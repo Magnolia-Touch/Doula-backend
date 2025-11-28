@@ -1,0 +1,40 @@
+test report: 
+changed jwt strategy
+changed roles guard
+made zip unique
+add region filter option
+add disabled option for region.
+response formating - doula and zone manager
+
+
+
+
+
+todo: 
+admin crud - done
+region crud - done
+zone manager crud -- done
+doula crud
+response formating
+
+service availability
+intake form.
+service booking 
+service history
+testimonials.
+admin api.
+add profile images.
+
+
+tested authentication, user creations availability, forms. etc etc. 
+workflow maatiya kond korach adhikam kurungii.
+
+Edge Cases: 
+formatting responses
+Adding meetings to Calenders.
+initially do the client need to see the pricing included in service.
+reduce {{localhost}}/enquiry/form request time.
+add payment on intake form?
+
+prbolems:
+7.29 second latency in reduce {{localhost}}/enquiry/form request time.

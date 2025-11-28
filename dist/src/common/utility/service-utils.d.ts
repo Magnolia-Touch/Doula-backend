@@ -1,0 +1,97 @@
+import { Role } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+export declare function findSlotOrThrow(prisma: PrismaService, slotId: string): Promise<{
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    startTime: Date;
+    endTime: Date;
+    availabe: boolean;
+    isBooked: boolean;
+    dateId: string;
+}>;
+export declare function findRegionOrThrow(prisma: PrismaService, regionId: string): Promise<{
+    id: string;
+    is_active: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    pincode: string;
+    regionName: string;
+    district: string;
+    state: string;
+    country: string;
+    latitude: string;
+    longitude: string;
+    zoneManagerId: string | null;
+}>;
+export declare function findZoneManagerOrThrowWithId(prisma: PrismaService, zoneManagerId: string): Promise<{
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    profile_image: string | null;
+    userId: string | null;
+}>;
+export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId: string): Promise<{
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    profile_image: string | null;
+    userId: string;
+    regionId: string | null;
+}>;
+export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;
+export declare function findUserOrThrowwithId(prisma: PrismaService, userId: string): Promise<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    otp: string | null;
+    otpExpiresAt: Date | null;
+    role: import("@prisma/client").$Enums.Role;
+    is_active: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}>;
+export declare function findServiceOrThrowwithId(prisma: PrismaService, serviceId: string): Promise<{
+    id: string;
+    name: string;
+    createdAt: Date;
+    updatedAt: Date;
+    description: string | null;
+}>;
+export declare function findUserRoleById(prisma: PrismaService, userId: string): Promise<import("@prisma/client").$Enums.Role>;
+export declare function findUserProfileId(prisma: PrismaService, userId: string): Promise<any>;
+export declare function getSlotOrCreateSlot(prisma: PrismaService, dateString: string, userRole: Role, profileId: string): Promise<{
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    availabe: boolean;
+    date: Date;
+    zoneManagerId: string | null;
+    weekday: string;
+    doulaId: string | null;
+    adminId: string | null;
+    ownerRole: import("@prisma/client").$Enums.Role;
+}>;
+export declare function createTimeForSlot(prisma: PrismaService, slotId: string, startTime: Date, endTime: Date): Promise<{
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    startTime: Date;
+    endTime: Date;
+    availabe: boolean;
+    isBooked: boolean;
+    dateId: string;
+}>;
+export declare function toUTCDate(dateString: string): Date;
+export declare function getOrcreateClent(prisma: PrismaService, data: any): Promise<any>;
+export declare function getServiceSlotOrCreateSlot(prisma: PrismaService, dateString: string, profileId: string): Promise<{
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    availabe: boolean;
+    isBooked: boolean;
+    date: Date;
+    weekday: string;
+    doulaId: string;
+}>;

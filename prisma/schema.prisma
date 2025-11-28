@@ -1,0 +1,376 @@
+// Prisma Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+  DOULA
+  ZONE_MANAGER
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
+
+//User Model
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  phone        String?   @unique
+  otp          String?
+  otpExpiresAt DateTime?
+  role         Role
+  is_active    Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  zonemanagerprofile ZoneManagerProfile? @relation("UserZoneManagerProfile")
+  doulaProfile       DoulaProfile?       @relation("UserDoulaProfile")
+  clientProfile      ClientProfile?      @relation("UserClientProfile")
+  adminProfile       AdminProfile?       @relation("UserAdminProfile")
+}
+
+//Zone Manager Profile 
+model ZoneManagerProfile {
+  id            String   @id @default(uuid())
+  user          User?    @relation("UserZoneManagerProfile", fields: [userId], references: [id])
+  userId        String?  @unique
+  profile_image String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  managingRegion Region[]
+
+  doulas                   DoulaProfile[]
+  notes                    Notes[]
+  availableSlotsForMeeting AvailableSlotsForMeeting[]
+  Meeting                  Meetings[]
+}
+
+// Doula Profile
+model DoulaProfile {
+  id            String   @id @default(uuid())
+  user          User     @relation("UserDoulaProfile", fields: [userId], references: [id])
+  userId        String   @unique
+  regionId      String?
+  profile_image String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  Region      Region[]             @relation("regions")
+  zoneManager ZoneManagerProfile[]
+
+  schedules                ServiceBooking[]
+  availableSlotsForMeeting AvailableSlotsForMeeting[]
+  Meeting                  Meetings[]
+  AvailableSlotsForService AvailableSlotsForService[]
+  IntakeForm               IntakeForm[]
+  ServicePricing           ServicePricing[]
+  Testimonials             Testimonials[]
+}
+
+// Client Profile
+model ClientProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  address       String?
+  profile_image String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation("UserClientProfile", fields: [userId], references: [id])
+
+  intakeForms  IntakeForm[]
+  enquiryForms EnquiryForm[]
+  bookings     ServiceBooking[]
+  Meetings     Meetings[]
+  Testimonials Testimonials[]
+}
+
+// Admin Profile
+model AdminProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  profile_image String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation("UserAdminProfile", fields: [userId], references: [id])
+
+  notes                    Notes[]
+  availableSlotsForMeeting AvailableSlotsForMeeting[]
+  Meeting                  Meetings[]
+}
+
+// Enquiry Form
+model EnquiryForm {
+  id              String   @id @default(uuid())
+  name            String
+  email           String
+  phone           String
+  additionalNotes String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  regionId  String
+  slotId    String
+  serviceId String
+  clientId  String? //remove this line 
+
+  region                     Region                       @relation(fields: [regionId], references: [id])
+  slot                       AvailableSlotsTimeForMeeting @relation(fields: [slotId], references: [id])
+  service                    Service                      @relation(fields: [serviceId], references: [id])
+  clientProfile              ClientProfile?               @relation(fields: [clientId], references: [id]) //remove this line
+  AvailableSlotsForMeeting   AvailableSlotsForMeeting?    @relation(fields: [availableSlotsForMeetingId], references: [id])
+  availableSlotsForMeetingId String?
+}
+
+// Regions
+model Region {
+  id         String   @id @default(uuid())
+  regionName String
+  pincode    String   @unique
+  district   String
+  state      String
+  country    String
+  latitude   String
+  longitude  String
+  is_active  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  zoneManagerId String?
+
+  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id])
+
+  doula          DoulaProfile[]   @relation("regions")
+  EnquiryForm    EnquiryForm[]
+  ServiceBooking ServiceBooking[]
+  IntakeForm     IntakeForm[]
+}
+
+// Notes
+model Notes {
+  id            String   @id @default(uuid())
+  remarks       String
+  zoneManagerId String?
+  adminId       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id])
+  admin       AdminProfile?       @relation(fields: [adminId], references: [id])
+}
+
+model AvailableSlotsForMeeting {
+  id        String   @id @default(uuid())
+  date      DateTime @db.Date
+  weekday   String
+  availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
+  ownerRole Role
+
+  doulaId       String?
+  adminId       String?
+  zoneManagerId String?
+
+  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id])
+  doula       DoulaProfile?       @relation(fields: [doulaId], references: [id])
+  admin       AdminProfile?       @relation(fields: [adminId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  EnquiryForm                  EnquiryForm[]
+  meetings                     Meetings[]
+  AvailableSlotsTimeForMeeting AvailableSlotsTimeForMeeting[]
+
+  @@unique([doulaId, date])
+  @@unique([adminId, date])
+  @@unique([zoneManagerId, date])
+}
+
+model AvailableSlotsTimeForMeeting {
+  id        String   @id @default(uuid())
+  startTime DateTime
+  endTime   DateTime
+  availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dateId String
+
+  date        AvailableSlotsForMeeting @relation(fields: [dateId], references: [id])
+  EnquiryForm EnquiryForm[]
+  Meetings    Meetings?
+}
+
+model Meetings {
+  id      String                       @id @default(uuid())
+  link    String
+  slotId  String                       @unique
+  slot    AvailableSlotsTimeForMeeting @relation(fields: [slotId], references: [id])
+  status  MeetingStatus
+  remarks String?
+
+  bookedById String // customer ID
+  bookedBy   ClientProfile @relation(fields: [bookedById], references: [id])
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  cancelledAt   DateTime?
+  rescheduledAt DateTime?
+
+  availableSlotsForMeetingId String?
+  zoneManagerProfileId       String?
+  doulaProfileId             String?
+  adminProfileId             String?
+  serviceId                  String?
+
+  AvailableSlotsForMeeting AvailableSlotsForMeeting? @relation(fields: [availableSlotsForMeetingId], references: [id])
+  ZoneManagerProfile       ZoneManagerProfile?       @relation(fields: [zoneManagerProfileId], references: [id])
+  DoulaProfile             DoulaProfile?             @relation(fields: [doulaProfileId], references: [id])
+  AdminProfile             AdminProfile?             @relation(fields: [adminProfileId], references: [id])
+  Service                  Service?                  @relation(fields: [serviceId], references: [id])
+}
+
+model AvailableSlotsForService {
+  id        String   @id @default(uuid())
+  date      DateTime @db.Date
+  weekday   String
+  availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  doulaId   String
+
+  doula                        DoulaProfile                   @relation(fields: [doulaId], references: [id])
+  IntakeForm                   IntakeForm[]
+  AvailableSlotsTimeForService AvailableSlotsTimeForService[]
+  ServiceBooking               ServiceBooking[]
+
+  // Prevent duplicates for the same owner for same day/time
+  @@unique([doulaId, date]) //creates a compostie unique constraint
+}
+
+model AvailableSlotsTimeForService {
+  id        String   @id @default(uuid())
+  startTime DateTime
+  endTime   DateTime
+  availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dateId String
+
+  date           AvailableSlotsForService @relation(fields: [dateId], references: [id])
+  IntakeForm     IntakeForm[]
+  ServiceBooking ServiceBooking[]
+}
+
+// Intake Form
+model IntakeForm {
+  id   String   @id @default(uuid())
+  date DateTime
+
+  //use these optional data if the service location is different
+  name    String?
+  email   String?
+  phone   String?
+  address String  @db.Text
+
+  regionId         String
+  servicePricingId String
+  doulaProfileId   String
+  clientId         String
+  slotTimeId       String?
+  slotId           String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  service       ServicePricing                @relation(fields: [servicePricingId], references: [id])
+  clientProfile ClientProfile                 @relation(fields: [clientId], references: [id])
+  region        Region                        @relation(fields: [regionId], references: [id])
+  DoulaProfile  DoulaProfile                  @relation(fields: [doulaProfileId], references: [id])
+  slotTime      AvailableSlotsTimeForService? @relation(fields: [slotTimeId], references: [id])
+  slot          AvailableSlotsForService      @relation(fields: [slotId], references: [id])
+}
+
+// Service Booking
+model ServiceBooking {
+  id             String   @id @default(uuid())
+  date           DateTime
+  paymentDetails Json?
+
+  regionId         String
+  servicePricingId String
+  doulaProfileId   String
+  clientId         String
+  slotTimeId       String?
+  slotId           String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  DoulaProfile             DoulaProfile                  @relation(fields: [doulaProfileId], references: [id])
+  service                  ServicePricing                @relation(fields: [servicePricingId], references: [id])
+  client                   ClientProfile                 @relation(fields: [clientId], references: [id])
+  region                   Region                        @relation(fields: [regionId], references: [id])
+  slot                     AvailableSlotsTimeForService? @relation(fields: [slotTimeId], references: [id])
+  AvailableSlotsForService AvailableSlotsForService      @relation(fields: [slotId], references: [id])
+}
+
+// Service Model
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text()
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ServicePricing ServicePricing[]
+  Meeting        Meetings[]
+  EnquiryForm    EnquiryForm[]
+}
+
+model ServicePricing {
+  id             String  @id @default(uuid())
+  serviceId      String
+  doulaProfileId String
+  price          Decimal @default(0) @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  service        Service          @relation(fields: [serviceId], references: [id])
+  DoulaProfile   DoulaProfile     @relation(fields: [doulaProfileId], references: [id])
+  IntakeForm     IntakeForm[]
+  ServiceBooking ServiceBooking[]
+
+  //add images adding option here.
+  Testimonials Testimonials[]
+}
+
+model Testimonials {
+  id             String @id @default(uuid())
+  doulaProfileId String
+  serviceId      String
+  ratings        Int
+  reviews        String
+  clientId       String
+
+  DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id])
+  ServicePricing ServicePricing @relation(fields: [serviceId], references: [id])
+  client         ClientProfile  @relation(fields: [clientId], references: [id])
+}

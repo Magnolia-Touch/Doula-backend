@@ -1,0 +1,58 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    title Meeting Confirmation
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        padding: 25px;
+      }
+      .container {
+        background: #fff;
+        padding: 20px 25px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        max-width: 600px;
+        margin: auto;
+      }
+      h2 {
+        color: #28a745;
+      }
+      .label {
+        font-weight: bold;
+      }
+      .field {
+        margin: 12px 0;
+      }
+      .btn {
+        display: inline-block;
+        padding: 10px 18px;
+        background-color: #007BFF;
+        color: #fff !important;
+        border-radius: 6px;
+        text-decoration: none;
+        margin-top: 20px;
+      }
+  body
+    .container
+      h2 Your Meeting is Confirmed
+
+      .field
+        .label Date:
+        span #{date}
+
+      .field
+        .label Time:
+        span #{time}
+
+      .field
+        .label Google Meet Link:
+        br
+        a(href=meetLink target="_blank") #{meetLink}
+
+      p Thank you for booking a meeting with us. Please use the link above to join the call at the scheduled time.
+
+      a.btn(href=meetLink target="_blank") Join Meeting
