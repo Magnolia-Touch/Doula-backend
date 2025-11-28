@@ -1,0 +1,138 @@
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateDoulaDto } from './dto/create-doula.dto';
+import { UpdateDoulaRegionDto } from './dto/update-doula.dto';
+export declare class DoulaService {
+    private prisma;
+    constructor(prisma: PrismaService);
+    create(dto: CreateDoulaDto, userId: string): Promise<{
+        message: string;
+        data: {
+            doulaProfile: ({
+                zoneManager: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    userId: string | null;
+                    profile_image: string | null;
+                }[];
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string;
+                profile_image: string | null;
+                regionId: string | null;
+            }) | null;
+        } & {
+            id: string;
+            email: string;
+            phone: string | null;
+            name: string;
+            otp: string | null;
+            otpExpiresAt: Date | null;
+            role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    } | undefined>;
+    get(page?: number, limit?: number, search?: string): Promise<{
+        data: {
+            id: string;
+            email: string;
+            phone: string | null;
+            name: string;
+            otp: string | null;
+            otpExpiresAt: Date | null;
+            role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+        message: string;
+    }>;
+    getById(id: string): Promise<{
+        message: string;
+        data: {
+            doulaProfile: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string;
+                profile_image: string | null;
+                regionId: string | null;
+            } | null;
+        } & {
+            id: string;
+            email: string;
+            phone: string | null;
+            name: string;
+            otp: string | null;
+            otpExpiresAt: Date | null;
+            role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    delete(id: string): Promise<{
+        message: string;
+        data: null;
+    }>;
+    updateStatus(id: string, isActive: boolean): Promise<{
+        message: string;
+        data: {
+            id: string;
+            email: string;
+            phone: string | null;
+            name: string;
+            otp: string | null;
+            otpExpiresAt: Date | null;
+            role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    UpdateDoulaRegions(dto: UpdateDoulaRegionDto, userId: string): Promise<{
+        message: string;
+        data: {
+            zoneManager: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string | null;
+                profile_image: string | null;
+            }[];
+            Region: {
+                id: string;
+                is_active: boolean;
+                createdAt: Date;
+                updatedAt: Date;
+                regionName: string;
+                pincode: string;
+                district: string;
+                state: string;
+                country: string;
+                latitude: string;
+                longitude: string;
+                zoneManagerId: string | null;
+            }[];
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            profile_image: string | null;
+            regionId: string | null;
+        };
+    }>;
+}

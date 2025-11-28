@@ -1,0 +1,15 @@
+Clients can preform Enquiry using: 
+    -- region  
+    -- time slot of Zone Manager
+    -- client name
+    -- client email
+    -- service required
+    -- additional notes.
+
+on Sending Post request: 
+    -- time slot of Zone Manager will be locked with the client 
+    -- EnquiryForm instance is created on db with the given details
+    -- A mail will be send to the Zone Manager Regarding the Enquiry
+
+21 nov
+enquiry forms can be filtered based on region.

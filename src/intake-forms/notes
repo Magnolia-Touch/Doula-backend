@@ -1,0 +1,105 @@
+fill intake form to book doula service.
+
+
+intake forms are taken by authenticated users. 
+if name, email, phone are not given at the time of filling the form, take it from the user table. address is mandtatory and update it on both clientprofile and intakeform
+while create booking make sure to add a variable named buffer, days between bookingdate - buffer and bookingdate + buffer should be marked availabe to false and booked should be true only for the booked date and remaning as it is.
+
+
+tables:
+
+//User Model
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  phone        String?   @unique
+  otp          String?
+  otpExpiresAt DateTime?
+  role         Role
+  is_active    Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  zonemanagerprofile ZoneManagerProfile? @relation("UserZoneManagerProfile")
+  doulaProfile       DoulaProfile?       @relation("UserDoulaProfile")
+  clientProfile      ClientProfile?      @relation("UserClientProfile")
+  adminProfile       AdminProfile?       @relation("UserAdminProfile")
+}
+
+// Client Profile
+model ClientProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation("UserClientProfile", fields: [userId], references: [id])
+
+  intakeForms  IntakeForm[]
+  enquiryForms EnquiryForm[]
+  bookings     ServiceBooking[]
+  Meeting      Meeting[]
+  Meetings     Meetings[]
+}
+
+
+model AvailableSlotsForService {
+  id        String   @id @default(uuid())
+  date      DateTime
+  availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  doulaId   String?
+
+  doula DoulaProfile? @relation(fields: [doulaId], references: [id])
+
+  // Prevent duplicates for the same owner for same day/time
+  @@unique([doulaId, date]) //creates a compostie unique constraint
+}
+
+// Intake Form
+model IntakeForm {
+  id String @id @default(uuid())
+
+  //use these optional data if the service location is different
+  name    String?
+  email   String?
+  phone   String?
+  address String  @db.Text
+
+  regionId       String
+  serviceId      String
+  doulaProfileId String
+  clientId       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  service       Service       @relation(fields: [serviceId], references: [id])
+  clientProfile ClientProfile @relation(fields: [clientId], references: [id])
+  region        Region        @relation(fields: [regionId], references: [id])
+  DoulaProfile  DoulaProfile  @relation(fields: [doulaProfileId], references: [id])
+}
+
+// Service Booking
+model ServiceBooking {
+  id             String   @id @default(uuid())
+  date           DateTime
+  paymentDetails Json?
+
+  regionId       String
+  serviceId      String
+  doulaProfileId String
+  clientId       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  DoulaProfile DoulaProfile  @relation(fields: [doulaProfileId], references: [id])
+  service      Service       @relation(fields: [serviceId], references: [id])
+  client       ClientProfile @relation(fields: [clientId], references: [id])
+  region       Region        @relation(fields: [regionId], references: [id])
+}

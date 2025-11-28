@@ -1,0 +1,36 @@
+doulas analytics - 
+zone manager analytics - 
+total revenue. -- by their region, doula, zonemanager, service, month, days, week, 
+no of active services, 
+no of active meetings
+no of completed services
+
+admin analytics - 
+total revenue. -- by region, doula, zonemanager, service, month, days, week, 
+report export function.
+
+
+// Service Booking
+model ServiceBooking {
+  id             String   @id @default(uuid())
+  date           DateTime
+  paymentDetails Json?
+
+  regionId         String
+  servicePricingId String
+  doulaProfileId   String
+  clientId         String
+  slotTimeId       String?
+  slotId           String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  DoulaProfile             DoulaProfile                  @relation(fields: [doulaProfileId], references: [id])
+  service                  ServicePricing                @relation(fields: [servicePricingId], references: [id])
+  client                   ClientProfile                 @relation(fields: [clientId], references: [id])
+  region                   Region                        @relation(fields: [regionId], references: [id])
+  slot                     AvailableSlotsTimeForService? @relation(fields: [slotTimeId], references: [id])
+  AvailableSlotsForService AvailableSlotsForService      @relation(fields: [slotId], references: [id])
+}
+
