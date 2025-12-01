@@ -32,8 +32,27 @@ export declare class AnalyticsController {
         zonemanagers: number;
         admins: number;
     }>;
+    ActivegetCounts(): Promise<{
+        total: number;
+        clients: number;
+        doulas: number;
+        zonemanagers: number;
+        admins: number;
+    }>;
+    inactivegetCounts(): Promise<{
+        total: number;
+        clients: number;
+        doulas: number;
+        zonemanagers: number;
+        admins: number;
+    }>;
     getStats(): Promise<{
         totalBookings: number;
         totalRevenue: number;
+    }>;
+    getMeetigStats(): Promise<{
+        SCHEDULED: number;
+        COMPLETED: number;
+        CANCELED: number;
     }>;
 }

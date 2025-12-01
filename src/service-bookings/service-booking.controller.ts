@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ServiceBookingService } from './service-booking.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
@@ -34,8 +34,12 @@ export class ServiceBookingController {
         },
     })
     @Get()
-    getAllBookings() {
-        return this.bookingService.findAll();
+    async findAll(@Query() query: { page?: string; limit?: string; status?: string }) {
+        return this.bookingService.findAll({
+            page: query.page ? Number(query.page) : undefined,
+            limit: query.limit ? Number(query.limit) : undefined,
+            status: query.status,
+        });
     }
 
     @ApiOperation({ summary: 'Get a booking by ID' })

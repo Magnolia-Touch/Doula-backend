@@ -21,6 +21,12 @@ enum MeetingStatus {
   CANCELED
 }
 
+enum BookingStatus {
+  ACTIVE
+  COMPLETED
+  CANCELED
+}
+
 //User Model
 model User {
   id           String    @id @default(uuid())
@@ -59,13 +65,18 @@ model ZoneManagerProfile {
 
 // Doula Profile
 model DoulaProfile {
-  id            String   @id @default(uuid())
-  user          User     @relation("UserDoulaProfile", fields: [userId], references: [id])
-  userId        String   @unique
+  id            String     @id @default(uuid())
+  user          User       @relation("UserDoulaProfile", fields: [userId], references: [id])
+  userId        String     @unique
   regionId      String?
-  profile_image String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  profileImage  String?
+  description   String?    @db.Text()
+  achievements  String?    @db.Text()
+  qualification String?    @db.Text()
+  yoe           Int?
+  languages     Language[] @relation("DoulaLanguages")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   Region      Region[]             @relation("regions")
   zoneManager ZoneManagerProfile[]
@@ -77,6 +88,12 @@ model DoulaProfile {
   IntakeForm               IntakeForm[]
   ServicePricing           ServicePricing[]
   Testimonials             Testimonials[]
+}
+
+model Language {
+  id     String         @id @default(uuid())
+  name   String         @unique
+  doulas DoulaProfile[] @relation("DoulaLanguages")
 }
 
 // Client Profile
@@ -309,9 +326,10 @@ model IntakeForm {
 
 // Service Booking
 model ServiceBooking {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   date           DateTime
   paymentDetails Json?
+  status         BookingStatus @default(ACTIVE)
 
   regionId         String
   servicePricingId String

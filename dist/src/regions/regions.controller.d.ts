@@ -4,6 +4,10 @@ export declare class RegionController {
     private readonly regionService;
     constructor(regionService: RegionService);
     create(dto: CreateRegionDto): Promise<{
+        id: string;
+        is_active: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         regionName: string;
         pincode: string;
         district: string;
@@ -11,14 +15,14 @@ export declare class RegionController {
         country: string;
         latitude: string;
         longitude: string;
-        is_active: boolean;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
         zoneManagerId: string | null;
     }>;
     findAll(page?: number, limit?: number, search?: string): Promise<{
         data: {
+            id: string;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
             regionName: string;
             pincode: string;
             district: string;
@@ -26,10 +30,6 @@ export declare class RegionController {
             country: string;
             latitude: string;
             longitude: string;
-            is_active: boolean;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             zoneManagerId: string | null;
         }[];
         meta: {
@@ -46,10 +46,14 @@ export declare class RegionController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string | null;
             profile_image: string | null;
+            userId: string | null;
         } | null;
     } & {
+        id: string;
+        is_active: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         regionName: string;
         pincode: string;
         district: string;
@@ -57,13 +61,13 @@ export declare class RegionController {
         country: string;
         latitude: string;
         longitude: string;
-        is_active: boolean;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
         zoneManagerId: string | null;
     }>;
     update(id: string, dto: UpdateRegionDto): Promise<{
+        id: string;
+        is_active: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         regionName: string;
         pincode: string;
         district: string;
@@ -71,13 +75,13 @@ export declare class RegionController {
         country: string;
         latitude: string;
         longitude: string;
-        is_active: boolean;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
         zoneManagerId: string | null;
     }>;
     remove(id: string): Promise<{
+        id: string;
+        is_active: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         regionName: string;
         pincode: string;
         district: string;
@@ -85,10 +89,6 @@ export declare class RegionController {
         country: string;
         latitude: string;
         longitude: string;
-        is_active: boolean;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
         zoneManagerId: string | null;
     }>;
 }

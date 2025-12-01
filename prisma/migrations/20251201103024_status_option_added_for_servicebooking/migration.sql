@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `ServiceBooking` ADD COLUMN `status` ENUM('ACTIVE', 'COMPLETED', 'CANCELED') NOT NULL DEFAULT 'ACTIVE';

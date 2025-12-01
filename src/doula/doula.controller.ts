@@ -25,6 +25,7 @@ import {
     ApiBody,
     ApiQuery,
     ApiParam,
+    ApiOkResponse,
 } from '@nestjs/swagger';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
 
@@ -66,13 +67,32 @@ export class DoulaController {
 
     // GET LIST
     @Get()
-    @ApiOperation({ summary: 'Get all Doulas with pagination & search' })
-    @ApiQuery({ name: 'page', required: false, type: Number })
-    @ApiQuery({ name: 'limit', required: false, type: Number })
-    @ApiQuery({ name: 'search', required: false, type: String })
-    @ApiResponse({
-        status: 200,
-        type: SwaggerResponseDto,
+    @ApiOperation({ summary: 'Get all doulas with pagination & optional search' })
+
+    @ApiQuery({
+        name: 'page',
+        required: false,
+        type: Number,
+        description: 'Page number for pagination (default: 1)',
+        example: 1,
+    })
+    @ApiQuery({
+        name: 'limit',
+        required: false,
+        type: Number,
+        description: 'Number of items per page (default: 10)',
+        example: 10,
+    })
+    @ApiQuery({
+        name: 'search',
+        required: false,
+        type: String,
+        description: 'Search by doula name or email',
+        example: 'Jane',
+    })
+
+    @ApiOkResponse({
+        description: 'Returns a paginated list of doulas',
         schema: {
             example: {
                 success: true,
@@ -89,6 +109,7 @@ export class DoulaController {
             }
         }
     })
+
     async get(
         @Query('page') page = 1,
         @Query('limit') limit = 10,

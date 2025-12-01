@@ -1,4 +1,4 @@
-import { IsArray, IsEmail, IsPhoneNumber, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsNumber, IsPhoneNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDoulaDto {
@@ -24,4 +24,24 @@ export class CreateDoulaDto {
     @IsArray()
     @IsString({ each: true })
     regionIds: string[];
+
+    @IsString()
+    description: string;
+
+    @IsString()
+    achievements: string;
+
+    @IsString()
+    qualification: string;
+
+    @IsNumber()
+    yoe: number;
+
+    @ApiProperty({
+        example: ["English", "Hindi", "Tamil"]
+    })
+    @IsArray()
+    @IsString({ each: true })
+    languages: string[];
 }
+

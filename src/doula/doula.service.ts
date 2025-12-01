@@ -14,21 +14,31 @@ export class DoulaService {
     // Create new Doula
     //if admin is creating doula, zone manager of regions are added to doulas profile.
     async create(dto: CreateDoulaDto, userId: string) {
-        checkUserExistorNot(this.prisma, dto.email)
+        // Check if user already exists with this email
+        checkUserExistorNot(this.prisma, dto.email);
+
+        // Find the logged-in user
         const user = await this.prisma.user.findUnique({
             where: { id: userId }
-        })
+        });
+
+        // Validate region IDs
         const regions = await this.prisma.region.findMany({
             where: { id: { in: dto.regionIds } },
-        })
-        if (regions.length != dto.regionIds.length) {
+        });
+
+        if (regions.length !== dto.regionIds.length) {
             throw new NotFoundException("One or more region IDs are invalid");
         }
 
-        if (user?.role == Role.ZONE_MANAGER) {
+        // -------------------------------------------------------------
+        // CASE 1: CREATED BY ZONE MANAGER
+        // -------------------------------------------------------------
+        if (user?.role === Role.ZONE_MANAGER) {
             const manager = await this.prisma.zoneManagerProfile.findUnique({
-                where: { userId: userId }
-            })
+                where: { userId }
+            });
+
             const doula = await this.prisma.user.create({
                 data: {
                     name: dto.name,
@@ -38,27 +48,42 @@ export class DoulaService {
                     doulaProfile: {
                         create: {
                             Region: {
-                                connect: dto.regionIds.map((id) => ({ id })),
+                                connect: dto.regionIds.map(id => ({ id })),
                             },
                             zoneManager: {
                                 connect: { id: manager?.id }
+                            },
+                            description: dto.description,
+                            qualification: dto.qualification,
+                            achievements: dto.achievements,
+                            yoe: dto.yoe,
+                            languages: {
+                                connect: dto.languages.map(lang => ({ name: lang })),
                             }
-
-                        },
-                    },
+                        }
+                    }
                 },
                 include: {
                     doulaProfile: {
-                        include: { zoneManager: true },
-                    },
-                },
+                        include: {
+                            zoneManager: true,
+                        }
+                    }
+                }
             });
 
-            return { message: 'Doulas created successfully', data: doula };
+            return {
+                message: 'Doula created successfully',
+                data: doula
+            };
         }
-        else if (user?.role == Role.ADMIN) {
 
-            // Fetch regions with their zone managers
+        // -------------------------------------------------------------
+        // CASE 2: CREATED BY ADMIN
+        // -------------------------------------------------------------
+        if (user?.role === Role.ADMIN) {
+
+            // Get regions & their zone managers
             const regions = await this.prisma.region.findMany({
                 where: { id: { in: dto.regionIds } },
                 select: {
@@ -67,17 +92,16 @@ export class DoulaService {
                 }
             });
 
-            // Validate that regions exist
+            // Validate region count again for safety
             if (regions.length !== dto.regionIds.length) {
                 throw new BadRequestException("One or more regions are invalid.");
             }
 
-            // Extract zoneManager IDs
+            // Extract zone manager IDs
             const zoneManagerIds = regions
                 .filter(r => r.zoneManager)
-                .map(r => r.zoneManager?.id);
+                .map(r => r.zoneManager!.id);
 
-            // Validate that all selected regions have a zone manager
             if (zoneManagerIds.length === 0) {
                 throw new BadRequestException(
                     "Selected regions must have a Zone Manager assigned."
@@ -94,68 +118,122 @@ export class DoulaService {
                     doulaProfile: {
                         create: {
                             Region: {
-                                connect: dto.regionIds.map((id) => ({ id })),
+                                connect: dto.regionIds.map(id => ({ id })),
                             },
                             zoneManager: {
                                 connect: zoneManagerIds.map(id => ({ id }))
                             },
-                        },
-                    },
+                            description: dto.description,
+                            qualification: dto.qualification,
+                            achievements: dto.achievements,
+                            yoe: dto.yoe,
+                            languages: {
+                                connect: dto.languages.map(lang => ({ name: lang })),
+                            }
+                        }
+                    }
                 },
                 include: {
                     doulaProfile: {
-                        include: { zoneManager: true },
-                    },
-                },
+                        include: {
+                            zoneManager: true,
+                        }
+                    }
+                }
             });
 
-            return { message: 'Doulas created successfully', data: doula };
+            return {
+                message: 'Doula created successfully',
+                data: doula
+            };
         }
 
+        // Fallback
+        throw new BadRequestException("Unauthorized role");
     }
 
 
-    // Doula can be searched using their name, email, phone. Region Name and Zone manager Email
-    async get(page = 1, limit = 10, search?: string) {
-        const where = {
+
+
+    async get(
+        page = 1,
+        limit = 10,
+        search?: string,
+        serviceId?: string,
+        isAvailable?: boolean,
+        isActive?: boolean,
+    ) {
+        const where: any = {
             role: Role.DOULA,
-            OR: search
-                ? [
-                    // Search by Doula name, email, phone
-                    { name: { contains: search.toLowerCase() } },
-                    { email: { contains: search.toLowerCase() } },
-                    { phone: { contains: search.toLowerCase() } },
+        };
 
-                    // Search by Region name
-                    {
-                        doulaProfile: {
-                            Region: {
-                                some: {
-                                    regionName: {
-                                        contains: search.toLowerCase()
-                                    }
-                                }
-                            }
-                        },
-                    },
+        // 🔍 Search filter  
+        if (search) {
+            const q = search.toLowerCase();
+            where.OR = [
+                // Search by Doula name, email, phone (User Model)
+                { name: { contains: q } },
+                { email: { contains: q } },
+                { phone: { contains: q } },
 
-                    // Search by Zone Manager email
-                    {
-                        doulaProfile: {
-                            zoneManager: {
-                                some: {
-                                    user: {
-                                        email: { contains: search.toLowerCase() },
-                                    },
-                                }
-
+                // Search by Region name (DoulaProfile -> Region)
+                {
+                    doulaProfile: {
+                        Region: {
+                            some: {
+                                regionName: { contains: q },
                             },
                         },
                     },
-                ]
-                : undefined,
-        };
+                },
 
+                // Search by Zone Manager Email
+                {
+                    doulaProfile: {
+                        zoneManager: {
+                            some: {
+                                user: {
+                                    email: { contains: q },
+                                },
+                            },
+                        },
+                    },
+                },
+            ];
+        }
+
+        // 🟢 Filter by is_active
+        if (typeof isActive === 'boolean') {
+            where.is_active = isActive;
+        }
+
+        // 🟦 Filter by Service (ServicePricing)
+        if (serviceId) {
+            where.doulaProfile = {
+                ...(where.doulaProfile || {}),
+                ServicePricing: {
+                    some: {
+                        id: serviceId,
+                    },
+                },
+            };
+        }
+
+        // 🟩 Filter by Availability
+        if (typeof isAvailable === 'boolean') {
+            where.doulaProfile = {
+                ...(where.doulaProfile || {}),
+                AvailableSlotsForService: isAvailable
+                    ? {
+                        some: {
+                            isBooked: false, // or availability flag based on your schema
+                        },
+                    }
+                    : {},
+            };
+        }
+
+        // Final Query with Pagination
         const result = await paginate({
             prismaModel: this.prisma.user,
             page,
@@ -165,7 +243,14 @@ export class DoulaService {
                 doulaProfile: {
                     include: {
                         Region: true,
-                        zoneManager: true
+                        zoneManager: {
+                            include: {
+                                user: true,
+                            },
+                        },
+                        ServicePricing: true,
+                        AvailableSlotsForService: true,
+                        languages: true,
                     },
                 },
             },
@@ -174,7 +259,7 @@ export class DoulaService {
 
         return {
             message: 'Doulas fetched successfully',
-            ...result, // includes { data, meta }
+            ...result,
         };
     }
 
@@ -183,7 +268,7 @@ export class DoulaService {
     async getById(id: string) {
         const doula = await this.prisma.user.findUnique({
             where: { id },
-            include: { doulaProfile: true },
+            include: { doulaProfile: { include: { languages: true } } },
         });
 
         if (!doula || doula.role !== Role.DOULA) {

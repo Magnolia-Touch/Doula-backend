@@ -6,8 +6,8 @@ export declare class TestimonialsController {
     private readonly service;
     constructor(service: TestimonialsService);
     create(dto: CreateTestimonialDto, req: any): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;
@@ -15,8 +15,8 @@ export declare class TestimonialsController {
     }>;
     findAll(query: FilterTestimonialsDto): Promise<{
         data: {
-            serviceId: string;
             id: string;
+            serviceId: string;
             doulaProfileId: string;
             clientId: string;
             ratings: number;
@@ -32,24 +32,24 @@ export declare class TestimonialsController {
         };
     }>;
     findOne(id: string): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;
         reviews: string;
     }>;
     update(id: string, dto: UpdateTestimonialDto, req: any): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;
         reviews: string;
     }>;
     remove(id: string, req: any): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;

@@ -13,12 +13,27 @@ exports.FilterUserDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
+const class_transformer_1 = require("class-transformer");
 class FilterUserDto {
+    is_active;
     role;
     page;
     limit;
 }
 exports.FilterUserDto = FilterUserDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: "Status filter to identify active user.", example: true }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === 'true')
+            return true;
+        if (value === 'false')
+            return false;
+        return true;
+    }),
+    __metadata("design:type", Boolean)
+], FilterUserDto.prototype, "is_active", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'Role to filter (ADMIN, CLIENT, DOULA, ZONE_MANAGER)', example: client_1.Role.CLIENT }),
     (0, class_validator_1.IsOptional)(),

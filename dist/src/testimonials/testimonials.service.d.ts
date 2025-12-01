@@ -6,8 +6,8 @@ export declare class TestimonialsService {
     private prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateTestimonialDto, user: any): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;
@@ -15,8 +15,8 @@ export declare class TestimonialsService {
     }>;
     findAll(query: FilterTestimonialsDto): Promise<{
         data: {
-            serviceId: string;
             id: string;
+            serviceId: string;
             doulaProfileId: string;
             clientId: string;
             ratings: number;
@@ -32,24 +32,24 @@ export declare class TestimonialsService {
         };
     }>;
     findOne(id: string, userId?: string): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;
         reviews: string;
     }>;
     update(id: string, dto: UpdateTestimonialDto, userId: string): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;
         reviews: string;
     }>;
     remove(id: string, userId: string): Promise<{
-        serviceId: string;
         id: string;
+        serviceId: string;
         doulaProfileId: string;
         clientId: string;
         ratings: number;
