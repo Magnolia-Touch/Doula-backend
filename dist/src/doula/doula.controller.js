@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DoulaController = void 0;
 const common_1 = require("@nestjs/common");
@@ -171,7 +170,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_a = typeof update_doula_status_dto_1.UpdateDoulaStatusDto !== "undefined" && update_doula_status_dto_1.UpdateDoulaStatusDto) === "function" ? _a : Object]),
+    __metadata("design:paramtypes", [String, update_doula_status_dto_1.UpdateDoulaStatusDto]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "updateStatus", null);
 __decorate([

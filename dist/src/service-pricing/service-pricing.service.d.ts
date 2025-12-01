@@ -4,84 +4,84 @@ export declare class ServicePricingService {
     private prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateServicePricingDto, userId: string): Promise<{
-        serviceId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
         doulaProfileId: string;
     }>;
     findAll(userId: string): Promise<({
         DoulaProfile: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
             userId: string;
             regionId: string | null;
-            profile_image: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
         service: {
-            description: string | null;
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
+            description: string | null;
         };
     } & {
-        serviceId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
         doulaProfileId: string;
     })[]>;
     findOne(id: string): Promise<{
         DoulaProfile: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
             userId: string;
             regionId: string | null;
-            profile_image: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
         service: {
-            description: string | null;
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
+            description: string | null;
         };
     } & {
-        serviceId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
         doulaProfileId: string;
     }>;
     update(id: string, dto: UpdateServicePricingDto): Promise<{
-        serviceId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
         doulaProfileId: string;
     }>;
     remove(id: string): Promise<{
-        serviceId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
         doulaProfileId: string;
     }>;
     listServices(query: any): Promise<{
         data: {
-            serviceId: string;
-            price: import("@prisma/client/runtime/library").Decimal;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            price: import("@prisma/client/runtime/library").Decimal;
+            serviceId: string;
             doulaProfileId: string;
         }[];
         meta: {

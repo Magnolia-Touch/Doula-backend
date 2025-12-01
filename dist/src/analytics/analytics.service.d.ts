@@ -5,13 +5,13 @@ export declare class AnalyticsService {
     constructor(prisma: PrismaService);
     listUsers(query: FilterUserDto): Promise<{
         data: {
-            role: import("@prisma/client").$Enums.Role;
             id: string;
             name: string;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
+            role: import("@prisma/client").$Enums.Role;
             is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
@@ -32,8 +32,27 @@ export declare class AnalyticsService {
         zonemanagers: number;
         admins: number;
     }>;
+    ActivecountUsersByRole(): Promise<{
+        total: number;
+        clients: number;
+        doulas: number;
+        zonemanagers: number;
+        admins: number;
+    }>;
+    inactivecountUsersByRole(): Promise<{
+        total: number;
+        clients: number;
+        doulas: number;
+        zonemanagers: number;
+        admins: number;
+    }>;
     getBookingStats(): Promise<{
         totalBookings: number;
         totalRevenue: number;
+    }>;
+    getMeetingstats(): Promise<{
+        SCHEDULED: number;
+        COMPLETED: number;
+        CANCELED: number;
     }>;
 }

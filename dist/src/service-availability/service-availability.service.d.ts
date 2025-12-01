@@ -18,14 +18,14 @@ export declare class DoulaServiceAvailabilityService {
     }>;
     getAllSlots(doulaId: string, startDate: string, endDate: string, filter?: 'all' | 'booked' | 'unbooked', page?: number, limit?: number): Promise<{
         data: {
-            date: Date;
-            availabe: boolean;
-            isBooked: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            date: Date;
             weekday: string;
+            availabe: boolean;
             doulaId: string;
+            isBooked: boolean;
         }[];
         meta: {
             total: number;
@@ -40,60 +40,60 @@ export declare class DoulaServiceAvailabilityService {
         message: string;
         slot: {
             AvailableSlotsTimeForService: {
-                startTime: Date;
-                endTime: Date;
-                availabe: boolean;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                availabe: boolean;
+                startTime: Date;
+                endTime: Date;
                 dateId: string;
             }[];
         } & {
-            date: Date;
-            availabe: boolean;
-            isBooked: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            date: Date;
             weekday: string;
+            availabe: boolean;
             doulaId: string;
+            isBooked: boolean;
         };
     }>;
     updateSlotTimeById(dto: UpdateDoulaServiceAvailabilityDTO, timeSlotId: string, userId: string): Promise<{
         message: string;
         data: {
-            startTime: Date;
-            endTime: Date;
-            availabe: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            startTime: Date;
+            endTime: Date;
             dateId: string;
         };
     }>;
     deleteSlots(timeSlotId: string, userId: string): Promise<{
         message: string;
         data: {
-            startTime: Date;
-            endTime: Date;
-            availabe: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            startTime: Date;
+            endTime: Date;
             dateId: string;
         };
     }>;
     updateSlotTimeByDate(timeSlotId: string): Promise<{
         message: string;
         data: {
-            date: Date;
-            availabe: boolean;
-            isBooked: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            date: Date;
             weekday: string;
+            availabe: boolean;
             doulaId: string;
+            isBooked: boolean;
         };
     }>;
 }

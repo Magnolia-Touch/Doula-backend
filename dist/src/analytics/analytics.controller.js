@@ -29,8 +29,17 @@ let AnalyticsController = class AnalyticsController {
     async getCounts() {
         return this.service.countUsersByRole();
     }
+    async ActivegetCounts() {
+        return this.service.ActivecountUsersByRole();
+    }
+    async inactivegetCounts() {
+        return this.service.inactivecountUsersByRole();
+    }
     async getStats() {
         return this.service.getBookingStats();
+    }
+    async getMeetigStats() {
+        return this.service.getMeetingstats();
     }
 };
 exports.AnalyticsController = AnalyticsController;
@@ -61,7 +70,7 @@ __decorate([
             },
         },
     }),
-    (0, common_1.Get)(),
+    (0, common_1.Get)('user/list'),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [filter_user_dto_1.FilterUserDto]),
@@ -85,11 +94,57 @@ __decorate([
             },
         },
     }),
-    (0, common_1.Get)('counts'),
+    (0, common_1.Get)('counts/user'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], AnalyticsController.prototype, "getCounts", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get counts of Active users grouped by role' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Active Counts by role fetched',
+                data: {
+                    ADMIN: 2,
+                    CLIENT: 120,
+                    DOULA: 8,
+                    ZONE_MANAGER: 3,
+                },
+            },
+        },
+    }),
+    (0, common_1.Get)('counts/active'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "ActivegetCounts", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get counts of Inactive users grouped by role' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Inactive Counts by role fetched',
+                data: {
+                    ADMIN: 2,
+                    CLIENT: 120,
+                    DOULA: 8,
+                    ZONE_MANAGER: 3,
+                },
+            },
+        },
+    }),
+    (0, common_1.Get)('counts/inactive'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "inactivegetCounts", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get booking statistics (aggregated)' }),
     (0, swagger_1.ApiResponse)({
@@ -112,11 +167,33 @@ __decorate([
             },
         },
     }),
-    (0, common_1.Get)('stats'),
+    (0, common_1.Get)('counts/booking'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], AnalyticsController.prototype, "getStats", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get Meetings aggregated results' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Meetings stats fetched',
+                data: {
+                    SCHEDULED: 12,
+                    COMPLETED: 5,
+                    CANCELED: 0
+                },
+            },
+        },
+    }),
+    (0, common_1.Get)('counts/meeting'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "getMeetigStats", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('Analytics'),
     (0, common_1.Controller)({

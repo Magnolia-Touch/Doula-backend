@@ -20,12 +20,15 @@ let AnalyticsService = class AnalyticsService {
         this.prisma = prisma;
     }
     async listUsers(query) {
-        const { role } = query;
+        const { role, is_active } = query;
         const page = query.page ? Number(query.page) : 1;
         const limit = query.limit ? Number(query.limit) : 10;
         const where = {};
         if (role)
             where.role = role;
+        if (is_active !== undefined) {
+            where.is_active = is_active;
+        }
         return (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.user,
             page,
@@ -54,6 +57,34 @@ let AnalyticsService = class AnalyticsService {
             admins,
         };
     }
+    async ActivecountUsersByRole() {
+        const clients = await this.prisma.user.count({ where: { role: client_1.Role.CLIENT, is_active: true } });
+        const doulas = await this.prisma.user.count({ where: { role: client_1.Role.DOULA, is_active: true } });
+        const zonemanagers = await this.prisma.user.count({ where: { role: client_1.Role.ZONE_MANAGER, is_active: true } });
+        const admins = await this.prisma.user.count({ where: { role: client_1.Role.ADMIN, is_active: true } });
+        const total = await this.prisma.user.count();
+        return {
+            total,
+            clients,
+            doulas,
+            zonemanagers,
+            admins,
+        };
+    }
+    async inactivecountUsersByRole() {
+        const clients = await this.prisma.user.count({ where: { role: client_1.Role.CLIENT, is_active: false } });
+        const doulas = await this.prisma.user.count({ where: { role: client_1.Role.DOULA, is_active: false } });
+        const zonemanagers = await this.prisma.user.count({ where: { role: client_1.Role.ZONE_MANAGER, is_active: false } });
+        const admins = await this.prisma.user.count({ where: { role: client_1.Role.ADMIN, is_active: false } });
+        const total = await this.prisma.user.count();
+        return {
+            total,
+            clients,
+            doulas,
+            zonemanagers,
+            admins,
+        };
+    }
     async getBookingStats() {
         const totalBookings = await this.prisma.serviceBooking.count();
         const bookings = await this.prisma.serviceBooking.findMany({
@@ -64,6 +95,23 @@ let AnalyticsService = class AnalyticsService {
             totalBookings,
             totalRevenue,
         };
+    }
+    async getMeetingstats() {
+        const totalMeetings = await this.prisma.meetings.groupBy({
+            by: ['status'],
+            _count: {
+                status: true
+            }
+        });
+        const FormattedCounts = {
+            SCHEDULED: 0,
+            COMPLETED: 0,
+            CANCELED: 0,
+        };
+        totalMeetings.forEach((item) => {
+            FormattedCounts[item.status] = item._count.status;
+        });
+        return FormattedCounts;
     }
 };
 exports.AnalyticsService = AnalyticsService;

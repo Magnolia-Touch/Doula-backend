@@ -19,6 +19,7 @@ import { ServicePricingModule } from './service-pricing/service-pricing.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ServiceBookingModule } from './service-bookings/service-booking.module';
+import { LanguageModule } from './languages/language.module';
 
 @Module({
   imports: [ZoneManagerModule,
@@ -37,6 +38,7 @@ import { ServiceBookingModule } from './service-bookings/service-booking.module'
     ServicePricingModule,
     AnalyticsModule,
     TestimonialsModule,
+    LanguageModule,
     ServiceBookingModule,
     MailerModule.forRoot({
       transport: {

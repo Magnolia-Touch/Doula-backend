@@ -7,50 +7,51 @@ export declare class IntakeFormService {
     constructor(prisma: PrismaService, mail: MailerService);
     createIntakeForm(dto: IntakeFormDto): Promise<{
         intake: {
+            id: string;
             name: string | null;
             email: string | null;
             phone: string | null;
-            slotId: string;
-            doulaProfileId: string;
-            address: string;
-            id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             regionId: string;
-            servicePricingId: string;
+            address: string;
+            doulaProfileId: string;
+            date: Date;
+            slotId: string;
             clientId: string;
+            servicePricingId: string;
             slotTimeId: string | null;
         };
         booking: {
-            slotId: string;
-            doulaProfileId: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             regionId: string;
-            servicePricingId: string;
+            doulaProfileId: string;
+            date: Date;
+            slotId: string;
             clientId: string;
+            status: import("@prisma/client").$Enums.BookingStatus;
+            servicePricingId: string;
             slotTimeId: string | null;
             paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
         };
     }>;
     getAllForms(page: number, limit: number): Promise<{
         data: {
+            id: string;
             name: string | null;
             email: string | null;
             phone: string | null;
-            slotId: string;
-            doulaProfileId: string;
-            address: string;
-            id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             regionId: string;
-            servicePricingId: string;
+            address: string;
+            doulaProfileId: string;
+            date: Date;
+            slotId: string;
             clientId: string;
+            servicePricingId: string;
             slotTimeId: string | null;
         }[];
         meta: {
@@ -64,15 +65,24 @@ export declare class IntakeFormService {
     }>;
     getFormById(id: string): Promise<{
         clientProfile: {
-            address: string | null;
             id: string;
-            userId: string;
-            profile_image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+            address: string | null;
+        };
+        DoulaProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+            regionId: string | null;
         };
         region: {
             id: string;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
             regionName: string;
@@ -82,24 +92,15 @@ export declare class IntakeFormService {
             country: string;
             latitude: string;
             longitude: string;
-            is_active: boolean;
             zoneManagerId: string | null;
         };
-        DoulaProfile: {
-            id: string;
-            userId: string;
-            profile_image: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string | null;
-        };
         service: {
-            doulaProfileId: string;
-            serviceId: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
+            serviceId: string;
+            doulaProfileId: string;
         };
         slot: {
             id: string;
@@ -108,23 +109,23 @@ export declare class IntakeFormService {
             date: Date;
             weekday: string;
             availabe: boolean;
-            isBooked: boolean;
             doulaId: string;
+            isBooked: boolean;
         };
     } & {
+        id: string;
         name: string | null;
         email: string | null;
         phone: string | null;
-        slotId: string;
-        doulaProfileId: string;
-        address: string;
-        id: string;
         createdAt: Date;
         updatedAt: Date;
-        date: Date;
         regionId: string;
-        servicePricingId: string;
+        address: string;
+        doulaProfileId: string;
+        date: Date;
+        slotId: string;
         clientId: string;
+        servicePricingId: string;
         slotTimeId: string | null;
     }>;
     deleteForm(id: string): Promise<{

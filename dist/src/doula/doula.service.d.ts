@@ -12,22 +12,22 @@ export declare class DoulaService {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    userId: string | null;
                     profile_image: string | null;
+                    userId: string | null;
                 }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 profile_image: string | null;
+                userId: string;
                 regionId: string | null;
             }) | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -39,9 +39,9 @@ export declare class DoulaService {
     get(page?: number, limit?: number, search?: string): Promise<{
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -66,15 +66,15 @@ export declare class DoulaService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 profile_image: string | null;
+                userId: string;
                 regionId: string | null;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -91,9 +91,9 @@ export declare class DoulaService {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -105,13 +105,6 @@ export declare class DoulaService {
     UpdateDoulaRegions(dto: UpdateDoulaRegionDto, userId: string): Promise<{
         message: string;
         data: {
-            zoneManager: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                userId: string | null;
-                profile_image: string | null;
-            }[];
             Region: {
                 id: string;
                 is_active: boolean;
@@ -126,12 +119,19 @@ export declare class DoulaService {
                 longitude: string;
                 zoneManagerId: string | null;
             }[];
+            zoneManager: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                profile_image: string | null;
+                userId: string | null;
+            }[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             profile_image: string | null;
+            userId: string;
             regionId: string | null;
         };
     }>;

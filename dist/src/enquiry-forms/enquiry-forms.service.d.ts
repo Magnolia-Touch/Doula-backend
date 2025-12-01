@@ -10,32 +10,32 @@ export declare class EnquiryService {
     submitEnquiry(data: EnquiryFormDto): Promise<{
         message: string;
         enquiry: {
-            regionId: string;
-            slotId: string;
-            serviceId: string;
+            id: string;
             name: string;
             email: string;
             phone: string;
-            additionalNotes: string | null;
-            id: string;
             createdAt: Date;
             updatedAt: Date;
+            regionId: string;
+            serviceId: string;
+            additionalNotes: string | null;
+            slotId: string;
             clientId: string | null;
             availableSlotsForMeetingId: string | null;
         };
     }>;
     getAllEnquiries(page?: number, limit?: number): Promise<{
         data: {
-            regionId: string;
-            slotId: string;
-            serviceId: string;
+            id: string;
             name: string;
             email: string;
             phone: string;
-            additionalNotes: string | null;
-            id: string;
             createdAt: Date;
             updatedAt: Date;
+            regionId: string;
+            serviceId: string;
+            additionalNotes: string | null;
+            slotId: string;
             clientId: string | null;
             availableSlotsForMeetingId: string | null;
         }[];
@@ -51,46 +51,46 @@ export declare class EnquiryService {
     getEnquiryById(id: string): Promise<{
         region: {
             id: string;
-            pincode: string;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
             regionName: string;
+            pincode: string;
             district: string;
             state: string;
             country: string;
             latitude: string;
             longitude: string;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
             zoneManagerId: string | null;
         };
         service: {
-            description: string | null;
-            name: string;
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
         };
         slot: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
             startTime: Date;
             endTime: Date;
-            availabe: boolean;
             isBooked: boolean;
             dateId: string;
         };
     } & {
-        regionId: string;
-        slotId: string;
-        serviceId: string;
+        id: string;
         name: string;
         email: string;
         phone: string;
-        additionalNotes: string | null;
-        id: string;
         createdAt: Date;
         updatedAt: Date;
+        regionId: string;
+        serviceId: string;
+        additionalNotes: string | null;
+        slotId: string;
         clientId: string | null;
         availableSlotsForMeetingId: string | null;
     }>;
