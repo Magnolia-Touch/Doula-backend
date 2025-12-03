@@ -1,25 +1,27 @@
 import { IsArray, IsEmail, IsNumber, IsPhoneNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateDoulaDto {
-    @ApiProperty({ example: 'Jane Doe', description: 'Full name of the doula' })
     @IsString()
     name: string;
 
-    @ApiProperty({ example: 'jane@example.com' })
     @IsEmail()
     email: string;
 
-    @ApiProperty({ example: '+919876543210', description: 'Phone with country code' })
     @IsPhoneNumber()
     phone: string;
 
-    @ApiProperty({
-        example: [
-            '96efbdce-d7cb-43bb-8787-626c198be1a4',
-            '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
-        ],
-        description: 'List of region UUIDs that the doula will serve',
+    // regionIds comes as a JSON STRING → convert to array
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch {
+                return value.split(','); // fallback support
+            }
+        }
+        return value;
     })
     @IsArray()
     @IsString({ each: true })
@@ -34,14 +36,24 @@ export class CreateDoulaDto {
     @IsString()
     qualification: string;
 
+    // yoe comes as "4" → convert to number
+    @Transform(({ value }) => Number(value))
     @IsNumber()
     yoe: number;
 
-    @ApiProperty({
-        example: ["English", "Hindi", "Tamil"]
+    // languages also from string → convert to array
+    @Transform(({ value }) => {
+        if (!value) return [];
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch {
+                return value.split(','); // support comma separated
+            }
+        }
+        return value;
     })
     @IsArray()
     @IsString({ each: true })
     languages: string[];
 }
-

@@ -11,14 +11,26 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ServiceBookingService = void 0;
 const common_1 = require("@nestjs/common");
+const pagination_util_1 = require("../common/utility/pagination.util");
 const prisma_service_1 = require("../prisma/prisma.service");
 let ServiceBookingService = class ServiceBookingService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll() {
-        return this.prisma.serviceBooking.findMany({
+    async findAll(query) {
+        const page = query.page ? Number(query.page) : 1;
+        const limit = query.limit ? Number(query.limit) : 10;
+        const where = {};
+        if (query.status) {
+            where.status = query.status;
+        }
+        return (0, pagination_util_1.paginate)({
+            prismaModel: this.prisma.serviceBooking,
+            page,
+            limit,
+            where,
+            orderBy: { createdAt: 'desc' },
             include: {
                 DoulaProfile: true,
                 service: true,

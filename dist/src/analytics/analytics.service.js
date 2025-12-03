@@ -14,6 +14,8 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const client_1 = require("@prisma/client");
+const date_fns_1 = require("date-fns");
+const date_fns_2 = require("date-fns");
 let AnalyticsService = class AnalyticsService {
     prisma;
     constructor(prisma) {
@@ -86,14 +88,26 @@ let AnalyticsService = class AnalyticsService {
         };
     }
     async getBookingStats() {
-        const totalBookings = await this.prisma.serviceBooking.count();
+        const totalBookings = await this.prisma.serviceBooking.groupBy({
+            by: ['status'],
+            _count: {
+                status: true
+            }
+        });
         const bookings = await this.prisma.serviceBooking.findMany({
             select: { paymentDetails: true },
         });
         let totalRevenue = 0;
+        const FormattedCounts = {
+            ACTIVE: 0,
+            COMPLETED: 0,
+            CANCELED: 0
+        };
+        totalBookings.forEach((item) => {
+            FormattedCounts[item.status] = item._count.status;
+        });
         return {
-            totalBookings,
-            totalRevenue,
+            FormattedCounts
         };
     }
     async getMeetingstats() {
@@ -112,6 +126,55 @@ let AnalyticsService = class AnalyticsService {
             FormattedCounts[item.status] = item._count.status;
         });
         return FormattedCounts;
+    }
+    async getDailyActivity(startDate, endDate) {
+        let start;
+        let end;
+        if (startDate)
+            start = (0, date_fns_2.startOfDay)(new Date(startDate));
+        if (endDate)
+            end = (0, date_fns_2.endOfDay)(new Date(endDate));
+        const dateFilter = start && end ? { gte: start, lte: end }
+            : start ? { gte: start }
+                : end ? { lte: end }
+                    : undefined;
+        const bookings = await this.prisma.serviceBooking.findMany({
+            where: {
+                ...(dateFilter && { createdAt: dateFilter }),
+            },
+            select: { createdAt: true },
+        });
+        const meetings = await this.prisma.meetings.findMany({
+            where: {
+                ...(dateFilter && { createdAt: dateFilter }),
+            },
+            select: { createdAt: true },
+        });
+        const map = new Map();
+        bookings.forEach((b) => {
+            const date = (0, date_fns_1.format)(b.createdAt, 'yyyy-MM-dd');
+            if (!map.has(date))
+                map.set(date, { noOfBookings: 0, noOfMeetings: 0 });
+            map.get(date).noOfBookings++;
+        });
+        meetings.forEach((m) => {
+            const date = (0, date_fns_1.format)(m.createdAt, 'yyyy-MM-dd');
+            if (!map.has(date))
+                map.set(date, { noOfBookings: 0, noOfMeetings: 0 });
+            map.get(date).noOfMeetings++;
+        });
+        const result = [];
+        for (const [date, counts] of map.entries()) {
+            const weekday = (0, date_fns_1.format)(new Date(date), 'EEE');
+            result.push({
+                date,
+                weekday,
+                noOfBookings: counts.noOfBookings,
+                noOfMeetings: counts.noOfMeetings,
+            });
+        }
+        result.sort((a, b) => a.date.localeCompare(b.date));
+        return result;
     }
 };
 exports.AnalyticsService = AnalyticsService;

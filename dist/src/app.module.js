@@ -28,6 +28,8 @@ const service_pricing_module_1 = require("./service-pricing/service-pricing.modu
 const analytics_module_1 = require("./analytics/analytics.module");
 const testimonials_module_1 = require("./testimonials/testimonials.module");
 const service_booking_module_1 = require("./service-bookings/service-booking.module");
+const language_module_1 = require("./languages/language.module");
+const serve_static_1 = require("@nestjs/serve-static");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -45,11 +47,20 @@ exports.AppModule = AppModule = __decorate([
             regions_module_1.RegionModule,
             service_availability_module_1.DoulaServiceAvailabilityModule,
             services_module_1.ServicesModule,
+            language_module_1.LanguageModule,
             zone_manager_module_1.ZoneManagerModule,
             service_pricing_module_1.ServicePricingModule,
             analytics_module_1.AnalyticsModule,
             testimonials_module_1.TestimonialsModule,
+            language_module_1.LanguageModule,
             service_booking_module_1.ServiceBookingModule,
+            serve_static_1.ServeStaticModule.forRoot({
+                rootPath: (0, path_1.join)(process.cwd(), 'uploads'),
+                serveRoot: "/uploads",
+                serveStaticOptions: {
+                    index: false,
+                }
+            }),
             mailer_1.MailerModule.forRoot({
                 transport: {
                     host: 'smtp.gmail.com',

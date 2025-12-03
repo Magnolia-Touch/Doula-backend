@@ -58,9 +58,13 @@ export declare class MeetingsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            profile_image: string | null;
             userId: string;
             regionId: string | null;
+            profileImage: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
         } | null;
         Service: {
             id: string;

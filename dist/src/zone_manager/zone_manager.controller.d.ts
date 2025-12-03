@@ -4,7 +4,9 @@ import { RegionAssignmentCheckDto, UpdateZoneManagerRegionDto } from './dto/upda
 export declare class ZoneManagerController {
     private readonly service;
     constructor(service: ZoneManagerService);
-    create(dto: CreateZoneManagerDto): Promise<{
+    create(dto: CreateZoneManagerDto, files: {
+        profile_image?: Express.Multer.File[];
+    }): Promise<{
         message: string;
         data: {
             zonemanagerprofile: {

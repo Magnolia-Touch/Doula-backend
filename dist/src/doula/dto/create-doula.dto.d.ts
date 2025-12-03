@@ -3,4 +3,9 @@ export declare class CreateDoulaDto {
     email: string;
     phone: string;
     regionIds: string[];
+    description: string;
+    achievements: string;
+    qualification: string;
+    yoe: number;
+    languages: string[];
 }

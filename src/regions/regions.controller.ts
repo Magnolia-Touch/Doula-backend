@@ -24,8 +24,8 @@ import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
 export class RegionController {
     constructor(private readonly regionService: RegionService) { }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('ADMIN')
+    // @UseGuards(JwtAuthGuard, RolesGuard)
+    // @Roles('ADMIN')
     @ApiOperation({ summary: 'Create a region' })
     @ApiBody({ type: CreateRegionDto })
     @ApiResponse({

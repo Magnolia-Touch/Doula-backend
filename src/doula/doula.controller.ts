@@ -9,6 +9,10 @@ import {
     Param,
     Delete,
     Patch,
+    UseInterceptors,
+    UploadedFiles,
+    BadRequestException,
+    InternalServerErrorException,
 } from '@nestjs/common';
 import { DoulaService } from './doula.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
@@ -26,8 +30,34 @@ import {
     ApiQuery,
     ApiParam,
     ApiOkResponse,
+    ApiConsumes,
 } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+const ALLOWED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+function multerStorage() {
+    return diskStorage({
+        destination: (req, file, cb) => {
+            // ensure this folder exists (create on app init or manually)
+            cb(null, './uploads/doulas');
+        },
+        filename: (req, file, cb) => {
+            const safeName =
+                Date.now() + '-' + Math.round(Math.random() * 1e9) + extname(file.originalname);
+            cb(null, safeName);
+        },
+    });
+}
+
 
 @ApiTags('Doula')
 @ApiBearerAuth('bearer')
@@ -42,6 +72,20 @@ export class DoulaController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('ADMIN', 'ZONE_MANAGER')
     @Post()
+    @UseInterceptors(
+        FileFieldsInterceptor(
+            [{ name: 'profile_image', maxCount: 1 }],
+            {
+                storage: multerStorage(),
+                limits: { fileSize: MAX_FILE_SIZE },
+                fileFilter: (req, file, cb) => {
+                    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
+                    else cb(new BadRequestException('Unsupported file type'), false);
+                },
+            },
+        ),
+    )
+    @ApiConsumes('multipart/form-data')
     @ApiOperation({ summary: 'Create a new Doula' })
     @ApiBody({ type: CreateDoulaDto })
     @ApiResponse({
@@ -61,8 +105,49 @@ export class DoulaController {
             }
         }
     })
-    async create(@Body() dto: CreateDoulaDto, @Req() req) {
-        return this.service.create(dto, req.user.id);
+    async create(
+        @Body() dto: CreateDoulaDto,
+        @Req() req,
+        @UploadedFiles()
+        files: {
+            profile_image?: Express.Multer.File[];
+        },
+    ) {
+        // validate file presence/size etc (Multer already limits size)
+        const profileImage = files?.profile_image?.[0];
+
+        let profileImageUrl: string | undefined;
+
+        if (profileImage) {
+            // double-check mimetype and size (extra safety)
+            if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
+                // remove saved file (optional cleanup) and throw
+                throw new BadRequestException('Unsupported image type.');
+            }
+            if (profileImage.size > MAX_FILE_SIZE) {
+                throw new BadRequestException('Profile image exceeds maximum size of 5 MB.');
+            }
+
+            // Construct a URL or a path to store in DB. Two options:
+            // 1) store relative path and serve with ServeStaticModule
+            // 2) store full public URL if hosted
+            // Here we store a relative path (uploads/doulas/<filename>)
+            profileImageUrl = `uploads/doulas/${profileImage.filename}`;
+        }
+
+        try {
+            const result = await this.service.create(dto, req.user.id, profileImageUrl);
+            return {
+                success: true,
+                message: 'Doula created successfully',
+                data: result.data || result,
+            };
+        } catch (err) {
+            // optionally remove uploaded file on failure (cleanup)
+            // fs.unlinkSync(profileImage.path) // careful with sync/async and checks
+            throw new InternalServerErrorException(err.message || 'Failed to create doula');
+        }
+
     }
 
     // GET LIST

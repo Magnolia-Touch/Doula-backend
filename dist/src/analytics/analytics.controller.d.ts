@@ -47,12 +47,21 @@ export declare class AnalyticsController {
         admins: number;
     }>;
     getStats(): Promise<{
-        totalBookings: number;
-        totalRevenue: number;
+        FormattedCounts: {
+            ACTIVE: number;
+            COMPLETED: number;
+            CANCELED: number;
+        };
     }>;
     getMeetigStats(): Promise<{
         SCHEDULED: number;
         COMPLETED: number;
         CANCELED: number;
     }>;
+    getDailyActivity(startDate?: string, endDate?: string): Promise<{
+        date: string;
+        weekday: string;
+        noOfBookings: number;
+        noOfMeetings: number;
+    }[]>;
 }

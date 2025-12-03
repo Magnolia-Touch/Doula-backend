@@ -12,10 +12,11 @@ export class ZoneManagerService {
     constructor(private prisma: PrismaService) { }
 
     // Create new Zone Manager
-    async create(dto: CreateZoneManagerDto) {
+    async create(dto: CreateZoneManagerDto, profileImageUrl?: string) {
         const existingUser = await this.prisma.user.findUnique({
             where: { email: dto.email },
         });
+        console.log("regionIds", dto.regionIds)
         const regions = await this.prisma.region.findMany({
             where: { id: { in: dto.regionIds } },
         })
@@ -36,7 +37,8 @@ export class ZoneManagerService {
                     create: {
                         managingRegion: {
                             connect: dto.regionIds.map((id) => ({ id }))
-                        }
+                        },
+                        profile_image: profileImageUrl ?? null,
                     },
                 },
             },

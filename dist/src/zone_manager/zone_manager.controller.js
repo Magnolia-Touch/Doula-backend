@@ -22,13 +22,45 @@ const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
 const update_zone_manager_dto_1 = require("./dto/update-zone-manager.dto");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
+const path_1 = require("path");
+const ALLOWED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+function multerStorage() {
+    return (0, multer_1.diskStorage)({
+        destination: (req, file, cb) => {
+            cb(null, './uploads/manager');
+        },
+        filename: (req, file, cb) => {
+            const safeName = Date.now() + '-' + Math.round(Math.random() * 1e9) + (0, path_1.extname)(file.originalname);
+            cb(null, safeName);
+        },
+    });
+}
 let ZoneManagerController = class ZoneManagerController {
     service;
     constructor(service) {
         this.service = service;
     }
-    create(dto) {
-        return this.service.create(dto);
+    create(dto, files) {
+        const profileImage = files?.profile_image?.[0];
+        let profileImageUrl;
+        if (profileImage) {
+            if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
+                throw new common_1.BadRequestException('Unsupported image type.');
+            }
+            if (profileImage.size > MAX_FILE_SIZE) {
+                throw new common_1.BadRequestException('Profile image exceeds maximum size of 5 MB.');
+            }
+            profileImageUrl = `uploads/manager/${profileImage.filename}`;
+        }
+        return this.service.create(dto, profileImageUrl);
     }
     getZoneManagers(page = 1, limit = 3, search) {
         return this.service.get(Number(page), Number(limit), search);
@@ -51,13 +83,24 @@ let ZoneManagerController = class ZoneManagerController {
 };
 exports.ZoneManagerController = ZoneManagerController;
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
     (0, common_1.Post)(),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([{ name: 'profile_image', maxCount: 1 }], {
+        storage: multerStorage(),
+        limits: { fileSize: MAX_FILE_SIZE },
+        fileFilter: (req, file, cb) => {
+            if (ALLOWED_IMAGE_TYPES.includes(file.mimetype))
+                cb(null, true);
+            else
+                cb(new common_1.BadRequestException('Unsupported file type'), false);
+        },
+    })),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, swagger_1.ApiOperation)({ summary: 'Create Zone Manager' }),
+    (0, swagger_1.ApiBody)({ type: create_zone_manager_dto_1.CreateZoneManagerDto }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_zone_manager_dto_1.CreateZoneManagerDto]),
+    __metadata("design:paramtypes", [create_zone_manager_dto_1.CreateZoneManagerDto, Object]),
     __metadata("design:returntype", void 0)
 ], ZoneManagerController.prototype, "create", null);
 __decorate([

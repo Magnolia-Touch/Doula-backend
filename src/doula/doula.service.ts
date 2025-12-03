@@ -13,7 +13,7 @@ export class DoulaService {
 
     // Create new Doula
     //if admin is creating doula, zone manager of regions are added to doulas profile.
-    async create(dto: CreateDoulaDto, userId: string) {
+    async create(dto: CreateDoulaDto, userId: string, profileImageUrl?: string) {
         // Check if user already exists with this email
         checkUserExistorNot(this.prisma, dto.email);
 
@@ -21,7 +21,7 @@ export class DoulaService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId }
         });
-
+        console.log(dto.regionIds)
         // Validate region IDs
         const regions = await this.prisma.region.findMany({
             where: { id: { in: dto.regionIds } },
@@ -53,12 +53,13 @@ export class DoulaService {
                             zoneManager: {
                                 connect: { id: manager?.id }
                             },
+                            profileImage: profileImageUrl ?? null,
                             description: dto.description,
                             qualification: dto.qualification,
                             achievements: dto.achievements,
                             yoe: dto.yoe,
                             languages: {
-                                connect: dto.languages.map(lang => ({ name: lang })),
+                                connect: dto.languages.map(lang => ({ id: lang })),
                             }
                         }
                     }
@@ -67,6 +68,7 @@ export class DoulaService {
                     doulaProfile: {
                         include: {
                             zoneManager: true,
+                            languages: true
                         }
                     }
                 }
@@ -123,6 +125,7 @@ export class DoulaService {
                             zoneManager: {
                                 connect: zoneManagerIds.map(id => ({ id }))
                             },
+                            profileImage: profileImageUrl ?? null,
                             description: dto.description,
                             qualification: dto.qualification,
                             achievements: dto.achievements,
@@ -137,6 +140,7 @@ export class DoulaService {
                     doulaProfile: {
                         include: {
                             zoneManager: true,
+                            languages: true
                         }
                     }
                 }
