@@ -22,8 +22,12 @@ let ServiceBookingController = class ServiceBookingController {
     constructor(bookingService) {
         this.bookingService = bookingService;
     }
-    getAllBookings() {
-        return this.bookingService.findAll();
+    async findAll(query) {
+        return this.bookingService.findAll({
+            page: query.page ? Number(query.page) : undefined,
+            limit: query.limit ? Number(query.limit) : undefined,
+            status: query.status,
+        });
     }
     getBookingById(id) {
         return this.bookingService.findById(id);
@@ -54,10 +58,11 @@ __decorate([
         },
     }),
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], ServiceBookingController.prototype, "getAllBookings", null);
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ServiceBookingController.prototype, "findAll", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get a booking by ID' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Booking UUID' }),

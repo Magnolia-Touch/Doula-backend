@@ -41,6 +41,9 @@ let AnalyticsController = class AnalyticsController {
     async getMeetigStats() {
         return this.service.getMeetingstats();
     }
+    async getDailyActivity(startDate, endDate) {
+        return this.service.getDailyActivity(startDate, endDate);
+    }
 };
 exports.AnalyticsController = AnalyticsController;
 __decorate([
@@ -155,14 +158,9 @@ __decorate([
                 success: true,
                 message: 'Booking stats fetched',
                 data: {
-                    totalBookings: 320,
-                    bookingsThisMonth: 24,
-                    completedBookings: 290,
-                    cancelledBookings: 30,
-                    bookingsByService: {
-                        'prenatal-care': 120,
-                        'postnatal-care': 200
-                    }
+                    ACTIVE: 64,
+                    COMPLETED: 100,
+                    CANCELED: 4
                 },
             },
         },
@@ -194,6 +192,83 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], AnalyticsController.prototype, "getMeetigStats", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get Weekly / Daily Activity Analytics' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'startDate',
+        required: false,
+        type: String,
+        description: 'Start date in YYYY-MM-DD format',
+        example: '2025-11-01',
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'endDate',
+        required: false,
+        type: String,
+        description: 'End date in YYYY-MM-DD format',
+        example: '2025-11-07',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Daily activity statistics fetched successfully',
+        schema: {
+            example: {
+                success: true,
+                message: 'Weekly activity fetched',
+                data: [
+                    {
+                        date: '2025-11-01',
+                        weekday: 'Sat',
+                        noOfBookings: 2,
+                        noOfMeetings: 1,
+                    },
+                    {
+                        date: '2025-11-02',
+                        weekday: 'Sun',
+                        noOfBookings: 0,
+                        noOfMeetings: 3,
+                    },
+                    {
+                        date: '2025-11-03',
+                        weekday: 'Mon',
+                        noOfBookings: 4,
+                        noOfMeetings: 2,
+                    },
+                    {
+                        date: '2025-11-04',
+                        weekday: 'Tue',
+                        noOfBookings: 3,
+                        noOfMeetings: 4,
+                    },
+                    {
+                        date: '2025-11-05',
+                        weekday: 'Wed',
+                        noOfBookings: 5,
+                        noOfMeetings: 6,
+                    },
+                    {
+                        date: '2025-11-06',
+                        weekday: 'Thu',
+                        noOfBookings: 7,
+                        noOfMeetings: 5,
+                    },
+                    {
+                        date: '2025-11-07',
+                        weekday: 'Fri',
+                        noOfBookings: 6,
+                        noOfMeetings: 8,
+                    },
+                ],
+            },
+        },
+    }),
+    (0, common_1.Get)('daily-activity'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "getDailyActivity", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('Analytics'),
     (0, common_1.Controller)({

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+// import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ZoneManagerModule } from './zone_manager/zone_manager.module';
@@ -20,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ServiceBookingModule } from './service-bookings/service-booking.module';
 import { LanguageModule } from './languages/language.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [ZoneManagerModule,
@@ -34,12 +36,21 @@ import { LanguageModule } from './languages/language.module';
     RegionModule,
     DoulaServiceAvailabilityModule,
     ServicesModule,
+    LanguageModule,
     ZoneManagerModule,
     ServicePricingModule,
     AnalyticsModule,
     TestimonialsModule,
     LanguageModule,
     ServiceBookingModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: "/uploads",
+      serveStaticOptions: {
+        index: false,
+      }
+    }),
+
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',       // your SMTP host

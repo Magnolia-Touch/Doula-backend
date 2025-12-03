@@ -22,14 +22,56 @@ const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const swagger_1 = require("@nestjs/swagger");
+const multer_1 = require("multer");
+const path_1 = require("path");
 const swagger_response_dto_1 = require("../common/dto/swagger-response.dto");
+const platform_express_1 = require("@nestjs/platform-express");
+const ALLOWED_IMAGE_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+function multerStorage() {
+    return (0, multer_1.diskStorage)({
+        destination: (req, file, cb) => {
+            cb(null, './uploads/doulas');
+        },
+        filename: (req, file, cb) => {
+            const safeName = Date.now() + '-' + Math.round(Math.random() * 1e9) + (0, path_1.extname)(file.originalname);
+            cb(null, safeName);
+        },
+    });
+}
 let DoulaController = class DoulaController {
     service;
     constructor(service) {
         this.service = service;
     }
-    async create(dto, req) {
-        return this.service.create(dto, req.user.id);
+    async create(dto, req, files) {
+        const profileImage = files?.profile_image?.[0];
+        let profileImageUrl;
+        if (profileImage) {
+            if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
+                throw new common_1.BadRequestException('Unsupported image type.');
+            }
+            if (profileImage.size > MAX_FILE_SIZE) {
+                throw new common_1.BadRequestException('Profile image exceeds maximum size of 5 MB.');
+            }
+            profileImageUrl = `uploads/doulas/${profileImage.filename}`;
+        }
+        try {
+            const result = await this.service.create(dto, req.user.id, profileImageUrl);
+            return {
+                success: true,
+                message: 'Doula created successfully',
+                data: result.data || result,
+            };
+        }
+        catch (err) {
+            throw new common_1.InternalServerErrorException(err.message || 'Failed to create doula');
+        }
     }
     async get(page = 1, limit = 10, search) {
         return this.service.get(Number(page), Number(limit), search);
@@ -52,6 +94,17 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('ADMIN', 'ZONE_MANAGER'),
     (0, common_1.Post)(),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([{ name: 'profile_image', maxCount: 1 }], {
+        storage: multerStorage(),
+        limits: { fileSize: MAX_FILE_SIZE },
+        fileFilter: (req, file, cb) => {
+            if (ALLOWED_IMAGE_TYPES.includes(file.mimetype))
+                cb(null, true);
+            else
+                cb(new common_1.BadRequestException('Unsupported file type'), false);
+        },
+    })),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, swagger_1.ApiOperation)({ summary: 'Create a new Doula' }),
     (0, swagger_1.ApiBody)({ type: create_doula_dto_1.CreateDoulaDto }),
     (0, swagger_1.ApiResponse)({
@@ -73,19 +126,37 @@ __decorate([
     }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_doula_dto_1.CreateDoulaDto, Object]),
+    __metadata("design:paramtypes", [create_doula_dto_1.CreateDoulaDto, Object, Object]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all Doulas with pagination & search' }),
-    (0, swagger_1.ApiQuery)({ name: 'page', required: false, type: Number }),
-    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, type: Number }),
-    (0, swagger_1.ApiQuery)({ name: 'search', required: false, type: String }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        type: swagger_response_dto_1.SwaggerResponseDto,
+    (0, swagger_1.ApiOperation)({ summary: 'Get all doulas with pagination & optional search' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'page',
+        required: false,
+        type: Number,
+        description: 'Page number for pagination (default: 1)',
+        example: 1,
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'limit',
+        required: false,
+        type: Number,
+        description: 'Number of items per page (default: 10)',
+        example: 10,
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'search',
+        required: false,
+        type: String,
+        description: 'Search by doula name or email',
+        example: 'Jane',
+    }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Returns a paginated list of doulas',
         schema: {
             example: {
                 success: true,

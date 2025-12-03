@@ -5,10 +5,17 @@ import { UpdateDoulaStatusDto } from './dto/update-doula-status.dto';
 export declare class DoulaController {
     private readonly service;
     constructor(service: DoulaService);
-    create(dto: CreateDoulaDto, req: any): Promise<{
+    create(dto: CreateDoulaDto, req: any, files: {
+        profile_image?: Express.Multer.File[];
+    }): Promise<{
+        success: boolean;
         message: string;
         data: {
             doulaProfile: ({
+                languages: {
+                    id: string;
+                    name: string;
+                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
@@ -20,9 +27,13 @@ export declare class DoulaController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string;
                 regionId: string | null;
+                profileImage: string | null;
+                description: string | null;
+                achievements: string | null;
+                qualification: string | null;
+                yoe: number | null;
             }) | null;
         } & {
             id: string;
@@ -36,7 +47,7 @@ export declare class DoulaController {
             createdAt: Date;
             updatedAt: Date;
         };
-    } | undefined>;
+    }>;
     get(page?: number, limit?: number, search?: string): Promise<{
         data: {
             id: string;
@@ -63,14 +74,23 @@ export declare class DoulaController {
     getById(id: string): Promise<{
         message: string;
         data: {
-            doulaProfile: {
+            doulaProfile: ({
+                languages: {
+                    id: string;
+                    name: string;
+                }[];
+            } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string;
                 regionId: string | null;
-            } | null;
+                profileImage: string | null;
+                description: string | null;
+                achievements: string | null;
+                qualification: string | null;
+                yoe: number | null;
+            }) | null;
         } & {
             id: string;
             name: string;
@@ -131,9 +151,13 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            profile_image: string | null;
             userId: string;
             regionId: string | null;
+            profileImage: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
         };
     }>;
 }

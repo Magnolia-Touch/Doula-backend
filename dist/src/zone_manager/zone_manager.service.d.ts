@@ -4,7 +4,7 @@ import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 export declare class ZoneManagerService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(dto: CreateZoneManagerDto): Promise<{
+    create(dto: CreateZoneManagerDto, profileImageUrl?: string): Promise<{
         message: string;
         data: {
             zonemanagerprofile: {

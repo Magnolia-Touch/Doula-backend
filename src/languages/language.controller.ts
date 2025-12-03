@@ -3,7 +3,10 @@ import { LanguageService } from "./language.service";
 import { CreateLanguageDto } from "./dto/create-language.dto";
 import { UpdateLanguageDto } from "./dto/update-language.dto";
 
-@Controller("languages")
+@Controller({
+    path: 'languages',
+    version: '1',
+})
 export class LanguageController {
     constructor(private readonly service: LanguageService) { }
 

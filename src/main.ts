@@ -5,9 +5,18 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { VersioningType } from '@nestjs/common';
-
+import { existsSync, mkdirSync } from 'fs';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // const UPLOAD_DIR = './uploads/doulas';
+  // if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
+  // ✅ Enable CORS
+  app.enableCors({
+    origin: '*', // or use '*' for all origins (not recommended for production)
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   // Optional: set a global prefix (nice for staging/prod)
   app.setGlobalPrefix('backend');
