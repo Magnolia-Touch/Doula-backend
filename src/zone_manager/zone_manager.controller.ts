@@ -55,8 +55,8 @@ function multerStorage() {
 export class ZoneManagerController {
     constructor(private readonly service: ZoneManagerService) { }
 
-    // @UseGuards(JwtAuthGuard, RolesGuard)
-    // @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ADMIN)
     @Post()
     @UseInterceptors(
         FileFieldsInterceptor(

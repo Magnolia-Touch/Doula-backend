@@ -381,12 +381,14 @@ model ServicePricing {
 }
 
 model Testimonials {
-  id             String @id @default(uuid())
+  id             String   @id @default(uuid())
   doulaProfileId String
   serviceId      String
   ratings        Int
   reviews        String
   clientId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id])
   ServicePricing ServicePricing @relation(fields: [serviceId], references: [id])

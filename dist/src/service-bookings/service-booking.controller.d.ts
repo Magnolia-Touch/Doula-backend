@@ -14,10 +14,10 @@ export declare class ServiceBookingController {
             regionId: string;
             doulaProfileId: string;
             date: Date;
-            slotId: string;
-            clientId: string;
             status: import("@prisma/client").$Enums.BookingStatus;
+            slotId: string;
             servicePricingId: string;
+            clientId: string;
             slotTimeId: string | null;
             paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
@@ -45,13 +45,13 @@ export declare class ServiceBookingController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             regionId: string | null;
             profileImage: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
+            userId: string;
         };
         region: {
             id: string;
@@ -89,8 +89,8 @@ export declare class ServiceBookingController {
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
-            userId: string;
             address: string | null;
+            userId: string;
         };
     } & {
         id: string;
@@ -99,10 +99,10 @@ export declare class ServiceBookingController {
         regionId: string;
         doulaProfileId: string;
         date: Date;
-        slotId: string;
-        clientId: string;
         status: import("@prisma/client").$Enums.BookingStatus;
+        slotId: string;
         servicePricingId: string;
+        clientId: string;
         slotTimeId: string | null;
         paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
     }>;

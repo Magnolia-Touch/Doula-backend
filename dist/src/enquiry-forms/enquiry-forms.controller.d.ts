@@ -14,10 +14,10 @@ export declare class EnquiryController {
             updatedAt: Date;
             regionId: string;
             serviceId: string;
-            additionalNotes: string | null;
             slotId: string;
-            clientId: string | null;
             availableSlotsForMeetingId: string | null;
+            clientId: string | null;
+            additionalNotes: string | null;
         };
     }>;
     getAllEnquiries(page?: string, limit?: string): Promise<{
@@ -30,10 +30,10 @@ export declare class EnquiryController {
             updatedAt: Date;
             regionId: string;
             serviceId: string;
-            additionalNotes: string | null;
             slotId: string;
-            clientId: string | null;
             availableSlotsForMeetingId: string | null;
+            clientId: string | null;
+            additionalNotes: string | null;
         }[];
         meta: {
             total: number;
@@ -85,10 +85,10 @@ export declare class EnquiryController {
         updatedAt: Date;
         regionId: string;
         serviceId: string;
-        additionalNotes: string | null;
         slotId: string;
-        clientId: string | null;
         availableSlotsForMeetingId: string | null;
+        clientId: string | null;
+        additionalNotes: string | null;
     }>;
     deleteEnquiry(id: string): Promise<{
         message: string;

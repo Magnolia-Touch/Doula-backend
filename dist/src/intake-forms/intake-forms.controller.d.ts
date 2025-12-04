@@ -11,13 +11,13 @@ export declare class IntakeFormController {
             phone: string | null;
             createdAt: Date;
             updatedAt: Date;
-            regionId: string;
             address: string;
+            regionId: string;
             doulaProfileId: string;
             date: Date;
             slotId: string;
-            clientId: string;
             servicePricingId: string;
+            clientId: string;
             slotTimeId: string | null;
         };
         booking: {
@@ -27,10 +27,10 @@ export declare class IntakeFormController {
             regionId: string;
             doulaProfileId: string;
             date: Date;
-            slotId: string;
-            clientId: string;
             status: import("@prisma/client").$Enums.BookingStatus;
+            slotId: string;
             servicePricingId: string;
+            clientId: string;
             slotTimeId: string | null;
             paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
         };
@@ -43,13 +43,13 @@ export declare class IntakeFormController {
             phone: string | null;
             createdAt: Date;
             updatedAt: Date;
-            regionId: string;
             address: string;
+            regionId: string;
             doulaProfileId: string;
             date: Date;
             slotId: string;
-            clientId: string;
             servicePricingId: string;
+            clientId: string;
             slotTimeId: string | null;
         }[];
         meta: {
@@ -67,20 +67,20 @@ export declare class IntakeFormController {
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
-            userId: string;
             address: string | null;
+            userId: string;
         };
         DoulaProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             regionId: string | null;
             profileImage: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
+            userId: string;
         };
         region: {
             id: string;
@@ -121,13 +121,13 @@ export declare class IntakeFormController {
         phone: string | null;
         createdAt: Date;
         updatedAt: Date;
-        regionId: string;
         address: string;
+        regionId: string;
         doulaProfileId: string;
         date: Date;
         slotId: string;
-        clientId: string;
         servicePricingId: string;
+        clientId: string;
         slotTimeId: string | null;
     }>;
     delete(id: string): Promise<{

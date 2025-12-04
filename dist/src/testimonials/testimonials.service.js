@@ -36,21 +36,58 @@ let TestimonialsService = class TestimonialsService {
             where.doulaProfileId = doulaId;
         if (serviceId)
             where.servicePricingId = serviceId;
-        return (0, pagination_util_1.paginate)({
+        const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.testimonials,
             page,
             limit,
             where,
             include: {
-                DoulaProfile: true,
-                ServicePricing: true,
+                DoulaProfile: {
+                    include: {
+                        user: { select: { name: true } }
+                    }
+                },
+                ServicePricing: {
+                    include: {
+                        service: { select: { name: true } }
+                    }
+                },
+                client: {
+                    include: {
+                        user: { select: { name: true } }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' },
         });
+        const formatted = result.data.map((item) => ({
+            id: item.id,
+            ratings: item.ratings,
+            reviews: item.reviews,
+            doulaName: item.DoulaProfile?.user?.name,
+            serviceName: item.ServicePricing?.service?.name,
+            clientName: item.client?.user?.name,
+            createdAt: item.createdAt,
+        }));
+        return {
+            data: formatted,
+            meta: result.meta,
+        };
     }
     async findOne(id, userId) {
         const testimonial = await this.prisma.testimonials.findUnique({
             where: { id },
+            include: {
+                DoulaProfile: {
+                    include: { user: { select: { name: true } } }
+                },
+                ServicePricing: {
+                    include: { service: { select: { name: true } } }
+                },
+                client: {
+                    include: { user: { select: { name: true } } }
+                }
+            }
         });
         if (!testimonial) {
             throw new common_1.NotFoundException('Testimonial not found');
@@ -58,7 +95,15 @@ let TestimonialsService = class TestimonialsService {
         if (userId && testimonial.clientId !== userId) {
             throw new common_1.ForbiddenException('You are not allowed to modify this testimonial');
         }
-        return testimonial;
+        return {
+            id: testimonial.id,
+            ratings: testimonial.ratings,
+            reviews: testimonial.reviews,
+            doulaName: testimonial.DoulaProfile?.user?.name,
+            serviceName: testimonial.ServicePricing?.service?.name,
+            clientName: testimonial.client?.user?.name,
+            createdAt: testimonial.createdAt,
+        };
     }
     async update(id, dto, userId) {
         await this.findOne(id, userId);
@@ -71,6 +116,59 @@ let TestimonialsService = class TestimonialsService {
         await this.findOne(id, userId);
         return this.prisma.testimonials.delete({
             where: { id },
+        });
+    }
+    async getZoneManagerTestimonials(zoneManagerId, page = 1, limit = 10) {
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId: zoneManagerId },
+            select: { id: true }
+        });
+        if (!zoneManager)
+            return [];
+        const doulas = await this.prisma.doulaProfile.findMany({
+            where: {
+                zoneManager: {
+                    some: {
+                        id: zoneManager.id
+                    }
+                }
+            },
+            select: { id: true }
+        });
+        const doulaIds = doulas.map(d => d.id);
+        if (doulaIds.length === 0)
+            return [];
+        return await (0, pagination_util_1.paginate)({
+            prismaModel: this.prisma.testimonials,
+            page,
+            limit,
+            where: {
+                doulaProfileId: { in: doulaIds }
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                DoulaProfile: {
+                    include: {
+                        user: {
+                            select: { name: true }
+                        }
+                    }
+                },
+                ServicePricing: {
+                    include: {
+                        service: {
+                            select: { name: true }
+                        }
+                    }
+                },
+                client: {
+                    include: {
+                        user: {
+                            select: { name: true }
+                        }
+                    }
+                }
+            }
         });
     }
 };
