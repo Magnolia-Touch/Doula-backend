@@ -7,6 +7,8 @@ export declare class TestimonialsController {
     constructor(service: TestimonialsService);
     create(dto: CreateTestimonialDto, req: any): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         serviceId: string;
         doulaProfileId: string;
         clientId: string;
@@ -15,7 +17,57 @@ export declare class TestimonialsController {
     }>;
     findAll(query: FilterTestimonialsDto): Promise<{
         data: {
+            id: any;
+            ratings: any;
+            reviews: any;
+            doulaName: any;
+            serviceName: any;
+            clientName: any;
+            createdAt: any;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    findOne(id: string): Promise<{
+        id: string;
+        ratings: number;
+        reviews: string;
+        doulaName: string;
+        serviceName: string;
+        clientName: string;
+        createdAt: Date;
+    }>;
+    update(id: string, dto: UpdateTestimonialDto, req: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        serviceId: string;
+        doulaProfileId: string;
+        clientId: string;
+        ratings: number;
+        reviews: string;
+    }>;
+    remove(id: string, req: any): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        serviceId: string;
+        doulaProfileId: string;
+        clientId: string;
+        ratings: number;
+        reviews: string;
+    }>;
+    getTestimonials(req: any, page?: number, limit?: number): Promise<never[] | {
+        data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             serviceId: string;
             doulaProfileId: string;
             clientId: string;
@@ -30,29 +82,5 @@ export declare class TestimonialsController {
             hasNextPage: boolean;
             hasPrevPage: boolean;
         };
-    }>;
-    findOne(id: string): Promise<{
-        id: string;
-        serviceId: string;
-        doulaProfileId: string;
-        clientId: string;
-        ratings: number;
-        reviews: string;
-    }>;
-    update(id: string, dto: UpdateTestimonialDto, req: any): Promise<{
-        id: string;
-        serviceId: string;
-        doulaProfileId: string;
-        clientId: string;
-        ratings: number;
-        reviews: string;
-    }>;
-    remove(id: string, req: any): Promise<{
-        id: string;
-        serviceId: string;
-        doulaProfileId: string;
-        clientId: string;
-        ratings: number;
-        reviews: string;
     }>;
 }

@@ -43,6 +43,10 @@ let TestimonialsController = class TestimonialsController {
     remove(id, req) {
         return this.service.remove(id, req.user.id);
     }
+    async getTestimonials(req, page = 1, limit = 10) {
+        const zoneManagerId = req.user.id;
+        return this.service.getZoneManagerTestimonials(zoneManagerId, Number(page), Number(limit));
+    }
 };
 exports.TestimonialsController = TestimonialsController;
 __decorate([
@@ -111,6 +115,17 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], TestimonialsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('recent/testimonials'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], TestimonialsController.prototype, "getTestimonials", null);
 exports.TestimonialsController = TestimonialsController = __decorate([
     (0, swagger_1.ApiTags)('Testimonials'),
     (0, swagger_1.ApiBearerAuth)(),

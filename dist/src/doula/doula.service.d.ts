@@ -23,13 +23,13 @@ export declare class DoulaService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 regionId: string | null;
                 profileImage: string | null;
                 description: string | null;
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
+                userId: string;
             }) | null;
         } & {
             id: string;
@@ -79,13 +79,13 @@ export declare class DoulaService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 regionId: string | null;
                 profileImage: string | null;
                 description: string | null;
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
+                userId: string;
             }) | null;
         } & {
             id: string;
@@ -147,13 +147,13 @@ export declare class DoulaService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             regionId: string | null;
             profileImage: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
+            userId: string;
         };
     }>;
 }

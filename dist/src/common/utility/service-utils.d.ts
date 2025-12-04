@@ -35,13 +35,13 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    userId: string;
     regionId: string | null;
     profileImage: string | null;
     description: string | null;
     achievements: string | null;
     qualification: string | null;
     yoe: number | null;
+    userId: string;
 }>;
 export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;
 export declare function findUserOrThrowwithId(prisma: PrismaService, userId: string): Promise<{

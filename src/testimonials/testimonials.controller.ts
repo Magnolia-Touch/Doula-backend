@@ -69,4 +69,12 @@ export class TestimonialsController {
     remove(@Param('id') id: string, @Req() req) {
         return this.service.remove(id, req.user.id);
     }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('recent/testimonials')
+    async getTestimonials(@Req() req, @Query('page') page = 1, @Query('limit') limit = 10) {
+        const zoneManagerId = req.user.id; // authenticated user ID
+        return this.service.getZoneManagerTestimonials(zoneManagerId, Number(page), Number(limit));
+    }
 }
