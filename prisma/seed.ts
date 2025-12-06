@@ -243,9 +243,9 @@ async function main() {
         data: { remarks: "Zone manager feedback", zoneManagerId: zoneManager.id }
     });
 
-    await prisma.notes.create({
-        data: { remarks: "Admin remark", adminId: adminUser.id }
-    });
+    // await prisma.notes.create({
+    //     data: { remarks: "Admin remark", adminId: adminUser.id }
+    // });
 
     console.log("🌱 Seed Done!");
 }
