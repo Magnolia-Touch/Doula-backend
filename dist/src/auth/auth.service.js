@@ -70,14 +70,6 @@ let AuthService = class AuthService {
                     otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
                 }
             });
-            await this.mailerService.sendMail({
-                to: dto.email,
-                subject: 'Login OTP',
-                template: 'authentication',
-                context: {
-                    otp,
-                },
-            });
             return { message: "Otp Sent Succesfully", data: otp };
         }
         else {

@@ -10,14 +10,18 @@ export declare class EnquiryController {
             name: string;
             email: string;
             phone: string;
+            additionalNotes: string | null;
+            startDate: string;
+            endDate: string;
+            VisitFrequency: number;
+            TimeSlots: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
-            serviceId: string;
             slotId: string;
-            availableSlotsForMeetingId: string | null;
+            serviceId: string;
             clientId: string | null;
-            additionalNotes: string | null;
+            availableSlotsForMeetingId: string | null;
         };
     }>;
     getAllEnquiries(page?: string, limit?: string): Promise<{
@@ -26,14 +30,18 @@ export declare class EnquiryController {
             name: string;
             email: string;
             phone: string;
+            additionalNotes: string | null;
+            startDate: string;
+            endDate: string;
+            VisitFrequency: number;
+            TimeSlots: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
-            serviceId: string;
             slotId: string;
-            availableSlotsForMeetingId: string | null;
+            serviceId: string;
             clientId: string | null;
-            additionalNotes: string | null;
+            availableSlotsForMeetingId: string | null;
         }[];
         meta: {
             total: number;
@@ -47,7 +55,6 @@ export declare class EnquiryController {
     getEnquiryById(id: string): Promise<{
         region: {
             id: string;
-            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
             regionName: string;
@@ -57,7 +64,18 @@ export declare class EnquiryController {
             country: string;
             latitude: string;
             longitude: string;
+            is_active: boolean;
             zoneManagerId: string | null;
+        };
+        slot: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            startTime: Date;
+            endTime: Date;
+            availabe: boolean;
+            isBooked: boolean;
+            dateId: string;
         };
         service: {
             id: string;
@@ -66,29 +84,23 @@ export declare class EnquiryController {
             updatedAt: Date;
             description: string | null;
         };
-        slot: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            availabe: boolean;
-            startTime: Date;
-            endTime: Date;
-            isBooked: boolean;
-            dateId: string;
-        };
     } & {
         id: string;
         name: string;
         email: string;
         phone: string;
+        additionalNotes: string | null;
+        startDate: string;
+        endDate: string;
+        VisitFrequency: number;
+        TimeSlots: string;
         createdAt: Date;
         updatedAt: Date;
         regionId: string;
-        serviceId: string;
         slotId: string;
-        availableSlotsForMeetingId: string | null;
+        serviceId: string;
         clientId: string | null;
-        additionalNotes: string | null;
+        availableSlotsForMeetingId: string | null;
     }>;
     deleteEnquiry(id: string): Promise<{
         message: string;

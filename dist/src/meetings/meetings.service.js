@@ -339,6 +339,7 @@ let MeetingsService = class MeetingsService {
         };
     }
     async doulasMeetingSchedule(dto, user) {
+        console.log(user);
         if (user.role !== client_1.Role.ZONE_MANAGER) {
             throw new common_1.ForbiddenException("Only Zone Manager can schedule doula meetings");
         }
@@ -349,13 +350,16 @@ let MeetingsService = class MeetingsService {
             throw new common_1.ForbiddenException("Zone Manager profile not found");
         }
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
-            where: { userId: dto.doulaId },
+            where: { id: dto.doulaId },
         });
-        const doulausertble = await this.prisma.user.findUnique({
-            where: { id: doulaProfile?.id }
-        });
-        if (!doulaProfile || !doulausertble) {
+        if (!doulaProfile) {
             throw new common_1.NotFoundException("Doula profile not found");
+        }
+        const doulaUser = await this.prisma.user.findUnique({
+            where: { id: doulaProfile.userId }
+        });
+        if (!doulaUser) {
+            throw new common_1.NotFoundException("Doula user not found");
         }
         const enquiry = await this.prisma.enquiryForm.findUnique({
             where: { id: dto.enquiryId },
@@ -391,17 +395,6 @@ let MeetingsService = class MeetingsService {
         await this.prisma.availableSlotsTimeForMeeting.update({
             where: { id: dto.slotId },
             data: { isBooked: true, availabe: false },
-        });
-        await this.mail.sendMail({
-            to: doulausertble.email,
-            subject: `Meeting Scheduled with ${enquiry.name} for ${service.name}`,
-            template: 'enquiry',
-            context: {
-                name: enquiry.name,
-                phone_number: enquiry.phone,
-                email: enquiry.email,
-                message: `A client has shown interest in ${service.name} and booked a meeting slot.`,
-            },
         });
         return {
             message: "Doula meeting scheduled successfully",

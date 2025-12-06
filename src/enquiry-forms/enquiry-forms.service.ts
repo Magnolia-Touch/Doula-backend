@@ -40,11 +40,16 @@ export class EnquiryService {
         // //client is created while submiting the enquiry form. might be useful for followup
         // const client = await createClent(this.prisma, data)
 
-        const { regionId, slotId, serviceId, name, email, phone, additionalNotes } = data;
+        const { regionId, timeId, serviceId, name, email, phone, additionalNotes } = data;
+        const client = await getOrcreateClent(this.prisma, data)
+        const profile = await this.prisma.clientProfile.findUnique({
+            where: { userId: client.id }
+        })
+        if (!profile) { throw new NotFoundException("profile not found") }
         // 1. Validate Region
         const region = await findRegionOrThrow(this.prisma, regionId);
         // 2. Validate Slot
-        const slot = await findSlotOrThrow(this.prisma, slotId);
+        const slot = await findSlotOrThrow(this.prisma, timeId);
         // Prevent double booking
         if (slot.isBooked == true || slot.availabe === false) {
             throw new BadRequestException('This slot is already booked');
@@ -69,42 +74,41 @@ export class EnquiryService {
         const enquiry = await this.prisma.enquiryForm.create({
             data: {
                 regionId,
-                slotId,
+                slotId: timeId,
                 serviceId: service.id,
                 name,
                 email,
                 phone,
                 additionalNotes,
+                startDate: data.startDate,
+                endDate: data.endDate,
+                TimeSlots: data.timeSlots,
+                VisitFrequency: data.visitFrequency,
+                clientId: profile.id
+
             },
         });
         const enquiryForm = { email: enquiry.email, slotId: enquiry.slotId, additionalNotes: enquiry.additionalNotes, name: service.name }
-        console.log("1")
         //create meeting
-        const client = await getOrcreateClent(this.prisma, data)
-        console.log("2")
         console.log(enquiry)
         const meeting = await this.schedule.scheduleMeeting(enquiryForm, client.clientProfile.id, zoneManager.id, Role.ZONE_MANAGER, slot.dateId)
-        console.log("3")
         // 6. Lock slot
         await this.prisma.availableSlotsTimeForMeeting.update({
-            where: { id: slotId },
+            where: { id: timeId },
             data: { isBooked: true, availabe: false },
         });
-
-        console.log("4")
         // 8. Send Mail
-        await this.mail.sendMail({
-            to: zoneMngrssertbldata.email,
-            subject: `New Enquiry from ${name}`,
-            template: 'enquiry',
-            context: {
-                name,
-                phone_number: phone,
-                email,
-                message: `A client has shown interest in ${service.name} and booked a meeting slot.`,
-            },
-        });
-        console.log("5")
+        // await this.mail.sendMail({
+        //     to: zoneMngrssertbldata.email,
+        //     subject: `New Enquiry from ${name}`,
+        //     template: 'enquiry',
+        //     context: {
+        //         name,
+        //         phone_number: phone,
+        //         email,
+        //         message: `A client has shown interest in ${service.name} and booked a meeting slot.`,
+        //     },
+        // });
         return {
             message: 'Enquiry submitted successfully',
             enquiry,

@@ -96,7 +96,7 @@ export class ZoneManagerService {
     async getById(id: string) {
         const zoneManager = await this.prisma.user.findUnique({
             where: { id },
-            include: { zonemanagerprofile: true },
+            include: { zonemanagerprofile: { include: { managingRegion: true } } },
         });
 
         if (!zoneManager || zoneManager.role !== Role.ZONE_MANAGER) {

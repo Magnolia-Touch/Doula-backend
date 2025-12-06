@@ -20,14 +20,15 @@ const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const swagger_1 = require("@nestjs/swagger");
 const swagger_response_dto_1 = require("../common/dto/swagger-response.dto");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const client_1 = require("@prisma/client");
 let AvailableSlotsController = class AvailableSlotsController {
     service;
     constructor(service) {
         this.service = service;
     }
     async createSlots(dto, req) {
-        const results = await Promise.all(dto.map(item => this.service.createAvailability(item, req.user)));
-        return results;
+        return this.service.createAvailability(dto, req.user);
     }
     async getAllSlots(regionId, startDate, endDate, filter = 'all', page = '1', limit = '10') {
         if (!regionId)
@@ -49,6 +50,29 @@ let AvailableSlotsController = class AvailableSlotsController {
     }
     async updateSlotAvail(id, booked, availabe) {
         return this.service.updateTimeSlotAvailability(id, booked, availabe);
+    }
+    async disableSlots(startDate, endDate) {
+        if (!startDate)
+            throw new common_1.BadRequestException('startDate is required');
+        if (!endDate)
+            throw new common_1.BadRequestException('endDate is required');
+        const result = await this.service.disableSlotsInRange(startDate, endDate);
+        return {
+            success: true,
+            message: 'Slots disabled',
+            data: {
+                startDate,
+                endDate,
+                ...result
+            }
+        };
+    }
+    async findall(startDate, endDate, filter = 'all', page = '1', limit = '10', req) {
+        if (!startDate)
+            throw new common_1.BadRequestException('startDate is required');
+        if (!endDate)
+            throw new common_1.BadRequestException('endDate is required');
+        return this.service.findall(req.user, startDate, endDate, filter, parseInt(page, 10), parseInt(limit, 10));
     }
 };
 exports.AvailableSlotsController = AvailableSlotsController;
@@ -81,7 +105,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Array, Object]),
+    __metadata("design:paramtypes", [meeting_avail_dto_1.AvailableSlotsForMeetingDto, Object]),
     __metadata("design:returntype", Promise)
 ], AvailableSlotsController.prototype, "createSlots", null);
 __decorate([
@@ -198,6 +222,81 @@ __decorate([
     __metadata("design:paramtypes", [String, Boolean, Boolean]),
     __metadata("design:returntype", Promise)
 ], AvailableSlotsController.prototype, "updateSlotAvail", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, roles_decorator_1.Roles)('ADMIN', 'ZONE_MANAGER', 'DOULA'),
+    (0, swagger_1.ApiOperation)({ summary: 'Disable ALL meeting available slots in a date range' }),
+    (0, swagger_1.ApiQuery)({ name: 'startDate', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'endDate', required: true }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Slots disabled',
+                data: {
+                    startDate: '2025-01-10',
+                    endDate: '2025-01-15',
+                    count: 8
+                }
+            }
+        }
+    }),
+    (0, common_1.Post)('disable'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], AvailableSlotsController.prototype, "disableSlots", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
+    (0, swagger_1.ApiOperation)({ summary: 'Get slots for a region between dates' }),
+    (0, swagger_1.ApiQuery)({ name: 'regionId', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'startDate', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'endDate', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'filter', required: false, description: 'all | booked | unbooked' }),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Slots fetched',
+                data: {
+                    items: [
+                        {
+                            id: 'date-slot-1',
+                            date: '2025-11-21',
+                            times: [
+                                { id: 'time-1', startTime: '09:00', endTime: '09:30', isBooked: false, available: true },
+                                { id: 'time-2', startTime: '10:00', endTime: '10:30', isBooked: true, available: false },
+                            ],
+                            regionId: 'region-1',
+                        },
+                    ],
+                    total: 1,
+                    page: 1,
+                    limit: 10,
+                },
+            },
+        },
+    }),
+    (0, common_1.Get)('my/availability'),
+    __param(0, (0, common_1.Query)('startDate')),
+    __param(1, (0, common_1.Query)('endDate')),
+    __param(2, (0, common_1.Query)('filter')),
+    __param(3, (0, common_1.Query)('page')),
+    __param(4, (0, common_1.Query)('limit')),
+    __param(5, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String, String, Object]),
+    __metadata("design:returntype", Promise)
+], AvailableSlotsController.prototype, "findall", null);
 exports.AvailableSlotsController = AvailableSlotsController = __decorate([
     (0, swagger_1.ApiTags)('Meeting Slots'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

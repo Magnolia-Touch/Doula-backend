@@ -28,8 +28,7 @@ let DoulaServiceAvailabilityController = class DoulaServiceAvailabilityControlle
         this.service = service;
     }
     async createSlots(dto, req) {
-        const results = await Promise.all(dto.map((item) => this.service.createAvailability(item, req.user)));
-        return results;
+        return this.service.createAvailability(dto, req.user);
     }
     async getAllSlots(doulaId, startDate, endDate, filter = 'all', page = '1', limit = '10') {
         if (!doulaId)
@@ -81,7 +80,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Array, Object]),
+    __metadata("design:paramtypes", [service_availability_dto_1.CreateDoulaServiceAvailability, Object]),
     __metadata("design:returntype", Promise)
 ], DoulaServiceAvailabilityController.prototype, "createSlots", null);
 __decorate([

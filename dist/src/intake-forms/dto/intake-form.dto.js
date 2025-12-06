@@ -16,11 +16,11 @@ class IntakeFormDto {
     name;
     email;
     phone;
-    slotId;
     doulaProfileId;
     serviceId;
     address;
     buffer;
+    enquiryId;
 }
 exports.IntakeFormDto = IntakeFormDto;
 __decorate([
@@ -42,11 +42,6 @@ __decorate([
     __metadata("design:type", String)
 ], IntakeFormDto.prototype, "phone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'date-uuid', description: 'Slot identifier' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], IntakeFormDto.prototype, "slotId", void 0);
-__decorate([
     (0, swagger_1.ApiProperty)({ example: 'doula-uuid', description: 'Doula profile id' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -66,4 +61,9 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], IntakeFormDto.prototype, "buffer", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'uuid-enquiry-id' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], IntakeFormDto.prototype, "enquiryId", void 0);
 //# sourceMappingURL=intake-form.dto.js.map

@@ -211,13 +211,13 @@ export class DoulaService {
             where.is_active = isActive;
         }
 
-        // 🟦 Filter by Service (ServicePricing)
+        // 🟦 Filter by Service (ServicePricing) 
         if (serviceId) {
             where.doulaProfile = {
                 ...(where.doulaProfile || {}),
                 ServicePricing: {
                     some: {
-                        id: serviceId,
+                        serviceId: serviceId,
                     },
                 },
             };

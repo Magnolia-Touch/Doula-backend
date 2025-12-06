@@ -126,6 +126,8 @@ export class MeetingsController {
     }
 
     // SCHEDULE MEETING (DOULA)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
     @ApiOperation({ summary: 'Schedule a meeting with a doula' })
     @ApiBody({ type: ScheduleDoulaDto })
     @ApiResponse({

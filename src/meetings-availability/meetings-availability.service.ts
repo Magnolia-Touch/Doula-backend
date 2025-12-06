@@ -11,6 +11,8 @@ export class AvailableSlotsService {
 
     async createAvailability(dto: AvailableSlotsForMeetingDto, user: any) {
         let profile: any
+
+
         switch (user.role) {
             case Role.ZONE_MANAGER:
                 profile = await this.prisma.zoneManagerProfile.findUnique({
@@ -91,7 +93,6 @@ export class AvailableSlotsService {
 
     //continue from here. booked or unbooked filter not needed on slots.
     //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
-
     async getAllSlots(
         regionId: string,
         startDate: string,
@@ -116,7 +117,6 @@ export class AvailableSlotsService {
         });
 
         const manager = region?.zoneManagerId;
-
         // Base date filter
         const where: any = {
             zoneManagerId: manager,
@@ -131,7 +131,7 @@ export class AvailableSlotsService {
         if (filter === 'booked') timeFilter.isBooked = true;
         if (filter === 'unbooked') timeFilter.isBooked = false;
 
-        return paginate({
+        const result = await paginate({
             prismaModel: this.prisma.availableSlotsForMeeting,
             page,
             limit,
@@ -144,6 +144,33 @@ export class AvailableSlotsService {
             },
             orderBy: { date: 'asc' }
         });
+
+        const mapped = result.data.map(slot => ({
+            dateId: slot.id,
+            date: slot.date,
+            weekday: slot.weekday,
+            availabe: slot.availabe,
+            ownerRole: slot.ownerRole,
+            adminId: slot.adminId,
+            doulaId: slot.doulaId,
+            zoneManagerId: slot.zoneManagerId,
+            createdAt: slot.createdAt,
+            updatedAt: slot.updatedAt,
+
+            timings: (slot as any).AvailableSlotsTimeForMeeting?.map((t: any) => ({
+                timeId: t.id,
+                startTime: t.startTime,
+                endTime: t.endTime,
+                availabe: t.availabe,
+                isBooked: t.isBooked
+            })) || []
+        }));
+
+        // ---- Return with mapped data ----
+        return {
+            data: mapped,
+            meta: result.meta
+        };
     }
 
 
@@ -311,8 +338,159 @@ export class AvailableSlotsService {
         return { message: "Slot Updated Successfully" }
     }
 
-    //take date range and make the availableSlotForMeeting's available to false. 
-    //make sure getSlot never take the one which is not available. add one availabillity filter also in get.
+    /**
+     * Disable all AvailableSlotsForMeeting and child time slots in a date range
+     */
+    async disableSlotsInRange(startDate: string | Date, endDate: string | Date) {
+        const from = new Date(startDate);
+        const to = new Date(endDate);
+
+        // end date inclusive
+        to.setHours(23, 59, 59, 999);
+
+        // find parent slot IDs
+        const parentSlots = await this.prisma.availableSlotsForMeeting.findMany({
+            where: {
+                date: {
+                    gte: from,
+                    lte: to,
+                }
+            },
+            select: { id: true }
+        });
+
+        if (!parentSlots.length) {
+            return { message: "No slots found in range", count: 0 };
+        }
+
+        const parentIds = parentSlots.map(s => s.id);
+
+        // disable parent + children in one transaction
+        await this.prisma.$transaction([
+            // disable parent
+            this.prisma.availableSlotsForMeeting.updateMany({
+                where: { id: { in: parentIds } },
+                data: { availabe: false }
+            }),
+
+            // disable children
+            this.prisma.availableSlotsTimeForMeeting.updateMany({
+                where: { dateId: { in: parentIds } },
+                data: { availabe: false }
+            })
+        ]);
+
+        return {
+            message: "Slots disabled successfully",
+            count: parentIds.length
+        };
+    }
+
+    async findall(
+        user: any,
+        startDate: string,
+        endDate: string,
+        filter: 'all' | 'booked' | 'unbooked' = 'all',
+        page: number = 1,
+        limit: number = 10
+    ) {
+        let profile: any
+        let ownerField: 'zoneManagerId' | 'doulaId' | 'adminId';
+
+        switch (user.role) {
+            case Role.ZONE_MANAGER:
+                profile = await this.prisma.zoneManagerProfile.findUnique({
+                    where: { userId: user.id },
+                });
+                ownerField = 'zoneManagerId';
+                break;
+
+            case Role.DOULA:
+                profile = await this.prisma.doulaProfile.findUnique({
+                    where: { userId: user.id },
+                });
+                ownerField = 'doulaId';
+                break;
+
+            case Role.ADMIN:
+                profile = await this.prisma.adminProfile.findUnique({
+                    where: { userId: user.id },
+                });
+                ownerField = 'adminId';
+                break;
+
+            default:
+                throw new ForbiddenException('Invalid user role');
+        }
+
+        if (!profile) {
+            throw new ForbiddenException('Profile not found for this user');
+        }
+
+        const skip = (page - 1) * limit;
+
+        const firstDate = new Date(startDate);
+        const secondDate = new Date(endDate);
+        // make end exclusive by adding 1 day
+        secondDate.setDate(secondDate.getDate() + 1);
+
+        const where: any = {
+            [ownerField]: profile.id,      // dynamically use zoneManagerId/doulaId/adminId
+            date: {
+                gte: firstDate,
+                lt: secondDate,
+            },
+        };
+
+        // Build time filter inside include
+        const timeFilter: any = {};
+        if (filter === 'booked') timeFilter.isBooked = true;
+        if (filter === 'unbooked') timeFilter.isBooked = false;
+
+        const result = await paginate({
+            prismaModel: this.prisma.availableSlotsForMeeting,
+            page,
+            limit,
+            where,
+            include: {
+                AvailableSlotsTimeForMeeting: {
+                    where: filter === 'all' ? undefined : timeFilter,
+                    orderBy: { startTime: 'asc' }
+                }
+            },
+            orderBy: { date: 'asc' }
+        });
+
+        // >>> transform rows here
+        // ---- Map data ----
+        const mapped = result.data.map(slot => ({
+            dateId: slot.id,
+            date: slot.date,
+            weekday: slot.weekday,
+            availabe: slot.availabe,
+            ownerRole: slot.ownerRole,
+            adminId: slot.adminId,
+            doulaId: slot.doulaId,
+            zoneManagerId: slot.zoneManagerId,
+            createdAt: slot.createdAt,
+            updatedAt: slot.updatedAt,
+
+            timings: (slot as any).AvailableSlotsTimeForMeeting?.map((t: any) => ({
+                timeId: t.id,
+                startTime: t.startTime,
+                endTime: t.endTime,
+                availabe: t.availabe,
+                isBooked: t.isBooked
+            })) || []
+        }));
+
+        // ---- Return with mapped data ----
+        return {
+            data: mapped,
+            meta: result.meta
+        };
+    }
+
 
 
 

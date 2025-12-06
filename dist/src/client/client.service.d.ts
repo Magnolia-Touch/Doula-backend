@@ -11,8 +11,8 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
-                address: string | null;
                 userId: string;
+                address: string | null;
             } | null;
         } & {
             id: string;
@@ -35,8 +35,8 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
-                address: string | null;
                 userId: string;
+                address: string | null;
             } | null;
         } & {
             id: string;
@@ -59,8 +59,8 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
-                address: string | null;
                 userId: string;
+                address: string | null;
             } | null;
         } & {
             id: string;

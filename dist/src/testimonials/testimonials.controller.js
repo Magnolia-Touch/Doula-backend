@@ -119,6 +119,7 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('recent/testimonials'),
+    (0, swagger_1.ApiOperation)({ summary: 'Recent testimonial' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),

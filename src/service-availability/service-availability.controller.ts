@@ -61,11 +61,8 @@ export class DoulaServiceAvailabilityController {
         },
     })
     @Post()
-    async createSlots(@Body() dto: CreateDoulaServiceAvailability[], @Req() req) {
-        const results = await Promise.all(
-            dto.map((item) => this.service.createAvailability(item, req.user))
-        );
-        return results;
+    async createSlots(@Body() dto: CreateDoulaServiceAvailability, @Req() req) {
+        return this.service.createAvailability(dto, req.user)
     }
 
     // Get SLOT

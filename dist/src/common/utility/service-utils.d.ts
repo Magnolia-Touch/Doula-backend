@@ -4,9 +4,9 @@ export declare function findSlotOrThrow(prisma: PrismaService, slotId: string): 
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    availabe: boolean;
     startTime: Date;
     endTime: Date;
+    availabe: boolean;
     isBooked: boolean;
     dateId: string;
 }>;
@@ -15,8 +15,8 @@ export declare function findRegionOrThrow(prisma: PrismaService, regionId: strin
     is_active: boolean;
     createdAt: Date;
     updatedAt: Date;
-    regionName: string;
     pincode: string;
+    regionName: string;
     district: string;
     state: string;
     country: string;
@@ -35,13 +35,13 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
     id: string;
     createdAt: Date;
     updatedAt: Date;
+    userId: string;
     regionId: string | null;
     profileImage: string | null;
     description: string | null;
     achievements: string | null;
     qualification: string | null;
     yoe: number | null;
-    userId: string;
 }>;
 export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;
 export declare function findUserOrThrowwithId(prisma: PrismaService, userId: string): Promise<{
@@ -69,21 +69,21 @@ export declare function getSlotOrCreateSlot(prisma: PrismaService, dateString: s
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    zoneManagerId: string | null;
-    date: Date;
-    weekday: string;
     availabe: boolean;
-    ownerRole: import("@prisma/client").$Enums.Role;
+    date: Date;
+    zoneManagerId: string | null;
+    weekday: string;
     doulaId: string | null;
     adminId: string | null;
+    ownerRole: import("@prisma/client").$Enums.Role;
 }>;
 export declare function createTimeForSlot(prisma: PrismaService, slotId: string, startTime: Date, endTime: Date): Promise<{
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    availabe: boolean;
     startTime: Date;
     endTime: Date;
+    availabe: boolean;
     isBooked: boolean;
     dateId: string;
 }>;
@@ -93,9 +93,9 @@ export declare function getServiceSlotOrCreateSlot(prisma: PrismaService, dateSt
     id: string;
     createdAt: Date;
     updatedAt: Date;
+    availabe: boolean;
+    isBooked: boolean;
     date: Date;
     weekday: string;
-    availabe: boolean;
     doulaId: string;
-    isBooked: boolean;
 }>;

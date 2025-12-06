@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class IntakeFormDto {
@@ -17,10 +17,6 @@ export class IntakeFormDto {
     @IsString()
     phone?: string;
 
-    @ApiProperty({ example: 'date-uuid', description: 'Slot identifier' })
-    @IsString()
-    slotId: string;
-
     @ApiProperty({ example: 'doula-uuid', description: 'Doula profile id' })
     @IsString()
     doulaProfileId: string;
@@ -36,4 +32,10 @@ export class IntakeFormDto {
     @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
     @IsNumber()
     buffer: number;
+
+    @ApiProperty({ example: 'uuid-enquiry-id' })
+    @IsString()
+    enquiryId: string;
 }
+
+

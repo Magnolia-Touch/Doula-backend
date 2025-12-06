@@ -173,7 +173,7 @@ let DoulaService = class DoulaService {
                 ...(where.doulaProfile || {}),
                 ServicePricing: {
                     some: {
-                        id: serviceId,
+                        serviceId: serviceId,
                     },
                 },
             };

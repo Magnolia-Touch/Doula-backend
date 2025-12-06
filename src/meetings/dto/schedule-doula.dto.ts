@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsString } from 'class-validator';
 import { MeetingStatus } from '@prisma/client';
 
 export class ScheduleDoulaDto {
@@ -14,5 +14,7 @@ export class ScheduleDoulaDto {
     @ApiProperty({ example: 'uuid-slot-id' })
     @IsString()
     doulaId: string;
+
+
 
 }

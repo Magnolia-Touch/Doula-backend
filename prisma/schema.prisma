@@ -27,6 +27,12 @@ enum BookingStatus {
   CANCELED
 }
 
+enum ServiceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
 //User Model
 model User {
   id           String    @id @default(uuid())
@@ -88,6 +94,7 @@ model DoulaProfile {
   IntakeForm               IntakeForm[]
   ServicePricing           ServicePricing[]
   Testimonials             Testimonials[]
+  Schedules                Schedules[]
 }
 
 model Language {
@@ -112,6 +119,7 @@ model ClientProfile {
   bookings     ServiceBooking[]
   Meetings     Meetings[]
   Testimonials Testimonials[]
+  Schedules    Schedules[]
 }
 
 // Admin Profile
@@ -131,13 +139,18 @@ model AdminProfile {
 
 // Enquiry Form
 model EnquiryForm {
-  id              String   @id @default(uuid())
+  id              String  @id @default(uuid())
   name            String
   email           String
   phone           String
   additionalNotes String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  startDate       String
+  endDate         String
+  VisitFrequency  Int
+  TimeSlots       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   regionId  String
   slotId    String
@@ -285,14 +298,17 @@ model AvailableSlotsTimeForService {
   startTime DateTime
   endTime   DateTime
   availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
+  isBooked  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  dateId String
+  formId    String?
+  bookingId String?
+  dateId    String
 
   date           AvailableSlotsForService @relation(fields: [dateId], references: [id])
-  IntakeForm     IntakeForm[]
-  ServiceBooking ServiceBooking[]
+  IntakeForm     IntakeForm?              @relation(fields: [formId], references: [id])
+  ServiceBooking ServiceBooking?          @relation(fields: [bookingId], references: [id])
 }
 
 // Intake Form
@@ -310,18 +326,16 @@ model IntakeForm {
   servicePricingId String
   doulaProfileId   String
   clientId         String
-  slotTimeId       String?
-  slotId           String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  service       ServicePricing                @relation(fields: [servicePricingId], references: [id])
-  clientProfile ClientProfile                 @relation(fields: [clientId], references: [id])
-  region        Region                        @relation(fields: [regionId], references: [id])
-  DoulaProfile  DoulaProfile                  @relation(fields: [doulaProfileId], references: [id])
-  slotTime      AvailableSlotsTimeForService? @relation(fields: [slotTimeId], references: [id])
-  slot          AvailableSlotsForService      @relation(fields: [slotId], references: [id])
+  service       ServicePricing                 @relation(fields: [servicePricingId], references: [id])
+  clientProfile ClientProfile                  @relation(fields: [clientId], references: [id])
+  region        Region                         @relation(fields: [regionId], references: [id])
+  DoulaProfile  DoulaProfile                   @relation(fields: [doulaProfileId], references: [id])
+  slotTime      AvailableSlotsTimeForService[]
+  slot          AvailableSlotsForService[]
 }
 
 // Service Booking
@@ -335,18 +349,16 @@ model ServiceBooking {
   servicePricingId String
   doulaProfileId   String
   clientId         String
-  slotTimeId       String?
-  slotId           String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  DoulaProfile             DoulaProfile                  @relation(fields: [doulaProfileId], references: [id])
-  service                  ServicePricing                @relation(fields: [servicePricingId], references: [id])
-  client                   ClientProfile                 @relation(fields: [clientId], references: [id])
-  region                   Region                        @relation(fields: [regionId], references: [id])
-  slot                     AvailableSlotsTimeForService? @relation(fields: [slotTimeId], references: [id])
-  AvailableSlotsForService AvailableSlotsForService      @relation(fields: [slotId], references: [id])
+  DoulaProfile             DoulaProfile                   @relation(fields: [doulaProfileId], references: [id])
+  service                  ServicePricing                 @relation(fields: [servicePricingId], references: [id])
+  client                   ClientProfile                  @relation(fields: [clientId], references: [id])
+  region                   Region                         @relation(fields: [regionId], references: [id])
+  slot                     AvailableSlotsTimeForService[]
+  AvailableSlotsForService AvailableSlotsForService[]
 }
 
 // Service Model
@@ -378,6 +390,7 @@ model ServicePricing {
 
   //add images adding option here.
   Testimonials Testimonials[]
+  Schedules    Schedules[]
 }
 
 model Testimonials {
@@ -393,4 +406,23 @@ model Testimonials {
   DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id])
   ServicePricing ServicePricing @relation(fields: [serviceId], references: [id])
   client         ClientProfile  @relation(fields: [clientId], references: [id])
+}
+
+model Schedules {
+  id        String        @id @default(uuid())
+  date      DateTime      @db.Date
+  startTime DateTime
+  endTime   DateTime
+  status    ServiceStatus @default(PENDING)
+
+  doulaProfileId String
+  serviceId      String
+  clientId       String
+
+  DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id])
+  ServicePricing ServicePricing @relation(fields: [serviceId], references: [id])
+  client         ClientProfile  @relation(fields: [clientId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

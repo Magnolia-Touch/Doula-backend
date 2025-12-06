@@ -73,6 +73,7 @@ export class TestimonialsController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ZONE_MANAGER)
     @Get('recent/testimonials')
+    @ApiOperation({ summary: 'Recent testimonial' })
     async getTestimonials(@Req() req, @Query('page') page = 1, @Query('limit') limit = 10) {
         const zoneManagerId = req.user.id; // authenticated user ID
         return this.service.getZoneManagerTestimonials(zoneManagerId, Number(page), Number(limit));

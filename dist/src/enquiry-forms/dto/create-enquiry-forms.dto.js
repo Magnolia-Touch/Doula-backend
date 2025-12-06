@@ -14,12 +14,16 @@ const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class EnquiryFormDto {
     regionId;
-    slotId;
+    timeId;
     serviceId;
     name;
     email;
     phone;
     additionalNotes;
+    startDate;
+    endDate;
+    visitFrequency = 1;
+    timeSlots;
 }
 exports.EnquiryFormDto = EnquiryFormDto;
 __decorate([
@@ -31,7 +35,7 @@ __decorate([
     (0, swagger_1.ApiProperty)({ example: 'slot-uuid' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], EnquiryFormDto.prototype, "slotId", void 0);
+], EnquiryFormDto.prototype, "timeId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'service-uuid' }),
     (0, class_validator_1.IsString)(),
@@ -58,4 +62,25 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "additionalNotes", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '2025-12-05', description: 'Service Start Date (ISO format)' }),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "startDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '2025-12-10', description: 'Service End Date (ISO format)' }),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "endDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 2, description: 'Visit Frequency for Services (e.g., twice a week)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
+], EnquiryFormDto.prototype, "visitFrequency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "timeSlots", void 0);
 //# sourceMappingURL=create-enquiry-forms.dto.js.map

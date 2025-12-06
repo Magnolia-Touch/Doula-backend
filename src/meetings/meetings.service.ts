@@ -477,6 +477,7 @@ export class MeetingsService {
 
     async doulasMeetingSchedule(dto: ScheduleDoulaDto, user: any) {
         // Only Zone Manager is allowed
+        console.log(user)
         if (user.role !== Role.ZONE_MANAGER) {
             throw new ForbiddenException("Only Zone Manager can schedule doula meetings");
         }
@@ -489,15 +490,21 @@ export class MeetingsService {
         }
         // 2. Fetch doula profile
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
-            where: { userId: dto.doulaId },
+            where: { id: dto.doulaId },
         });
-        const doulausertble = await this.prisma.user.findUnique({
-            where: { id: doulaProfile?.id }
-        })
 
-        if (!doulaProfile || !doulausertble) {
+        if (!doulaProfile) {
             throw new NotFoundException("Doula profile not found");
         }
+
+        const doulaUser = await this.prisma.user.findUnique({
+            where: { id: doulaProfile.userId }
+        })
+
+        if (!doulaUser) {
+            throw new NotFoundException("Doula user not found");
+        }
+
         // 3. Fetch enquiry → contains client, region, service, notes
         const enquiry = await this.prisma.enquiryForm.findUnique({
             where: { id: dto.enquiryId },
@@ -544,17 +551,17 @@ export class MeetingsService {
             data: { isBooked: true, availabe: false },
         });
         // 8. Send Mail
-        await this.mail.sendMail({
-            to: doulausertble.email,
-            subject: `Meeting Scheduled with ${enquiry.name} for ${service.name}`,
-            template: 'enquiry',
-            context: {
-                name: enquiry.name,
-                phone_number: enquiry.phone,
-                email: enquiry.email,
-                message: `A client has shown interest in ${service.name} and booked a meeting slot.`,
-            },
-        });
+        // await this.mail.sendMail({
+        //     to: doulausertble.email,
+        //     subject: `Meeting Scheduled with ${enquiry.name} for ${service.name}`,
+        //     template: 'enquiry',
+        //     context: {
+        //         name: enquiry.name,
+        //         phone_number: enquiry.phone,
+        //         email: enquiry.email,
+        //         message: `A client has shown interest in ${service.name} and booked a meeting slot.`,
+        //     },
+        // });
         return {
             message: "Doula meeting scheduled successfully",
             meeting,

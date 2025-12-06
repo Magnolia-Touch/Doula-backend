@@ -99,7 +99,7 @@ let AvailableSlotsService = class AvailableSlotsService {
             timeFilter.isBooked = true;
         if (filter === 'unbooked')
             timeFilter.isBooked = false;
-        return (0, pagination_util_1.paginate)({
+        const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.availableSlotsForMeeting,
             page,
             limit,
@@ -112,6 +112,29 @@ let AvailableSlotsService = class AvailableSlotsService {
             },
             orderBy: { date: 'asc' }
         });
+        const mapped = result.data.map(slot => ({
+            dateId: slot.id,
+            date: slot.date,
+            weekday: slot.weekday,
+            availabe: slot.availabe,
+            ownerRole: slot.ownerRole,
+            adminId: slot.adminId,
+            doulaId: slot.doulaId,
+            zoneManagerId: slot.zoneManagerId,
+            createdAt: slot.createdAt,
+            updatedAt: slot.updatedAt,
+            timings: slot.AvailableSlotsTimeForMeeting?.map((t) => ({
+                timeId: t.id,
+                startTime: t.startTime,
+                endTime: t.endTime,
+                availabe: t.availabe,
+                isBooked: t.isBooked
+            })) || []
+        }));
+        return {
+            data: mapped,
+            meta: result.meta
+        };
     }
     async getSlotById(id) {
         const slot = await this.prisma.availableSlotsForMeeting.findUnique({
@@ -236,6 +259,119 @@ let AvailableSlotsService = class AvailableSlotsService {
             }
         });
         return { message: "Slot Updated Successfully" };
+    }
+    async disableSlotsInRange(startDate, endDate) {
+        const from = new Date(startDate);
+        const to = new Date(endDate);
+        to.setHours(23, 59, 59, 999);
+        const parentSlots = await this.prisma.availableSlotsForMeeting.findMany({
+            where: {
+                date: {
+                    gte: from,
+                    lte: to,
+                }
+            },
+            select: { id: true }
+        });
+        if (!parentSlots.length) {
+            return { message: "No slots found in range", count: 0 };
+        }
+        const parentIds = parentSlots.map(s => s.id);
+        await this.prisma.$transaction([
+            this.prisma.availableSlotsForMeeting.updateMany({
+                where: { id: { in: parentIds } },
+                data: { availabe: false }
+            }),
+            this.prisma.availableSlotsTimeForMeeting.updateMany({
+                where: { dateId: { in: parentIds } },
+                data: { availabe: false }
+            })
+        ]);
+        return {
+            message: "Slots disabled successfully",
+            count: parentIds.length
+        };
+    }
+    async findall(user, startDate, endDate, filter = 'all', page = 1, limit = 10) {
+        let profile;
+        let ownerField;
+        switch (user.role) {
+            case client_1.Role.ZONE_MANAGER:
+                profile = await this.prisma.zoneManagerProfile.findUnique({
+                    where: { userId: user.id },
+                });
+                ownerField = 'zoneManagerId';
+                break;
+            case client_1.Role.DOULA:
+                profile = await this.prisma.doulaProfile.findUnique({
+                    where: { userId: user.id },
+                });
+                ownerField = 'doulaId';
+                break;
+            case client_1.Role.ADMIN:
+                profile = await this.prisma.adminProfile.findUnique({
+                    where: { userId: user.id },
+                });
+                ownerField = 'adminId';
+                break;
+            default:
+                throw new common_1.ForbiddenException('Invalid user role');
+        }
+        if (!profile) {
+            throw new common_1.ForbiddenException('Profile not found for this user');
+        }
+        const skip = (page - 1) * limit;
+        const firstDate = new Date(startDate);
+        const secondDate = new Date(endDate);
+        secondDate.setDate(secondDate.getDate() + 1);
+        const where = {
+            [ownerField]: profile.id,
+            date: {
+                gte: firstDate,
+                lt: secondDate,
+            },
+        };
+        const timeFilter = {};
+        if (filter === 'booked')
+            timeFilter.isBooked = true;
+        if (filter === 'unbooked')
+            timeFilter.isBooked = false;
+        const result = await (0, pagination_util_1.paginate)({
+            prismaModel: this.prisma.availableSlotsForMeeting,
+            page,
+            limit,
+            where,
+            include: {
+                AvailableSlotsTimeForMeeting: {
+                    where: filter === 'all' ? undefined : timeFilter,
+                    orderBy: { startTime: 'asc' }
+                }
+            },
+            orderBy: { date: 'asc' }
+        });
+        const mapped = result.data.map(slot => ({
+            dateId: slot.id,
+            date: slot.date,
+            weekday: slot.weekday,
+            availabe: slot.availabe,
+            ownerRole: slot.ownerRole,
+            adminId: slot.adminId,
+            doulaId: slot.doulaId,
+            zoneManagerId: slot.zoneManagerId,
+            createdAt: slot.createdAt,
+            updatedAt: slot.updatedAt,
+            timings: slot.AvailableSlotsTimeForMeeting?.map((t) => ({
+                timeId: t.id,
+                startTime: t.startTime,
+                endTime: t.endTime,
+                availabe: t.availabe,
+                isBooked: t.isBooked
+            })) || []
+        }));
+        return {
+            data: mapped,
+            meta: result.meta
+        };
     }
 };
 exports.AvailableSlotsService = AvailableSlotsService;

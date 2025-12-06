@@ -3,7 +3,7 @@ import { CreateDoulaServiceAvailability, UpdateDoulaServiceAvailabilityDTO } fro
 export declare class DoulaServiceAvailabilityController {
     private readonly service;
     constructor(service: DoulaServiceAvailabilityService);
-    createSlots(dto: CreateDoulaServiceAvailability[], req: any): Promise<{
+    createSlots(dto: CreateDoulaServiceAvailability, req: any): Promise<{
         message: string;
         data: {
             date: Date;
@@ -14,17 +14,17 @@ export declare class DoulaServiceAvailabilityController {
                 available: boolean;
             };
         };
-    }[]>;
+    }>;
     getAllSlots(doulaId: string, startDate: string, endDate: string, filter?: 'all' | 'booked' | 'unbooked', page?: string, limit?: string): Promise<{
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             date: Date;
             weekday: string;
             availabe: boolean;
-            doulaId: string;
             isBooked: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            doulaId: string;
         }[];
         meta: {
             total: number;
@@ -40,33 +40,39 @@ export declare class DoulaServiceAvailabilityController {
         slot: {
             AvailableSlotsTimeForService: {
                 id: string;
+                availabe: boolean;
+                isBooked: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
+                formId: string | null;
+                bookingId: string | null;
                 dateId: string;
             }[];
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             date: Date;
             weekday: string;
             availabe: boolean;
-            doulaId: string;
             isBooked: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            doulaId: string;
         };
     }>;
     updateSlot(dto: UpdateDoulaServiceAvailabilityDTO, id: string, req: any): Promise<{
         message: string;
         data: {
             id: string;
+            availabe: boolean;
+            isBooked: boolean;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            formId: string | null;
+            bookingId: string | null;
             dateId: string;
         };
     }>;
@@ -74,11 +80,14 @@ export declare class DoulaServiceAvailabilityController {
         message: string;
         data: {
             id: string;
+            availabe: boolean;
+            isBooked: boolean;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            formId: string | null;
+            bookingId: string | null;
             dateId: string;
         };
     }>;
@@ -86,13 +95,13 @@ export declare class DoulaServiceAvailabilityController {
         message: string;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             date: Date;
             weekday: string;
             availabe: boolean;
-            doulaId: string;
             isBooked: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            doulaId: string;
         };
     }>;
 }

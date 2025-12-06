@@ -95,7 +95,7 @@ let ZoneManagerService = class ZoneManagerService {
     async getById(id) {
         const zoneManager = await this.prisma.user.findUnique({
             where: { id },
-            include: { zonemanagerprofile: true },
+            include: { zonemanagerprofile: { include: { managingRegion: true } } },
         });
         if (!zoneManager || zoneManager.role !== client_1.Role.ZONE_MANAGER) {
             throw new common_1.NotFoundException('Zone Manager not found');

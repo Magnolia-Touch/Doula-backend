@@ -23,25 +23,25 @@ let IntakeFormService = class IntakeFormService {
         this.mail = mail;
     }
     async createIntakeForm(dto) {
-        const { name, email, phone } = dto;
+        const { name, email, phone, doulaProfileId, serviceId, address, buffer, enquiryId } = dto;
         const data = { name: dto.name, email: dto.email, phone: dto.phone };
         const client = await (0, service_utils_1.getOrcreateClent)(this.prisma, data);
-        console.log("client", client);
         const clientprofile = await this.prisma.clientProfile.update({
             where: { userId: client.id },
             data: { address: dto.address },
         });
+        const enquiry = await this.prisma.enquiryForm.findUnique({
+            where: { id: dto.enquiryId },
+            select: { endDate: true, startDate: true, VisitFrequency: true, TimeSlots: true }
+        });
+        if (!enquiry) {
+            throw new common_1.BadRequestException("Enquiry not Found");
+        }
         const region = await this.prisma.region.findFirst({
             where: { doula: { some: { id: dto.doulaProfileId } } }
         });
         if (!region) {
             throw new common_1.BadRequestException("Region not listed for doula");
-        }
-        const slot = await this.prisma.availableSlotsForService.findUnique({
-            where: { id: dto.slotId }
-        });
-        if (!slot || !slot.availabe || slot.isBooked) {
-            throw new common_1.BadRequestException('Selected slot is not available');
         }
         const service = await this.prisma.servicePricing.findUnique({
             where: { id: dto.serviceId }
@@ -49,45 +49,152 @@ let IntakeFormService = class IntakeFormService {
         if (!service) {
             throw new common_1.NotFoundException('Service Not Found');
         }
-        const leftEndDate = new Date(slot.date);
-        leftEndDate.setDate(slot.date.getDate() - dto.buffer);
-        const rightEndDate = new Date(slot.date);
-        rightEndDate.setDate(slot.date.getDate() + dto.buffer);
+        const leftEndDate = new Date(enquiry.startDate);
+        const rightEndDate = new Date(enquiry.endDate);
+        const dates = [];
+        let current = new Date(leftEndDate);
+        while (current <= rightEndDate) {
+            dates.push(new Date(current));
+            current.setDate(current.getDate() + enquiry.VisitFrequency);
+        }
+        const [startStr, endStr] = enquiry.TimeSlots.split("-");
+        const [startHour, startMinute] = startStr.split(":").map(Number);
+        const [endHour, endMinute] = endStr.split(":").map(Number);
+        function dateWithTime(date, hour, minute) {
+            const d = new Date(date);
+            d.setHours(hour, minute, 0, 0);
+            return d;
+        }
+        const fetchedSlots = await this.prisma.availableSlotsForService.findMany({
+            where: {
+                date: { in: dates },
+            },
+            include: {
+                AvailableSlotsTimeForService: {
+                    where: {
+                        AND: [
+                            {
+                                startTime: {
+                                    gte: dateWithTime(new Date(enquiry.startDate), startHour, startMinute),
+                                },
+                            },
+                            {
+                                endTime: {
+                                    lte: dateWithTime(new Date(enquiry.startDate), endHour, endMinute),
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+            orderBy: { date: "asc" },
+        });
+        const parentSlotIds = fetchedSlots.map(s => s.id);
+        const timeSlotIds = fetchedSlots
+            .flatMap(s => s.AvailableSlotsTimeForService.map(ts => ts.id))
+            .filter(Boolean);
+        const startDate = new Date(enquiry.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(enquiry.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        const bufferDays = Number(dto.buffer) || 0;
+        const rangeAStart = new Date(startDate);
+        rangeAStart.setDate(rangeAStart.getDate() - bufferDays);
+        rangeAStart.setHours(0, 0, 0, 0);
+        const rangeAEnd = new Date(startDate);
+        rangeAEnd.setHours(23, 59, 59, 999);
+        const rangeBStart = new Date(startDate);
+        rangeBStart.setHours(0, 0, 0, 0);
+        const rangeBEnd = new Date(endDate);
+        rangeBEnd.setDate(rangeBEnd.getDate() + bufferDays);
+        rangeBEnd.setHours(23, 59, 59, 999);
+        const txOps = [];
+        if (timeSlotIds.length > 0) {
+            txOps.push(this.prisma.availableSlotsTimeForService.updateMany({
+                where: { id: { in: timeSlotIds } },
+                data: { availabe: false },
+            }));
+        }
+        if (parentSlotIds.length > 0) {
+            txOps.push(this.prisma.availableSlotsForService.updateMany({
+                where: { id: { in: parentSlotIds } },
+                data: { availabe: false, isBooked: true },
+            }));
+        }
+        txOps.push(this.prisma.availableSlotsForService.updateMany({
+            where: {
+                date: {
+                    gte: rangeAStart,
+                    lte: rangeAEnd,
+                },
+            },
+            data: { availabe: false },
+        }));
+        txOps.push(this.prisma.availableSlotsForService.updateMany({
+            where: {
+                date: {
+                    gte: rangeBStart,
+                    lte: rangeBEnd,
+                },
+            },
+            data: { availabe: false },
+        }));
+        await this.prisma.$transaction(txOps);
         const intake = await this.prisma.intakeForm.create({
             data: {
-                date: slot.date,
+                date: new Date(enquiry.startDate),
                 name,
                 email,
                 phone,
-                address: dto.address,
+                address,
                 regionId: region.id,
                 servicePricingId: service.id,
-                doulaProfileId: dto.doulaProfileId,
+                doulaProfileId: doulaProfileId,
                 clientId: clientprofile.id,
-                slotId: slot.id,
+                slot: {
+                    connect: parentSlotIds.map(id => ({ id }))
+                },
+                slotTime: {
+                    connect: timeSlotIds.map(id => ({ id }))
+                }
             },
         });
-        console.log("intake form", intake);
         const booking = await this.prisma.serviceBooking.create({
             data: {
-                date: slot.date,
+                date: new Date(enquiry.startDate),
                 regionId: region.id,
                 servicePricingId: service.id,
-                doulaProfileId: dto.doulaProfileId,
+                doulaProfileId: doulaProfileId,
                 clientId: clientprofile.id,
-                slotId: slot.id
-            },
+                slot: {
+                    connect: timeSlotIds.map(id => ({ id }))
+                },
+                AvailableSlotsForService: {
+                    connect: parentSlotIds.map(id => ({ id }))
+                }
+            }
         });
         console.log("intake form", intake);
-        await this.prisma.availableSlotsForService.updateMany({
-            where: {
-                doulaId: dto.doulaProfileId,
-                date: { gte: leftEndDate, lte: rightEndDate },
-            },
-            data: {
-                availabe: false,
-                isBooked: true,
-            },
+        const booked = await this.prisma.availableSlotsForService.findMany({
+            where: { id: { in: parentSlotIds } },
+            include: {
+                AvailableSlotsTimeForService: {
+                    where: { id: { in: timeSlotIds } }
+                }
+            }
+        });
+        const scheduleRecords = booked.flatMap(parent => {
+            return parent.AvailableSlotsTimeForService.map(child => ({
+                date: parent.date,
+                startTime: child.startTime,
+                endTime: child.endTime,
+                doulaProfileId: doulaProfileId,
+                serviceId: service.id,
+                clientId: clientprofile.id,
+            }));
+        });
+        await this.prisma.schedules.createMany({
+            data: scheduleRecords
         });
         return { intake, booking };
     }
@@ -122,10 +229,6 @@ let IntakeFormService = class IntakeFormService {
         if (!intake) {
             throw new common_1.NotFoundException('Intake not found');
         }
-        await this.prisma.availableSlotsForService.update({
-            where: { id: intake.slotId },
-            data: { isBooked: false, availabe: true },
-        });
         await this.prisma.intakeForm.delete({ where: { id } });
         return { message: 'Intake deleted successfully and slot unlocked' };
     }

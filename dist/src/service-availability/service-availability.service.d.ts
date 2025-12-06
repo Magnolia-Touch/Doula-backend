@@ -21,11 +21,11 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            isBooked: boolean;
             date: Date;
             weekday: string;
-            availabe: boolean;
             doulaId: string;
-            isBooked: boolean;
         }[];
         meta: {
             total: number;
@@ -43,20 +43,23 @@ export declare class DoulaServiceAvailabilityService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
+                availabe: boolean;
+                isBooked: boolean;
                 dateId: string;
+                formId: string | null;
+                bookingId: string | null;
             }[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            isBooked: boolean;
             date: Date;
             weekday: string;
-            availabe: boolean;
             doulaId: string;
-            isBooked: boolean;
         };
     }>;
     updateSlotTimeById(dto: UpdateDoulaServiceAvailabilityDTO, timeSlotId: string, userId: string): Promise<{
@@ -65,10 +68,13 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
+            isBooked: boolean;
             dateId: string;
+            formId: string | null;
+            bookingId: string | null;
         };
     }>;
     deleteSlots(timeSlotId: string, userId: string): Promise<{
@@ -77,10 +83,13 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
+            isBooked: boolean;
             dateId: string;
+            formId: string | null;
+            bookingId: string | null;
         };
     }>;
     updateSlotTimeByDate(timeSlotId: string): Promise<{
@@ -89,11 +98,11 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            isBooked: boolean;
             date: Date;
             weekday: string;
-            availabe: boolean;
             doulaId: string;
-            isBooked: boolean;
         };
     }>;
 }

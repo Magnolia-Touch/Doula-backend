@@ -55,13 +55,28 @@ export declare class ZoneManagerController {
     getZoneManagerById(id: string): Promise<{
         message: string;
         data: {
-            zonemanagerprofile: {
+            zonemanagerprofile: ({
+                managingRegion: {
+                    id: string;
+                    is_active: boolean;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    pincode: string;
+                    regionName: string;
+                    district: string;
+                    state: string;
+                    country: string;
+                    latitude: string;
+                    longitude: string;
+                    zoneManagerId: string | null;
+                }[];
+            } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
                 userId: string | null;
-            } | null;
+            }) | null;
         } & {
             id: string;
             name: string;

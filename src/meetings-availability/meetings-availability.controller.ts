@@ -31,6 +31,8 @@ import {
 } from '@nestjs/swagger';
 import { toUTCDate } from 'src/common/utility/service-utils';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Role } from '@prisma/client';
 
 @ApiTags('Meeting Slots')
 @ApiBearerAuth('bearer')
@@ -67,10 +69,9 @@ export class AvailableSlotsController {
         },
     })
     @Post()
-    async createSlots(@Body() dto: AvailableSlotsForMeetingDto[], @Req() req) {
+    async createSlots(@Body() dto: AvailableSlotsForMeetingDto, @Req() req) {
         // note: your service probably accepts either single or multiple; adjust call accordingly
-        const results = await Promise.all(dto.map(item => this.service.createAvailability(item, req.user)));
-        return results;
+        return this.service.createAvailability(dto, req.user)
     }
 
     // Get SLOT (filtered)
@@ -147,7 +148,7 @@ export class AvailableSlotsController {
         return this.service.getSlotById(id);
     }
 
-    // Update slot (time)
+    // Update slot (time)ff
     @UseGuards(JwtAuthGuard)
     @Roles('ZONE_MANAGER', 'ADMIN', 'DOULA')
     @ApiOperation({ summary: 'Update a timeslot (start/end) or its metadata' })
@@ -181,4 +182,98 @@ export class AvailableSlotsController {
     async updateSlotAvail(@Param('id') id: string, @Body('booked') booked: boolean, @Body('availabe') availabe: boolean) {
         return this.service.updateTimeSlotAvailability(id, booked, availabe);
     }
+
+    // Disable slots for a date range
+    @UseGuards(JwtAuthGuard)
+    @Roles('ADMIN', 'ZONE_MANAGER', 'DOULA')
+    @ApiOperation({ summary: 'Disable ALL meeting available slots in a date range' })
+    @ApiQuery({ name: 'startDate', required: true })
+    @ApiQuery({ name: 'endDate', required: true })
+    @ApiResponse({
+        status: 200,
+        type: SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Slots disabled',
+                data: {
+                    startDate: '2025-01-10',
+                    endDate: '2025-01-15',
+                    count: 8
+                }
+            }
+        }
+    })
+    @Post('disable')
+    async disableSlots(
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string
+    ) {
+        if (!startDate) throw new BadRequestException('startDate is required');
+        if (!endDate) throw new BadRequestException('endDate is required');
+
+        const result = await this.service.disableSlotsInRange(startDate, endDate);
+
+        return {
+            success: true,
+            message: 'Slots disabled',
+            data: {
+                startDate,
+                endDate,
+                ...result
+            }
+        };
+    }
+
+    // Get SLOT (filtered)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ADMIN, Role.ZONE_MANAGER, Role.DOULA)
+    @ApiOperation({ summary: 'Get slots for a region between dates' })
+    @ApiQuery({ name: 'regionId', required: true })
+    @ApiQuery({ name: 'startDate', required: true })
+    @ApiQuery({ name: 'endDate', required: true })
+    @ApiQuery({ name: 'filter', required: false, description: 'all | booked | unbooked' })
+    @ApiQuery({ name: 'page', required: false })
+    @ApiQuery({ name: 'limit', required: false })
+    @ApiResponse({
+        status: 200,
+        type: SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Slots fetched',
+                data: {
+                    items: [
+                        {
+                            id: 'date-slot-1',
+                            date: '2025-11-21',
+                            times: [
+                                { id: 'time-1', startTime: '09:00', endTime: '09:30', isBooked: false, available: true },
+                                { id: 'time-2', startTime: '10:00', endTime: '10:30', isBooked: true, available: false },
+                            ],
+                            regionId: 'region-1',
+                        },
+                    ],
+                    total: 1,
+                    page: 1,
+                    limit: 10,
+                },
+            },
+        },
+    })
+    @Get('my/availability')
+    async findall(
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+        @Query('filter') filter: 'all' | 'booked' | 'unbooked' = 'all',
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10',
+        @Req() req
+    ) {
+        if (!startDate) throw new BadRequestException('startDate is required');
+        if (!endDate) throw new BadRequestException('endDate is required');
+
+        return this.service.findall(req.user, startDate, endDate, filter, parseInt(page, 10), parseInt(limit, 10));
+    }
+
 }
