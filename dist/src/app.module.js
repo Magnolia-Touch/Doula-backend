@@ -30,6 +30,7 @@ const testimonials_module_1 = require("./testimonials/testimonials.module");
 const service_booking_module_1 = require("./service-bookings/service-booking.module");
 const language_module_1 = require("./languages/language.module");
 const serve_static_1 = require("@nestjs/serve-static");
+const contact_form_module_1 = require("./contact-form/contact-form.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -53,6 +54,7 @@ exports.AppModule = AppModule = __decorate([
             analytics_module_1.AnalyticsModule,
             testimonials_module_1.TestimonialsModule,
             language_module_1.LanguageModule,
+            contact_form_module_1.ContactFormModule,
             service_booking_module_1.ServiceBookingModule,
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(process.cwd(), 'uploads'),

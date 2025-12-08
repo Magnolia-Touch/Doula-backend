@@ -22,6 +22,7 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ServiceBookingModule } from './service-bookings/service-booking.module';
 import { LanguageModule } from './languages/language.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ContactFormModule } from './contact-form/contact-form.module';
 
 @Module({
   imports: [ZoneManagerModule,
@@ -42,6 +43,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     AnalyticsModule,
     TestimonialsModule,
     LanguageModule,
+
+    ContactFormModule,
     ServiceBookingModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
