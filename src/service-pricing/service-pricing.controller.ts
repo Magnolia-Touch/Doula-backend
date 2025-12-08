@@ -177,4 +177,26 @@ export class ServicePricingController {
     getServiceWithPricing(@Query() query) {
         return this.servicesService.listServices(query);
     }
+
+
+    @Post("manager")
+    @ApiOperation({ summary: 'Create a service pricing entry' })
+    @ApiResponse({
+        status: 201,
+        description: 'Service pricing created successfully',
+        schema: {
+            example: {
+                message: 'Created successfully',
+                data: {
+                    id: 'uuid',
+                    serviceId: 'uuid',
+                    price: 4999,
+                    createdAt: '2025-01-12T10:12:00.123Z',
+                }
+            }
+        }
+    })
+    createPricing(@Body() dto: CreateServicePricingDto) {
+        return this.servicesService.createPricing(dto);
+    }
 }

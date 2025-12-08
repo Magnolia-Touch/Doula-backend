@@ -59,8 +59,8 @@ export declare class ZoneManagerService {
                     is_active: boolean;
                     createdAt: Date;
                     updatedAt: Date;
-                    pincode: string;
                     regionName: string;
+                    pincode: string;
                     district: string;
                     state: string;
                     country: string;

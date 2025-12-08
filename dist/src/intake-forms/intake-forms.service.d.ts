@@ -13,23 +13,23 @@ export declare class IntakeFormService {
             phone: string | null;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
-            regionId: string;
             address: string;
+            regionId: string;
             doulaProfileId: string;
-            clientId: string;
+            date: Date;
             servicePricingId: string;
+            clientId: string;
         };
         booking: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             regionId: string;
-            status: import("@prisma/client").$Enums.BookingStatus;
             doulaProfileId: string;
-            clientId: string;
+            date: Date;
+            status: import("@prisma/client").$Enums.BookingStatus;
             servicePricingId: string;
+            clientId: string;
             paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
         };
     }>;
@@ -41,12 +41,12 @@ export declare class IntakeFormService {
             phone: string | null;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
-            regionId: string;
             address: string;
+            regionId: string;
             doulaProfileId: string;
-            clientId: string;
+            date: Date;
             servicePricingId: string;
+            clientId: string;
         }[];
         meta: {
             total: number;
@@ -63,16 +63,28 @@ export declare class IntakeFormService {
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
-            userId: string;
             address: string | null;
+            userId: string;
+        };
+        DoulaProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string | null;
+            profileImage: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            userId: string;
         };
         region: {
             id: string;
             is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
-            pincode: string;
             regionName: string;
+            pincode: string;
             district: string;
             state: string;
             country: string;
@@ -84,31 +96,19 @@ export declare class IntakeFormService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            price: import("@prisma/client/runtime/library").Decimal;
             serviceId: string;
             doulaProfileId: string;
-            price: import("@prisma/client/runtime/library").Decimal;
-        };
-        DoulaProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            regionId: string | null;
-            profileImage: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
         };
         slot: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
-            isBooked: boolean;
             date: Date;
             weekday: string;
+            availabe: boolean;
             doulaId: string;
+            isBooked: boolean;
         }[];
     } & {
         id: string;
@@ -117,12 +117,12 @@ export declare class IntakeFormService {
         phone: string | null;
         createdAt: Date;
         updatedAt: Date;
-        date: Date;
-        regionId: string;
         address: string;
+        regionId: string;
         doulaProfileId: string;
-        clientId: string;
+        date: Date;
         servicePricingId: string;
+        clientId: string;
     }>;
     deleteForm(id: string): Promise<{
         message: string;

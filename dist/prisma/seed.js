@@ -195,9 +195,6 @@ async function main() {
     await prisma.notes.create({
         data: { remarks: "Zone manager feedback", zoneManagerId: zoneManager.id }
     });
-    await prisma.notes.create({
-        data: { remarks: "Admin remark", adminId: adminUser.id }
-    });
     console.log("🌱 Seed Done!");
 }
 main().finally(() => prisma.$disconnect());

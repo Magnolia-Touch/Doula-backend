@@ -99,6 +99,21 @@ let ServicePricingService = class ServicePricingService {
             },
         });
     }
+    async createPricing(dto) {
+        const user = await this.prisma.doulaProfile.findUnique({
+            where: { id: dto.doulaId }
+        });
+        if (!user) {
+            throw new common_1.NotFoundException("User Not found Exception");
+        }
+        return this.prisma.servicePricing.create({
+            data: {
+                serviceId: dto.serviceId,
+                doulaProfileId: dto.doulaId,
+                price: dto.price
+            }
+        });
+    }
 };
 exports.ServicePricingService = ServicePricingService;
 exports.ServicePricingService = ServicePricingService = __decorate([

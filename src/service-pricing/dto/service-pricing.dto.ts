@@ -13,6 +13,10 @@ export class CreateServicePricingDto {
     @IsNumber()
     @IsPositive()
     price: number;
+
+    @IsOptional()
+    @IsString()
+    doulaId: string;
 }
 
 export class UpdateServicePricingDto {
