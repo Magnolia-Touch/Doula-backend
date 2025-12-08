@@ -16,8 +16,8 @@ export declare class DoulaController {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    profile_image: string | null;
                     userId: string | null;
+                    profile_image: string | null;
                 }[];
             } & {
                 id: string;
@@ -124,8 +124,8 @@ export declare class DoulaController {
                 is_active: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                regionName: string;
                 pincode: string;
+                regionName: string;
                 district: string;
                 state: string;
                 country: string;
@@ -137,8 +137,8 @@ export declare class DoulaController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string | null;
+                profile_image: string | null;
             }[];
         } & {
             id: string;

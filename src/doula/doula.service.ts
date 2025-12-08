@@ -250,7 +250,6 @@ export class DoulaService {
                         },
                         ServicePricing: true,
                         AvailableSlotsForService: true,
-                        languages: true,
                     },
                 },
             },
