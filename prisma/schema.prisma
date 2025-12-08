@@ -71,18 +71,18 @@ model ZoneManagerProfile {
 
 // Doula Profile
 model DoulaProfile {
-  id            String     @id @default(uuid())
-  user          User       @relation("UserDoulaProfile", fields: [userId], references: [id])
-  userId        String     @unique
+  id            String   @id @default(uuid())
+  user          User     @relation("UserDoulaProfile", fields: [userId], references: [id])
+  userId        String   @unique
   regionId      String?
   profileImage  String?
-  description   String?    @db.Text()
-  achievements  String?    @db.Text()
-  qualification String?    @db.Text()
+  description   String?  @db.Text()
+  achievements  String?  @db.Text()
+  qualification String?  @db.Text()
   yoe           Int?
-  languages     Language[] @relation("DoulaLanguages")
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  languages     Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   Region      Region[]             @relation("regions")
   zoneManager ZoneManagerProfile[]
@@ -95,12 +95,6 @@ model DoulaProfile {
   ServicePricing           ServicePricing[]
   Testimonials             Testimonials[]
   Schedules                Schedules[]
-}
-
-model Language {
-  id     String         @id @default(uuid())
-  name   String         @unique
-  doulas DoulaProfile[] @relation("DoulaLanguages")
 }
 
 // Client Profile

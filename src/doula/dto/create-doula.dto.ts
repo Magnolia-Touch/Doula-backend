@@ -12,13 +12,14 @@ export class CreateDoulaDto {
     @IsPhoneNumber()
     phone: string;
 
-    // regionIds comes as a JSON STRING → convert to array
+
+
     @Transform(({ value }) => {
         if (typeof value === 'string') {
             try {
                 return JSON.parse(value);
             } catch {
-                return value.split(','); // fallback support
+                return value.split(',');
             }
         }
         return value;
@@ -26,6 +27,7 @@ export class CreateDoulaDto {
     @IsArray()
     @IsString({ each: true })
     regionIds: string[];
+
 
     @IsString()
     description: string;

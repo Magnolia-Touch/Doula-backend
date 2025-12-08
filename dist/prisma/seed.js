@@ -65,15 +65,9 @@ async function main() {
     const doula3 = d3.doulaProfile;
     const zoneManager = zoneUser.zonemanagerprofile;
     const client = clientUser.clientProfile;
-    const english = await prisma.language.create({ data: { name: "English" } });
-    const hindi = await prisma.language.create({ data: { name: "Hindi" } });
     await Promise.all([doula1.id, doula2.id, doula3.id].map(id => prisma.doulaProfile.update({
         where: { id },
-        data: {
-            languages: {
-                connect: [{ id: english.id }, { id: hindi.id }]
-            }
-        }
+        data: {}
     })));
     const region = await prisma.region.create({
         data: {

@@ -55,9 +55,7 @@ let DoulaService = class DoulaService {
                             qualification: dto.qualification,
                             achievements: dto.achievements,
                             yoe: dto.yoe,
-                            languages: {
-                                connect: dto.languages.map(lang => ({ id: lang })),
-                            }
+                            languages: dto.languages,
                         }
                     }
                 },
@@ -65,7 +63,6 @@ let DoulaService = class DoulaService {
                     doulaProfile: {
                         include: {
                             zoneManager: true,
-                            languages: true
                         }
                     }
                 }
@@ -92,6 +89,7 @@ let DoulaService = class DoulaService {
             if (zoneManagerIds.length === 0) {
                 throw new common_1.BadRequestException("Selected regions must have a Zone Manager assigned.");
             }
+            console.log("languages", dto.languages);
             const doula = await this.prisma.user.create({
                 data: {
                     name: dto.name,
@@ -111,9 +109,7 @@ let DoulaService = class DoulaService {
                             qualification: dto.qualification,
                             achievements: dto.achievements,
                             yoe: dto.yoe,
-                            languages: {
-                                connect: dto.languages.map(lang => ({ name: lang })),
-                            }
+                            languages: dto.languages
                         }
                     }
                 },
@@ -121,7 +117,6 @@ let DoulaService = class DoulaService {
                     doulaProfile: {
                         include: {
                             zoneManager: true,
-                            languages: true
                         }
                     }
                 }
@@ -220,7 +215,7 @@ let DoulaService = class DoulaService {
     async getById(id) {
         const doula = await this.prisma.user.findUnique({
             where: { id },
-            include: { doulaProfile: { include: { languages: true } } },
+            include: { doulaProfile: true },
         });
         if (!doula || doula.role !== client_1.Role.DOULA) {
             throw new common_1.NotFoundException('Doula not found');

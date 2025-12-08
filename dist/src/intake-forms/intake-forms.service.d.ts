@@ -76,6 +76,7 @@ export declare class IntakeFormService {
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
             userId: string;
         };
         region: {

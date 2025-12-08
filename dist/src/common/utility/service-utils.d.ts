@@ -41,6 +41,7 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
     achievements: string | null;
     qualification: string | null;
     yoe: number | null;
+    languages: import("@prisma/client/runtime/library").JsonValue | null;
     userId: string;
 }>;
 export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;

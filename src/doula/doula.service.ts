@@ -58,9 +58,8 @@ export class DoulaService {
                             qualification: dto.qualification,
                             achievements: dto.achievements,
                             yoe: dto.yoe,
-                            languages: {
-                                connect: dto.languages.map(lang => ({ id: lang })),
-                            }
+                            languages: dto.languages,
+
                         }
                     }
                 },
@@ -68,7 +67,6 @@ export class DoulaService {
                     doulaProfile: {
                         include: {
                             zoneManager: true,
-                            languages: true
                         }
                     }
                 }
@@ -109,6 +107,7 @@ export class DoulaService {
                     "Selected regions must have a Zone Manager assigned."
                 );
             }
+            console.log("languages", dto.languages)
 
             // Create doula
             const doula = await this.prisma.user.create({
@@ -130,9 +129,7 @@ export class DoulaService {
                             qualification: dto.qualification,
                             achievements: dto.achievements,
                             yoe: dto.yoe,
-                            languages: {
-                                connect: dto.languages.map(lang => ({ name: lang })),
-                            }
+                            languages: dto.languages
                         }
                     }
                 },
@@ -140,7 +137,6 @@ export class DoulaService {
                     doulaProfile: {
                         include: {
                             zoneManager: true,
-                            languages: true
                         }
                     }
                 }
@@ -272,7 +268,7 @@ export class DoulaService {
     async getById(id: string) {
         const doula = await this.prisma.user.findUnique({
             where: { id },
-            include: { doulaProfile: { include: { languages: true } } },
+            include: { doulaProfile: true },
         });
 
         if (!doula || doula.role !== Role.DOULA) {

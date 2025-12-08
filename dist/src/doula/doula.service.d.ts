@@ -8,10 +8,6 @@ export declare class DoulaService {
         message: string;
         data: {
             doulaProfile: ({
-                languages: {
-                    id: string;
-                    name: string;
-                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
@@ -29,6 +25,7 @@ export declare class DoulaService {
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
+                languages: import("@prisma/client/runtime/library").JsonValue | null;
                 userId: string;
             }) | null;
         } & {
@@ -70,12 +67,7 @@ export declare class DoulaService {
     getById(id: string): Promise<{
         message: string;
         data: {
-            doulaProfile: ({
-                languages: {
-                    id: string;
-                    name: string;
-                }[];
-            } & {
+            doulaProfile: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -85,8 +77,9 @@ export declare class DoulaService {
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
+                languages: import("@prisma/client/runtime/library").JsonValue | null;
                 userId: string;
-            }) | null;
+            } | null;
         } & {
             id: string;
             name: string;
@@ -153,6 +146,7 @@ export declare class DoulaService {
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
             userId: string;
         };
     }>;

@@ -20,7 +20,6 @@ import { ServicePricingModule } from './service-pricing/service-pricing.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ServiceBookingModule } from './service-bookings/service-booking.module';
-import { LanguageModule } from './languages/language.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ContactFormModule } from './contact-form/contact-form.module';
 
@@ -37,12 +36,10 @@ import { ContactFormModule } from './contact-form/contact-form.module';
     RegionModule,
     DoulaServiceAvailabilityModule,
     ServicesModule,
-    LanguageModule,
     ZoneManagerModule,
     ServicePricingModule,
     AnalyticsModule,
     TestimonialsModule,
-    LanguageModule,
 
     ContactFormModule,
     ServiceBookingModule,
