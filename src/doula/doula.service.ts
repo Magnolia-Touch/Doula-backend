@@ -342,6 +342,7 @@ export class DoulaService {
             return {
                 userId: user.id,
                 name: user.name,
+                email: user.email,
                 profileId: profile?.id ?? null,
                 profileImage: profile?.profileImage ?? null,
                 yoe: profile?.yoe ?? null,
@@ -421,6 +422,7 @@ export class DoulaService {
         const transformed = {
             userId: doula.id,
             name: doula.name,
+            email: doula.email,
 
             profileId: profile?.id ?? null,
             profileImage: profile?.profileImage ?? null,
