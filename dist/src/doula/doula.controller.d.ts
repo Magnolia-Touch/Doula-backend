@@ -32,8 +32,8 @@ export declare class DoulaController {
                         id: string;
                         createdAt: Date;
                         updatedAt: Date;
-                        userId: string | null;
                         profile_image: string | null;
+                        userId: string | null;
                     }[];
                     ServicePricing: ({
                         service: {
@@ -47,15 +47,14 @@ export declare class DoulaController {
                         id: string;
                         createdAt: Date;
                         updatedAt: Date;
+                        price: import("@prisma/client/runtime/library").Decimal;
                         serviceId: string;
                         doulaProfileId: string;
-                        price: import("@prisma/client/runtime/library").Decimal;
                     })[];
                 } & {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    userId: string;
                     regionId: string | null;
                     profileImage: string | null;
                     description: string | null;
@@ -63,12 +62,13 @@ export declare class DoulaController {
                     qualification: string | null;
                     yoe: number | null;
                     languages: import("@prisma/client/runtime/library").JsonValue | null;
+                    userId: string;
                 }) | null;
             } & {
                 id: string;
+                name: string;
                 email: string;
                 phone: string | null;
-                name: string;
                 otp: string | null;
                 otpExpiresAt: Date | null;
                 role: import("@prisma/client").$Enums.Role;
@@ -96,8 +96,8 @@ export declare class DoulaController {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    userId: string | null;
                     profile_image: string | null;
+                    userId: string | null;
                 }[];
                 ServicePricing: ({
                     service: {
@@ -111,15 +111,14 @@ export declare class DoulaController {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    price: import("@prisma/client/runtime/library").Decimal;
                     serviceId: string;
                     doulaProfileId: string;
-                    price: import("@prisma/client/runtime/library").Decimal;
                 })[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 regionId: string | null;
                 profileImage: string | null;
                 description: string | null;
@@ -127,12 +126,13 @@ export declare class DoulaController {
                 qualification: string | null;
                 yoe: number | null;
                 languages: import("@prisma/client/runtime/library").JsonValue | null;
+                userId: string;
             }) | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -201,9 +201,9 @@ export declare class DoulaController {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -233,14 +233,13 @@ export declare class DoulaController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string | null;
                 profile_image: string | null;
+                userId: string | null;
             }[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             regionId: string | null;
             profileImage: string | null;
             description: string | null;
@@ -248,6 +247,7 @@ export declare class DoulaController {
             qualification: string | null;
             yoe: number | null;
             languages: import("@prisma/client/runtime/library").JsonValue | null;
+            userId: string;
         };
     }>;
 }

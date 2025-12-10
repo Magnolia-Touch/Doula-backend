@@ -7,41 +7,41 @@ export declare class EnquiryController {
         message: string;
         enquiry: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            slotId: string;
-            availableSlotsForMeetingId: string | null;
-            serviceId: string;
             name: string;
-            regionId: string;
-            startDate: string;
-            endDate: string;
             email: string;
             phone: string;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string;
+            serviceId: string;
+            slotId: string;
+            availableSlotsForMeetingId: string | null;
+            clientId: string | null;
+            startDate: string;
+            endDate: string;
             additionalNotes: string | null;
             VisitFrequency: number;
             TimeSlots: string;
-            clientId: string | null;
         };
     }>;
     getAllEnquiries(page?: string, limit?: string): Promise<{
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            slotId: string;
-            availableSlotsForMeetingId: string | null;
-            serviceId: string;
             name: string;
-            regionId: string;
-            startDate: string;
-            endDate: string;
             email: string;
             phone: string;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string;
+            serviceId: string;
+            slotId: string;
+            availableSlotsForMeetingId: string | null;
+            clientId: string | null;
+            startDate: string;
+            endDate: string;
             additionalNotes: string | null;
             VisitFrequency: number;
             TimeSlots: string;
-            clientId: string | null;
         }[];
         meta: {
             total: number;
@@ -53,54 +53,54 @@ export declare class EnquiryController {
         };
     }>;
     getEnquiryById(id: string): Promise<{
-        slot: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            startTime: Date;
-            endTime: Date;
-            availabe: boolean;
-            isBooked: boolean;
-            dateId: string;
-        };
-        service: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-        };
         region: {
             id: string;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
-            zoneManagerId: string | null;
-            is_active: boolean;
-            pincode: string;
             regionName: string;
+            pincode: string;
             district: string;
             state: string;
             country: string;
             latitude: string;
             longitude: string;
+            zoneManagerId: string | null;
+        };
+        service: {
+            id: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+        };
+        slot: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            availabe: boolean;
+            startTime: Date;
+            endTime: Date;
+            isBooked: boolean;
+            dateId: string;
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        slotId: string;
-        availableSlotsForMeetingId: string | null;
-        serviceId: string;
         name: string;
-        regionId: string;
-        startDate: string;
-        endDate: string;
         email: string;
         phone: string;
+        createdAt: Date;
+        updatedAt: Date;
+        regionId: string;
+        serviceId: string;
+        slotId: string;
+        availableSlotsForMeetingId: string | null;
+        clientId: string | null;
+        startDate: string;
+        endDate: string;
         additionalNotes: string | null;
         VisitFrequency: number;
         TimeSlots: string;
-        clientId: string | null;
     }>;
     deleteEnquiry(id: string): Promise<{
         message: string;

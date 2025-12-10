@@ -4,6 +4,7 @@ import {
     Body,
     UseGuards,
     Req,
+    Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegistrationDto } from './dto/registration.dto';
@@ -90,4 +91,20 @@ export class AuthController {
     async verifyOtp(@Body() dto: OtpVerifyDto) {
         return this.authService.verifyOtp(dto);
     }
+
+    // Authenticated user's own profile
+    @UseGuards(JwtAuthGuard)
+    @Get('profile')
+    async myProfile(@Req() req: any) {
+        const userId = req.user.id; // from JWT token
+        return this.authService.Profile(userId);
+    }
+
+    // // Fetch profile of any user by ID (admin or internal use)
+    // @UseGuards(JwtAuthGuard)
+    // @Get('profile/:userId')
+    // async getProfile(@Param('userId') userId: string) {
+    //     const result = await this.authService.Profile(userId);
+    //     return { success: true, data: result };
+    // }
 }

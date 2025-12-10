@@ -2,6 +2,8 @@ import {
     Injectable,
     UnauthorizedException,
     ForbiddenException,
+    BadRequestException,
+    NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -122,6 +124,82 @@ export class AuthService {
             message: "User Verified Successfully",
             status: 200,
         };
+    }
+
+
+    async Profile(userId: string) {
+        // Fetch base user with all possible profiles
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                adminProfile: true,
+                doulaProfile: true,
+                clientProfile: true,
+                zonemanagerprofile: true,
+            },
+        });
+
+        if (!user) throw new NotFoundException("User not found");
+
+        const role = user.role;
+
+        // Switch based on role
+        switch (role) {
+            case Role.ADMIN:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.adminProfile,
+                };
+
+            case Role.DOULA:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.doulaProfile,
+                };
+
+            case Role.CLIENT:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.clientProfile,
+                };
+
+            case Role.ZONE_MANAGER:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.zonemanagerprofile,
+                };
+
+            default:
+                throw new BadRequestException("Unknown role or profile not assigned");
+        }
     }
 
 

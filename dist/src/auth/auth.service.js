@@ -104,6 +104,72 @@ let AuthService = class AuthService {
             status: 200,
         };
     }
+    async Profile(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                adminProfile: true,
+                doulaProfile: true,
+                clientProfile: true,
+                zonemanagerprofile: true,
+            },
+        });
+        if (!user)
+            throw new common_1.NotFoundException("User not found");
+        const role = user.role;
+        switch (role) {
+            case client_1.Role.ADMIN:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.adminProfile,
+                };
+            case client_1.Role.DOULA:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.doulaProfile,
+                };
+            case client_1.Role.CLIENT:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.clientProfile,
+                };
+            case client_1.Role.ZONE_MANAGER:
+                return {
+                    role,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        is_active: user.is_active,
+                    },
+                    profile: user.zonemanagerprofile,
+                };
+            default:
+                throw new common_1.BadRequestException("Unknown role or profile not assigned");
+        }
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

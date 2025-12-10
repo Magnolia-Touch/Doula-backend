@@ -21,9 +21,9 @@ export declare class AuthService {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -39,9 +39,9 @@ export declare class AuthService {
     verifyOtp(dto: OtpVerifyDto): Promise<{
         user: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -52,5 +52,78 @@ export declare class AuthService {
         accessToken: string;
         message: string;
         status: number;
+    }>;
+    Profile(userId: string): Promise<{
+        role: "ADMIN";
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string | null;
+            is_active: boolean;
+        };
+        profile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+        } | null;
+    } | {
+        role: "DOULA";
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string | null;
+            is_active: boolean;
+        };
+        profile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string | null;
+            profileImage: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
+            userId: string;
+        } | null;
+    } | {
+        role: "CLIENT";
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string | null;
+            is_active: boolean;
+        };
+        profile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            is_verified: boolean;
+            address: string | null;
+            userId: string;
+        } | null;
+    } | {
+        role: "ZONE_MANAGER";
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string | null;
+            is_active: boolean;
+        };
+        profile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string | null;
+        } | null;
     }>;
 }

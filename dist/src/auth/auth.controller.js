@@ -38,6 +38,10 @@ let AuthController = class AuthController {
     async verifyOtp(dto) {
         return this.authService.verifyOtp(dto);
     }
+    async myProfile(req) {
+        const userId = req.user.id;
+        return this.authService.Profile(userId);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -110,6 +114,14 @@ __decorate([
     __metadata("design:paramtypes", [otp_verify_dto_1.OtpVerifyDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('profile'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "myProfile", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)({
