@@ -174,7 +174,7 @@ async function getOrcreateClent(prisma, data) {
             email: data.email,
             phone: data.phone,
             role: client_1.Role.CLIENT,
-            clientProfile: { create: {} }
+            clientProfile: { create: { is_verified: true } }
         },
         include: {
             clientProfile: true

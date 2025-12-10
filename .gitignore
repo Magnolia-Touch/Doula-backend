@@ -9,3 +9,5 @@ dist/
 notes.txt
 
 uploads/
+
+src/firebase/service-account.json

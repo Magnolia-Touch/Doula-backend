@@ -91,6 +91,7 @@ export declare class ServiceBookingService {
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
+            is_verified: boolean;
             address: string | null;
             userId: string;
         };

@@ -62,7 +62,7 @@ let AuthService = class AuthService {
         if (!user) {
             throw new Error("No User Found");
         }
-        if (user.role == client_1.Role.DOULA || user.role == client_1.Role.ADMIN || user.role == client_1.Role.ZONE_MANAGER) {
+        if (user.role == client_1.Role.DOULA || user.role == client_1.Role.ADMIN || user.role == client_1.Role.ZONE_MANAGER || user.role == client_1.Role.CLIENT) {
             await this.prisma.user.update({
                 where: { email: email },
                 data: {

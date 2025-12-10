@@ -152,55 +152,58 @@ export class DoulaController {
 
     // GET LIST
     @Get()
-    @ApiOperation({ summary: 'Get all doulas with pagination & optional search' })
+    @ApiOperation({ summary: 'Get all doulas with filters & pagination' })
 
-    @ApiQuery({
-        name: 'page',
-        required: false,
-        type: Number,
-        description: 'Page number for pagination (default: 1)',
-        example: 1,
-    })
-    @ApiQuery({
-        name: 'limit',
-        required: false,
-        type: Number,
-        description: 'Number of items per page (default: 10)',
-        example: 10,
-    })
-    @ApiQuery({
-        name: 'search',
-        required: false,
-        type: String,
-        description: 'Search by doula name or email',
-        example: 'Jane',
-    })
+    // pagination
+    @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+
+    // search
+    @ApiQuery({ name: 'search', required: false, type: String, description: 'Search by name, email, phone, region' })
+
+    // existing filters
+    @ApiQuery({ name: 'serviceId', required: false, type: String })
+    @ApiQuery({ name: 'isAvailable', required: false, type: Boolean })
+    @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+
+    // new filters
+    @ApiQuery({ name: 'regionName', required: false, type: String })
+    @ApiQuery({ name: 'minExperience', required: false, type: Number, description: 'Minimum years of experience' })
+    @ApiQuery({ name: 'serviceName', required: false, type: String })
+    @ApiQuery({ name: 'startDate', required: false, type: String, description: 'ISO date yyyy-MM-dd' })
+    @ApiQuery({ name: 'endDate', required: false, type: String, description: 'ISO date yyyy-MM-dd' })
 
     @ApiOkResponse({
-        description: 'Returns a paginated list of doulas',
-        schema: {
-            example: {
-                success: true,
-                message: 'Doulas fetched',
-                data: {
-                    items: [
-                        { id: 'doula-1', name: 'Jane', email: 'jane@example.com' },
-                        { id: 'doula-2', name: 'Asha', email: 'asha@example.com' }
-                    ],
-                    total: 2,
-                    page: 1,
-                    limit: 10
-                }
-            }
-        }
+        description: 'Returns a filtered & paginated list of doulas'
     })
-
     async get(
         @Query('page') page = 1,
         @Query('limit') limit = 10,
         @Query('search') search?: string,
+        @Query('serviceId') serviceId?: string,
+        @Query('isAvailable') isAvailable?: boolean,
+        @Query('isActive') isActive?: boolean,
+
+        @Query('regionName') regionName?: string,
+        @Query('minExperience') minExperience?: number,
+        @Query('serviceName') serviceName?: string,
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string,
     ) {
-        return this.service.get(Number(page), Number(limit), search);
+        return this.service.get(
+            Number(page),
+            Number(limit),
+            search,
+            serviceId,
+            isAvailable,
+            isActive,
+
+            regionName,
+            minExperience ? Number(minExperience) : undefined,
+            serviceName,
+            startDate,
+            endDate,
+        );
     }
 
     // GET BY ID

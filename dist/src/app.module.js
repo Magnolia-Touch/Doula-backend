@@ -30,6 +30,10 @@ const testimonials_module_1 = require("./testimonials/testimonials.module");
 const service_booking_module_1 = require("./service-bookings/service-booking.module");
 const serve_static_1 = require("@nestjs/serve-static");
 const contact_form_module_1 = require("./contact-form/contact-form.module");
+const firebase_module_1 = require("./firebase/firebase.module");
+const notifications_module_1 = require("./notifications/notifications.module");
+const device_token_module_1 = require("./token/device-token.module");
+const users_module_1 = require("./users/users.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -51,8 +55,12 @@ exports.AppModule = AppModule = __decorate([
             service_pricing_module_1.ServicePricingModule,
             analytics_module_1.AnalyticsModule,
             testimonials_module_1.TestimonialsModule,
+            firebase_module_1.FirebaseModule,
+            notifications_module_1.NotificationModule,
+            device_token_module_1.DeviceTokenModule,
             contact_form_module_1.ContactFormModule,
             service_booking_module_1.ServiceBookingModule,
+            users_module_1.UserModule,
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(process.cwd(), 'uploads'),
                 serveRoot: "/uploads",

@@ -59,7 +59,7 @@ export class AuthService {
         if (!user) {
             throw new Error("No User Found")
         }
-        if (user.role == Role.DOULA || user.role == Role.ADMIN || user.role == Role.ZONE_MANAGER) {
+        if (user.role == Role.DOULA || user.role == Role.ADMIN || user.role == Role.ZONE_MANAGER || user.role == Role.CLIENT) {
             await this.prisma.user.update({
                 where: { email: email },
                 data: {
@@ -67,6 +67,7 @@ export class AuthService {
                     otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
                 }
             })
+
             // await this.mailerService.sendMail({
             //     to: dto.email,
             //     subject: 'Login OTP',

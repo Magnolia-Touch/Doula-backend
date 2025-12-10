@@ -11,6 +11,7 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
+                is_verified: boolean;
                 address: string | null;
                 userId: string;
             } | null;
@@ -35,6 +36,7 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
+                is_verified: boolean;
                 address: string | null;
                 userId: string;
             } | null;
@@ -59,6 +61,7 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
+                is_verified: boolean;
                 address: string | null;
                 userId: string;
             } | null;

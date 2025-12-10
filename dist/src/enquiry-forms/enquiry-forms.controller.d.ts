@@ -17,9 +17,9 @@ export declare class EnquiryController {
             slotId: string;
             availableSlotsForMeetingId: string | null;
             clientId: string | null;
-            additionalNotes: string | null;
             startDate: string;
             endDate: string;
+            additionalNotes: string | null;
             VisitFrequency: number;
             TimeSlots: string;
         };
@@ -37,9 +37,9 @@ export declare class EnquiryController {
             slotId: string;
             availableSlotsForMeetingId: string | null;
             clientId: string | null;
-            additionalNotes: string | null;
             startDate: string;
             endDate: string;
+            additionalNotes: string | null;
             VisitFrequency: number;
             TimeSlots: string;
         }[];
@@ -96,9 +96,9 @@ export declare class EnquiryController {
         slotId: string;
         availableSlotsForMeetingId: string | null;
         clientId: string | null;
-        additionalNotes: string | null;
         startDate: string;
         endDate: string;
+        additionalNotes: string | null;
         VisitFrequency: number;
         TimeSlots: string;
     }>;

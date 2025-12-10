@@ -128,7 +128,7 @@ let DoulaService = class DoulaService {
         }
         throw new common_1.BadRequestException("Unauthorized role");
     }
-    async get(page = 1, limit = 10, search, serviceId, isAvailable, isActive) {
+    async get(page = 1, limit = 10, search, serviceId, isAvailable, isActive, regionName, minExperience, serviceName, startDate, endDate) {
         const where = {
             role: client_1.Role.DOULA,
         };
@@ -141,9 +141,7 @@ let DoulaService = class DoulaService {
                 {
                     doulaProfile: {
                         Region: {
-                            some: {
-                                regionName: { contains: q },
-                            },
+                            some: { regionName: { contains: q } },
                         },
                     },
                 },
@@ -151,37 +149,77 @@ let DoulaService = class DoulaService {
                     doulaProfile: {
                         zoneManager: {
                             some: {
-                                user: {
-                                    email: { contains: q },
-                                },
+                                user: { email: { contains: q } },
                             },
                         },
                     },
                 },
             ];
         }
-        if (typeof isActive === 'boolean') {
-            where.is_active = isActive;
-        }
-        if (serviceId) {
+        if (regionName) {
             where.doulaProfile = {
                 ...(where.doulaProfile || {}),
-                ServicePricing: {
+                Region: {
                     some: {
-                        serviceId: serviceId,
+                        regionName: {
+                            contains: regionName.toLowerCase()
+                        },
                     },
                 },
             };
+        }
+        if (typeof minExperience === 'number') {
+            where.doulaProfile = {
+                ...(where.doulaProfile || {}),
+                yoe: { gte: minExperience },
+            };
+        }
+        let servicePricingConditions = {};
+        if (serviceId) {
+            servicePricingConditions = {
+                ...servicePricingConditions,
+                serviceId,
+            };
+        }
+        if (serviceName) {
+            servicePricingConditions = {
+                ...servicePricingConditions,
+                service: {
+                    name: {
+                        contains: serviceName.toLowerCase()
+                    },
+                },
+            };
+        }
+        if (Object.keys(servicePricingConditions).length > 0) {
+            where.doulaProfile = {
+                ...(where.doulaProfile || {}),
+                ServicePricing: { some: servicePricingConditions },
+            };
+        }
+        if (startDate || endDate) {
+            const dateFilter = { isBooked: false, availabe: true };
+            if (startDate)
+                dateFilter.date = { gte: new Date(startDate) };
+            if (endDate) {
+                dateFilter.date = {
+                    ...(dateFilter.date || {}),
+                    lte: new Date(endDate),
+                };
+            }
+            where.doulaProfile = {
+                ...(where.doulaProfile || {}),
+                AvailableSlotsForService: { some: dateFilter },
+            };
+        }
+        if (typeof isActive === 'boolean') {
+            where.is_active = isActive;
         }
         if (typeof isAvailable === 'boolean') {
             where.doulaProfile = {
                 ...(where.doulaProfile || {}),
                 AvailableSlotsForService: isAvailable
-                    ? {
-                        some: {
-                            isBooked: false,
-                        },
-                    }
+                    ? { some: { isBooked: false, availabe: true } }
                     : {},
             };
         }
@@ -194,32 +232,135 @@ let DoulaService = class DoulaService {
                 doulaProfile: {
                     include: {
                         Region: true,
-                        zoneManager: {
-                            include: {
-                                user: true,
-                            },
+                        ServicePricing: {
+                            include: { service: true },
                         },
-                        ServicePricing: true,
-                        AvailableSlotsForService: true,
+                        AvailableSlotsForService: {
+                            where: {
+                                availabe: true,
+                                isBooked: false,
+                                ...(startDate || endDate
+                                    ? {
+                                        date: {
+                                            ...(startDate && { gte: new Date(startDate) }),
+                                            ...(endDate && { lte: new Date(endDate) }),
+                                        },
+                                    }
+                                    : {
+                                        date: { gte: new Date() },
+                                    }),
+                            },
+                            orderBy: { date: 'asc' },
+                            take: 1,
+                        },
+                        Testimonials: true,
                     },
                 },
             },
             orderBy: { createdAt: 'desc' },
         });
+        const items = result.data || [];
+        const transformed = items.map((user) => {
+            const profile = user.doulaProfile;
+            const services = profile?.ServicePricing?.map((p) => p.service?.name).filter(Boolean) ?? [];
+            const regions = profile?.Region?.map((r) => r.regionName).filter(Boolean) ?? [];
+            const testimonials = profile?.Testimonials ?? [];
+            const reviewCount = testimonials.length;
+            const avgRating = reviewCount > 0
+                ? testimonials.reduce((sum, t) => sum + t.ratings, 0) / reviewCount
+                : null;
+            const nextSlot = profile?.AvailableSlotsForService?.[0]?.date ?? null;
+            return {
+                userId: user.id,
+                name: user.name,
+                profileId: profile?.id ?? null,
+                profileImage: profile?.profileImage ?? null,
+                yoe: profile?.yoe ?? null,
+                serviceNames: services,
+                regionNames: regions,
+                ratings: avgRating,
+                reviewsCount: reviewCount,
+                nextImmediateAvailabilityDate: nextSlot,
+            };
+        });
         return {
             message: 'Doulas fetched successfully',
             ...result,
+            data: transformed,
         };
     }
     async getById(id) {
         const doula = await this.prisma.user.findUnique({
             where: { id },
-            include: { doulaProfile: true },
+            include: {
+                doulaProfile: {
+                    include: {
+                        Region: true,
+                        ServicePricing: {
+                            include: { service: true }
+                        },
+                        AvailableSlotsForService: {
+                            where: {
+                                availabe: true,
+                                isBooked: false,
+                                date: { gte: new Date() }
+                            },
+                            orderBy: { date: 'asc' },
+                            take: 1,
+                        },
+                        Testimonials: {
+                            include: {
+                                client: {
+                                    include: {
+                                        user: true
+                                    }
+                                }
+                            }
+                        },
+                    },
+                },
+            },
         });
         if (!doula || doula.role !== client_1.Role.DOULA) {
             throw new common_1.NotFoundException('Doula not found');
         }
-        return { message: 'Doula fetched successfully', data: doula };
+        const profile = doula.doulaProfile;
+        const services = profile?.ServicePricing?.map((p) => p.service?.name).filter(Boolean) ?? [];
+        const regions = profile?.Region?.map((r) => r.regionName).filter(Boolean) ?? [];
+        const testimonials = profile?.Testimonials ?? [];
+        const reviewsCount = testimonials.length;
+        const avgRating = reviewsCount > 0
+            ? testimonials.reduce((sum, t) => sum + t.ratings, 0) / reviewsCount
+            : null;
+        const nextSlot = profile?.AvailableSlotsForService?.[0]?.date ?? null;
+        const transformed = {
+            userId: doula.id,
+            name: doula.name,
+            profileId: profile?.id ?? null,
+            profileImage: profile?.profileImage ?? null,
+            yoe: profile?.yoe ?? null,
+            description: profile?.description ?? null,
+            achievements: profile?.achievements ?? null,
+            qualification: profile?.qualification ?? null,
+            serviceNames: services,
+            regionNames: regions,
+            ratings: avgRating,
+            reviewsCount: reviewsCount,
+            nextImmediateAvailabilityDate: nextSlot,
+            testimonials: testimonials.map(t => ({
+                id: t.id,
+                rating: t.ratings,
+                review: t.reviews,
+                clientName: t.client?.user?.name ?? null,
+                clientId: t.clientId,
+                serviceId: t.serviceId,
+                createdAt: t.createdAt
+            })),
+        };
+        return {
+            message: 'Doula fetched successfully',
+            data: transformed,
+        };
     }
     async delete(id) {
         const existingUser = await this.prisma.user.findUnique({

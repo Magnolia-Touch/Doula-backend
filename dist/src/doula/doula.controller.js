@@ -73,8 +73,8 @@ let DoulaController = class DoulaController {
             throw new common_1.InternalServerErrorException(err.message || 'Failed to create doula');
         }
     }
-    async get(page = 1, limit = 10, search) {
-        return this.service.get(Number(page), Number(limit), search);
+    async get(page = 1, limit = 10, search, serviceId, isAvailable, isActive, regionName, minExperience, serviceName, startDate, endDate) {
+        return this.service.get(Number(page), Number(limit), search, serviceId, isAvailable, isActive, regionName, minExperience ? Number(minExperience) : undefined, serviceName, startDate, endDate);
     }
     async getById(id) {
         return this.service.getById(id);
@@ -133,51 +133,34 @@ __decorate([
 ], DoulaController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all doulas with pagination & optional search' }),
-    (0, swagger_1.ApiQuery)({
-        name: 'page',
-        required: false,
-        type: Number,
-        description: 'Page number for pagination (default: 1)',
-        example: 1,
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'limit',
-        required: false,
-        type: Number,
-        description: 'Number of items per page (default: 10)',
-        example: 10,
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'search',
-        required: false,
-        type: String,
-        description: 'Search by doula name or email',
-        example: 'Jane',
-    }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all doulas with filters & pagination' }),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false, type: Number, example: 1 }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, type: Number, example: 10 }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false, type: String, description: 'Search by name, email, phone, region' }),
+    (0, swagger_1.ApiQuery)({ name: 'serviceId', required: false, type: String }),
+    (0, swagger_1.ApiQuery)({ name: 'isAvailable', required: false, type: Boolean }),
+    (0, swagger_1.ApiQuery)({ name: 'isActive', required: false, type: Boolean }),
+    (0, swagger_1.ApiQuery)({ name: 'regionName', required: false, type: String }),
+    (0, swagger_1.ApiQuery)({ name: 'minExperience', required: false, type: Number, description: 'Minimum years of experience' }),
+    (0, swagger_1.ApiQuery)({ name: 'serviceName', required: false, type: String }),
+    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, type: String, description: 'ISO date yyyy-MM-dd' }),
+    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, type: String, description: 'ISO date yyyy-MM-dd' }),
     (0, swagger_1.ApiOkResponse)({
-        description: 'Returns a paginated list of doulas',
-        schema: {
-            example: {
-                success: true,
-                message: 'Doulas fetched',
-                data: {
-                    items: [
-                        { id: 'doula-1', name: 'Jane', email: 'jane@example.com' },
-                        { id: 'doula-2', name: 'Asha', email: 'asha@example.com' }
-                    ],
-                    total: 2,
-                    page: 1,
-                    limit: 10
-                }
-            }
-        }
+        description: 'Returns a filtered & paginated list of doulas'
     }),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
     __param(2, (0, common_1.Query)('search')),
+    __param(3, (0, common_1.Query)('serviceId')),
+    __param(4, (0, common_1.Query)('isAvailable')),
+    __param(5, (0, common_1.Query)('isActive')),
+    __param(6, (0, common_1.Query)('regionName')),
+    __param(7, (0, common_1.Query)('minExperience')),
+    __param(8, (0, common_1.Query)('serviceName')),
+    __param(9, (0, common_1.Query)('startDate')),
+    __param(10, (0, common_1.Query)('endDate')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, String]),
+    __metadata("design:paramtypes", [Object, Object, String, String, Boolean, Boolean, String, Number, String, String, String]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "get", null);
 __decorate([

@@ -246,7 +246,7 @@ export async function getOrcreateClent(
       email: data.email,
       phone: data.phone,
       role: Role.CLIENT,
-      clientProfile: { create: {} }
+      clientProfile: { create: { is_verified: true } }
     },
     include: {
       clientProfile: true

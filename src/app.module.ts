@@ -22,6 +22,10 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
 import { ServiceBookingModule } from './service-bookings/service-booking.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ContactFormModule } from './contact-form/contact-form.module';
+import { FirebaseModule } from './firebase/firebase.module';
+import { NotificationModule } from './notifications/notifications.module';
+import { DeviceTokenModule } from './token/device-token.module';
+import { UserModule } from './users/users.module';
 
 @Module({
   imports: [ZoneManagerModule,
@@ -40,9 +44,12 @@ import { ContactFormModule } from './contact-form/contact-form.module';
     ServicePricingModule,
     AnalyticsModule,
     TestimonialsModule,
-
+    FirebaseModule,
+    NotificationModule,
+    DeviceTokenModule,
     ContactFormModule,
     ServiceBookingModule,
+    UserModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: "/uploads",

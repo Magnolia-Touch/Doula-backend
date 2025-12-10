@@ -42,6 +42,8 @@
     "class-validator": "^0.14.2",
     "date-fns": "^4.1.0",
     "express": "^5.2.1",
+    "firebase": "^12.6.0",
+    "firebase-admin": "^13.6.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.10",
     "passport-google-oauth20": "^2.0.0",
