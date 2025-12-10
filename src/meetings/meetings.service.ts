@@ -568,4 +568,20 @@ export class MeetingsService {
         };
     }
 
+
+    async findAllmeetings() {
+        return this.prisma.meetings.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: {
+                slot: true,
+                bookedBy: true,
+                AvailableSlotsForMeeting: true,
+                ZoneManagerProfile: true,
+                DoulaProfile: true,
+                AdminProfile: true,
+                Service: true
+            },
+        });
+    }
+
 }

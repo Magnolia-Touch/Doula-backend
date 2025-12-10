@@ -51,6 +51,9 @@ let MeetingsController = class MeetingsController {
     async deleteAllMeetings(req) {
         return this.service.deleteAllMeetings(req.user);
     }
+    async getAllMeetings() {
+        return this.service.findAllmeetings();
+    }
 };
 exports.MeetingsController = MeetingsController;
 __decorate([
@@ -240,6 +243,12 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], MeetingsController.prototype, "deleteAllMeetings", null);
+__decorate([
+    (0, common_1.Get)("all/meetings"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], MeetingsController.prototype, "getAllMeetings", null);
 exports.MeetingsController = MeetingsController = __decorate([
     (0, swagger_1.ApiTags)('Meetings'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

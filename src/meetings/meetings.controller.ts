@@ -215,4 +215,9 @@ export class MeetingsController {
     async deleteAllMeetings(@Req() req) {
         return this.service.deleteAllMeetings(req.user);
     }
+
+    @Get("all/meetings")
+    async getAllMeetings() {
+        return this.service.findAllmeetings();
+    }
 }
