@@ -25,29 +25,87 @@ let ServiceBookingService = class ServiceBookingService {
         if (query.status) {
             where.status = query.status;
         }
-        return (0, pagination_util_1.paginate)({
+        const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.serviceBooking,
             page,
             limit,
             where,
             orderBy: { createdAt: 'desc' },
             include: {
-                DoulaProfile: true,
-                service: true,
-                client: true,
+                DoulaProfile: {
+                    include: {
+                        user: true,
+                    }
+                },
+                client: {
+                    include: {
+                        user: true,
+                    }
+                },
+                service: {
+                    include: {
+                        service: true,
+                    }
+                },
                 region: true,
                 slot: true,
                 AvailableSlotsForService: true,
             },
         });
+        const items = result.data || [];
+        const transformed = items.map((b) => {
+            const clientUser = b.client?.user;
+            const doulaUser = b.DoulaProfile?.user;
+            const serviceName = b.service?.service?.name ?? null;
+            const startDate = b.date;
+            const endDate = b.date;
+            const timeSlots = b.slot?.map((s) => ({
+                id: s.id,
+                startTime: s.startTime,
+                endTime: s.endTime,
+            })) ?? [];
+            return {
+                bookingId: b.id,
+                clientUserId: clientUser?.id ?? null,
+                clientName: clientUser?.name ?? null,
+                clientProfileId: b.client?.id ?? null,
+                doulaUserId: doulaUser?.id ?? null,
+                doulaName: doulaUser?.name ?? null,
+                doulaProfileId: b.DoulaProfile?.id ?? null,
+                regionName: b.region?.regionName ?? null,
+                serviceName,
+                start_date: startDate,
+                end_date: endDate,
+                timeSlots,
+                status: b.status,
+                createdAt: b.createdAt,
+            };
+        });
+        return {
+            message: 'Bookings fetched successfully',
+            ...result,
+            data: transformed,
+        };
     }
     async findById(id) {
         const booking = await this.prisma.serviceBooking.findUnique({
             where: { id },
             include: {
-                DoulaProfile: true,
-                service: true,
-                client: true,
+                DoulaProfile: {
+                    include: {
+                        user: true,
+                    },
+                },
+                client: {
+                    include: {
+                        user: true,
+                    },
+                },
+                service: {
+                    include: {
+                        service: true,
+                    },
+                },
                 region: true,
                 slot: true,
                 AvailableSlotsForService: true,
@@ -56,7 +114,36 @@ let ServiceBookingService = class ServiceBookingService {
         if (!booking) {
             throw new common_1.NotFoundException('Service booking not found');
         }
-        return booking;
+        const clientUser = booking.client?.user;
+        const doulaUser = booking.DoulaProfile?.user;
+        const serviceName = booking.service?.service?.name ?? null;
+        const startDate = booking.date;
+        const endDate = booking.date;
+        const timeSlots = booking.slot?.map((s) => ({
+            id: s.id,
+            startTime: s.startTime,
+            endTime: s.endTime,
+        })) ?? [];
+        const transformed = {
+            bookingId: booking.id,
+            clientUserId: clientUser?.id ?? null,
+            clientName: clientUser?.name ?? null,
+            clientProfileId: booking.client?.id ?? null,
+            doulaUserId: doulaUser?.id ?? null,
+            doulaName: doulaUser?.name ?? null,
+            doulaProfileId: booking.DoulaProfile?.id ?? null,
+            regionName: booking.region?.regionName ?? null,
+            serviceName,
+            start_date: startDate,
+            end_date: endDate,
+            timeSlots,
+            status: booking.status,
+            createdAt: booking.createdAt,
+        };
+        return {
+            message: 'Booking fetched successfully',
+            data: transformed,
+        };
     }
 };
 exports.ServiceBookingService = ServiceBookingService;

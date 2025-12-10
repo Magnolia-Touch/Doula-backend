@@ -17,12 +17,12 @@ export class DoulaService {
         // Check if user already exists with this email
         checkUserExistorNot(this.prisma, dto.email);
 
-        // Find the logged-in user
+        // logged-in user
         const user = await this.prisma.user.findUnique({
             where: { id: userId }
         });
-        console.log(dto.regionIds)
-        // Validate region IDs
+
+        // Validate regions
         const regions = await this.prisma.region.findMany({
             where: { id: { in: dto.regionIds } },
         });
@@ -30,6 +30,8 @@ export class DoulaService {
         if (regions.length !== dto.regionIds.length) {
             throw new NotFoundException("One or more region IDs are invalid");
         }
+
+        let doula;
 
         // -------------------------------------------------------------
         // CASE 1: CREATED BY ZONE MANAGER
@@ -39,7 +41,7 @@ export class DoulaService {
                 where: { userId }
             });
 
-            const doula = await this.prisma.user.create({
+            doula = await this.prisma.user.create({
                 data: {
                     name: dto.name,
                     email: dto.email,
@@ -59,23 +61,13 @@ export class DoulaService {
                             achievements: dto.achievements,
                             yoe: dto.yoe,
                             languages: dto.languages,
-
                         }
                     }
                 },
                 include: {
-                    doulaProfile: {
-                        include: {
-                            zoneManager: true,
-                        }
-                    }
+                    doulaProfile: true,
                 }
             });
-
-            return {
-                message: 'Doula created successfully',
-                data: doula
-            };
         }
 
         // -------------------------------------------------------------
@@ -83,7 +75,6 @@ export class DoulaService {
         // -------------------------------------------------------------
         if (user?.role === Role.ADMIN) {
 
-            // Get regions & their zone managers
             const regions = await this.prisma.region.findMany({
                 where: { id: { in: dto.regionIds } },
                 select: {
@@ -92,12 +83,6 @@ export class DoulaService {
                 }
             });
 
-            // Validate region count again for safety
-            if (regions.length !== dto.regionIds.length) {
-                throw new BadRequestException("One or more regions are invalid.");
-            }
-
-            // Extract zone manager IDs
             const zoneManagerIds = regions
                 .filter(r => r.zoneManager)
                 .map(r => r.zoneManager!.id);
@@ -107,10 +92,8 @@ export class DoulaService {
                     "Selected regions must have a Zone Manager assigned."
                 );
             }
-            console.log("languages", dto.languages)
 
-            // Create doula
-            const doula = await this.prisma.user.create({
+            doula = await this.prisma.user.create({
                 data: {
                     name: dto.name,
                     email: dto.email,
@@ -129,28 +112,58 @@ export class DoulaService {
                             qualification: dto.qualification,
                             achievements: dto.achievements,
                             yoe: dto.yoe,
-                            languages: dto.languages
-                        }
+                            languages: dto.languages,
+                        },
+
                     }
                 },
                 include: {
-                    doulaProfile: {
-                        include: {
-                            zoneManager: true,
-                        }
-                    }
+                    doulaProfile: true,
+
                 }
             });
-
-            return {
-                message: 'Doula created successfully',
-                data: doula
-            };
         }
 
-        // Fallback
-        throw new BadRequestException("Unauthorized role");
+        if (!doula) {
+            throw new BadRequestException("Unauthorized role");
+        }
+
+        // -------------------------------------------------------------
+        // CREATE SERVICE PRICING
+        // dto.services is { service_uuid: price }
+        // -------------------------------------------------------------
+        if (dto.services && doula.doulaProfile?.id) {
+            for (const [serviceId, price] of Object.entries(dto.services)) {
+                await this.prisma.servicePricing.create({
+                    data: {
+                        doulaProfileId: doula.doulaProfile.id,
+                        serviceId,
+                        price,
+                    }
+                });
+            }
+        }
+        const doulaWithServices = await this.prisma.user.findUnique({
+            where: { id: doula.id },
+            include: {
+                doulaProfile: {
+                    include: {
+                        ServicePricing: {
+                            include: { service: true }   // <---- fetch service details
+                        },
+                        Region: true,
+                        zoneManager: true,
+                    }
+                }
+            }
+        });
+
+        return {
+            message: 'Doula created successfully',
+            data: doulaWithServices
+        };
     }
+
 
 
     async get(

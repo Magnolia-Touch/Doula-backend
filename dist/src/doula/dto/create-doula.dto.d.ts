@@ -8,4 +8,5 @@ export declare class CreateDoulaDto {
     qualification: string;
     yoe: number;
     languages: string[];
+    services: Record<string, number>;
 }

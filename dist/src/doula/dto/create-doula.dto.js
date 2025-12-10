@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateDoulaDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 class CreateDoulaDto {
     name;
@@ -22,6 +23,7 @@ class CreateDoulaDto {
     qualification;
     yoe;
     languages;
+    services;
 }
 exports.CreateDoulaDto = CreateDoulaDto;
 __decorate([
@@ -87,4 +89,29 @@ __decorate([
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], CreateDoulaDto.prototype, "languages", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        type: 'object',
+        additionalProperties: { type: 'number' },
+        example: {
+            "86ee0ee2-11fb-4f15-b403-9a94a3cfe868": 1000,
+            "a9943bf1-3678-4981-a7f8-96d260c9bb55": 1500
+        }
+    }),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (!value)
+            return {};
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            }
+            catch {
+                return {};
+            }
+        }
+        return value;
+    }),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", Object)
+], CreateDoulaDto.prototype, "services", void 0);
 //# sourceMappingURL=create-doula.dto.js.map

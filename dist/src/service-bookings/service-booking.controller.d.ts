@@ -8,16 +8,20 @@ export declare class ServiceBookingController {
         status?: string;
     }): Promise<{
         data: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string;
-            doulaProfileId: string;
-            date: Date;
-            status: import("@prisma/client").$Enums.BookingStatus;
-            servicePricingId: string;
-            clientId: string;
-            paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
+            bookingId: any;
+            clientUserId: any;
+            clientName: any;
+            clientProfileId: any;
+            doulaUserId: any;
+            doulaName: any;
+            doulaProfileId: any;
+            regionName: any;
+            serviceName: any;
+            start_date: any;
+            end_date: any;
+            timeSlots: any;
+            status: any;
+            createdAt: any;
         }[];
         meta: {
             total: number;
@@ -27,84 +31,29 @@ export declare class ServiceBookingController {
             hasNextPage: boolean;
             hasPrevPage: boolean;
         };
+        message: string;
     }>;
     getBookingById(id: string): Promise<{
-        AvailableSlotsForService: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            date: Date;
-            weekday: string;
-            availabe: boolean;
-            doulaId: string;
-            isBooked: boolean;
-        }[];
-        DoulaProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string | null;
-            profileImage: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
-            userId: string;
-        };
-        region: {
-            id: string;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
-            regionName: string;
-            pincode: string;
-            district: string;
-            state: string;
-            country: string;
-            latitude: string;
-            longitude: string;
-            zoneManagerId: string | null;
-        };
-        service: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            price: import("@prisma/client/runtime/library").Decimal;
-            serviceId: string;
+        message: string;
+        data: {
+            bookingId: string;
+            clientUserId: string;
+            clientName: string;
+            clientProfileId: string;
+            doulaUserId: string;
+            doulaName: string;
             doulaProfileId: string;
-        };
-        slot: {
-            id: string;
+            regionName: string;
+            serviceName: string;
+            start_date: Date;
+            end_date: Date;
+            timeSlots: {
+                id: any;
+                startTime: any;
+                endTime: any;
+            }[];
+            status: import("@prisma/client").$Enums.BookingStatus;
             createdAt: Date;
-            updatedAt: Date;
-            availabe: boolean;
-            startTime: Date;
-            endTime: Date;
-            isBooked: boolean;
-            dateId: string;
-            formId: string | null;
-            bookingId: string | null;
-        }[];
-        client: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            profile_image: string | null;
-            is_verified: boolean;
-            address: string | null;
-            userId: string;
         };
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        regionId: string;
-        doulaProfileId: string;
-        date: Date;
-        status: import("@prisma/client").$Enums.BookingStatus;
-        servicePricingId: string;
-        clientId: string;
-        paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
 }

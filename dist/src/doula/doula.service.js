@@ -25,18 +25,18 @@ let DoulaService = class DoulaService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId }
         });
-        console.log(dto.regionIds);
         const regions = await this.prisma.region.findMany({
             where: { id: { in: dto.regionIds } },
         });
         if (regions.length !== dto.regionIds.length) {
             throw new common_1.NotFoundException("One or more region IDs are invalid");
         }
+        let doula;
         if (user?.role === client_1.Role.ZONE_MANAGER) {
             const manager = await this.prisma.zoneManagerProfile.findUnique({
                 where: { userId }
             });
-            const doula = await this.prisma.user.create({
+            doula = await this.prisma.user.create({
                 data: {
                     name: dto.name,
                     email: dto.email,
@@ -60,17 +60,9 @@ let DoulaService = class DoulaService {
                     }
                 },
                 include: {
-                    doulaProfile: {
-                        include: {
-                            zoneManager: true,
-                        }
-                    }
+                    doulaProfile: true,
                 }
             });
-            return {
-                message: 'Doula created successfully',
-                data: doula
-            };
         }
         if (user?.role === client_1.Role.ADMIN) {
             const regions = await this.prisma.region.findMany({
@@ -80,17 +72,13 @@ let DoulaService = class DoulaService {
                     zoneManager: { select: { id: true } }
                 }
             });
-            if (regions.length !== dto.regionIds.length) {
-                throw new common_1.BadRequestException("One or more regions are invalid.");
-            }
             const zoneManagerIds = regions
                 .filter(r => r.zoneManager)
                 .map(r => r.zoneManager.id);
             if (zoneManagerIds.length === 0) {
                 throw new common_1.BadRequestException("Selected regions must have a Zone Manager assigned.");
             }
-            console.log("languages", dto.languages);
-            const doula = await this.prisma.user.create({
+            doula = await this.prisma.user.create({
                 data: {
                     name: dto.name,
                     email: dto.email,
@@ -109,24 +97,47 @@ let DoulaService = class DoulaService {
                             qualification: dto.qualification,
                             achievements: dto.achievements,
                             yoe: dto.yoe,
-                            languages: dto.languages
-                        }
+                            languages: dto.languages,
+                        },
                     }
                 },
                 include: {
-                    doulaProfile: {
-                        include: {
-                            zoneManager: true,
-                        }
-                    }
+                    doulaProfile: true,
                 }
             });
-            return {
-                message: 'Doula created successfully',
-                data: doula
-            };
         }
-        throw new common_1.BadRequestException("Unauthorized role");
+        if (!doula) {
+            throw new common_1.BadRequestException("Unauthorized role");
+        }
+        if (dto.services && doula.doulaProfile?.id) {
+            for (const [serviceId, price] of Object.entries(dto.services)) {
+                await this.prisma.servicePricing.create({
+                    data: {
+                        doulaProfileId: doula.doulaProfile.id,
+                        serviceId,
+                        price,
+                    }
+                });
+            }
+        }
+        const doulaWithServices = await this.prisma.user.findUnique({
+            where: { id: doula.id },
+            include: {
+                doulaProfile: {
+                    include: {
+                        ServicePricing: {
+                            include: { service: true }
+                        },
+                        Region: true,
+                        zoneManager: true,
+                    }
+                }
+            }
+        });
+        return {
+            message: 'Doula created successfully',
+            data: doulaWithServices
+        };
     }
     async get(page = 1, limit = 10, search, serviceId, isAvailable, isActive, regionName, minExperience, serviceName, startDate, endDate) {
         const where = {
@@ -273,6 +284,7 @@ let DoulaService = class DoulaService {
             return {
                 userId: user.id,
                 name: user.name,
+                email: user.email,
                 profileId: profile?.id ?? null,
                 profileImage: profile?.profileImage ?? null,
                 yoe: profile?.yoe ?? null,
@@ -336,6 +348,7 @@ let DoulaService = class DoulaService {
         const transformed = {
             userId: doula.id,
             name: doula.name,
+            email: doula.email,
             profileId: profile?.id ?? null,
             profileImage: profile?.profileImage ?? null,
             yoe: profile?.yoe ?? null,
