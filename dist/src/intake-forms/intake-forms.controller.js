@@ -39,6 +39,9 @@ let IntakeFormController = class IntakeFormController {
     deleteallEnquiry() {
         return this.intakeService.deleteAllIntakeForms();
     }
+    BookDoula(dto, req) {
+        return this.intakeService.BookDoula(dto, req.user.id);
+    }
 };
 exports.IntakeFormController = IntakeFormController;
 __decorate([
@@ -143,6 +146,36 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], IntakeFormController.prototype, "deleteallEnquiry", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('bearer'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Book Doula Service' }),
+    (0, swagger_1.ApiBody)({ type: intake_form_dto_1.BookDoulaDto }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Intake form created',
+                data: {
+                    id: 'intake-uuid',
+                    name: 'Jane Doe',
+                    email: 'jane@example.com',
+                    slotId: 'slot-uuid',
+                    doulaProfileId: 'doula-uuid',
+                    serviceId: 'service-uuid',
+                },
+            },
+        },
+    }),
+    (0, common_1.Post)('book/doula'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [intake_form_dto_1.BookDoulaDto, Object]),
+    __metadata("design:returntype", void 0)
+], IntakeFormController.prototype, "BookDoula", null);
 exports.IntakeFormController = IntakeFormController = __decorate([
     (0, swagger_1.ApiTags)('Intake Forms'),
     (0, common_1.Controller)({

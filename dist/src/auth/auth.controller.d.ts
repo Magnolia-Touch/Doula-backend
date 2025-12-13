@@ -70,14 +70,13 @@ export declare class AuthController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            userId: string;
             regionId: string | null;
-            profileImage: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
             languages: import("@prisma/client/runtime/library").JsonValue | null;
-            userId: string;
         } | null;
     } | {
         role: "CLIENT";
@@ -93,9 +92,9 @@ export declare class AuthController {
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
+            userId: string;
             is_verified: boolean;
             address: string | null;
-            userId: string;
         } | null;
     } | {
         role: "ZONE_MANAGER";

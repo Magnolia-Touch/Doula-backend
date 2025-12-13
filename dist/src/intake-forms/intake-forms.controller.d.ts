@@ -1,49 +1,51 @@
 import { IntakeFormService } from './intake-forms.service';
-import { IntakeFormDto } from './dto/intake-form.dto';
+import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
 export declare class IntakeFormController {
     private readonly intakeService;
     constructor(intakeService: IntakeFormService);
     create(dto: IntakeFormDto): Promise<{
         intake: {
             id: string;
+            date: Date;
+            location: string | null;
             name: string | null;
             email: string | null;
             phone: string | null;
+            address: string;
             createdAt: Date;
             updatedAt: Date;
-            address: string;
             regionId: string;
-            doulaProfileId: string;
-            date: Date;
             servicePricingId: string;
+            doulaProfileId: string;
             clientId: string;
         };
         booking: {
             id: string;
+            date: Date;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
-            doulaProfileId: string;
-            date: Date;
-            status: import("@prisma/client").$Enums.BookingStatus;
             servicePricingId: string;
+            doulaProfileId: string;
             clientId: string;
             paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import("@prisma/client").$Enums.BookingStatus;
         };
     }>;
     getAll(page?: number, limit?: number): Promise<{
         data: {
             id: string;
+            date: Date;
+            location: string | null;
             name: string | null;
             email: string | null;
             phone: string | null;
+            address: string;
             createdAt: Date;
             updatedAt: Date;
-            address: string;
             regionId: string;
-            doulaProfileId: string;
-            date: Date;
             servicePricingId: string;
+            doulaProfileId: string;
             clientId: string;
         }[];
         meta: {
@@ -56,31 +58,25 @@ export declare class IntakeFormController {
         };
     }>;
     get(id: string): Promise<{
+        service: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            doulaProfileId: string;
+            serviceId: string;
+            price: import("@prisma/client/runtime/library").Decimal;
+        };
         clientProfile: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            profile_image: string | null;
-            is_verified: boolean;
             address: string | null;
-            userId: string;
-        };
-        DoulaProfile: {
-            id: string;
             createdAt: Date;
             updatedAt: Date;
-            regionId: string | null;
-            profileImage: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
             userId: string;
+            is_verified: boolean;
+            profile_image: string | null;
         };
         region: {
             id: string;
-            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
             regionName: string;
@@ -90,38 +86,44 @@ export declare class IntakeFormController {
             country: string;
             latitude: string;
             longitude: string;
+            is_active: boolean;
             zoneManagerId: string | null;
         };
-        service: {
+        DoulaProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client/runtime/library").Decimal;
-            serviceId: string;
-            doulaProfileId: string;
+            regionId: string | null;
+            userId: string;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
         };
         slot: {
             id: string;
+            date: Date;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             weekday: string;
             availabe: boolean;
-            doulaId: string;
             isBooked: boolean;
+            doulaId: string;
         }[];
     } & {
         id: string;
+        date: Date;
+        location: string | null;
         name: string | null;
         email: string | null;
         phone: string | null;
+        address: string;
         createdAt: Date;
         updatedAt: Date;
-        address: string;
         regionId: string;
-        doulaProfileId: string;
-        date: Date;
         servicePricingId: string;
+        doulaProfileId: string;
         clientId: string;
     }>;
     delete(id: string): Promise<{
@@ -130,5 +132,34 @@ export declare class IntakeFormController {
     deleteallEnquiry(): Promise<{
         message: string;
         deletedCount: number;
+    }>;
+    BookDoula(dto: BookDoulaDto, req: any): Promise<{
+        intake: {
+            id: string;
+            date: Date;
+            location: string | null;
+            name: string | null;
+            email: string | null;
+            phone: string | null;
+            address: string;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string;
+            servicePricingId: string;
+            doulaProfileId: string;
+            clientId: string;
+        };
+        booking: {
+            id: string;
+            date: Date;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string;
+            servicePricingId: string;
+            doulaProfileId: string;
+            clientId: string;
+            paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import("@prisma/client").$Enums.BookingStatus;
+        };
     }>;
 }

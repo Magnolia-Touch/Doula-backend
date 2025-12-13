@@ -20,11 +20,11 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            isBooked: boolean;
             date: Date;
             weekday: string;
-            availabe: boolean;
             doulaId: string;
-            isBooked: boolean;
         }[];
         meta: {
             total: number;
@@ -42,9 +42,9 @@ export declare class DoulaServiceAvailabilityController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
+                availabe: boolean;
                 isBooked: boolean;
                 dateId: string;
                 formId: string | null;
@@ -54,11 +54,11 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            isBooked: boolean;
             date: Date;
             weekday: string;
-            availabe: boolean;
             doulaId: string;
-            isBooked: boolean;
         };
     }>;
     updateSlot(dto: UpdateDoulaServiceAvailabilityDTO, id: string, req: any): Promise<{
@@ -67,9 +67,9 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             formId: string | null;
@@ -82,9 +82,9 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             formId: string | null;
@@ -97,11 +97,11 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
+            isBooked: boolean;
             date: Date;
             weekday: string;
-            availabe: boolean;
             doulaId: string;
-            isBooked: boolean;
         };
     }>;
 }

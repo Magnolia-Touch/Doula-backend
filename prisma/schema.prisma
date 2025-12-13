@@ -76,7 +76,6 @@ model DoulaProfile {
   user          User     @relation("UserDoulaProfile", fields: [userId], references: [id])
   userId        String   @unique
   regionId      String?
-  profileImage  String?
   description   String?  @db.Text()
   achievements  String?  @db.Text()
   qualification String?  @db.Text()
@@ -96,6 +95,7 @@ model DoulaProfile {
   ServicePricing           ServicePricing[]
   Testimonials             Testimonials[]
   Schedules                Schedules[]
+  DoulaImages              DoulaImages[]
 }
 
 // Client Profile
@@ -309,8 +309,9 @@ model AvailableSlotsTimeForService {
 
 // Intake Form
 model IntakeForm {
-  id   String   @id @default(uuid())
-  date DateTime
+  id       String   @id @default(uuid())
+  date     DateTime
+  location String?
 
   //use these optional data if the service location is different
   name    String?
@@ -446,4 +447,17 @@ model DeviceToken {
   userId    String
   token     String
   createdAt DateTime @default(now())
+}
+
+model DoulaImages {
+  id             String  @id @default(uuid())
+  doulaProfileId String
+  url            String
+  altText        String?
+  isMain         Boolean @default(false)
+  sortOrder      Int     @default(0)
+
+  doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id])
+
+  @@unique([doulaProfileId, isMain], map: "unique_main_image")
 }

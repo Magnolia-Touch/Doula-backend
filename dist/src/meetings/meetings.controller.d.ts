@@ -21,10 +21,10 @@ export declare class MeetingsController {
             serviceId: string | null;
             doulaProfileId: string | null;
             status: import("@prisma/client").$Enums.MeetingStatus;
+            slotId: string;
             remarks: string | null;
             cancelledAt: Date | null;
             rescheduledAt: Date | null;
-            slotId: string;
             bookedById: string;
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
@@ -40,25 +40,24 @@ export declare class MeetingsController {
         };
     }>;
     getMeetingById(id: string, req: any): Promise<{
-        DoulaProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string | null;
-            profileImage: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
-            userId: string;
-        } | null;
         ZoneManagerProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
             userId: string | null;
+        } | null;
+        DoulaProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            regionId: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
         } | null;
         Service: {
             id: string;
@@ -67,13 +66,20 @@ export declare class MeetingsController {
             updatedAt: Date;
             description: string | null;
         } | null;
+        AdminProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+        } | null;
         slot: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
         };
@@ -82,17 +88,10 @@ export declare class MeetingsController {
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
+            userId: string;
             is_verified: boolean;
             address: string | null;
-            userId: string;
         };
-        AdminProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            profile_image: string | null;
-            userId: string;
-        } | null;
     } & {
         id: string;
         createdAt: Date;
@@ -101,10 +100,10 @@ export declare class MeetingsController {
         serviceId: string | null;
         doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
+        slotId: string;
         remarks: string | null;
         cancelledAt: Date | null;
         rescheduledAt: Date | null;
-        slotId: string;
         bookedById: string;
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
@@ -120,10 +119,10 @@ export declare class MeetingsController {
             serviceId: string | null;
             doulaProfileId: string | null;
             status: import("@prisma/client").$Enums.MeetingStatus;
+            slotId: string;
             remarks: string | null;
             cancelledAt: Date | null;
             rescheduledAt: Date | null;
-            slotId: string;
             bookedById: string;
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
@@ -141,10 +140,10 @@ export declare class MeetingsController {
         serviceId: string | null;
         doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
+        slotId: string;
         remarks: string | null;
         cancelledAt: Date | null;
         rescheduledAt: Date | null;
-        slotId: string;
         bookedById: string;
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
@@ -160,10 +159,10 @@ export declare class MeetingsController {
             serviceId: string | null;
             doulaProfileId: string | null;
             status: import("@prisma/client").$Enums.MeetingStatus;
+            slotId: string;
             remarks: string | null;
             cancelledAt: Date | null;
             rescheduledAt: Date | null;
-            slotId: string;
             bookedById: string;
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
@@ -175,25 +174,24 @@ export declare class MeetingsController {
         count: number;
     }>;
     getAllMeetings(): Promise<({
-        DoulaProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string | null;
-            profileImage: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
-            userId: string;
-        } | null;
         ZoneManagerProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
             userId: string | null;
+        } | null;
+        DoulaProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            regionId: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
         } | null;
         Service: {
             id: string;
@@ -202,25 +200,32 @@ export declare class MeetingsController {
             updatedAt: Date;
             description: string | null;
         } | null;
+        AdminProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+        } | null;
         AvailableSlotsForMeeting: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            zoneManagerId: string | null;
-            date: Date;
-            weekday: string;
             availabe: boolean;
-            ownerRole: import("@prisma/client").$Enums.Role;
+            date: Date;
+            zoneManagerId: string | null;
+            weekday: string;
             doulaId: string | null;
             adminId: string | null;
+            ownerRole: import("@prisma/client").$Enums.Role;
         } | null;
         slot: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
         };
@@ -229,17 +234,10 @@ export declare class MeetingsController {
             createdAt: Date;
             updatedAt: Date;
             profile_image: string | null;
+            userId: string;
             is_verified: boolean;
             address: string | null;
-            userId: string;
         };
-        AdminProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            profile_image: string | null;
-            userId: string;
-        } | null;
     } & {
         id: string;
         createdAt: Date;
@@ -248,10 +246,10 @@ export declare class MeetingsController {
         serviceId: string | null;
         doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
+        slotId: string;
         remarks: string | null;
         cancelledAt: Date | null;
         rescheduledAt: Date | null;
-        slotId: string;
         bookedById: string;
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;

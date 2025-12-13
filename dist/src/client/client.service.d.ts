@@ -11,9 +11,9 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
+                userId: string;
                 is_verified: boolean;
                 address: string | null;
-                userId: string;
             } | null;
         } & {
             id: string;
@@ -36,9 +36,9 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
+                userId: string;
                 is_verified: boolean;
                 address: string | null;
-                userId: string;
             } | null;
         } & {
             id: string;
@@ -61,9 +61,9 @@ export declare class ClientsService {
                 createdAt: Date;
                 updatedAt: Date;
                 profile_image: string | null;
+                userId: string;
                 is_verified: boolean;
                 address: string | null;
-                userId: string;
             } | null;
         } & {
             id: string;

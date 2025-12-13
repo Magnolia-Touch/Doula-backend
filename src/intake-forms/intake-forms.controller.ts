@@ -6,11 +6,12 @@ import {
     Param,
     Post,
     Query,
+    Req,
     UseGuards,
 } from '@nestjs/common';
 
 import { IntakeFormService } from './intake-forms.service';
-import { IntakeFormDto } from './dto/intake-form.dto';
+import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import {
     ApiBearerAuth,
@@ -121,5 +122,33 @@ export class IntakeFormController {
     @Delete()
     deleteallEnquiry() {
         return this.intakeService.deleteAllIntakeForms();
+    }
+
+
+    @ApiBearerAuth('bearer')
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Book Doula Service' })
+    @ApiBody({ type: BookDoulaDto })
+    @ApiResponse({
+        status: 201,
+        type: SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Intake form created',
+                data: {
+                    id: 'intake-uuid',
+                    name: 'Jane Doe',
+                    email: 'jane@example.com',
+                    slotId: 'slot-uuid',
+                    doulaProfileId: 'doula-uuid',
+                    serviceId: 'service-uuid',
+                },
+            },
+        },
+    })
+    @Post('book/doula')
+    BookDoula(@Body() dto: BookDoulaDto, @Req() req) {
+        return this.intakeService.BookDoula(dto, req.user.id);
     }
 }

@@ -7,24 +7,11 @@ export declare class ServicePricingService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     findAll(userId: string): Promise<({
-        DoulaProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string | null;
-            profileImage: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
-            userId: string;
-        };
         service: {
             id: string;
             name: string;
@@ -32,28 +19,27 @@ export declare class ServicePricingService {
             updatedAt: Date;
             description: string | null;
         };
+        DoulaProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            regionId: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
+        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     })[]>;
     findOne(id: string): Promise<{
-        DoulaProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string | null;
-            profileImage: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
-            userId: string;
-        };
         service: {
             id: string;
             name: string;
@@ -61,38 +47,50 @@ export declare class ServicePricingService {
             updatedAt: Date;
             description: string | null;
         };
+        DoulaProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            regionId: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
+        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     update(id: string, dto: UpdateServicePricingDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     listServices(query: any): Promise<{
         data: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client/runtime/library").Decimal;
             serviceId: string;
             doulaProfileId: string;
+            price: import("@prisma/client/runtime/library").Decimal;
         }[];
         meta: {
             total: number;
@@ -107,8 +105,8 @@ export declare class ServicePricingService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
 }

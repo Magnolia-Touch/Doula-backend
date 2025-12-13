@@ -50,28 +50,18 @@ let DoulaController = class DoulaController {
         this.service = service;
     }
     async create(dto, req, files) {
-        const profileImage = files?.profile_image?.[0];
-        let profileImageUrl;
-        if (profileImage) {
-            if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
-                throw new common_1.BadRequestException('Unsupported image type.');
-            }
-            if (profileImage.size > MAX_FILE_SIZE) {
-                throw new common_1.BadRequestException('Profile image exceeds maximum size of 5 MB.');
-            }
-            profileImageUrl = `uploads/doulas/${profileImage.filename}`;
-        }
-        try {
-            const result = await this.service.create(dto, req.user.id, profileImageUrl);
-            return {
-                success: true,
-                message: 'Doula created successfully',
-                data: result.data || result,
-            };
-        }
-        catch (err) {
-            throw new common_1.InternalServerErrorException(err.message || 'Failed to create doula');
-        }
+        const images = files?.images ?? [];
+        const imagePayload = images.map((file, index) => ({
+            url: `uploads/doulas/${file.filename}`,
+            isMain: index === 0,
+            sortOrder: index,
+        }));
+        const result = await this.service.create(dto, req.user.id, imagePayload);
+        return {
+            success: true,
+            message: 'Doula created successfully',
+            data: result.data,
+        };
     }
     async get(page = 1, limit = 10, search, serviceId, isAvailable, isActive, regionName, minExperience, serviceName, startDate, endDate) {
         return this.service.get(Number(page), Number(limit), search, serviceId, isAvailable, isActive, regionName, minExperience ? Number(minExperience) : undefined, serviceName, startDate, endDate);
@@ -94,7 +84,9 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('ADMIN', 'ZONE_MANAGER'),
     (0, common_1.Post)(),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([{ name: 'profile_image', maxCount: 1 }], {
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
+        { name: 'images', maxCount: 5 },
+    ], {
         storage: multerStorage(),
         limits: { fileSize: MAX_FILE_SIZE },
         fileFilter: (req, file, cb) => {
@@ -105,25 +97,6 @@ __decorate([
         },
     })),
     (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a new Doula' }),
-    (0, swagger_1.ApiBody)({ type: create_doula_dto_1.CreateDoulaDto }),
-    (0, swagger_1.ApiResponse)({
-        status: 201,
-        type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: {
-            example: {
-                success: true,
-                message: 'Doula created successfully',
-                data: {
-                    id: 'doula-uuid',
-                    name: 'Jane Doe',
-                    email: 'jane@example.com',
-                    phone: '+919876543210',
-                    regionIds: ['region-uuid-1', 'region-uuid-2']
-                }
-            }
-        }
-    }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.UploadedFiles)()),

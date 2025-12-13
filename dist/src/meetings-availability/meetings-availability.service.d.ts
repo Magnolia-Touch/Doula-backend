@@ -47,9 +47,9 @@ export declare class AvailableSlotsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
+                availabe: boolean;
                 isBooked: boolean;
                 dateId: string;
             }[];
@@ -57,13 +57,13 @@ export declare class AvailableSlotsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            zoneManagerId: string | null;
-            date: Date;
-            weekday: string;
             availabe: boolean;
-            ownerRole: import("@prisma/client").$Enums.Role;
+            date: Date;
+            zoneManagerId: string | null;
+            weekday: string;
             doulaId: string | null;
             adminId: string | null;
+            ownerRole: import("@prisma/client").$Enums.Role;
         };
     }>;
     updateSlotTimeById(dto: UpdateSlotsForMeetingTimeDto, userId: string): Promise<{
@@ -72,9 +72,9 @@ export declare class AvailableSlotsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
         };

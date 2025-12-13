@@ -68,13 +68,14 @@ function multerStorage() {
 export class DoulaController {
     constructor(private readonly service: DoulaService) { }
 
-    // CREATE
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('ADMIN', 'ZONE_MANAGER')
     @Post()
     @UseInterceptors(
         FileFieldsInterceptor(
-            [{ name: 'profile_image', maxCount: 1 }],
+            [
+                { name: 'images', maxCount: 5 }, // allow multiple images
+            ],
             {
                 storage: multerStorage(),
                 limits: { fileSize: MAX_FILE_SIZE },
@@ -86,69 +87,35 @@ export class DoulaController {
         ),
     )
     @ApiConsumes('multipart/form-data')
-    @ApiOperation({ summary: 'Create a new Doula' })
-    @ApiBody({ type: CreateDoulaDto })
-    @ApiResponse({
-        status: 201,
-        type: SwaggerResponseDto,
-        schema: {
-            example: {
-                success: true,
-                message: 'Doula created successfully',
-                data: {
-                    id: 'doula-uuid',
-                    name: 'Jane Doe',
-                    email: 'jane@example.com',
-                    phone: '+919876543210',
-                    regionIds: ['region-uuid-1', 'region-uuid-2']
-                }
-            }
-        }
-    })
     async create(
         @Body() dto: CreateDoulaDto,
         @Req() req,
         @UploadedFiles()
         files: {
-            profile_image?: Express.Multer.File[];
+            images?: Express.Multer.File[];
         },
     ) {
-        // validate file presence/size etc (Multer already limits size)
-        const profileImage = files?.profile_image?.[0];
+        const images = files?.images ?? [];
 
-        let profileImageUrl: string | undefined;
+        const imagePayload = images.map((file, index) => ({
+            url: `uploads/doulas/${file.filename}`,
+            isMain: index === 0,   // first image = main
+            sortOrder: index,
+        }));
 
-        if (profileImage) {
-            // double-check mimetype and size (extra safety)
-            if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
-                // remove saved file (optional cleanup) and throw
-                throw new BadRequestException('Unsupported image type.');
-            }
-            if (profileImage.size > MAX_FILE_SIZE) {
-                throw new BadRequestException('Profile image exceeds maximum size of 5 MB.');
-            }
+        const result = await this.service.create(
+            dto,
+            req.user.id,
+            imagePayload
+        );
 
-            // Construct a URL or a path to store in DB. Two options:
-            // 1) store relative path and serve with ServeStaticModule
-            // 2) store full public URL if hosted
-            // Here we store a relative path (uploads/doulas/<filename>)
-            profileImageUrl = `uploads/doulas/${profileImage.filename}`;
-        }
-
-        try {
-            const result = await this.service.create(dto, req.user.id, profileImageUrl);
-            return {
-                success: true,
-                message: 'Doula created successfully',
-                data: result.data || result,
-            };
-        } catch (err) {
-            // optionally remove uploaded file on failure (cleanup)
-            // fs.unlinkSync(profileImage.path) // careful with sync/async and checks
-            throw new InternalServerErrorException(err.message || 'Failed to create doula');
-        }
-
+        return {
+            success: true,
+            message: 'Doula created successfully',
+            data: result.data,
+        };
     }
+
 
     // GET LIST
     @Get()
