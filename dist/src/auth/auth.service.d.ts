@@ -83,8 +83,8 @@ export declare class AuthService {
             createdAt: Date;
             updatedAt: Date;
             userId: string;
-            regionId: string | null;
             description: string | null;
+            regionId: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -103,10 +103,11 @@ export declare class AuthService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            is_verified: boolean;
+            region: string | null;
+            address: string | null;
             profile_image: string | null;
             userId: string;
-            is_verified: boolean;
-            address: string | null;
         } | null;
     } | {
         role: "ZONE_MANAGER";

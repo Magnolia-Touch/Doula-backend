@@ -184,7 +184,9 @@ export class IntakeFormService {
 
         const intake = await this.prisma.intakeForm.create({
             data: {
-                date: new Date(enquiry.startDate),
+
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
 
                 name,
                 email,
@@ -210,8 +212,8 @@ export class IntakeFormService {
 
         const booking = await this.prisma.serviceBooking.create({
             data: {
-                date: new Date(enquiry.startDate),
-
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
                 regionId: region.id,
                 servicePricingId: service.id,
                 doulaProfileId: doulaProfileId,
@@ -488,8 +490,8 @@ export class IntakeFormService {
 
         const intake = await this.prisma.intakeForm.create({
             data: {
-                date: new Date(serviceStartDate),
-
+                startDate: new Date(serviceStartDate),
+                endDate: new Date(servicEndDate),
                 name,
                 email,
                 phone,
@@ -515,7 +517,8 @@ export class IntakeFormService {
 
         const booking = await this.prisma.serviceBooking.create({
             data: {
-                date: new Date(serviceStartDate),
+                startDate: new Date(serviceStartDate),
+                endDate: new Date(servicEndDate),
 
                 regionId: region.id,
                 servicePricingId: service.id,

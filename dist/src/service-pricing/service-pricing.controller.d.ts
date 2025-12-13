@@ -7,18 +7,11 @@ export declare class ServicePricingController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     findAll(req: any): Promise<({
-        service: {
-            id: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-        };
         DoulaProfile: {
             id: string;
             createdAt: Date;
@@ -31,22 +24,22 @@ export declare class ServicePricingController {
             yoe: number | null;
             languages: import("@prisma/client/runtime/library").JsonValue | null;
         };
+        service: {
+            id: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
     })[]>;
     findOne(id: string): Promise<{
-        service: {
-            id: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-        };
         DoulaProfile: {
             id: string;
             createdAt: Date;
@@ -59,38 +52,45 @@ export declare class ServicePricingController {
             yoe: number | null;
             languages: import("@prisma/client/runtime/library").JsonValue | null;
         };
+        service: {
+            id: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     update(id: string, dto: UpdateServicePricingDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     getServiceWithPricing(query: any): Promise<{
         data: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            price: import("@prisma/client/runtime/library").Decimal;
             serviceId: string;
             doulaProfileId: string;
-            price: import("@prisma/client/runtime/library").Decimal;
         }[];
         meta: {
             total: number;
@@ -105,8 +105,8 @@ export declare class ServicePricingController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
     }>;
 }

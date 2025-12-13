@@ -117,8 +117,8 @@ let ServiceBookingService = class ServiceBookingService {
         const clientUser = booking.client?.user;
         const doulaUser = booking.DoulaProfile?.user;
         const serviceName = booking.service?.service?.name ?? null;
-        const startDate = booking.date;
-        const endDate = booking.date;
+        const startDate = booking.startDate;
+        const endDate = booking.endDate;
         const timeSlots = booking.slot?.map((s) => ({
             id: s.id,
             startTime: s.startTime,

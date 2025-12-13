@@ -46,6 +46,7 @@ import { UserModule } from './users/users.module';
     TestimonialsModule,
     // FirebaseModule,
     // NotificationModule,
+    ClientModule,
     DeviceTokenModule,
     ContactFormModule,
     ServiceBookingModule,

@@ -11,9 +11,9 @@ export declare class TestimonialsService {
         updatedAt: Date;
         serviceId: string;
         doulaProfileId: string;
+        clientId: string;
         ratings: number;
         reviews: string;
-        clientId: string;
     }>;
     findAll(query: FilterTestimonialsDto): Promise<{
         data: {
@@ -49,9 +49,9 @@ export declare class TestimonialsService {
         updatedAt: Date;
         serviceId: string;
         doulaProfileId: string;
+        clientId: string;
         ratings: number;
         reviews: string;
-        clientId: string;
     }>;
     remove(id: string, userId: string): Promise<{
         id: string;
@@ -59,9 +59,9 @@ export declare class TestimonialsService {
         updatedAt: Date;
         serviceId: string;
         doulaProfileId: string;
+        clientId: string;
         ratings: number;
         reviews: string;
-        clientId: string;
     }>;
     getZoneManagerTestimonials(zoneManagerId: string, page?: number, limit?: number): Promise<never[] | {
         data: {
@@ -70,9 +70,9 @@ export declare class TestimonialsService {
             updatedAt: Date;
             serviceId: string;
             doulaProfileId: string;
+            clientId: string;
             ratings: number;
             reviews: string;
-            clientId: string;
         }[];
         meta: {
             total: number;

@@ -103,6 +103,7 @@ model ClientProfile {
   id            String   @id @default(uuid())
   userId        String   @unique
   is_verified   Boolean  @default(false)
+  region        String?
   address       String?
   profile_image String?
   createdAt     DateTime @default(now())
@@ -309,9 +310,10 @@ model AvailableSlotsTimeForService {
 
 // Intake Form
 model IntakeForm {
-  id       String   @id @default(uuid())
-  date     DateTime
-  location String?
+  id        String   @id @default(uuid())
+  startDate DateTime @default(now())
+  endDate   DateTime @default(now())
+  location  String?
 
   //use these optional data if the service location is different
   name    String?
@@ -338,7 +340,8 @@ model IntakeForm {
 // Service Booking
 model ServiceBooking {
   id             String        @id @default(uuid())
-  date           DateTime
+  startDate      DateTime      @default(now())
+  endDate        DateTime      @default(now())
   paymentDetails Json?
   status         BookingStatus @default(ACTIVE)
 
@@ -347,8 +350,9 @@ model ServiceBooking {
   doulaProfileId   String
   clientId         String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cancelledAt DateTime?
 
   DoulaProfile             DoulaProfile                   @relation(fields: [doulaProfileId], references: [id])
   service                  ServicePricing                 @relation(fields: [servicePricingId], references: [id])

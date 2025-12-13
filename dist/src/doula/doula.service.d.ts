@@ -12,26 +12,26 @@ export declare class DoulaService {
         message: string;
         data: ({
             doulaProfile: ({
-                zoneManager: {
-                    id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    profile_image: string | null;
-                    userId: string | null;
-                }[];
                 Region: {
                     id: string;
                     is_active: boolean;
                     createdAt: Date;
                     updatedAt: Date;
-                    pincode: string;
                     regionName: string;
+                    pincode: string;
                     district: string;
                     state: string;
                     country: string;
                     latitude: string;
                     longitude: string;
                     zoneManagerId: string | null;
+                }[];
+                zoneManager: {
+                    id: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    profile_image: string | null;
+                    userId: string | null;
                 }[];
                 ServicePricing: ({
                     service: {
@@ -45,17 +45,17 @@ export declare class DoulaService {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    price: import("@prisma/client/runtime/library").Decimal;
                     serviceId: string;
                     doulaProfileId: string;
-                    price: import("@prisma/client/runtime/library").Decimal;
                 })[];
                 DoulaImages: {
                     id: string;
-                    sortOrder: number;
                     doulaProfileId: string;
+                    isMain: boolean;
                     url: string;
                     altText: string | null;
-                    isMain: boolean;
+                    sortOrder: number;
                 }[];
             } & {
                 id: string;
@@ -155,26 +155,26 @@ export declare class DoulaService {
     UpdateDoulaRegions(dto: UpdateDoulaRegionDto, userId: string): Promise<{
         message: string;
         data: {
-            zoneManager: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                profile_image: string | null;
-                userId: string | null;
-            }[];
             Region: {
                 id: string;
                 is_active: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                pincode: string;
                 regionName: string;
+                pincode: string;
                 district: string;
                 state: string;
                 country: string;
                 latitude: string;
                 longitude: string;
                 zoneManagerId: string | null;
+            }[];
+            zoneManager: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                profile_image: string | null;
+                userId: string | null;
             }[];
         } & {
             id: string;

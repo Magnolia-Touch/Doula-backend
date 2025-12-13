@@ -1,248 +1,261 @@
-// // prisma/seed.ts
-// import { PrismaClient, Role, BookingStatus, MeetingStatus } from "@prisma/client";
+// prisma/seed.ts
+import {
+    PrismaClient,
+    Role,
+    BookingStatus,
+    MeetingStatus,
+} from "@prisma/client";
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
-// async function main() {
-//     console.log("🌱 Seeding DB…");
+async function main() {
+    console.log("🌱 Seeding DB…");
 
-//     // USERS
-//     const adminUser = await prisma.user.create({
-//         data: {
-//             name: "Admin User",
-//             email: "admin@test.com",
-//             phone: "9000000001",
-//             role: Role.ADMIN,
-//             adminProfile: { create: { profile_image: "admin.jpg" } }
-//         }
-//     });
+    /* =========================
+       USERS
+    ========================= */
 
-//     const zoneUser = await prisma.user.create({
-//         data: {
-//             name: "Zone Manager",
-//             email: "zonemanager@test.com",
-//             phone: "9000000002",
-//             role: Role.ZONE_MANAGER,
-//             zonemanagerprofile: { create: { profile_image: "zm.jpg" } }
-//         },
-//         include: { zonemanagerprofile: true }
-//     });
+    const adminUser = await prisma.user.upsert({
+        where: { email: "admin@test.com" },
+        update: {},
+        create: {
+            name: "Admin User",
+            email: "admin@test.com",
+            phone: "9000000001",
+            role: Role.ADMIN,
+            adminProfile: { create: { profile_image: "admin.jpg" } },
+        },
+    });
 
-//     const clientUser = await prisma.user.create({
-//         data: {
-//             name: "Client User",
-//             email: "client@test.com",
-//             phone: "9000000004",
-//             role: Role.CLIENT,
-//             clientProfile: {
-//                 create: {
-//                     address: "123 Client Street",
-//                     profile_image: "client.jpg"
-//                 }
-//             }
-//         },
-//         include: { clientProfile: true }
-//     });
-
-//     // DOULAS
-//     async function createDoula(i: number, yoe: number) {
-//         return prisma.user.create({
-//             data: {
-//                 name: `Doula ${i}`,
-//                 email: `d${i}@test.com`,
-//                 phone: `900000001${i}`,
-//                 role: Role.DOULA,
-//                 doulaProfile: {
-//                     create: {
-//                         profileImage: `d${i}.jpg`,
-//                         description: `Experienced doula ${i}`,
-//                         qualification: "Certified",
-//                         yoe
-//                     }
-//                 }
-//             },
-//             include: { doulaProfile: true }
-//         })
-//     }
-
-//     const d1 = await createDoula(1, 4);
-//     const d2 = await createDoula(2, 6);
-//     const d3 = await createDoula(3, 2);
-
-//     const doula1 = d1.doulaProfile!;
-//     const doula2 = d2.doulaProfile!;
-//     const doula3 = d3.doulaProfile!;
-
-//     const zoneManager = zoneUser.zonemanagerprofile!;
-//     const client = clientUser.clientProfile!;
+    const zoneUser = await prisma.user.upsert({
+        where: { email: "zonemanager@test.com" },
+        update: {},
+        create: {
+            name: "Zone Manager",
+            email: "zonemanager@test.com",
+            phone: "9000000002",
+            role: Role.ZONE_MANAGER,
+            zonemanagerprofile: { create: { profile_image: "zm.jpg" } },
+        },
+        include: { zonemanagerprofile: true },
+    });
 
 
-//     await Promise.all(
-//         [doula1.id, doula2.id, doula3.id].map(id =>
-//             prisma.doulaProfile.update({
-//                 where: { id },
-//                 data: {
+    const clientUser = await prisma.user.upsert({
+        where: { email: "client@test.com" },
+        update: {},
+        create: {
+            name: "Client User",
+            email: "client@test.com",
+            phone: "9000000004",
+            role: Role.CLIENT,
+            clientProfile: {
+                create: {
+                    address: "123 Client Street",
+                    profile_image: "client.jpg",
+                },
+            },
+        },
+        include: { clientProfile: true },
+    });
 
-//                 }
-//             })
-//         )
-//     );
 
-//     // REGION
-//     const region = await prisma.region.create({
-//         data: {
-//             regionName: "Kochi",
-//             pincode: "682001",
-//             district: "Ernakulam",
-//             state: "Kerala",
-//             country: "India",
-//             latitude: "9.93",
-//             longitude: "76.26",
-//             zoneManager: {
-//                 connect: { id: zoneManager.id }
-//             }
-//         }
-//     });
+    const client = clientUser.clientProfile!;
+    const zoneManager = zoneUser.zonemanagerprofile!;
 
-//     // Doula ↔ Region
-//     await Promise.all(
-//         [doula1.id, doula2.id, doula3.id].map(id =>
-//             prisma.doulaProfile.update({
-//                 where: { id },
-//                 data: {
-//                     Region: { connect: { id: region.id } }
-//                 }
-//             })
-//         )
-//     );
+    /* =========================
+       DOULAS
+    ========================= */
 
-//     // ZM ↔ Doula M2M
-//     await prisma.zoneManagerProfile.update({
-//         where: { id: zoneManager.id },
-//         data: {
-//             doulas: {
-//                 connect: [{ id: doula1.id }, { id: doula2.id }, { id: doula3.id }]
-//             }
-//         }
-//     });
+    async function createDoula(i: number, yoe: number) {
+        return prisma.user.upsert({
+            where: { email: `d${i}@test.com` },
+            update: {},
+            create: {
+                name: `Doula ${i}`,
+                email: `d${i}@test.com`,
+                phone: `900000001${i}`,
+                role: Role.DOULA,
+                doulaProfile: {
+                    create: {
+                        description: `Experienced doula ${i}`,
+                        qualification: "Certified",
+                        yoe,
+                    },
+                },
+            },
+            include: { doulaProfile: true },
+        });
+    }
 
-//     // SERVICES
-//     const service = await prisma.service.create({
-//         data: {
-//             name: "Doula Consultation",
-//             description: "1 hour consultation."
-//         }
-//     });
+    const d1 = await createDoula(1, 4);
+    const d2 = await createDoula(2, 6);
 
-//     // PRICING
-//     const pricing1 = await prisma.servicePricing.create({
-//         data: { serviceId: service.id, doulaProfileId: doula1.id, price: 1500 }
-//     });
-//     const pricing2 = await prisma.servicePricing.create({
-//         data: { serviceId: service.id, doulaProfileId: doula2.id, price: 1800 }
-//     });
-//     const pricing3 = await prisma.servicePricing.create({
-//         data: { serviceId: service.id, doulaProfileId: doula3.id, price: 1200 }
-//     });
+    const doula1 = d1.doulaProfile!;
+    const doula2 = d2.doulaProfile!;
 
-//     // MEETING SLOTS
-//     const meetingDay = await prisma.availableSlotsForMeeting.create({
-//         data: {
-//             date: new Date("2025-11-30"),
-//             weekday: "Sunday",
-//             ownerRole: Role.DOULA,
-//             doulaId: doula1.id
-//         }
-//     });
+    /* =========================
+       REGION
+    ========================= */
 
-//     const meetingSlot = await prisma.availableSlotsTimeForMeeting.create({
-//         data: {
-//             startTime: new Date("2025-11-30T10:00"),
-//             endTime: new Date("2025-11-30T11:00"),
-//             dateId: meetingDay.id
-//         }
-//     });
+    const region = await prisma.region.upsert({
+        where: { pincode: "682001" },
+        update: {},
+        create: {
+            regionName: "Kochi",
+            pincode: "682001",
+            district: "Ernakulam",
+            state: "Kerala",
+            country: "India",
+            latitude: "9.93",
+            longitude: "76.26",
+            zoneManager: { connect: { id: zoneManager.id } },
+        },
+    });
 
-//     await prisma.meetings.create({
-//         data: {
-//             link: "https://meet.com/123",
-//             status: MeetingStatus.SCHEDULED,
-//             bookedById: client.id,
-//             slotId: meetingSlot.id,
-//             availableSlotsForMeetingId: meetingDay.id,
-//             doulaProfileId: doula1.id,
-//             serviceId: service.id
-//         }
-//     });
 
-//     // SERVICE SLOTS
-//     const sDay = await prisma.availableSlotsForService.create({
-//         data: {
-//             date: new Date("2025-12-01"),
-//             weekday: "Monday",
-//             doulaId: doula1.id
-//         }
-//     });
+    for (const doulaId of [doula1.id, doula2.id]) {
+        await prisma.doulaProfile.update({
+            where: { id: doulaId },
+            data: {
+                regionId: region.id,
+            },
+        });
+    }
 
-//     const sSlot = await prisma.availableSlotsTimeForService.create({
-//         data: {
-//             startTime: new Date("2025-12-01T09:00"),
-//             endTime: new Date("2025-12-01T10:00"),
-//             dateId: sDay.id
-//         }
-//     });
+    /* =========================
+       SERVICE + PRICING
+    ========================= */
 
-//     // INTAKE FORM
-//     await prisma.intakeForm.create({
-//         data: {
-//             date: new Date(),
-//             address: "Client Address",
-//             regionId: region.id,
-//             clientId: client.id,
-//             doulaProfileId: doula1.id,
-//             servicePricingId: pricing1.id,
-//             slot: { connect: { id: sDay.id } },
-//             slotTime: { connect: { id: sSlot.id } }
-//         }
-//     });
+    const service = await prisma.service.create({
+        data: {
+            name: "Doula Consultation",
+            description: "1 hour consultation",
+        },
+    });
 
-//     // SERVICE BOOKING
-//     await prisma.serviceBooking.create({
-//         data: {
-//             date: new Date(),
-//             regionId: region.id,
-//             clientId: client.id,
-//             doulaProfileId: doula1.id,
-//             servicePricingId: pricing1.id,
-//             status: BookingStatus.ACTIVE,
-//             paymentDetails: { amount: 1500, method: "UPI" },
-//             AvailableSlotsForService: { connect: { id: sDay.id } },
-//             slot: { connect: { id: sSlot.id } }
-//         }
-//     });
+    const pricing1 = await prisma.servicePricing.create({
+        data: { serviceId: service.id, doulaProfileId: doula1.id, price: 1500 },
+    });
 
-//     // TESTIMONIALS
-//     const now = new Date();
-//     const ago = (d: number) => new Date(now.getTime() - d * 86400000);
+    const pricing2 = await prisma.servicePricing.create({
+        data: { serviceId: service.id, doulaProfileId: doula2.id, price: 1800 },
+    });
 
-//     await prisma.testimonials.createMany({
-//         data: [
-//             { doulaProfileId: doula1.id, serviceId: pricing1.id, clientId: client.id, ratings: 5, reviews: "Excellent", createdAt: ago(0) },
-//             { doulaProfileId: doula2.id, serviceId: pricing2.id, clientId: client.id, ratings: 4, reviews: "Great", createdAt: ago(1) },
-//             { doulaProfileId: doula3.id, serviceId: pricing3.id, clientId: client.id, ratings: 3, reviews: "Normal", createdAt: ago(2) }
-//         ]
-//     });
+    /* =========================
+       MEETING SLOTS
+    ========================= */
 
-//     // NOTES
-//     await prisma.notes.create({
-//         data: { remarks: "Zone manager feedback", zoneManagerId: zoneManager.id }
-//     });
+    const meetingDate = new Date("2025-11-30");
 
-//     // await prisma.notes.create({
-//     //     data: { remarks: "Admin remark", adminId: adminUser.id }
-//     // });
+    const meetingDay = await prisma.availableSlotsForMeeting.upsert({
+        where: {
+            doulaId_date: {
+                doulaId: doula1.id,
+                date: meetingDate,
+            },
+        },
+        update: {},
+        create: {
+            date: meetingDate,
+            weekday: "Sunday",
+            ownerRole: Role.DOULA,
+            doulaId: doula1.id,
+        },
+    });
 
-//     console.log("🌱 Seed Done!");
-// }
 
-// main().finally(() => prisma.$disconnect());
+    const meetingSlot = await prisma.availableSlotsTimeForMeeting.create({
+        data: {
+            startTime: new Date("2025-11-30T10:00:00"),
+            endTime: new Date("2025-11-30T11:00:00"),
+            dateId: meetingDay.id,
+            isBooked: true,
+        },
+    });
+
+    // Scheduled Meeting
+    await prisma.meetings.create({
+        data: {
+            link: "https://meet.com/active",
+            status: MeetingStatus.SCHEDULED,
+            bookedById: client.id,
+            slotId: meetingSlot.id,
+            availableSlotsForMeetingId: meetingDay.id,
+            doulaProfileId: doula1.id,
+            serviceId: service.id,
+        },
+    });
+
+    // Canceled Meeting
+    await prisma.meetings.create({
+        data: {
+            link: "https://meet.com/canceled",
+            status: MeetingStatus.CANCELED,
+            cancelledAt: new Date(),
+            bookedById: client.id,
+            slotId: (
+                await prisma.availableSlotsTimeForMeeting.create({
+                    data: {
+                        startTime: new Date("2025-12-01T12:00"),
+                        endTime: new Date("2025-12-01T13:00"),
+                        dateId: meetingDay.id,
+                    },
+                })
+            ).id,
+            doulaProfileId: doula1.id,
+            serviceId: service.id,
+        },
+    });
+
+    /* =========================
+       SERVICE BOOKINGS
+    ========================= */
+
+    // ACTIVE Booking
+    await prisma.serviceBooking.create({
+        data: {
+            startDate: new Date("2025-12-05"),
+            endDate: new Date("2025-12-10"),
+            regionId: region.id,
+            clientId: client.id,
+            doulaProfileId: doula1.id,
+            servicePricingId: pricing1.id,
+            status: BookingStatus.ACTIVE,
+            paymentDetails: { amount: 1500, method: "UPI" },
+        },
+    });
+
+    // COMPLETED Booking
+    await prisma.serviceBooking.create({
+        data: {
+            startDate: new Date("2025-11-01"),
+            endDate: new Date("2025-11-05"),
+            regionId: region.id,
+            clientId: client.id,
+            doulaProfileId: doula2.id,
+            servicePricingId: pricing2.id,
+            status: BookingStatus.COMPLETED,
+        },
+    });
+
+    // CANCELED Booking
+    await prisma.serviceBooking.create({
+        data: {
+            startDate: new Date("2025-12-15"),
+            endDate: new Date("2025-12-20"),
+            regionId: region.id,
+            clientId: client.id,
+            doulaProfileId: doula1.id,
+            servicePricingId: pricing1.id,
+            status: BookingStatus.CANCELED,
+            cancelledAt: new Date(),
+        },
+    });
+
+    console.log("🌱 Seed Done!");
+}
+
+main()
+    .catch(console.error)
+    .finally(() => prisma.$disconnect());

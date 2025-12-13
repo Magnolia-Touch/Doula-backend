@@ -53,6 +53,7 @@ exports.AppModule = AppModule = __decorate([
             service_pricing_module_1.ServicePricingModule,
             analytics_module_1.AnalyticsModule,
             testimonials_module_1.TestimonialsModule,
+            client_module_1.ClientModule,
             device_token_module_1.DeviceTokenModule,
             contact_form_module_1.ContactFormModule,
             service_booking_module_1.ServiceBookingModule,

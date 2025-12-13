@@ -129,8 +129,8 @@ export class ServiceBookingService {
 
         const serviceName = booking.service?.service?.name ?? null;
 
-        const startDate = booking.date;
-        const endDate = booking.date;
+        const startDate = booking.startDate;
+        const endDate = booking.endDate;
 
         const timeSlots =
             booking.slot?.map((s: any) => ({

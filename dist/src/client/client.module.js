@@ -10,6 +10,7 @@ exports.ClientModule = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_module_1 = require("../prisma/prisma.module");
 const client_service_1 = require("./client.service");
+const client_controller_1 = require("./client.controller");
 let ClientModule = class ClientModule {
 };
 exports.ClientModule = ClientModule;
@@ -18,6 +19,7 @@ exports.ClientModule = ClientModule = __decorate([
         imports: [prisma_module_1.PrismaModule],
         providers: [client_service_1.ClientsService],
         exports: [client_service_1.ClientsService],
+        controllers: [client_controller_1.ClientController]
     })
 ], ClientModule);
 ``;

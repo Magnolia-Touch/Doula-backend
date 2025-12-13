@@ -11,9 +11,9 @@ export declare class TestimonialsController {
         updatedAt: Date;
         serviceId: string;
         doulaProfileId: string;
+        clientId: string;
         ratings: number;
         reviews: string;
-        clientId: string;
     }>;
     findAll(query: FilterTestimonialsDto): Promise<{
         data: {
@@ -49,9 +49,9 @@ export declare class TestimonialsController {
         updatedAt: Date;
         serviceId: string;
         doulaProfileId: string;
+        clientId: string;
         ratings: number;
         reviews: string;
-        clientId: string;
     }>;
     remove(id: string, req: any): Promise<{
         id: string;
@@ -59,9 +59,9 @@ export declare class TestimonialsController {
         updatedAt: Date;
         serviceId: string;
         doulaProfileId: string;
+        clientId: string;
         ratings: number;
         reviews: string;
-        clientId: string;
     }>;
     getTestimonials(req: any, page?: number, limit?: number): Promise<never[] | {
         data: {
@@ -70,9 +70,9 @@ export declare class TestimonialsController {
             updatedAt: Date;
             serviceId: string;
             doulaProfileId: string;
+            clientId: string;
             ratings: number;
             reviews: string;
-            clientId: string;
         }[];
         meta: {
             total: number;
