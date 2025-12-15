@@ -18,9 +18,9 @@ export declare class ClientsService {
             } | null;
         } & {
             id: string;
-            name: string;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -44,9 +44,9 @@ export declare class ClientsService {
             } | null;
         } & {
             id: string;
-            name: string;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -70,9 +70,9 @@ export declare class ClientsService {
             } | null;
         } & {
             id: string;
-            name: string;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -127,33 +127,43 @@ export declare class ClientsService {
         status: import("@prisma/client").$Enums.BookingStatus;
     }>;
     Meetings(userId: string): Promise<{
+        clientId: string;
+        clientName: string;
+        clientEmail: string;
+        clientPhone: string | null;
+        clientProfileId: string;
         meetingId: string;
-        userId: string;
-        name: string;
-        email: string;
-        phone: string | null;
-        profileId: string;
+        meetingWith: string | null;
         hostname: string | null;
-        date: Date;
+        meetingDate: Date;
+        weekday: import("@prisma/client").$Enums.WeekDays | null;
         startTime: Date;
         endTime: Date;
         link: string;
+        serviceName: string;
         remarks: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
     }[]>;
     meetingById(userId: string, meetingId: string): Promise<{
-        userId: string;
-        name: string;
-        email: string;
-        phone: string | null;
-        profileId: string;
+        clientId: string;
+        clientName: string;
+        clientEmail: string;
+        clientPhone: string | null;
+        clientProfileId: string;
+        meetingId: string;
+        meetingWith: string | null;
         hostname: string | null;
-        date: Date;
+        meetingDate: Date;
+        weekday: import("@prisma/client").$Enums.WeekDays | null;
         startTime: Date;
         endTime: Date;
         link: string;
+        serviceName: string;
         remarks: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
+        createdAt: Date;
+        cancelledAt: Date | null;
+        rescheduledAt: Date | null;
     }>;
     cancelMeeting(userId: string, meetingId: string): Promise<{
         message: string;

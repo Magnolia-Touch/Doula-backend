@@ -33,6 +33,16 @@ enum ServiceStatus {
   COMPLETED
 }
 
+enum WeekDays {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
 //User Model
 model User {
   id           String    @id @default(uuid())
@@ -56,7 +66,7 @@ model User {
 //Zone Manager Profile 
 model ZoneManagerProfile {
   id            String   @id @default(uuid())
-  user          User?    @relation("UserZoneManagerProfile", fields: [userId], references: [id])
+  user          User?    @relation("UserZoneManagerProfile", fields: [userId], references: [id], onDelete: Cascade)
   userId        String?  @unique
   profile_image String?
   createdAt     DateTime @default(now())
@@ -73,7 +83,7 @@ model ZoneManagerProfile {
 // Doula Profile
 model DoulaProfile {
   id            String   @id @default(uuid())
-  user          User     @relation("UserDoulaProfile", fields: [userId], references: [id])
+  user          User     @relation("UserDoulaProfile", fields: [userId], references: [id], onDelete: Cascade)
   userId        String   @unique
   regionId      String?
   description   String?  @db.Text()
@@ -109,7 +119,7 @@ model ClientProfile {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user User @relation("UserClientProfile", fields: [userId], references: [id])
+  user User @relation("UserClientProfile", fields: [userId], references: [id], onDelete: Cascade)
 
   intakeForms  IntakeForm[]
   enquiryForms EnquiryForm[]
@@ -127,7 +137,7 @@ model AdminProfile {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user User @relation("UserAdminProfile", fields: [userId], references: [id])
+  user User @relation("UserAdminProfile", fields: [userId], references: [id], onDelete: Cascade)
 
   notes                    Notes[]
   availableSlotsForMeeting AvailableSlotsForMeeting[]
@@ -136,15 +146,18 @@ model AdminProfile {
 
 // Enquiry Form
 model EnquiryForm {
-  id              String  @id @default(uuid())
-  name            String
-  email           String
-  phone           String
-  additionalNotes String?
-  startDate       String
-  endDate         String
-  VisitFrequency  Int
-  TimeSlots       String
+  id                String   @id @default(uuid())
+  name              String
+  email             String
+  phone             String
+  additionalNotes   String?
+  meetingsDate      DateTime
+  meetingsTimeSlots String
+  seviceStartDate   DateTime
+  serviceEndDate    DateTime
+  VisitFrequency    Int
+  serviceTimeSlots  String
+  serviceName       String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,14 +165,12 @@ model EnquiryForm {
   regionId  String
   slotId    String
   serviceId String
-  clientId  String? //remove this line 
+  clientId  String //remove this line 
 
-  region                     Region                       @relation(fields: [regionId], references: [id])
-  slot                       AvailableSlotsTimeForMeeting @relation(fields: [slotId], references: [id])
-  service                    Service                      @relation(fields: [serviceId], references: [id])
-  clientProfile              ClientProfile?               @relation(fields: [clientId], references: [id]) //remove this line
-  AvailableSlotsForMeeting   AvailableSlotsForMeeting?    @relation(fields: [availableSlotsForMeetingId], references: [id])
-  availableSlotsForMeetingId String?
+  region        Region                   @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  slot          AvailableSlotsForMeeting @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  service       Service                  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  clientProfile ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade) //remove this line
 }
 
 // Regions
@@ -178,7 +189,7 @@ model Region {
 
   zoneManagerId String?
 
-  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id])
+  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id], onDelete: SetNull)
 
   doula          DoulaProfile[]   @relation("regions")
   EnquiryForm    EnquiryForm[]
@@ -195,14 +206,13 @@ model Notes {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id])
-  admin       AdminProfile?       @relation(fields: [adminId], references: [id])
+  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id], onDelete: Cascade)
+  admin       AdminProfile?       @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
 
 model AvailableSlotsForMeeting {
   id        String   @id @default(uuid())
-  date      DateTime @db.Date
-  weekday   String
+  weekday   WeekDays
   availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
   ownerRole Role
 
@@ -210,9 +220,9 @@ model AvailableSlotsForMeeting {
   adminId       String?
   zoneManagerId String?
 
-  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id])
-  doula       DoulaProfile?       @relation(fields: [doulaId], references: [id])
-  admin       AdminProfile?       @relation(fields: [adminId], references: [id])
+  zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id], onDelete: Cascade)
+  doula       DoulaProfile?       @relation(fields: [doulaId], references: [id], onDelete: Cascade)
+  admin       AdminProfile?       @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -221,15 +231,15 @@ model AvailableSlotsForMeeting {
   meetings                     Meetings[]
   AvailableSlotsTimeForMeeting AvailableSlotsTimeForMeeting[]
 
-  @@unique([doulaId, date])
-  @@unique([adminId, date])
-  @@unique([zoneManagerId, date])
+  @@unique([doulaId, weekday])
+  @@unique([adminId, weekday])
+  @@unique([zoneManagerId, weekday])
 }
 
 model AvailableSlotsTimeForMeeting {
   id        String   @id @default(uuid())
-  startTime DateTime
-  endTime   DateTime
+  startTime DateTime @db.Time(0)
+  endTime   DateTime @db.Time(0)
   availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
   isBooked  Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -237,21 +247,23 @@ model AvailableSlotsTimeForMeeting {
 
   dateId String
 
-  date        AvailableSlotsForMeeting @relation(fields: [dateId], references: [id])
-  EnquiryForm EnquiryForm[]
-  Meetings    Meetings?
+  date       AvailableSlotsForMeeting @relation(fields: [dateId], references: [id], onDelete: Cascade)
+  Meetings   Meetings?                @relation(fields: [meetingsId], references: [id])
+  meetingsId String?
 }
 
 model Meetings {
-  id      String                       @id @default(uuid())
-  link    String
-  slotId  String                       @unique
-  slot    AvailableSlotsTimeForMeeting @relation(fields: [slotId], references: [id])
-  status  MeetingStatus
-  remarks String?
+  id          String        @id @default(uuid())
+  link        String
+  status      MeetingStatus
+  startTime   DateTime      @db.Time(0)
+  endTime     DateTime      @db.Time(0)
+  date        DateTime
+  serviceName String
+  remarks     String?
 
   bookedById String // customer ID
-  bookedBy   ClientProfile @relation(fields: [bookedById], references: [id])
+  bookedBy   ClientProfile @relation(fields: [bookedById], references: [id], onDelete: Cascade)
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -264,36 +276,36 @@ model Meetings {
   adminProfileId             String?
   serviceId                  String?
 
-  AvailableSlotsForMeeting AvailableSlotsForMeeting? @relation(fields: [availableSlotsForMeetingId], references: [id])
-  ZoneManagerProfile       ZoneManagerProfile?       @relation(fields: [zoneManagerProfileId], references: [id])
-  DoulaProfile             DoulaProfile?             @relation(fields: [doulaProfileId], references: [id])
-  AdminProfile             AdminProfile?             @relation(fields: [adminProfileId], references: [id])
-  Service                  Service?                  @relation(fields: [serviceId], references: [id])
+  AvailableSlotsForMeeting     AvailableSlotsForMeeting?      @relation(fields: [availableSlotsForMeetingId], references: [id], onDelete: Cascade)
+  ZoneManagerProfile           ZoneManagerProfile?            @relation(fields: [zoneManagerProfileId], references: [id], onDelete: Cascade)
+  DoulaProfile                 DoulaProfile?                  @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+  AdminProfile                 AdminProfile?                  @relation(fields: [adminProfileId], references: [id], onDelete: Cascade)
+  Service                      Service?                       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  AvailableSlotsTimeForMeeting AvailableSlotsTimeForMeeting[]
 }
 
 model AvailableSlotsForService {
   id        String   @id @default(uuid())
-  date      DateTime @db.Date
-  weekday   String
+  weekday   WeekDays
   availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
   isBooked  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   doulaId   String
 
-  doula                        DoulaProfile                   @relation(fields: [doulaId], references: [id])
+  doula                        DoulaProfile                   @relation(fields: [doulaId], references: [id], onDelete: Cascade)
   IntakeForm                   IntakeForm[]
   AvailableSlotsTimeForService AvailableSlotsTimeForService[]
   ServiceBooking               ServiceBooking[]
 
   // Prevent duplicates for the same owner for same day/time
-  @@unique([doulaId, date]) //creates a compostie unique constraint
+  @@unique([doulaId, weekday]) //creates a compostie unique constraint
 }
 
 model AvailableSlotsTimeForService {
   id        String   @id @default(uuid())
-  startTime DateTime
-  endTime   DateTime
+  startTime DateTime @db.Time(0)
+  endTime   DateTime @db.Time(0)
   availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
   isBooked  Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -303,7 +315,7 @@ model AvailableSlotsTimeForService {
   bookingId String?
   dateId    String
 
-  date           AvailableSlotsForService @relation(fields: [dateId], references: [id])
+  date           AvailableSlotsForService @relation(fields: [dateId], references: [id], onDelete: Cascade)
   IntakeForm     IntakeForm?              @relation(fields: [formId], references: [id])
   ServiceBooking ServiceBooking?          @relation(fields: [bookingId], references: [id])
 }
@@ -330,9 +342,9 @@ model IntakeForm {
   updatedAt DateTime @updatedAt
 
   service       ServicePricing                 @relation(fields: [servicePricingId], references: [id])
-  clientProfile ClientProfile                  @relation(fields: [clientId], references: [id])
-  region        Region                         @relation(fields: [regionId], references: [id])
-  DoulaProfile  DoulaProfile                   @relation(fields: [doulaProfileId], references: [id])
+  clientProfile ClientProfile                  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  region        Region                         @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  DoulaProfile  DoulaProfile                   @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
   slotTime      AvailableSlotsTimeForService[]
   slot          AvailableSlotsForService[]
 }
@@ -384,8 +396,8 @@ model ServicePricing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  service        Service          @relation(fields: [serviceId], references: [id])
-  DoulaProfile   DoulaProfile     @relation(fields: [doulaProfileId], references: [id])
+  service        Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  DoulaProfile   DoulaProfile     @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
   IntakeForm     IntakeForm[]
   ServiceBooking ServiceBooking[]
 
@@ -404,9 +416,9 @@ model Testimonials {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id])
-  ServicePricing ServicePricing @relation(fields: [serviceId], references: [id])
-  client         ClientProfile  @relation(fields: [clientId], references: [id])
+  DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+  ServicePricing ServicePricing @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  client         ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model Schedules {
@@ -420,9 +432,9 @@ model Schedules {
   serviceId      String
   clientId       String
 
-  DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id])
-  ServicePricing ServicePricing @relation(fields: [serviceId], references: [id])
-  client         ClientProfile  @relation(fields: [clientId], references: [id])
+  DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+  ServicePricing ServicePricing @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  client         ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -461,7 +473,7 @@ model DoulaImages {
   isMain         Boolean @default(false)
   sortOrder      Int     @default(0)
 
-  doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id])
+  doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 
   @@unique([doulaProfileId, isMain], map: "unique_main_image")
 }

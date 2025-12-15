@@ -13,15 +13,21 @@ exports.RescheduleDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class RescheduleDto {
-    newSlotId;
+    meetingsDate;
+    meetingsTimeSlots;
     meetingId;
 }
 exports.RescheduleDto = RescheduleDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-slot-id' }),
+    (0, swagger_1.ApiProperty)({ example: '2025-10-12' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], RescheduleDto.prototype, "newSlotId", void 0);
+], RescheduleDto.prototype, "meetingsDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RescheduleDto.prototype, "meetingsTimeSlots", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'uuid-meeting-id' }),
     (0, class_validator_1.IsString)(),

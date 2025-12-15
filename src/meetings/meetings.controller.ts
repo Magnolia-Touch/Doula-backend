@@ -9,6 +9,7 @@ import {
     Patch,
     UseGuards,
     Req,
+    BadRequestException,
 } from '@nestjs/common';
 import { MeetingsService } from './meetings.service';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -219,5 +220,37 @@ export class MeetingsController {
     @Get("all/meetings")
     async getAllMeetings() {
         return this.service.findAllmeetings();
+    }
+
+    @Get('booked/slots')
+    @ApiQuery({ name: 'date', required: true, example: '2025-02-12' })
+    @ApiQuery({ name: 'doulaProfileId', required: false })
+    @ApiQuery({ name: 'zoneManagerProfileId', required: false })
+    async getBookedMeetingsByDate(
+        @Query('date') date: string,
+        @Query('doulaProfileId') doulaProfileId?: string,
+        @Query('zoneManagerProfileId') zoneManagerProfileId?: string,
+    ) {
+        if (!date) {
+            throw new BadRequestException('date is required');
+        }
+
+        if (!doulaProfileId && !zoneManagerProfileId) {
+            throw new BadRequestException(
+                'Either doulaProfileId or zoneManagerProfileId is required',
+            );
+        }
+
+        if (doulaProfileId && zoneManagerProfileId) {
+            throw new BadRequestException(
+                'Provide only one: doulaProfileId OR zoneManagerProfileId',
+            );
+        }
+
+        return this.service.getBookedMeetingsByDate({
+            date,
+            doulaProfileId,
+            zoneManagerProfileId,
+        });
     }
 }

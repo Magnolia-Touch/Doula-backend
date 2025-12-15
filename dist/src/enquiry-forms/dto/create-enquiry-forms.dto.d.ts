@@ -1,13 +1,14 @@
 export declare class EnquiryFormDto {
-    regionId: string;
-    timeId: string;
-    serviceId: string;
     name: string;
     email: string;
     phone: string;
-    additionalNotes?: string;
-    startDate: string;
-    endDate: string;
+    regionId: string;
+    meetingsDate: string;
+    meetingsTimeSlots: string;
+    serviceId: string;
+    seviceStartDate: string;
+    serviceEndDate: string;
     visitFrequency: number;
-    timeSlots: string;
+    serviceTimeSlots: string;
+    additionalNotes?: string;
 }

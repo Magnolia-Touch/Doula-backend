@@ -7,7 +7,7 @@ export declare class AvailableSlotsService {
     createAvailability(dto: AvailableSlotsForMeetingDto, user: any): Promise<{
         message: string;
         data: {
-            date: Date;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             ownerRole: any;
             timeslot: {
                 startTime: Date;
@@ -17,11 +17,29 @@ export declare class AvailableSlotsService {
             };
         };
     }>;
+    getMyAvailabilities(userId: string): Promise<({
+        AvailableSlotsTimeForMeeting: {
+            id: string;
+            availabe: boolean;
+            startTime: Date;
+            endTime: Date;
+            isBooked: boolean;
+        }[];
+    } & {
+        id: string;
+        weekday: import("@prisma/client").$Enums.WeekDays;
+        availabe: boolean;
+        ownerRole: import("@prisma/client").$Enums.Role;
+        doulaId: string | null;
+        adminId: string | null;
+        zoneManagerId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    })[]>;
     getAllSlots(regionId: string, startDate: string, endDate: string, filter?: 'all' | 'booked' | 'unbooked', page?: number, limit?: number): Promise<{
         data: {
             dateId: string;
-            date: Date;
-            weekday: string;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             ownerRole: import("@prisma/client").$Enums.Role;
             adminId: string | null;
@@ -45,38 +63,39 @@ export declare class AvailableSlotsService {
         slot: {
             AvailableSlotsTimeForMeeting: {
                 id: string;
+                availabe: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
                 isBooked: boolean;
                 dateId: string;
+                meetingsId: string | null;
             }[];
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            zoneManagerId: string | null;
-            date: Date;
-            weekday: string;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             ownerRole: import("@prisma/client").$Enums.Role;
             doulaId: string | null;
             adminId: string | null;
+            zoneManagerId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     updateSlotTimeById(dto: UpdateSlotsForMeetingTimeDto, userId: string): Promise<{
         message: string;
         data: {
             id: string;
+            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
             isBooked: boolean;
             dateId: string;
+            meetingsId: string | null;
         };
     }>;
     deleteSlots(slotId: string, userId: string): Promise<{
@@ -89,15 +108,10 @@ export declare class AvailableSlotsService {
     updateTimeSlotAvailability(id: string, booked: boolean, availabe: boolean): Promise<{
         message: string;
     }>;
-    disableSlotsInRange(startDate: string | Date, endDate: string | Date): Promise<{
-        message: string;
-        count: number;
-    }>;
     findall(user: any, startDate: string, endDate: string, filter?: 'all' | 'booked' | 'unbooked', page?: number, limit?: number): Promise<{
         data: {
             dateId: string;
-            date: Date;
-            weekday: string;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             ownerRole: import("@prisma/client").$Enums.Role;
             adminId: string | null;

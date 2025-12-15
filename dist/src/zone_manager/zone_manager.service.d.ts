@@ -11,34 +11,34 @@ export declare class ZoneManagerService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string | null;
+                profile_image: string | null;
             } | null;
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     get(page?: number, limit?: number, search?: string): Promise<{
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         }[];
         meta: {
             total: number;
@@ -56,36 +56,36 @@ export declare class ZoneManagerService {
             zonemanagerprofile: ({
                 managingRegion: {
                     id: string;
-                    is_active: boolean;
+                    zoneManagerId: string | null;
                     createdAt: Date;
                     updatedAt: Date;
-                    regionName: string;
                     pincode: string;
+                    regionName: string;
                     district: string;
                     state: string;
                     country: string;
                     latitude: string;
                     longitude: string;
-                    zoneManagerId: string | null;
+                    is_active: boolean;
                 }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string | null;
+                profile_image: string | null;
             }) | null;
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     delete(id: string): Promise<{
@@ -96,15 +96,15 @@ export declare class ZoneManagerService {
         message: string;
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     UpdateZoneManagerRegions(dto: UpdateZoneManagerRegionDto): Promise<{
@@ -116,13 +116,13 @@ export declare class ZoneManagerService {
         unassignedCount: number;
         assigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
         unassigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
     }>;
 }

@@ -35,7 +35,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateDoulaDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsPhoneNumber)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateDoulaDto.prototype, "phone", void 0);
 __decorate([

@@ -11,41 +11,45 @@ export declare class EnquiryService {
         message: string;
         enquiry: {
             id: string;
-            name: string;
-            email: string;
-            phone: string;
             createdAt: Date;
             updatedAt: Date;
+            name: string;
             regionId: string;
+            email: string;
+            phone: string;
+            serviceName: string;
             serviceId: string;
-            startDate: string;
-            endDate: string;
-            clientId: string | null;
-            slotId: string;
-            availableSlotsForMeetingId: string | null;
+            clientId: string;
             additionalNotes: string | null;
+            meetingsDate: Date;
+            meetingsTimeSlots: string;
+            seviceStartDate: Date;
+            serviceEndDate: Date;
             VisitFrequency: number;
-            TimeSlots: string;
+            serviceTimeSlots: string;
+            slotId: string;
         };
     }>;
     getAllEnquiries(page?: number, limit?: number): Promise<{
         data: {
             id: string;
-            name: string;
-            email: string;
-            phone: string;
             createdAt: Date;
             updatedAt: Date;
+            name: string;
             regionId: string;
+            email: string;
+            phone: string;
+            serviceName: string;
             serviceId: string;
-            startDate: string;
-            endDate: string;
-            clientId: string | null;
-            slotId: string;
-            availableSlotsForMeetingId: string | null;
+            clientId: string;
             additionalNotes: string | null;
+            meetingsDate: Date;
+            meetingsTimeSlots: string;
+            seviceStartDate: Date;
+            serviceEndDate: Date;
             VisitFrequency: number;
-            TimeSlots: string;
+            serviceTimeSlots: string;
+            slotId: string;
         }[];
         meta: {
             total: number;
@@ -57,54 +61,23 @@ export declare class EnquiryService {
         };
     }>;
     getEnquiryById(id: string): Promise<{
-        region: {
-            id: string;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
-            regionName: string;
-            pincode: string;
-            district: string;
-            state: string;
-            country: string;
-            latitude: string;
-            longitude: string;
-            zoneManagerId: string | null;
-        };
-        service: {
-            id: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-        };
-        slot: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            availabe: boolean;
-            startTime: Date;
-            endTime: Date;
-            isBooked: boolean;
-            dateId: string;
-        };
-    } & {
         id: string;
-        name: string;
-        email: string;
-        phone: string;
         createdAt: Date;
         updatedAt: Date;
+        name: string;
         regionId: string;
+        email: string;
+        phone: string;
+        serviceName: string;
         serviceId: string;
-        startDate: string;
-        endDate: string;
-        clientId: string | null;
-        slotId: string;
-        availableSlotsForMeetingId: string | null;
         additionalNotes: string | null;
+        meetingsDate: Date;
+        meetingsTimeSlots: string;
+        seviceStartDate: Date;
+        serviceEndDate: Date;
         VisitFrequency: number;
-        TimeSlots: string;
+        serviceTimeSlots: string;
+        slotId: string;
     }>;
     deleteEnquiry(id: string): Promise<{
         message: string;

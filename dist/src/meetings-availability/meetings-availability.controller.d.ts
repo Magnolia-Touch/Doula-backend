@@ -7,7 +7,7 @@ export declare class AvailableSlotsController {
     createSlots(dto: AvailableSlotsForMeetingDto, req: any): Promise<{
         message: string;
         data: {
-            date: Date;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             ownerRole: any;
             timeslot: {
                 startTime: Date;
@@ -20,8 +20,7 @@ export declare class AvailableSlotsController {
     getAllSlots(regionId: string, startDate: string, endDate: string, filter?: 'all' | 'booked' | 'unbooked', page?: string, limit?: string): Promise<{
         data: {
             dateId: string;
-            date: Date;
-            weekday: string;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             ownerRole: import("@prisma/client").$Enums.Role;
             adminId: string | null;
@@ -45,38 +44,39 @@ export declare class AvailableSlotsController {
         slot: {
             AvailableSlotsTimeForMeeting: {
                 id: string;
+                availabe: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
                 isBooked: boolean;
                 dateId: string;
+                meetingsId: string | null;
             }[];
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            zoneManagerId: string | null;
-            date: Date;
-            weekday: string;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             ownerRole: import("@prisma/client").$Enums.Role;
             doulaId: string | null;
             adminId: string | null;
+            zoneManagerId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     updateSlot(dto: UpdateSlotsForMeetingTimeDto, req: any): Promise<{
         message: string;
         data: {
             id: string;
+            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
             isBooked: boolean;
             dateId: string;
+            meetingsId: string | null;
         };
     }>;
     deleteSlot(slotId: string, req: any): Promise<{
@@ -89,37 +89,23 @@ export declare class AvailableSlotsController {
     updateSlotAvail(id: string, booked: boolean, availabe: boolean): Promise<{
         message: string;
     }>;
-    disableSlots(startDate: string, endDate: string): Promise<{
-        success: boolean;
-        message: string;
-        data: {
-            message: string;
-            count: number;
-            startDate: string;
-            endDate: string;
-        };
-    }>;
-    findall(startDate: string, endDate: string, filter: "all" | "booked" | "unbooked" | undefined, page: string | undefined, limit: string | undefined, req: any): Promise<{
-        data: {
-            dateId: string;
-            date: Date;
-            weekday: string;
+    findall(req: any): Promise<({
+        AvailableSlotsTimeForMeeting: {
+            id: string;
             availabe: boolean;
-            ownerRole: import("@prisma/client").$Enums.Role;
-            adminId: string | null;
-            doulaId: string | null;
-            zoneManagerId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            timings: any;
+            startTime: Date;
+            endTime: Date;
+            isBooked: boolean;
         }[];
-        meta: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-            hasNextPage: boolean;
-            hasPrevPage: boolean;
-        };
-    }>;
+    } & {
+        id: string;
+        weekday: import("@prisma/client").$Enums.WeekDays;
+        availabe: boolean;
+        ownerRole: import("@prisma/client").$Enums.Role;
+        doulaId: string | null;
+        adminId: string | null;
+        zoneManagerId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    })[]>;
 }

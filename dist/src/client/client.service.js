@@ -255,63 +255,55 @@ let ClientsService = class ClientsService {
                 },
                 Meetings: {
                     include: {
-                        slot: {
-                            include: {
-                                date: {
-                                    select: {
-                                        date: true,
-                                    },
-                                },
-                            },
-                        },
                         DoulaProfile: {
                             include: {
                                 user: {
-                                    select: {
-                                        name: true,
-                                    },
+                                    select: { name: true },
                                 },
                             },
                         },
                         ZoneManagerProfile: {
                             include: {
                                 user: {
-                                    select: {
-                                        name: true,
-                                    },
+                                    select: { name: true },
                                 },
                             },
                         },
+                        AvailableSlotsForMeeting: {
+                            select: { weekday: true },
+                        },
                     },
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
+                    orderBy: { createdAt: 'desc' },
                 },
             },
         });
         if (!clientProfile) {
-            throw new Error('Client profile not found');
+            throw new common_1.NotFoundException('Client profile not found');
         }
-        return clientProfile.Meetings.map((meeting) => {
-            let hostname = null;
-            if (meeting.DoulaProfile?.user?.name) {
-                hostname = meeting.DoulaProfile.user.name;
-            }
-            else if (meeting.ZoneManagerProfile?.user?.name) {
-                hostname = meeting.ZoneManagerProfile.user.name;
-            }
+        return clientProfile.Meetings.map(meeting => {
+            const hostname = meeting.DoulaProfile?.user?.name ??
+                meeting.ZoneManagerProfile?.user?.name ??
+                null;
+            const meetingWith = meeting.doulaProfileId
+                ? 'DOULA'
+                : meeting.zoneManagerProfileId
+                    ? 'ZONE_MANAGER'
+                    : null;
             return {
+                clientId: clientProfile.user.id,
+                clientName: clientProfile.user.name,
+                clientEmail: clientProfile.user.email,
+                clientPhone: clientProfile.user.phone,
+                clientProfileId: clientProfile.id,
                 meetingId: meeting.id,
-                userId: clientProfile.user.id,
-                name: clientProfile.user.name,
-                email: clientProfile.user.email,
-                phone: clientProfile.user.phone,
-                profileId: clientProfile.id,
+                meetingWith,
                 hostname,
-                date: meeting.slot.date.date,
-                startTime: meeting.slot.startTime,
-                endTime: meeting.slot.endTime,
+                meetingDate: meeting.date,
+                weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
+                startTime: meeting.startTime,
+                endTime: meeting.endTime,
                 link: meeting.link,
+                serviceName: meeting.serviceName,
                 remarks: meeting.remarks,
                 status: meeting.status,
             };
@@ -332,7 +324,7 @@ let ClientsService = class ClientsService {
             },
         });
         if (!clientProfile) {
-            throw new Error('Client profile not found');
+            throw new common_1.NotFoundException('Client profile not found');
         }
         const meeting = await this.prisma.meetings.findFirst({
             where: {
@@ -340,58 +332,56 @@ let ClientsService = class ClientsService {
                 bookedById: clientProfile.id,
             },
             include: {
-                slot: {
-                    include: {
-                        date: {
-                            select: {
-                                date: true,
-                            },
-                        },
-                    },
-                },
                 DoulaProfile: {
                     include: {
                         user: {
-                            select: {
-                                name: true,
-                            },
+                            select: { name: true },
                         },
                     },
                 },
                 ZoneManagerProfile: {
                     include: {
                         user: {
-                            select: {
-                                name: true,
-                            },
+                            select: { name: true },
                         },
                     },
+                },
+                AvailableSlotsForMeeting: {
+                    select: { weekday: true },
                 },
             },
         });
         if (!meeting) {
-            throw new Error('Meeting not found');
+            throw new common_1.NotFoundException('Meeting not found');
         }
-        let hostname = null;
-        if (meeting.DoulaProfile?.user?.name) {
-            hostname = meeting.DoulaProfile.user.name;
-        }
-        else if (meeting.ZoneManagerProfile?.user?.name) {
-            hostname = meeting.ZoneManagerProfile.user.name;
-        }
+        const hostname = meeting.DoulaProfile?.user?.name ??
+            meeting.ZoneManagerProfile?.user?.name ??
+            null;
+        const meetingWith = meeting.doulaProfileId
+            ? 'DOULA'
+            : meeting.zoneManagerProfileId
+                ? 'ZONE_MANAGER'
+                : null;
         return {
-            userId: clientProfile.user.id,
-            name: clientProfile.user.name,
-            email: clientProfile.user.email,
-            phone: clientProfile.user.phone,
-            profileId: clientProfile.id,
+            clientId: clientProfile.user.id,
+            clientName: clientProfile.user.name,
+            clientEmail: clientProfile.user.email,
+            clientPhone: clientProfile.user.phone,
+            clientProfileId: clientProfile.id,
+            meetingId: meeting.id,
+            meetingWith,
             hostname,
-            date: meeting.slot.date.date,
-            startTime: meeting.slot.startTime,
-            endTime: meeting.slot.endTime,
+            meetingDate: meeting.date,
+            weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
+            startTime: meeting.startTime,
+            endTime: meeting.endTime,
             link: meeting.link,
+            serviceName: meeting.serviceName,
             remarks: meeting.remarks,
             status: meeting.status,
+            createdAt: meeting.createdAt,
+            cancelledAt: meeting.cancelledAt,
+            rescheduledAt: meeting.rescheduledAt,
         };
     }
     async cancelMeeting(userId, meetingId) {
@@ -399,7 +389,7 @@ let ClientsService = class ClientsService {
             where: { userId },
         });
         if (!clientProfile) {
-            throw new Error('Client profile not found');
+            throw new common_1.NotFoundException('Client profile not found');
         }
         const meeting = await this.prisma.meetings.findFirst({
             where: {
@@ -407,40 +397,48 @@ let ClientsService = class ClientsService {
                 bookedById: clientProfile.id,
             },
             include: {
-                slot: true,
+                AvailableSlotsTimeForMeeting: {
+                    select: { id: true },
+                },
             },
         });
         if (!meeting) {
-            throw new Error('Meeting not found');
+            throw new common_1.NotFoundException('Meeting not found');
         }
         if (meeting.status === client_1.MeetingStatus.CANCELED) {
-            throw new Error('Meeting is already canceled');
+            throw new common_1.BadRequestException('Meeting is already canceled');
         }
         if (meeting.status === client_1.MeetingStatus.COMPLETED) {
-            throw new Error('Completed meetings cannot be canceled');
+            throw new common_1.BadRequestException('Completed meetings cannot be canceled');
         }
-        const result = await this.prisma.$transaction(async (tx) => {
-            const canceledMeeting = await tx.meetings.update({
+        const canceledMeeting = await this.prisma.$transaction(async (tx) => {
+            const updated = await tx.meetings.update({
                 where: { id: meeting.id },
                 data: {
                     status: client_1.MeetingStatus.CANCELED,
                     cancelledAt: new Date(),
                 },
             });
-            await tx.availableSlotsTimeForMeeting.update({
-                where: { id: meeting.slotId },
-                data: {
-                    isBooked: false,
-                    availabe: true,
-                },
-            });
-            return canceledMeeting;
+            if (meeting.AvailableSlotsTimeForMeeting.length > 0) {
+                await tx.availableSlotsTimeForMeeting.updateMany({
+                    where: {
+                        id: {
+                            in: meeting.AvailableSlotsTimeForMeeting.map(s => s.id),
+                        },
+                    },
+                    data: {
+                        isBooked: false,
+                        availabe: true,
+                    },
+                });
+            }
+            return updated;
         });
         return {
             message: 'Meeting canceled successfully',
-            meetingId: result.id,
-            status: result.status,
-            cancelledAt: result.cancelledAt,
+            meetingId: canceledMeeting.id,
+            status: canceledMeeting.status,
+            cancelledAt: canceledMeeting.cancelledAt,
         };
     }
     async recentActivity(userId) {

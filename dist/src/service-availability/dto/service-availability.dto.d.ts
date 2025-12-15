@@ -1,5 +1,6 @@
+import { WeekDays } from '@prisma/client';
 export declare class CreateDoulaServiceAvailability {
-    date: string;
+    weekday: WeekDays;
     startTime: string;
     endTime: string;
 }

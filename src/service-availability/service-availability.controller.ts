@@ -93,20 +93,13 @@ export class DoulaServiceAvailabilityController {
             },
         },
     })
+    @UseGuards(JwtAuthGuard)
     @Get()
-    async getAllSlots(
-        @Query('doulaId') doulaId: string,
-        @Query('startDate') startDate: string,
-        @Query('endDate') endDate: string,
-        @Query('filter') filter: 'all' | 'booked' | 'unbooked' = 'all',
-        @Query('page') page: string = '1',
-        @Query('limit') limit: string = '10',
-    ) {
-        if (!doulaId) throw new BadRequestException('doulaId is required');
-        if (!startDate) throw new BadRequestException('startDate is required');
-        if (!endDate) throw new BadRequestException('endDate is required');
+    async getMyAvailabilities(
+        @Req() req
 
-        return this.service.getAllSlots(doulaId, startDate, endDate, filter, parseInt(page, 10), parseInt(limit, 10));
+    ) {
+        return this.service.getMyAvailabilities(req.user.id);
     }
 
     @Get(':id')

@@ -9,7 +9,7 @@ export class CreateDoulaDto {
     @IsEmail()
     email: string;
 
-    @IsPhoneNumber()
+    @IsString()
     phone: string;
 
 

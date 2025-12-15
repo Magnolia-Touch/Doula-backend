@@ -13,34 +13,20 @@ exports.EnquiryFormDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class EnquiryFormDto {
-    regionId;
-    timeId;
-    serviceId;
     name;
     email;
     phone;
-    additionalNotes;
-    startDate;
-    endDate;
+    regionId;
+    meetingsDate;
+    meetingsTimeSlots;
+    serviceId;
+    seviceStartDate;
+    serviceEndDate;
     visitFrequency = 1;
-    timeSlots;
+    serviceTimeSlots;
+    additionalNotes;
 }
 exports.EnquiryFormDto = EnquiryFormDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'region-uuid' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], EnquiryFormDto.prototype, "regionId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'slot-uuid' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], EnquiryFormDto.prototype, "timeId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'service-uuid' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], EnquiryFormDto.prototype, "serviceId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
     (0, class_validator_1.IsString)(),
@@ -52,35 +38,59 @@ __decorate([
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '+919876543210' }),
+    (0, swagger_1.ApiProperty)({ example: '9876543210' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "phone", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'region-uuid' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "regionId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "meetingsDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "meetingsTimeSlots", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'service-uuid' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "serviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '2025-12-05', description: 'Service Start Date (ISO format)' }),
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "seviceStartDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '2025-12-10', description: 'Service End Date (ISO format)' }),
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "serviceEndDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 2, description: 'Visit Frequency for Services (e.g., twice a week)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], EnquiryFormDto.prototype, "visitFrequency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EnquiryFormDto.prototype, "serviceTimeSlots", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ required: false, description: 'Optional additional notes' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "additionalNotes", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2025-12-05', description: 'Service Start Date (ISO format)' }),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], EnquiryFormDto.prototype, "startDate", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '2025-12-10', description: 'Service End Date (ISO format)' }),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], EnquiryFormDto.prototype, "endDate", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 2, description: 'Visit Frequency for Services (e.g., twice a week)' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    __metadata("design:type", Number)
-], EnquiryFormDto.prototype, "visitFrequency", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], EnquiryFormDto.prototype, "timeSlots", void 0);
 //# sourceMappingURL=create-enquiry-forms.dto.js.map

@@ -7,9 +7,9 @@ export declare class JwtStrategy extends JwtStrategy_base {
     constructor(configService: ConfigService, prisma: PrismaService);
     validate(payload: any): Promise<{
         id: string;
-        name: string;
         email: string;
         phone: string | null;
+        name: string;
         otp: string | null;
         otpExpiresAt: Date | null;
         role: import("@prisma/client").$Enums.Role;

@@ -1,4 +1,5 @@
 export declare class RescheduleDto {
-    newSlotId: string;
+    meetingsDate: string;
+    meetingsTimeSlots: string;
     meetingId: string;
 }

@@ -6,8 +6,40 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
 import { paginate } from 'src/common/utility/pagination.util';
-import { getOrcreateClent } from 'src/common/utility/service-utils';
+import { generateVisitDates, getOrcreateClent, isOverlapping } from 'src/common/utility/service-utils';
 import { MailerService } from '@nestjs-modules/mailer';
+import { Prisma, WeekDays } from '@prisma/client';
+
+type IntakeFormWithRelations = Prisma.IntakeFormGetPayload<{
+    include: {
+        region: { select: { regionName: true } };
+        service: {
+            select: {
+                price: true;
+                service: { select: { name: true } };
+            };
+        };
+        clientProfile: {
+            select: {
+                id: true;
+                user: {
+                    select: {
+                        id: true;
+                        name: true;
+                        email: true;
+                        phone: true;
+                    };
+                };
+            };
+        };
+        DoulaProfile: {
+            select: {
+                id: true;
+                user: { select: { id: true } };
+            };
+        };
+    };
+}>;
 
 @Injectable()
 export class IntakeFormService {
@@ -17,290 +49,368 @@ export class IntakeFormService {
     ) { }
 
     async createIntakeForm(dto: IntakeFormDto) {
-        const { name, email, phone, doulaProfileId, serviceId, address, buffer, enquiryId } = dto
-        const data = { name: dto.name, email: dto.email, phone: dto.phone }
-        const client = await getOrcreateClent(this.prisma, data)
+        const {
+            name,
+            email,
+            phone,
+            doulaProfileId,
+            serviceId,
+            address,
+            buffer = 0,
+            enquiryId,
+        } = dto;
 
-        // Update client address
-        const clientprofile = await this.prisma.clientProfile.update({
-            where: { userId: client.id },
-            data: { address: dto.address },
+        /* ----------------------------------------------------
+         * 1. Get or create client
+         * -------------------------------------------------- */
+        const clientUser = await getOrcreateClent(this.prisma, {
+            name,
+            email,
+            phone,
         });
 
+        const clientProfile = await this.prisma.clientProfile.update({
+            where: { userId: clientUser.id },
+            data: { address },
+        });
+
+        /* ----------------------------------------------------
+         * 2. Fetch enquiry
+         * -------------------------------------------------- */
         const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id: dto.enquiryId },
-            select: { endDate: true, startDate: true, VisitFrequency: true, TimeSlots: true }
+            where: { id: enquiryId },
+            select: {
+                seviceStartDate: true,
+                serviceEndDate: true,
+                VisitFrequency: true,
+                serviceTimeSlots: true,
+            },
         });
-        if (!enquiry) { throw new BadRequestException("Enquiry not Found") }
 
+        if (!enquiry) {
+            throw new BadRequestException('Enquiry not found');
+        }
 
+        /* ----------------------------------------------------
+         * 3. Validate region
+         * -------------------------------------------------- */
         const region = await this.prisma.region.findFirst({
-            where: { doula: { some: { id: dto.doulaProfileId } } }
-        })
-        if (!region) { throw new BadRequestException("Region not listed for doula") }
-
-
-        const service = await this.prisma.servicePricing.findUnique({
-            where: { id: dto.serviceId }
-        })
-        if (!service) {
-            throw new NotFoundException('Service Not Found');
-        }
-
-
-        // build date of services.
-        const leftEndDate = new Date(enquiry.startDate);
-        const rightEndDate = new Date(enquiry.endDate);
-
-        const dates: Date[] = [];
-        let current = new Date(leftEndDate);
-
-        while (current <= rightEndDate) {
-            dates.push(new Date(current));
-            current.setDate(current.getDate() + enquiry.VisitFrequency);
-        }
-
-        //parse timeslot "09:00-11:00"
-        const [startStr, endStr] = enquiry.TimeSlots.split("-");
-        const [startHour, startMinute] = startStr.split(":").map(Number);
-        const [endHour, endMinute] = endStr.split(":").map(Number);
-
-        // Helper to produce DateTime for a given date with hours/minutes
-        function dateWithTime(date: Date, hour: number, minute: number) {
-            const d = new Date(date);
-            d.setHours(hour, minute, 0, 0);
-            return d;
-        }
-
-        // 3) fetch matching AvailableSlotsForService with only the matching child timeslots
-        const fetchedSlots = await this.prisma.availableSlotsForService.findMany({
-            where: {
-                date: { in: dates },
-            },
-            include: {
-                AvailableSlotsTimeForService: {
-                    where: {
-                        AND: [
-                            {
-                                startTime: {
-                                    gte: dateWithTime(new Date(enquiry.startDate), startHour, startMinute),
-                                },
-                            },
-                            {
-                                endTime: {
-                                    lte: dateWithTime(new Date(enquiry.startDate), endHour, endMinute),
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
-            orderBy: { date: "asc" },
+            where: { doula: { some: { id: doulaProfileId } } },
         });
 
-        // 4) collect ids to update
-        const parentSlotIds = fetchedSlots.map(s => s.id);
+        if (!region) {
+            throw new BadRequestException('Region not listed for doula');
+        }
 
-        // Flatten all matching time-slot ids (may be empty arrays)
-        const timeSlotIds = fetchedSlots
-            .flatMap(s => s.AvailableSlotsTimeForService.map(ts => ts.id))
-            .filter(Boolean);
+        /* ----------------------------------------------------
+         * 4. Validate service
+         * -------------------------------------------------- */
+        const service = await this.prisma.servicePricing.findUnique({
+            where: { id: serviceId },
+        });
 
-        // 5) compute buffer ranges (dates are compared as DateTimes; truncate to start-of-day)
-        const startDate = new Date(enquiry.startDate);
+        if (!service) {
+            throw new NotFoundException('Service not found');
+        }
+
+        /* ----------------------------------------------------
+         * 5. Normalize service dates
+         * -------------------------------------------------- */
+        const startDate = new Date(enquiry.seviceStartDate);
         startDate.setHours(0, 0, 0, 0);
 
-        const endDate = new Date(enquiry.endDate);
+        const endDate = new Date(enquiry.serviceEndDate);
         endDate.setHours(0, 0, 0, 0);
 
-        const bufferDays = Number(dto.buffer) || 0;
-
-        // Range A: enquiry.startDate - buffer  → enquiry.startDate (inclusive)
-        const rangeAStart = new Date(startDate);
-        rangeAStart.setDate(rangeAStart.getDate() - bufferDays); // startDate - buffer
-        rangeAStart.setHours(0, 0, 0, 0);
-        const rangeAEnd = new Date(startDate); // upto startDate inclusive
-        rangeAEnd.setHours(23, 59, 59, 999);
-
-        // Range B: enquiry.startDate → enquiry.endDate + buffer (inclusive)
-        const rangeBStart = new Date(startDate);
-        rangeBStart.setHours(0, 0, 0, 0);
-        const rangeBEnd = new Date(endDate);
-        rangeBEnd.setDate(rangeBEnd.getDate() + bufferDays);
-        rangeBEnd.setHours(23, 59, 59, 999);
-
-        // 6) perform updates in a single transaction for consistency
-        const txOps = [] as any[];
-
-        // If there are matching child timeslots, mark their availabe = false
-        if (timeSlotIds.length > 0) {
-            txOps.push(
-                this.prisma.availableSlotsTimeForService.updateMany({
-                    where: { id: { in: timeSlotIds } },
-                    data: { availabe: false },
-                })
-            );
+        if (startDate > endDate) {
+            throw new BadRequestException('Invalid service date range');
         }
 
-        // Mark the fetched parent slots as availabe = false and isBooked = true
-        if (parentSlotIds.length > 0) {
-            txOps.push(
-                this.prisma.availableSlotsForService.updateMany({
-                    where: { id: { in: parentSlotIds } },
-                    data: { availabe: false, isBooked: true },
-                })
-            );
+        /* ----------------------------------------------------
+         * 6. Parse time slot "09:00-11:00"
+         * -------------------------------------------------- */
+        const [startStr, endStr] = enquiry.serviceTimeSlots.split('-');
+        const slotStartTime = new Date(`1970-01-01T${startStr}:00`);
+        const slotEndTime = new Date(`1970-01-01T${endStr}:00`);
+
+        if (slotStartTime >= slotEndTime) {
+            throw new BadRequestException('Invalid time slot');
         }
+        const DAY_TO_WEEKDAY: Record<number, WeekDays> = {
+            0: WeekDays.SUNDAY,
+            1: WeekDays.MONDAY,
+            2: WeekDays.TUESDAY,
+            3: WeekDays.WEDNESDAY,
+            4: WeekDays.THURSDAY,
+            5: WeekDays.FRIDAY,
+            6: WeekDays.SATURDAY,
+        };
 
-        // Buffer range A: set availabe = false (do NOT change isBooked)
-        txOps.push(
-            this.prisma.availableSlotsForService.updateMany({
-                where: {
-                    date: {
-                        gte: rangeAStart,
-                        lte: rangeAEnd,
-                    },
-                },
-                data: { availabe: false },
-            })
+
+        /* ----------------------------------------------------
+         * 7. Generate visit dates
+         * -------------------------------------------------- */
+        const visitDates = await generateVisitDates(
+            startDate,
+            endDate,
+            enquiry.VisitFrequency,
+            buffer,
         );
 
-        // Buffer range B: set availabe = false (do NOT change isBooked)
-        txOps.push(
-            this.prisma.availableSlotsForService.updateMany({
+        const schedulesToCreate: any[] = [];
+
+        /* ----------------------------------------------------
+         * 8. Validate availability + conflicts per date
+         * -------------------------------------------------- */
+        for (const visitDate of visitDates) {
+            const weekday = DAY_TO_WEEKDAY[visitDate.getDay()];
+
+            const daySlot = await this.prisma.availableSlotsForService.findUnique({
                 where: {
-                    date: {
-                        gte: rangeBStart,
-                        lte: rangeBEnd,
+                    doulaId_weekday: {
+                        doulaId: doulaProfileId,
+                        weekday,
                     },
                 },
-                data: { availabe: false },
-            })
-        );
-
-
-        // Execute transaction
-        await this.prisma.$transaction(txOps);
-
-        const intake = await this.prisma.intakeForm.create({
-            data: {
-
-                startDate: new Date(startDate),
-                endDate: new Date(endDate),
-
-                name,
-                email,
-                phone,
-                address,
-
-                regionId: region.id,
-                servicePricingId: service.id,
-                doulaProfileId: doulaProfileId,
-                clientId: clientprofile.id,
-
-                // Connect selected days
-                slot: {
-                    connect: parentSlotIds.map(id => ({ id }))
+                include: {
+                    AvailableSlotsTimeForService: {
+                        where: { availabe: true },
+                    },
                 },
+            });
 
-                // Connect selected time ranges
-                slotTime: {
-                    connect: timeSlotIds.map(id => ({ id }))
-                }
-            },
-        });
+            if (!daySlot || !daySlot.availabe) continue;
 
-        const booking = await this.prisma.serviceBooking.create({
-            data: {
-                startDate: new Date(startDate),
-                endDate: new Date(endDate),
-                regionId: region.id,
-                servicePricingId: service.id,
-                doulaProfileId: doulaProfileId,
-                clientId: clientprofile.id,
+            const hasTimeSlot = daySlot.AvailableSlotsTimeForService.some(ts =>
+                isOverlapping(
+                    slotStartTime,
+                    slotEndTime,
+                    ts.startTime,
+                    ts.endTime,
+                ),
+            );
 
-                // connect time slots booked
-                slot: {
-                    connect: timeSlotIds.map(id => ({ id }))
+            if (!hasTimeSlot) continue;
+
+            const conflict = await this.prisma.schedules.findFirst({
+                where: {
+                    doulaProfileId,
+                    date: visitDate,
+                    AND: [
+                        { startTime: { lt: slotEndTime } },
+                        { endTime: { gt: slotStartTime } },
+                    ],
                 },
+            });
 
-                // connect parent date slots booked
-                AvailableSlotsForService: {
-                    connect: parentSlotIds.map(id => ({ id }))
-                }
-            }
-        });
-        console.log("intake form", intake)
+            if (conflict) continue;
 
-        // fetch all slots that were just booked (i.e., the ones we connected)
-        const booked = await this.prisma.availableSlotsForService.findMany({
-            where: { id: { in: parentSlotIds } },
-            include: {
-                AvailableSlotsTimeForService: {
-                    where: { id: { in: timeSlotIds } }   // only these times
-                }
-            }
-        });
-
-        // build schedules payload
-        const scheduleRecords = booked.flatMap(parent => {
-            return parent.AvailableSlotsTimeForService.map(child => ({
-                date: parent.date,                   // parent date
-                startTime: child.startTime,          // child time
-                endTime: child.endTime,
-
-                doulaProfileId: doulaProfileId,
+            schedulesToCreate.push({
+                date: visitDate,
+                startTime: slotStartTime,
+                endTime: slotEndTime,
+                doulaProfileId,
                 serviceId: service.id,
-                clientId: clientprofile.id,
-            }))
-        });
+                clientId: clientProfile.id,
+            });
+        }
 
-        // insert in bulk
-        await this.prisma.schedules.createMany({
-            data: scheduleRecords
-        });
+        if (!schedulesToCreate.length) {
+            throw new BadRequestException(
+                'No valid schedules available for the selected dates and time slot',
+            );
+        }
 
-        //create schedules for each of slots marked isBooked = true
-        // await this.mail.sendMail({
-        //     to: client.email,
-        //     subject: `Confirmation of your service`,
-        //     template: 'meetings',
-        //     context: {
-        //         date: dateInstance?.date,
-        //         time: slot.startTime + ' - ' + slot.endTime,
-        //         meetLink: meetLink,
+        /* ----------------------------------------------------
+         * 9. Atomic write
+         * -------------------------------------------------- */
+        const [intake, booking] = await this.prisma.$transaction([
+            this.prisma.intakeForm.create({
+                data: {
+                    name,
+                    email,
+                    phone,
+                    address,
+                    startDate,
+                    endDate,
+                    regionId: region.id,
+                    servicePricingId: service.id,
+                    doulaProfileId,
+                    clientId: clientProfile.id,
+                },
+            }),
 
-        //     },
-        // });
-        return { intake, booking };
+            this.prisma.serviceBooking.create({
+                data: {
+                    startDate,
+                    endDate,
+                    regionId: region.id,
+                    servicePricingId: service.id,
+                    doulaProfileId,
+                    clientId: clientProfile.id,
+                },
+            }),
+
+            this.prisma.schedules.createMany({
+                data: schedulesToCreate,
+            }),
+        ]);
+
+        return {
+            intake,
+            booking,
+            schedulesCreated: schedulesToCreate.length,
+        };
     }
 
 
     async getAllForms(page: number, limit: number) {
-        return paginate({
+        const result = await paginate({
             prismaModel: this.prisma.intakeForm,
             page,
             limit,
-            include: { clientProfile: true, DoulaProfile: true },
             orderBy: { createdAt: 'desc' },
+            include: {
+                region: { select: { regionName: true } },
+                service: {
+                    select: {
+                        price: true,
+                        service: { select: { name: true } },
+                    },
+                },
+                clientProfile: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                DoulaProfile: {
+                    select: {
+                        id: true,
+                        user: { select: { id: true } },
+                    },
+                },
+            },
         });
+
+        // 🔑 Explicitly tell TS what `form` really is
+        const data = (result.data as IntakeFormWithRelations[]).map((form) => ({
+            intakeFormId: form.id,
+            serviceStartDate: form.startDate,
+            serviceEndDate: form.endDate,
+            location: form.location,
+
+            clientName: form.name ?? form.clientProfile.user.name,
+            clientEmail: form.email ?? form.clientProfile.user.email,
+            clientPhone: form.phone ?? form.clientProfile.user.phone,
+
+            regionName: form.region.regionName,
+
+            serviceName: form.service.service.name,
+            servicePrice: form.service.price,
+
+            clientId: form.clientProfile.user.id,
+            clientProfileId: form.clientProfile.id,
+
+            userId: form.DoulaProfile.user.id,
+            doulaProfileId: form.DoulaProfile.id,
+        }));
+
+        return {
+            ...result,
+            data,
+        };
     }
+
 
     async getFormById(id: string) {
         const form = await this.prisma.intakeForm.findUnique({
             where: { id },
             include: {
-                clientProfile: true,
-                DoulaProfile: true,
-                service: true,
-                region: true,
+                region: {
+                    select: {
+                        regionName: true,
+                    },
+                },
+                service: {
+                    select: {
+                        price: true,
+                        service: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                clientProfile: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                DoulaProfile: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                id: true,
+                            },
+                        },
+                    },
+                },
                 slot: true,
+                slotTime: true,
             },
         });
 
-        if (!form) throw new NotFoundException('Intake form not found');
-        return form;
+        if (!form) {
+            throw new NotFoundException('Intake form not found');
+        }
+
+        return {
+            intakeFormId: form.id,
+            serviceStartDate: form.startDate,
+            serviceEndDate: form.endDate,
+            location: form.location,
+            address: form.address,
+
+            clientName: form.name ?? form.clientProfile.user.name,
+            clientEmail: form.email ?? form.clientProfile.user.email,
+            clientPhone: form.phone ?? form.clientProfile.user.phone,
+
+            regionName: form.region.regionName,
+
+            serviceName: form.service.service.name,
+            servicePrice: form.service.price,
+
+            clientId: form.clientProfile.user.id,
+            clientProfileId: form.clientProfile.id,
+
+            userId: form.DoulaProfile.user.id,
+            doulaProfileId: form.DoulaProfile.id,
+
+            slots: form.slot,
+            slotTimes: form.slotTime,
+
+            createdAt: form.createdAt,
+            updatedAt: form.updatedAt,
+        };
     }
+
 
     async deleteForm(id: string) {
         const intake = await this.prisma.intakeForm.findUnique({
@@ -330,255 +440,209 @@ export class IntakeFormService {
     }
 
 
+
+
     async BookDoula(dto: BookDoulaDto, userId: string) {
-        const { name, email, phone, location, address, doulaProfileId, serviceId, serviceStartDate, servicEndDate, visitFrequency, timeSlots, buffer } = dto
+        const {
+            name,
+            email,
+            phone,
+            location,
+            address,
+            doulaProfileId,
+            serviceId,
+            serviceStartDate,
+            servicEndDate,
+            visitFrequency,
+            timeSlots,
+        } = dto;
 
-        // const data = { name: dto.name, email: dto.email, phone: dto.phone }
-        // const client = await getOrcreateClent(this.prisma, data)
-        // Update client address
-        const clientprofile = await this.prisma.clientProfile.update({
-            where: { userId: userId },
-            data: { address: dto.address },
+        /* ----------------------------------------------------
+         * 1. Update client profile
+         * -------------------------------------------------- */
+        const clientProfile = await this.prisma.clientProfile.update({
+            where: { userId },
+            data: { address },
         });
 
+        /* ----------------------------------------------------
+         * 2. Validate region
+         * -------------------------------------------------- */
         const region = await this.prisma.region.findFirst({
-            where: { doula: { some: { id: doulaProfileId } } }
-        })
-        if (!region) { throw new BadRequestException("Region not listed for doula") }
-
-
-        const service = await this.prisma.servicePricing.findUnique({
-            where: { id: serviceId }
-        })
-        if (!service) {
-            throw new NotFoundException('Service Not Found');
-        }
-
-        // build date of services.
-        const leftEndDate = new Date(serviceStartDate);
-        const rightEndDate = new Date(servicEndDate);
-
-        const dates: Date[] = [];
-        let current = new Date(leftEndDate);
-
-        while (current <= rightEndDate) {
-            dates.push(new Date(current));
-            current.setDate(current.getDate() + visitFrequency);
-        }
-
-        //parse timeslot "09:00-11:00"
-        const [startStr, endStr] = timeSlots.split("-");
-        const [startHour, startMinute] = startStr.split(":").map(Number);
-        const [endHour, endMinute] = endStr.split(":").map(Number);
-
-        // Helper to produce DateTime for a given date with hours/minutes
-        function dateWithTime(date: Date, hour: number, minute: number) {
-            const d = new Date(date);
-            d.setHours(hour, minute, 0, 0);
-            return d;
-        }
-
-        // 3) fetch matching AvailableSlotsForService with only the matching child timeslots
-        const fetchedSlots = await this.prisma.availableSlotsForService.findMany({
-            where: {
-                date: { in: dates },
-            },
-            include: {
-                AvailableSlotsTimeForService: {
-                    where: {
-                        AND: [
-                            {
-                                startTime: {
-                                    gte: dateWithTime(new Date(serviceStartDate), startHour, startMinute),
-                                },
-                            },
-                            {
-                                endTime: {
-                                    lte: dateWithTime(new Date(servicEndDate), endHour, endMinute),
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
-            orderBy: { date: "asc" },
+            where: { doula: { some: { id: doulaProfileId } } },
         });
 
-        // 4) collect ids to update
-        const parentSlotIds = fetchedSlots.map(s => s.id);
+        if (!region) {
+            throw new BadRequestException('Region not listed for doula');
+        }
 
-        // Flatten all matching time-slot ids (may be empty arrays)
-        const timeSlotIds = fetchedSlots
-            .flatMap(s => s.AvailableSlotsTimeForService.map(ts => ts.id))
-            .filter(Boolean);
+        /* ----------------------------------------------------
+         * 3. Validate service
+         * -------------------------------------------------- */
+        const service = await this.prisma.servicePricing.findUnique({
+            where: { id: serviceId },
+        });
 
-        // 5) compute buffer ranges (dates are compared as DateTimes; truncate to start-of-day)
+        if (!service) {
+            throw new NotFoundException('Service not found');
+        }
+
+        /* ----------------------------------------------------
+         * 4. Parse time slot (09:00-11:00)
+         * -------------------------------------------------- */
+        const [startStr, endStr] = timeSlots.split('-');
+
+        const slotStartTime = new Date(`1970-01-01T${startStr}:00`);
+        const slotEndTime = new Date(`1970-01-01T${endStr}:00`);
+
+        if (slotStartTime >= slotEndTime) {
+            throw new BadRequestException('Invalid time slot');
+        }
+
+        /* ----------------------------------------------------
+         * 5. Normalize service dates
+         * -------------------------------------------------- */
         const startDate = new Date(serviceStartDate);
         startDate.setHours(0, 0, 0, 0);
 
         const endDate = new Date(servicEndDate);
         endDate.setHours(0, 0, 0, 0);
 
-        const bufferDays = Number(dto.buffer) || 0;
-
-        // Range A: enquiry.startDate - buffer  → enquiry.startDate (inclusive)
-        const rangeAStart = new Date(startDate);
-        rangeAStart.setDate(rangeAStart.getDate() - bufferDays); // startDate - buffer
-        rangeAStart.setHours(0, 0, 0, 0);
-        const rangeAEnd = new Date(startDate); // upto startDate inclusive
-        rangeAEnd.setHours(23, 59, 59, 999);
-
-        // Range B: enquiry.startDate → enquiry.endDate + buffer (inclusive)
-        const rangeBStart = new Date(startDate);
-        rangeBStart.setHours(0, 0, 0, 0);
-        const rangeBEnd = new Date(endDate);
-        rangeBEnd.setDate(rangeBEnd.getDate() + bufferDays);
-        rangeBEnd.setHours(23, 59, 59, 999);
-
-        // 6) perform updates in a single transaction for consistency
-        const txOps = [] as any[];
-
-        // If there are matching child timeslots, mark their availabe = false
-        if (timeSlotIds.length > 0) {
-            txOps.push(
-                this.prisma.availableSlotsTimeForService.updateMany({
-                    where: { id: { in: timeSlotIds } },
-                    data: { availabe: false },
-                })
-            );
+        if (startDate > endDate) {
+            throw new BadRequestException('Invalid service date range');
         }
 
-        // Mark the fetched parent slots as availabe = false and isBooked = true
-        if (parentSlotIds.length > 0) {
-            txOps.push(
-                this.prisma.availableSlotsForService.updateMany({
-                    where: { id: { in: parentSlotIds } },
-                    data: { availabe: false, isBooked: true },
-                })
+        /* ----------------------------------------------------
+         * 6. Generate visit dates
+         * -------------------------------------------------- */
+        const BUFFER_DAYS = 0;
+
+        const visitDates = await generateVisitDates(
+            startDate,
+            endDate,
+            visitFrequency,
+            BUFFER_DAYS,
+        );
+
+        const schedulesToCreate: any[] = [];
+        const DAY_TO_WEEKDAY: Record<number, WeekDays> = {
+            0: WeekDays.SUNDAY,
+            1: WeekDays.MONDAY,
+            2: WeekDays.TUESDAY,
+            3: WeekDays.WEDNESDAY,
+            4: WeekDays.THURSDAY,
+            5: WeekDays.FRIDAY,
+            6: WeekDays.SATURDAY,
+        };
+
+        /* ----------------------------------------------------
+         * 7. Validate availability + conflicts per date
+         * -------------------------------------------------- */
+        for (const visitDate of visitDates) {
+            const weekday = DAY_TO_WEEKDAY[visitDate.getDay()];
+
+            /* Fetch weekday availability */
+            const daySlot = await this.prisma.availableSlotsForService.findUnique({
+                where: {
+                    doulaId_weekday: {
+                        doulaId: doulaProfileId,
+                        weekday,
+                    },
+                },
+                include: {
+                    AvailableSlotsTimeForService: {
+                        where: { availabe: true },
+                    },
+                },
+            });
+
+            if (!daySlot || !daySlot.availabe) continue;
+
+            /* Check time-slot availability */
+            const hasTimeAvailability = daySlot.AvailableSlotsTimeForService.some(
+                ts =>
+                    isOverlapping(
+                        slotStartTime,
+                        slotEndTime,
+                        ts.startTime,
+                        ts.endTime,
+                    ),
             );
-        }
 
-        // Buffer range A: set availabe = false (do NOT change isBooked)
-        txOps.push(
-            this.prisma.availableSlotsForService.updateMany({
+            if (!hasTimeAvailability) continue;
+
+            /* Check schedule conflicts */
+            const conflict = await this.prisma.schedules.findFirst({
                 where: {
-                    date: {
-                        gte: rangeAStart,
-                        lte: rangeAEnd,
-                    },
+                    doulaProfileId,
+                    date: visitDate,
+                    AND: [
+                        { startTime: { lt: slotEndTime } },
+                        { endTime: { gt: slotStartTime } },
+                    ],
                 },
-                data: { availabe: false },
-            })
-        );
+            });
 
-        // Buffer range B: set availabe = false (do NOT change isBooked)
-        txOps.push(
-            this.prisma.availableSlotsForService.updateMany({
-                where: {
-                    date: {
-                        gte: rangeBStart,
-                        lte: rangeBEnd,
-                    },
-                },
-                data: { availabe: false },
-            })
-        );
+            if (conflict) continue;
 
-
-        // Execute transaction
-        await this.prisma.$transaction(txOps);
-
-        const intake = await this.prisma.intakeForm.create({
-            data: {
-                startDate: new Date(serviceStartDate),
-                endDate: new Date(servicEndDate),
-                name,
-                email,
-                phone,
-                address,
-                location,
-
-                regionId: region.id,
-                servicePricingId: service.id,
-                doulaProfileId: doulaProfileId,
-                clientId: clientprofile.id,
-
-                // Connect selected days
-                slot: {
-                    connect: parentSlotIds.map(id => ({ id }))
-                },
-
-                // Connect selected time ranges
-                slotTime: {
-                    connect: timeSlotIds.map(id => ({ id }))
-                }
-            },
-        });
-
-        const booking = await this.prisma.serviceBooking.create({
-            data: {
-                startDate: new Date(serviceStartDate),
-                endDate: new Date(servicEndDate),
-
-                regionId: region.id,
-                servicePricingId: service.id,
-                doulaProfileId: doulaProfileId,
-                clientId: clientprofile.id,
-
-                // connect time slots booked
-                slot: {
-                    connect: timeSlotIds.map(id => ({ id }))
-                },
-
-                // connect parent date slots booked
-                AvailableSlotsForService: {
-                    connect: parentSlotIds.map(id => ({ id }))
-                }
-            }
-        });
-        console.log("intake form", intake)
-
-        // fetch all slots that were just booked (i.e., the ones we connected)
-        const booked = await this.prisma.availableSlotsForService.findMany({
-            where: { id: { in: parentSlotIds } },
-            include: {
-                AvailableSlotsTimeForService: {
-                    where: { id: { in: timeSlotIds } }   // only these times
-                }
-            }
-        });
-
-        // build schedules payload
-        const scheduleRecords = booked.flatMap(parent => {
-            return parent.AvailableSlotsTimeForService.map(child => ({
-                date: parent.date,                   // parent date
-                startTime: child.startTime,          // child time
-                endTime: child.endTime,
-
-                doulaProfileId: doulaProfileId,
+            /* Schedule is valid */
+            schedulesToCreate.push({
+                date: visitDate,
+                startTime: slotStartTime,
+                endTime: slotEndTime,
+                doulaProfileId,
                 serviceId: service.id,
-                clientId: clientprofile.id,
-            }))
-        });
+                clientId: clientProfile.id,
+            });
+        }
 
-        // insert in bulk
-        await this.prisma.schedules.createMany({
-            data: scheduleRecords
-        });
+        if (!schedulesToCreate.length) {
+            throw new BadRequestException(
+                'No valid schedules available for the selected dates and time slot',
+            );
+        }
 
-        //create schedules for each of slots marked isBooked = true
-        // await this.mail.sendMail({
-        //     to: client.email,
-        //     subject: `Confirmation of your service`,
-        //     template: 'meetings',
-        //     context: {
-        //         date: dateInstance?.date,
-        //         time: slot.startTime + ' - ' + slot.endTime,
-        //         meetLink: meetLink,
+        /* ----------------------------------------------------
+         * 8. Atomic write
+         * -------------------------------------------------- */
+        const [intake, booking] = await this.prisma.$transaction([
+            this.prisma.intakeForm.create({
+                data: {
+                    name,
+                    email,
+                    phone,
+                    address,
+                    location,
+                    startDate,
+                    endDate,
+                    regionId: region.id,
+                    servicePricingId: service.id,
+                    doulaProfileId,
+                    clientId: clientProfile.id,
+                },
+            }),
 
-        //     },
-        // });
-        return { intake, booking };
+            this.prisma.serviceBooking.create({
+                data: {
+                    startDate,
+                    endDate,
+                    regionId: region.id,
+                    servicePricingId: service.id,
+                    doulaProfileId,
+                    clientId: clientProfile.id,
+                },
+            }),
+
+            this.prisma.schedules.createMany({
+                data: schedulesToCreate,
+            }),
+        ]);
+
+        return {
+            intake,
+            booking,
+            schedulesCreated: schedulesToCreate.length,
+        };
     }
 
 }

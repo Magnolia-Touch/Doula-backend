@@ -15,9 +15,9 @@ export declare class AdminService {
             } | null;
         } & {
             id: string;
-            name: string;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -38,9 +38,9 @@ export declare class AdminService {
             } | null;
         } & {
             id: string;
-            name: string;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -61,9 +61,9 @@ export declare class AdminService {
             } | null;
         } & {
             id: string;
-            name: string;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;

@@ -14,6 +14,7 @@ async function main() {
             role: client_1.Role.ADMIN,
             adminProfile: { create: { profile_image: "admin.jpg" } },
         },
+        include: { adminProfile: true },
     });
     const zoneUser = await prisma.user.upsert({
         where: { email: "zonemanager@test.com" },
@@ -46,30 +47,25 @@ async function main() {
     });
     const client = clientUser.clientProfile;
     const zoneManager = zoneUser.zonemanagerprofile;
-    async function createDoula(i, yoe) {
-        return prisma.user.upsert({
-            where: { email: `d${i}@test.com` },
-            update: {},
-            create: {
-                name: `Doula ${i}`,
-                email: `d${i}@test.com`,
-                phone: `900000001${i}`,
-                role: client_1.Role.DOULA,
-                doulaProfile: {
-                    create: {
-                        description: `Experienced doula ${i}`,
-                        qualification: "Certified",
-                        yoe,
-                    },
+    const doulaUser = await prisma.user.upsert({
+        where: { email: "doula@test.com" },
+        update: {},
+        create: {
+            name: "Senior Doula",
+            email: "doula@test.com",
+            phone: "9000000005",
+            role: client_1.Role.DOULA,
+            doulaProfile: {
+                create: {
+                    description: "Experienced doula",
+                    qualification: "Certified",
+                    yoe: 6,
                 },
             },
-            include: { doulaProfile: true },
-        });
-    }
-    const d1 = await createDoula(1, 4);
-    const d2 = await createDoula(2, 6);
-    const doula1 = d1.doulaProfile;
-    const doula2 = d2.doulaProfile;
+        },
+        include: { doulaProfile: true },
+    });
+    const doula = doulaUser.doulaProfile;
     const region = await prisma.region.upsert({
         where: { pincode: "682001" },
         update: {},
@@ -84,46 +80,43 @@ async function main() {
             zoneManager: { connect: { id: zoneManager.id } },
         },
     });
-    for (const doulaId of [doula1.id, doula2.id]) {
-        await prisma.doulaProfile.update({
-            where: { id: doulaId },
-            data: {
-                regionId: region.id,
-            },
-        });
-    }
+    await prisma.doulaProfile.update({
+        where: { id: doula.id },
+        data: {
+            Region: { connect: { id: region.id } },
+        },
+    });
     const service = await prisma.service.create({
         data: {
             name: "Doula Consultation",
             description: "1 hour consultation",
         },
     });
-    const pricing1 = await prisma.servicePricing.create({
-        data: { serviceId: service.id, doulaProfileId: doula1.id, price: 1500 },
+    const pricing = await prisma.servicePricing.create({
+        data: {
+            serviceId: service.id,
+            doulaProfileId: doula.id,
+            price: 1500,
+        },
     });
-    const pricing2 = await prisma.servicePricing.create({
-        data: { serviceId: service.id, doulaProfileId: doula2.id, price: 1800 },
-    });
-    const meetingDate = new Date("2025-11-30");
     const meetingDay = await prisma.availableSlotsForMeeting.upsert({
         where: {
-            doulaId_date: {
-                doulaId: doula1.id,
-                date: meetingDate,
+            doulaId_weekday: {
+                doulaId: doula.id,
+                weekday: client_1.WeekDays.SUNDAY,
             },
         },
         update: {},
         create: {
-            date: meetingDate,
-            weekday: "Sunday",
+            weekday: client_1.WeekDays.SUNDAY,
             ownerRole: client_1.Role.DOULA,
-            doulaId: doula1.id,
+            doulaId: doula.id,
         },
     });
-    const meetingSlot = await prisma.availableSlotsTimeForMeeting.create({
+    await prisma.availableSlotsTimeForMeeting.create({
         data: {
-            startTime: new Date("2025-11-30T10:00:00"),
-            endTime: new Date("2025-11-30T11:00:00"),
+            startTime: new Date("1970-01-01T10:00:00"),
+            endTime: new Date("1970-01-01T11:00:00"),
             dateId: meetingDay.id,
             isBooked: true,
         },
@@ -132,10 +125,13 @@ async function main() {
         data: {
             link: "https://meet.com/active",
             status: client_1.MeetingStatus.SCHEDULED,
+            date: new Date("2025-11-30"),
+            startTime: new Date("1970-01-01T10:00:00"),
+            endTime: new Date("1970-01-01T11:00:00"),
+            serviceName: service.name,
             bookedById: client.id,
-            slotId: meetingSlot.id,
+            doulaProfileId: doula.id,
             availableSlotsForMeetingId: meetingDay.id,
-            doulaProfileId: doula1.id,
             serviceId: service.id,
         },
     });
@@ -144,15 +140,13 @@ async function main() {
             link: "https://meet.com/canceled",
             status: client_1.MeetingStatus.CANCELED,
             cancelledAt: new Date(),
+            date: new Date("2025-12-01"),
+            startTime: new Date("1970-01-01T12:00:00"),
+            endTime: new Date("1970-01-01T13:00:00"),
+            serviceName: service.name,
             bookedById: client.id,
-            slotId: (await prisma.availableSlotsTimeForMeeting.create({
-                data: {
-                    startTime: new Date("2025-12-01T12:00"),
-                    endTime: new Date("2025-12-01T13:00"),
-                    dateId: meetingDay.id,
-                },
-            })).id,
-            doulaProfileId: doula1.id,
+            doulaProfileId: doula.id,
+            availableSlotsForMeetingId: meetingDay.id,
             serviceId: service.id,
         },
     });
@@ -162,36 +156,13 @@ async function main() {
             endDate: new Date("2025-12-10"),
             regionId: region.id,
             clientId: client.id,
-            doulaProfileId: doula1.id,
-            servicePricingId: pricing1.id,
+            doulaProfileId: doula.id,
+            servicePricingId: pricing.id,
             status: client_1.BookingStatus.ACTIVE,
             paymentDetails: { amount: 1500, method: "UPI" },
         },
     });
-    await prisma.serviceBooking.create({
-        data: {
-            startDate: new Date("2025-11-01"),
-            endDate: new Date("2025-11-05"),
-            regionId: region.id,
-            clientId: client.id,
-            doulaProfileId: doula2.id,
-            servicePricingId: pricing2.id,
-            status: client_1.BookingStatus.COMPLETED,
-        },
-    });
-    await prisma.serviceBooking.create({
-        data: {
-            startDate: new Date("2025-12-15"),
-            endDate: new Date("2025-12-20"),
-            regionId: region.id,
-            clientId: client.id,
-            doulaProfileId: doula1.id,
-            servicePricingId: pricing1.id,
-            status: client_1.BookingStatus.CANCELED,
-            cancelledAt: new Date(),
-        },
-    });
-    console.log("🌱 Seed Done!");
+    console.log("🌱 Seed completed successfully");
 }
 main()
     .catch(console.error)

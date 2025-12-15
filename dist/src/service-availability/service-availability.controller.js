@@ -30,14 +30,8 @@ let DoulaServiceAvailabilityController = class DoulaServiceAvailabilityControlle
     async createSlots(dto, req) {
         return this.service.createAvailability(dto, req.user);
     }
-    async getAllSlots(doulaId, startDate, endDate, filter = 'all', page = '1', limit = '10') {
-        if (!doulaId)
-            throw new common_1.BadRequestException('doulaId is required');
-        if (!startDate)
-            throw new common_1.BadRequestException('startDate is required');
-        if (!endDate)
-            throw new common_1.BadRequestException('endDate is required');
-        return this.service.getAllSlots(doulaId, startDate, endDate, filter, parseInt(page, 10), parseInt(limit, 10));
+    async getMyAvailabilities(req) {
+        return this.service.getMyAvailabilities(req.user.id);
     }
     async getSlotById(id) {
         return this.service.getSlotById(id);
@@ -111,17 +105,13 @@ __decorate([
             },
         },
     }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('doulaId')),
-    __param(1, (0, common_1.Query)('startDate')),
-    __param(2, (0, common_1.Query)('endDate')),
-    __param(3, (0, common_1.Query)('filter')),
-    __param(4, (0, common_1.Query)('page')),
-    __param(5, (0, common_1.Query)('limit')),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, String, String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], DoulaServiceAvailabilityController.prototype, "getAllSlots", null);
+], DoulaServiceAvailabilityController.prototype, "getMyAvailabilities", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Get availability by date id' }),

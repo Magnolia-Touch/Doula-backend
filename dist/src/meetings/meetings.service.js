@@ -36,17 +36,17 @@ let MeetingsService = class MeetingsService {
         else if (role === client_1.Role.ADMIN) {
             profileData.adminProfileId = profileId;
         }
-        const slot = await (0, service_utils_1.findSlotOrThrow)(this.prisma, Form.slotId);
-        const dateInstance = await this.prisma.availableSlotsForMeeting.findUnique({
-            where: { id: slot.dateId },
-        });
+        console.log("form", Form);
         const meeting = await this.prisma.meetings.create({
             data: {
                 link: meetLink,
-                slotId: Form.slotId,
                 status: client_1.MeetingStatus.SCHEDULED,
-                bookedById: clientId,
+                startTime: Form.startTime,
+                endTime: Form.endTime,
+                date: Form.date,
+                serviceName: Form.serviceName,
                 remarks: Form.additionalNotes,
+                bookedById: clientId,
                 availableSlotsForMeetingId: slotParentId,
                 ...profileData
             },
@@ -57,8 +57,8 @@ let MeetingsService = class MeetingsService {
             subject: `Confirmation of your Meeting with ${role} for Service ${Form.name}`,
             template: 'meetings',
             context: {
-                date: dateInstance?.date,
-                time: slot.startTime + ' - ' + slot.endTime,
+                date: Form.date,
+                time: meeting.startTime + ' - ' + meeting.endTime,
                 meetLink: meetLink,
             },
         });
@@ -89,16 +89,13 @@ let MeetingsService = class MeetingsService {
         if (status)
             where.status = status;
         if (startDate || endDate) {
-            where.slot = {
-                date: {},
-            };
-            if (startDate) {
-                where.slot.date.gte = new Date(startDate);
-            }
+            where.date = {};
+            if (startDate)
+                where.date.gte = new Date(startDate);
             if (endDate) {
                 const end = new Date(endDate);
                 end.setHours(23, 59, 59, 999);
-                where.slot.date.lte = end;
+                where.date.lte = end;
             }
         }
         if (user.role === client_1.Role.ZONE_MANAGER) {
@@ -110,63 +107,230 @@ let MeetingsService = class MeetingsService {
         else if (user.role === client_1.Role.ADMIN) {
             where.adminProfileId = profile.id;
         }
-        return (0, pagination_util_1.paginate)({
+        const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.meetings,
             page,
             limit,
             where,
+            orderBy: { createdAt: 'desc' },
             include: {
-                slot: true,
-                bookedBy: true,
-                AvailableSlotsForMeeting: true,
+                AvailableSlotsForMeeting: {
+                    select: { weekday: true },
+                },
+                bookedBy: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                DoulaProfile: {
+                    select: {
+                        id: true,
+                        userId: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                ZoneManagerProfile: {
+                    select: {
+                        id: true,
+                        userId: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
             },
-            orderBy: { createdAt: 'asc' },
         });
+        return {
+            ...result,
+            data: result.data.map((meeting) => {
+                const meetingWith = meeting.doulaProfileId
+                    ? 'DOULA'
+                    : meeting.zoneManagerProfileId
+                        ? 'ZONE_MANAGER'
+                        : null;
+                return {
+                    meetingId: meeting.id,
+                    meetingLink: meeting.link,
+                    meetingStatus: meeting.status,
+                    meetingStartTime: meeting.startTime,
+                    meetingEndTime: meeting.endTime,
+                    meetingDate: meeting.date,
+                    weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
+                    serviceName: meeting.serviceName,
+                    remarks: meeting.remarks,
+                    meeting_with: meetingWith,
+                    client: {
+                        clientId: meeting.bookedBy?.id,
+                        clientName: meeting.bookedBy?.user?.name,
+                        clientEmail: meeting.bookedBy?.user?.email,
+                        clientPhone: meeting.bookedBy?.user?.phone,
+                    },
+                    doula: meetingWith === 'DOULA'
+                        ? {
+                            doulaId: meeting.DoulaProfile?.user?.id,
+                            doulaProfileId: meeting.DoulaProfile?.id,
+                            doulaName: meeting.DoulaProfile?.user?.name,
+                            doulaEmail: meeting.DoulaProfile?.user?.email,
+                            doulaPhone: meeting.DoulaProfile?.user?.phone,
+                        }
+                        : null,
+                    zoneManager: meetingWith === 'ZONE_MANAGER'
+                        ? {
+                            zoneManagerId: meeting.ZoneManagerProfile?.user?.id,
+                            zoneManagerProfileId: meeting.ZoneManagerProfile?.id,
+                            zoneManagerName: meeting.ZoneManagerProfile?.user?.name,
+                            zoneManagerEmail: meeting.ZoneManagerProfile?.user?.email,
+                        }
+                        : null,
+                };
+            }),
+        };
     }
     async getMeetingById(id, user) {
-        let profileId = null;
-        const whereCondition = { id };
+        let profile = null;
         if (user.role === client_1.Role.ZONE_MANAGER) {
-            const profile = await this.prisma.zoneManagerProfile.findUnique({
+            profile = await this.prisma.zoneManagerProfile.findUnique({
                 where: { userId: user.id },
             });
-            profileId = profile?.id ?? null;
-            whereCondition.zoneManagerProfileId = profileId;
         }
         else if (user.role === client_1.Role.DOULA) {
-            const profile = await this.prisma.doulaProfile.findUnique({
+            profile = await this.prisma.doulaProfile.findUnique({
                 where: { userId: user.id },
             });
-            profileId = profile?.id ?? null;
-            whereCondition.doulaProfileId = profileId;
         }
         else if (user.role === client_1.Role.ADMIN) {
-            const profile = await this.prisma.adminProfile.findUnique({
+            profile = await this.prisma.adminProfile.findUnique({
                 where: { userId: user.id },
             });
-            profileId = profile?.id ?? null;
-            whereCondition.adminProfileId = profileId;
+        }
+        if (!profile) {
+            throw new common_1.NotFoundException('Profile Not Found');
+        }
+        const where = { id };
+        if (user.role === client_1.Role.ZONE_MANAGER) {
+            where.zoneManagerProfileId = profile.id;
+        }
+        else if (user.role === client_1.Role.DOULA) {
+            where.doulaProfileId = profile.id;
+        }
+        else if (user.role === client_1.Role.ADMIN) {
+            where.adminProfileId = profile.id;
         }
         const meeting = await this.prisma.meetings.findFirst({
-            where: whereCondition,
+            where,
             include: {
-                slot: true,
-                bookedBy: true,
-                ZoneManagerProfile: true,
-                DoulaProfile: true,
-                AdminProfile: true,
-                Service: true,
+                AvailableSlotsForMeeting: {
+                    select: { weekday: true },
+                },
+                bookedBy: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                DoulaProfile: {
+                    select: {
+                        id: true,
+                        userId: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                ZoneManagerProfile: {
+                    select: {
+                        id: true,
+                        userId: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
             },
         });
-        if (!meeting)
-            throw new common_1.NotFoundException("Meeting not found or access denied");
-        return meeting;
+        if (!meeting) {
+            throw new common_1.NotFoundException('Meeting Not Found or Access Denied');
+        }
+        const meetingWith = meeting.doulaProfileId
+            ? 'DOULA'
+            : meeting.zoneManagerProfileId
+                ? 'ZONE_MANAGER'
+                : null;
+        return {
+            meetingId: meeting.id,
+            meetingLink: meeting.link,
+            meetingStatus: meeting.status,
+            meetingStartTime: meeting.startTime,
+            meetingEndTime: meeting.endTime,
+            meetingDate: meeting.date,
+            weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
+            serviceName: meeting.serviceName,
+            remarks: meeting.remarks,
+            meeting_with: meetingWith,
+            client: {
+                clientId: meeting.bookedBy?.id,
+                clientName: meeting.bookedBy?.user?.name,
+                clientEmail: meeting.bookedBy?.user?.email,
+                clientPhone: meeting.bookedBy?.user?.phone,
+            },
+            doula: meetingWith === 'DOULA'
+                ? {
+                    doulaId: meeting.DoulaProfile?.user?.id,
+                    doulaProfileId: meeting.DoulaProfile?.id,
+                    doulaName: meeting.DoulaProfile?.user?.name,
+                    doulaEmail: meeting.DoulaProfile?.user?.email,
+                    doulaPhone: meeting.DoulaProfile?.user?.phone,
+                }
+                : null,
+            zoneManager: meetingWith === 'ZONE_MANAGER'
+                ? {
+                    zoneManagerId: meeting.ZoneManagerProfile?.user?.id,
+                    zoneManagerProfileId: meeting.ZoneManagerProfile?.id,
+                    zoneManagerName: meeting.ZoneManagerProfile?.user?.name,
+                    zoneManagerEmail: meeting.ZoneManagerProfile?.user?.email,
+                }
+                : null,
+        };
     }
     async cancelMeeting(dto, user) {
         const meeting = await this.prisma.meetings.findUnique({
             where: { id: dto.meetingId },
             include: {
-                slot: true,
                 DoulaProfile: {
                     include: {
                         zoneManager: true,
@@ -200,21 +364,16 @@ let MeetingsService = class MeetingsService {
         await this.prisma.meetings.update({
             where: { id: dto.meetingId },
             data: {
-                status: "CANCELED",
+                status: client_1.MeetingStatus.CANCELED,
                 cancelledAt: new Date(),
             },
         });
-        await this.prisma.availableSlotsTimeForMeeting.update({
-            where: { id: meeting.slotId },
-            data: { isBooked: false, availabe: true },
-        });
-        return { message: "Meeting canceled and slot freed" };
+        return { message: "Meeting canceled Successfully" };
     }
     async rescheduleMeeting(dto, user) {
         const meeting = await this.prisma.meetings.findUnique({
             where: { id: dto.meetingId },
             include: {
-                slot: true,
                 DoulaProfile: {
                     include: {
                         zoneManager: true,
@@ -243,72 +402,31 @@ let MeetingsService = class MeetingsService {
         else {
             throw new common_1.ForbiddenException("You are not allowed to reschedule meetings");
         }
-        await this.prisma.availableSlotsTimeForMeeting.update({
-            where: { id: meeting.slotId },
-            data: { isBooked: false, availabe: true },
-        });
-        const newSlot = await this.prisma.availableSlotsTimeForMeeting.findUnique({
-            where: { id: dto.newSlotId },
-        });
-        if (!newSlot)
-            throw new common_1.NotFoundException("New slot not found");
-        if (!newSlot.availabe || newSlot.isBooked) {
-            throw new common_1.BadRequestException("New slot is not available");
+        const [startTime, endTime] = dto.meetingsTimeSlots.split('-');
+        if (!startTime || !endTime) {
+            throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
         }
+        const startDateTime = new Date(`${dto.meetingsDate}T${startTime}:00`);
+        const endDateTime = new Date(`${dto.meetingsDate}T${startTime}:00`);
         const updated = await this.prisma.meetings.update({
             where: { id: dto.meetingId },
             data: {
-                slotId: dto.newSlotId,
+                startTime: startDateTime,
+                endTime: endDateTime,
+                date: new Date(dto.meetingsDate),
                 rescheduledAt: new Date(),
                 status: client_1.MeetingStatus.SCHEDULED,
             },
-        });
-        await this.prisma.availableSlotsTimeForMeeting.update({
-            where: { id: dto.newSlotId },
-            data: { isBooked: true, availabe: false },
         });
         return updated;
     }
     async updateMeetingStatus(dto, user) {
         const meeting = await this.prisma.meetings.findUnique({
             where: { id: dto.meetingId },
-            include: {
-                slot: true,
-                DoulaProfile: {
-                    include: {
-                        zoneManager: true,
-                    },
-                },
-            },
+            select: { status: true },
         });
         if (!meeting) {
             throw new common_1.NotFoundException("Meeting not found");
-        }
-        if (user.role === client_1.Role.ADMIN) {
-        }
-        else if (user.role === client_1.Role.ZONE_MANAGER) {
-            const zoneManagerProfile = await this.prisma.zoneManagerProfile.findUnique({
-                where: { userId: user.id },
-                include: { doulas: true },
-            });
-            if (!zoneManagerProfile) {
-                throw new common_1.ForbiddenException("Zone Manager profile not found");
-            }
-            const zoneManagerId = zoneManagerProfile.id;
-            const ownsMeeting = meeting.zoneManagerProfileId === zoneManagerId;
-            const doulaBelongsToZoneManager = zoneManagerProfile.doulas.some((d) => d.id === meeting.doulaProfileId);
-            if (!ownsMeeting && !doulaBelongsToZoneManager) {
-                throw new common_1.ForbiddenException("You can update status only for your meetings or your doulas' meetings");
-            }
-        }
-        else {
-            throw new common_1.ForbiddenException("You are not allowed to update meeting status");
-        }
-        if (dto.status === client_1.MeetingStatus.CANCELED) {
-            await this.prisma.availableSlotsTimeForMeeting.update({
-                where: { id: meeting.slotId },
-                data: { isBooked: false, availabe: true },
-            });
         }
         const updated = await this.prisma.meetings.update({
             where: { id: dto.meetingId },
@@ -361,6 +479,13 @@ let MeetingsService = class MeetingsService {
         if (!doulaUser) {
             throw new common_1.NotFoundException("Doula user not found");
         }
+        const weekday = await (0, service_utils_1.getWeekdayFromDate)(dto.meetingsDate);
+        const exists = await (0, service_utils_1.isMeetingExists)(this.prisma, new Date(dto.meetingsDate), dto.meetingsTimeSlots, {
+            doulaProfileId: doulaProfile.id,
+        });
+        if (exists) {
+            throw new common_1.BadRequestException('Meeting already exists for this time slot');
+        }
         const enquiry = await this.prisma.enquiryForm.findUnique({
             where: { id: dto.enquiryId },
             include: {
@@ -376,26 +501,29 @@ let MeetingsService = class MeetingsService {
         if (!enquiry.clientProfile) {
             throw new common_1.BadRequestException("Client profile is missing for this enquiry");
         }
-        const slot = await this.prisma.availableSlotsTimeForMeeting.findUnique({
-            where: { id: dto.slotId },
-        });
-        if (!slot)
-            throw new common_1.NotFoundException("Slot not found");
-        if (!slot.availabe || slot.isBooked) {
-            throw new common_1.BadRequestException("Slot is not available");
+        const meetCode = Math.random().toString(36).slice(2, 10);
+        const meetLink = `https://meet.google.com/${meetCode}`;
+        const [startTime, endTime] = dto.meetingsTimeSlots.split('-');
+        if (!startTime || !endTime) {
+            throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
         }
-        const formData = {
-            slotId: dto.slotId,
-            additionalNotes: enquiry.additionalNotes ?? null,
-            email: enquiry.email,
-            name: enquiry.name,
-        };
-        const service = await (0, service_utils_1.findServiceOrThrowwithId)(this.prisma, enquiry.serviceId);
-        const meeting = await this.scheduleMeeting(formData, enquiry.clientProfile.id, doulaProfile.id, client_1.Role.DOULA, slot.dateId);
-        await this.prisma.availableSlotsTimeForMeeting.update({
-            where: { id: dto.slotId },
-            data: { isBooked: true, availabe: false },
+        const startDateTime = new Date(`${dto.meetingsDate}T${startTime}:00`);
+        const endDateTime = new Date(`${dto.meetingsDate}T${startTime}:00`);
+        const meeting = await this.prisma.meetings.create({
+            data: {
+                link: meetLink,
+                status: client_1.MeetingStatus.SCHEDULED,
+                startTime: startDateTime,
+                endTime: endDateTime,
+                date: new Date(dto.meetingsDate),
+                serviceName: enquiry.serviceName,
+                remarks: dto.additionalNotes,
+                bookedById: enquiry.clientId,
+                availableSlotsForMeetingId: enquiry.slotId,
+                doulaProfileId: doulaProfile.id
+            },
         });
+        console.log("meeting created succesfull");
         return {
             message: "Doula meeting scheduled successfully",
             meeting,
@@ -405,7 +533,6 @@ let MeetingsService = class MeetingsService {
         return this.prisma.meetings.findMany({
             orderBy: { createdAt: 'desc' },
             include: {
-                slot: true,
                 bookedBy: true,
                 AvailableSlotsForMeeting: true,
                 ZoneManagerProfile: true,
@@ -414,6 +541,54 @@ let MeetingsService = class MeetingsService {
                 Service: true
             },
         });
+    }
+    async getBookedMeetingsByDate(params) {
+        const { doulaProfileId, zoneManagerProfileId, date } = params;
+        if (!doulaProfileId && !zoneManagerProfileId) {
+            throw new common_1.BadRequestException('Either doulaProfileId or zoneManagerProfileId is required');
+        }
+        if (doulaProfileId && zoneManagerProfileId) {
+            throw new common_1.BadRequestException('Provide only one: doulaProfileId OR zoneManagerProfileId');
+        }
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        const where = {
+            date: {
+                gte: startOfDay,
+                lte: endOfDay,
+            },
+            status: {
+                notIn: [client_1.MeetingStatus.CANCELED],
+            },
+        };
+        if (doulaProfileId) {
+            where.doulaProfileId = doulaProfileId;
+        }
+        if (zoneManagerProfileId) {
+            where.zoneManagerProfileId = zoneManagerProfileId;
+        }
+        const meetings = await this.prisma.meetings.findMany({
+            where,
+            select: {
+                date: true,
+                startTime: true,
+                endTime: true,
+            },
+            orderBy: {
+                startTime: 'asc',
+            },
+        });
+        return {
+            date,
+            totalBookedSlots: meetings.length,
+            bookings: meetings.map((m) => ({
+                meetingDate: m.date,
+                startTime: m.startTime,
+                endTime: m.endTime,
+            })),
+        };
     }
 };
 exports.MeetingsService = MeetingsService;

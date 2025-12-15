@@ -1,14 +1,44 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { MeetingStatus, Role, WeekDays } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+// utils/meeting.util.ts
+
 
 export async function findSlotOrThrow(
   prisma: PrismaService,
-  slotId: string,
+  params: {
+    ownerRole: Role;
+    ownerProfileId: string;
+    weekday: WeekDays;
+  }
 ) {
-  const slot = await prisma.availableSlotsTimeForMeeting.findUnique({
-    where: { id: slotId },
+  const { ownerRole, ownerProfileId, weekday } = params;
+
+  console.log('ownerRole', ownerRole);
+  console.log('ownerProfileId', ownerProfileId);
+  console.log('weekday', weekday);
+
+  let where: any = {};
+
+  if (ownerRole === Role.DOULA) {
+    where.doulaId_weekday = {
+      doulaId: ownerProfileId,
+      weekday,
+    };
+  }
+
+  if (ownerRole === Role.ZONE_MANAGER) {
+    where.zoneManagerId_weekday = {
+      zoneManagerId: ownerProfileId,
+      weekday,
+    };
+  }
+
+  const slot = await prisma.availableSlotsForMeeting.findUnique({
+    where,
   });
+
+  console.log('slot', slot);
 
   if (!slot) {
     throw new NotFoundException('Slot Not Found');
@@ -16,6 +46,7 @@ export async function findSlotOrThrow(
 
   return slot;
 }
+
 
 export async function findRegionOrThrow(
   prisma: PrismaService,
@@ -157,23 +188,23 @@ export async function findUserProfileId(
 }
 export async function getSlotOrCreateSlot(
   prisma: PrismaService,
-  dateString: string,
+  week: WeekDays,
   userRole: Role,
   profileId: string
 ) {
   // FORCE UTC MIDNIGHT MATCH FOR MYSQL @db.Date
-  const formatted = dateString.split("T")[0];
-  const slotDate = new Date(formatted + "T00:00:00.000Z");
+  // const formatted = dateString.split("T")[0];
+  // const slotDate = new Date(formatted + "T00:00:00.000Z");
 
-  const weekday = slotDate.toLocaleDateString("en-US", { weekday: "long" });
+  // const weekday = slotDate.toLocaleDateString("en-US", { weekday: "long" });
 
   const uniqueWhere =
     userRole === Role.DOULA
-      ? { doulaId_date: { doulaId: profileId, date: slotDate } }
+      ? { doulaId_weekday: { doulaId: profileId, weekday: week } }
       : userRole === Role.ADMIN
-        ? { adminId_date: { adminId: profileId, date: slotDate } }
-        : { zoneManagerId_date: { zoneManagerId: profileId, date: slotDate } };
-
+        ? { adminId_weekday: { adminId: profileId, weekday: week } }
+        : { zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week } };
+  console.log("unique where", uniqueWhere)
   const ownerField =
     userRole === Role.DOULA ? "doulaId" :
       userRole === Role.ADMIN ? "adminId" :
@@ -189,8 +220,7 @@ export async function getSlotOrCreateSlot(
   // 2. Create new slot
   slot = await prisma.availableSlotsForMeeting.create({
     data: {
-      date: slotDate,
-      weekday,
+      weekday: week,
       ownerRole: userRole,
       availabe: true,
       [ownerField]: profileId,
@@ -256,22 +286,44 @@ export async function getOrcreateClent(
 }
 
 
+export function getWeekdayFromDate(date: string | Date): WeekDays {
+  const d = typeof date === 'string' ? new Date(date) : date;
+
+  if (isNaN(d.getTime())) {
+    throw new Error('Invalid date');
+  }
+
+  const map: WeekDays[] = [
+    WeekDays.SUNDAY,
+    WeekDays.MONDAY,
+    WeekDays.TUESDAY,
+    WeekDays.WEDNESDAY,
+    WeekDays.THURSDAY,
+    WeekDays.FRIDAY,
+    WeekDays.SATURDAY,
+  ];
+
+  return map[d.getDay()];
+}
+
+
+
 export async function getServiceSlotOrCreateSlot(
   prisma: PrismaService,
-  dateString: string,
+  weekday: WeekDays,
   profileId: string
 ) {
   // FORCE UTC MIDNIGHT MATCH FOR MYSQL @db.Date
-  const formatted = dateString.split("T")[0];
-  const slotDate = new Date(formatted + "T00:00:00.000Z");
+  // const formatted = dateString.split("T")[0];
+  // const slotDate = new Date(formatted + "T00:00:00.000Z");
 
-  const weekday = slotDate.toLocaleDateString("en-US", { weekday: "long" });
+  // const weekday = slotDate.toLocaleDateString("en-US", { weekday: "long" });
   // 1. Try existing slot
   let slot = await prisma.availableSlotsForService.findUnique({
     where: {
-      doulaId_date: {
+      doulaId_weekday: {
         doulaId: profileId,
-        date: slotDate
+        weekday: weekday
       }
     },
   });
@@ -281,12 +333,122 @@ export async function getServiceSlotOrCreateSlot(
   // 2. Create new slot
   slot = await prisma.availableSlotsForService.create({
     data: {
-      date: slotDate,
-      weekday,
+      weekday: weekday,
       availabe: true,
       doulaId: profileId
     },
   });
 
   return slot;
+}
+
+export function parseTimeSlot(timeSlot: string): {
+  startTime: Date;
+  endTime: Date;
+} {
+  const match = timeSlot.match(/^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$/);
+
+  if (!match) {
+    throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
+  }
+
+  const [, sh, sm, eh, em] = match;
+
+  const baseDate = '1970-01-01';
+
+  return {
+    startTime: new Date(`${baseDate}T${sh}:${sm}:00`),
+    endTime: new Date(`${baseDate}T${eh}:${em}:00`),
+  };
+}
+
+
+export async function isMeetingExists(
+  prisma: PrismaService,
+  meetingDate: Date,
+  timeSlot: string,
+  options?: {
+    zoneManagerProfileId?: string;
+    doulaProfileId?: string;
+    adminProfileId?: string;
+  },
+): Promise<boolean> {
+  const { startTime, endTime } = parseTimeSlot(timeSlot);
+
+  const startOfDay = new Date(meetingDate);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(meetingDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const meeting = await prisma.meetings.findFirst({
+    where: {
+      date: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+
+      // OVERLAP CHECK:
+      // existing.start < new.end AND existing.end > new.start
+      AND: [
+        {
+          startTime: {
+            lt: endTime,
+          },
+        },
+        {
+          endTime: {
+            gt: startTime,
+          },
+        },
+      ],
+
+      ...(options?.zoneManagerProfileId && {
+        zoneManagerProfileId: options.zoneManagerProfileId,
+      }),
+      ...(options?.doulaProfileId && {
+        doulaProfileId: options.doulaProfileId,
+      }),
+      ...(options?.adminProfileId && {
+        adminProfileId: options.adminProfileId,
+      }),
+    },
+  });
+
+  return Boolean(meeting);
+}
+
+
+
+export async function isOverlapping(
+  aStart: Date,
+  aEnd: Date,
+  bStart: Date,
+  bEnd: Date,
+) {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+
+export async function generateVisitDates(
+  start: Date,
+  end: Date,
+  frequency: number,
+  buffer = 0,
+): Promise<Date[]> {
+  const dates: Date[] = [];
+  const cursor = new Date(start);
+  cursor.setDate(cursor.getDate() - buffer);
+
+  const final = new Date(end);
+  final.setDate(final.getDate() + buffer);
+
+  while (cursor <= final) {
+    const d = new Date(cursor);
+    d.setHours(0, 0, 0, 0);
+    dates.push(d);
+    cursor.setDate(cursor.getDate() + frequency);
+  }
+
+  return dates;
 }

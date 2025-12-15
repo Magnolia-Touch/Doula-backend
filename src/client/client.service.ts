@@ -329,7 +329,7 @@ export class ClientsService {
 
 
     async Meetings(userId: string) {
-        // 1. Fetch client profile with meetings
+        // 1️⃣ Fetch client profile with meetings
         const clientProfile = await this.prisma.clientProfile.findUnique({
             where: { userId },
             include: {
@@ -343,80 +343,75 @@ export class ClientsService {
                 },
                 Meetings: {
                     include: {
-                        slot: {
-                            include: {
-                                date: {
-                                    select: {
-                                        date: true,
-                                    },
-                                },
-                            },
-                        },
                         DoulaProfile: {
                             include: {
                                 user: {
-                                    select: {
-                                        name: true,
-                                    },
+                                    select: { name: true },
                                 },
                             },
                         },
                         ZoneManagerProfile: {
                             include: {
                                 user: {
-                                    select: {
-                                        name: true,
-                                    },
+                                    select: { name: true },
                                 },
                             },
                         },
+                        AvailableSlotsForMeeting: {
+                            select: { weekday: true },
+                        },
                     },
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
+                    orderBy: { createdAt: 'desc' },
                 },
             },
         });
 
         if (!clientProfile) {
-            throw new Error('Client profile not found');
+            throw new NotFoundException('Client profile not found');
         }
 
-        // 2. Transform response
-        return clientProfile.Meetings.map((meeting) => {
-            let hostname: string | null = null;
+        // 2️⃣ Transform response
+        return clientProfile.Meetings.map(meeting => {
+            const hostname =
+                meeting.DoulaProfile?.user?.name ??
+                meeting.ZoneManagerProfile?.user?.name ??
+                null;
 
-            if (meeting.DoulaProfile?.user?.name) {
-                hostname = meeting.DoulaProfile.user.name;
-            } else if (meeting.ZoneManagerProfile?.user?.name) {
-                hostname = meeting.ZoneManagerProfile.user.name;
-            }
+            const meetingWith = meeting.doulaProfileId
+                ? 'DOULA'
+                : meeting.zoneManagerProfileId
+                    ? 'ZONE_MANAGER'
+                    : null;
 
             return {
-                // User details
+                // ===== CLIENT =====
+                clientId: clientProfile.user.id,
+                clientName: clientProfile.user.name,
+                clientEmail: clientProfile.user.email,
+                clientPhone: clientProfile.user.phone,
+                clientProfileId: clientProfile.id,
+
+                // ===== MEETING =====
                 meetingId: meeting.id,
-                userId: clientProfile.user.id,
-                name: clientProfile.user.name,
-                email: clientProfile.user.email,
-                phone: clientProfile.user.phone,
-
-                // Client profile
-                profileId: clientProfile.id,
-
-                // Meeting details
+                meetingWith,
                 hostname,
-                date: meeting.slot.date.date,
-                startTime: meeting.slot.startTime,
-                endTime: meeting.slot.endTime,
+
+                meetingDate: meeting.date,
+                weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
+                startTime: meeting.startTime,
+                endTime: meeting.endTime,
+
                 link: meeting.link,
+                serviceName: meeting.serviceName,
                 remarks: meeting.remarks,
                 status: meeting.status,
             };
         });
     }
 
+
     async meetingById(userId: string, meetingId: string) {
-        // 1. Fetch client profile
+        // 1️⃣ Fetch client profile
         const clientProfile = await this.prisma.clientProfile.findUnique({
             where: { userId },
             include: {
@@ -432,118 +427,122 @@ export class ClientsService {
         });
 
         if (!clientProfile) {
-            throw new Error('Client profile not found');
+            throw new NotFoundException('Client profile not found');
         }
 
-        // 2. Fetch meeting and validate ownership
+        // 2️⃣ Fetch meeting (ownership enforced)
         const meeting = await this.prisma.meetings.findFirst({
             where: {
                 id: meetingId,
                 bookedById: clientProfile.id,
             },
             include: {
-                slot: {
-                    include: {
-                        date: {
-                            select: {
-                                date: true,
-                            },
-                        },
-                    },
-                },
                 DoulaProfile: {
                     include: {
                         user: {
-                            select: {
-                                name: true,
-                            },
+                            select: { name: true },
                         },
                     },
                 },
                 ZoneManagerProfile: {
                     include: {
                         user: {
-                            select: {
-                                name: true,
-                            },
+                            select: { name: true },
                         },
                     },
+                },
+                AvailableSlotsForMeeting: {
+                    select: { weekday: true },
                 },
             },
         });
 
         if (!meeting) {
-            throw new Error('Meeting not found');
+            throw new NotFoundException('Meeting not found');
         }
 
-        // 3. Resolve hostname
-        let hostname: string | null = null;
+        // 3️⃣ Resolve host & meeting type
+        const hostname =
+            meeting.DoulaProfile?.user?.name ??
+            meeting.ZoneManagerProfile?.user?.name ??
+            null;
 
-        if (meeting.DoulaProfile?.user?.name) {
-            hostname = meeting.DoulaProfile.user.name;
-        } else if (meeting.ZoneManagerProfile?.user?.name) {
-            hostname = meeting.ZoneManagerProfile.user.name;
-        }
+        const meetingWith = meeting.doulaProfileId
+            ? 'DOULA'
+            : meeting.zoneManagerProfileId
+                ? 'ZONE_MANAGER'
+                : null;
 
-        // 4. Response mapping (same shape as list API)
+        // 4️⃣ Response mapping (consistent with list API)
         return {
-            // User details
-            userId: clientProfile.user.id,
-            name: clientProfile.user.name,
-            email: clientProfile.user.email,
-            phone: clientProfile.user.phone,
+            // ===== CLIENT =====
+            clientId: clientProfile.user.id,
+            clientName: clientProfile.user.name,
+            clientEmail: clientProfile.user.email,
+            clientPhone: clientProfile.user.phone,
+            clientProfileId: clientProfile.id,
 
-            // Client profile
-            profileId: clientProfile.id,
-
-            // Meeting details
+            // ===== MEETING =====
+            meetingId: meeting.id,
+            meetingWith,
             hostname,
-            date: meeting.slot.date.date,
-            startTime: meeting.slot.startTime,
-            endTime: meeting.slot.endTime,
+
+            meetingDate: meeting.date,
+            weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
+            startTime: meeting.startTime,
+            endTime: meeting.endTime,
+
             link: meeting.link,
+            serviceName: meeting.serviceName,
             remarks: meeting.remarks,
             status: meeting.status,
+
+            createdAt: meeting.createdAt,
+            cancelledAt: meeting.cancelledAt,
+            rescheduledAt: meeting.rescheduledAt,
         };
     }
 
     async cancelMeeting(userId: string, meetingId: string) {
-        // 1. Fetch client profile
+        // 1️⃣ Fetch client profile
         const clientProfile = await this.prisma.clientProfile.findUnique({
             where: { userId },
         });
 
         if (!clientProfile) {
-            throw new Error('Client profile not found');
+            throw new NotFoundException('Client profile not found');
         }
 
-        // 2. Fetch meeting and validate ownership
+        // 2️⃣ Fetch meeting with linked time slots
         const meeting = await this.prisma.meetings.findFirst({
             where: {
                 id: meetingId,
                 bookedById: clientProfile.id,
             },
             include: {
-                slot: true,
+                AvailableSlotsTimeForMeeting: {
+                    select: { id: true },
+                },
             },
         });
 
         if (!meeting) {
-            throw new Error('Meeting not found');
+            throw new NotFoundException('Meeting not found');
         }
 
-        // 3. Business rules
+        // 3️⃣ Business rules
         if (meeting.status === MeetingStatus.CANCELED) {
-            throw new Error('Meeting is already canceled');
+            throw new BadRequestException('Meeting is already canceled');
         }
 
         if (meeting.status === MeetingStatus.COMPLETED) {
-            throw new Error('Completed meetings cannot be canceled');
+            throw new BadRequestException('Completed meetings cannot be canceled');
         }
 
-        // 4. Transaction: cancel meeting + release slot
-        const result = await this.prisma.$transaction(async (tx) => {
-            const canceledMeeting = await tx.meetings.update({
+        // 4️⃣ Transaction: cancel meeting + release slots
+        const canceledMeeting = await this.prisma.$transaction(async (tx) => {
+            // Cancel meeting
+            const updated = await tx.meetings.update({
                 where: { id: meeting.id },
                 data: {
                     status: MeetingStatus.CANCELED,
@@ -551,26 +550,31 @@ export class ClientsService {
                 },
             });
 
-            // Release the slot
-            await tx.availableSlotsTimeForMeeting.update({
-                where: { id: meeting.slotId },
-                data: {
-                    isBooked: false,
-                    availabe: true,
-                },
-            });
+            // Release all booked time slots
+            if (meeting.AvailableSlotsTimeForMeeting.length > 0) {
+                await tx.availableSlotsTimeForMeeting.updateMany({
+                    where: {
+                        id: {
+                            in: meeting.AvailableSlotsTimeForMeeting.map(s => s.id),
+                        },
+                    },
+                    data: {
+                        isBooked: false,
+                        availabe: true,
+                    },
+                });
+            }
 
-            return canceledMeeting;
+            return updated;
         });
 
         return {
             message: 'Meeting canceled successfully',
-            meetingId: result.id,
-            status: result.status,
-            cancelledAt: result.cancelledAt,
+            meetingId: canceledMeeting.id,
+            status: canceledMeeting.status,
+            cancelledAt: canceledMeeting.cancelledAt,
         };
     }
-
 
 
     async recentActivity(userId: string) {

@@ -6,7 +6,7 @@ export declare class DoulaServiceAvailabilityController {
     createSlots(dto: CreateDoulaServiceAvailability, req: any): Promise<{
         message: string;
         data: {
-            date: Date;
+            date: import("@prisma/client").$Enums.WeekDays;
             ownerRole: any;
             timeslot: {
                 startTime: Date;
@@ -15,34 +15,31 @@ export declare class DoulaServiceAvailabilityController {
             };
         };
     }>;
-    getAllSlots(doulaId: string, startDate: string, endDate: string, filter?: 'all' | 'booked' | 'unbooked', page?: string, limit?: string): Promise<{
-        data: {
+    getMyAvailabilities(req: any): Promise<({
+        AvailableSlotsTimeForService: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            date: Date;
-            weekday: string;
             availabe: boolean;
-            doulaId: string;
+            startTime: Date;
+            endTime: Date;
             isBooked: boolean;
         }[];
-        meta: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-            hasNextPage: boolean;
-            hasPrevPage: boolean;
-        };
-    }>;
+    } & {
+        id: string;
+        weekday: import("@prisma/client").$Enums.WeekDays;
+        availabe: boolean;
+        doulaId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        isBooked: boolean;
+    })[]>;
     getSlotById(id: string): Promise<{
         message: string;
         slot: {
             AvailableSlotsTimeForService: {
                 id: string;
+                availabe: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
                 isBooked: boolean;
@@ -52,12 +49,11 @@ export declare class DoulaServiceAvailabilityController {
             }[];
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            date: Date;
-            weekday: string;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             doulaId: string;
+            createdAt: Date;
+            updatedAt: Date;
             isBooked: boolean;
         };
     }>;
@@ -65,9 +61,9 @@ export declare class DoulaServiceAvailabilityController {
         message: string;
         data: {
             id: string;
+            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
             isBooked: boolean;
@@ -80,9 +76,9 @@ export declare class DoulaServiceAvailabilityController {
         message: string;
         data: {
             id: string;
+            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
             isBooked: boolean;
@@ -95,12 +91,11 @@ export declare class DoulaServiceAvailabilityController {
         message: string;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            date: Date;
-            weekday: string;
+            weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             doulaId: string;
+            createdAt: Date;
+            updatedAt: Date;
             isBooked: boolean;
         };
     }>;

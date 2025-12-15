@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const service_utils_1 = require("../common/utility/service-utils");
+const service_utils_2 = require("../common/utility/service-utils");
 const mailer_1 = require("@nestjs-modules/mailer");
 const client_1 = require("@prisma/client");
 const meetings_service_1 = require("../meetings/meetings.service");
@@ -27,48 +28,62 @@ let EnquiryService = class EnquiryService {
         this.schedule = schedule;
     }
     async submitEnquiry(data) {
-        const { regionId, timeId, serviceId, name, email, phone, additionalNotes } = data;
-        const client = await (0, service_utils_1.getOrcreateClent)(this.prisma, data);
+        const { name, email, phone, regionId, meetingsDate, meetingsTimeSlots, serviceId, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeSlots, additionalNotes } = data;
+        const client = await (0, service_utils_2.getOrcreateClent)(this.prisma, data);
         const profile = await this.prisma.clientProfile.findUnique({
             where: { userId: client.id }
         });
         if (!profile) {
             throw new common_1.NotFoundException("profile not found");
         }
-        const region = await (0, service_utils_1.findRegionOrThrow)(this.prisma, regionId);
-        const slot = await (0, service_utils_1.findSlotOrThrow)(this.prisma, timeId);
-        if (slot.isBooked == true || slot.availabe === false) {
-            throw new common_1.BadRequestException('This slot is already booked');
-        }
-        const service = await (0, service_utils_1.findServiceOrThrowwithId)(this.prisma, serviceId);
+        const weekday = await (0, service_utils_1.getWeekdayFromDate)(meetingsDate);
+        console.log("weekday", weekday);
+        const region = await (0, service_utils_2.findRegionOrThrow)(this.prisma, regionId);
         if (!region.zoneManagerId) {
             throw new common_1.BadRequestException("Region does not have a zone manager assigned");
         }
-        const zoneManager = await (0, service_utils_1.findZoneManagerOrThrowWithId)(this.prisma, region.zoneManagerId);
-        const zoneMngrssertbldata = await (0, service_utils_1.findUserOrThrowwithId)(this.prisma, zoneManager.userId || '');
+        const zoneManager = await (0, service_utils_2.findZoneManagerOrThrowWithId)(this.prisma, region.zoneManagerId);
+        const slot = await (0, service_utils_2.findSlotOrThrow)(this.prisma, {
+            ownerRole: client_1.Role.ZONE_MANAGER,
+            ownerProfileId: region.zoneManagerId,
+            weekday,
+        });
+        console.log("slot", slot);
+        const exists = await (0, service_utils_1.isMeetingExists)(this.prisma, new Date(meetingsDate), meetingsTimeSlots, {
+            zoneManagerProfileId: region.zoneManagerId,
+        });
+        if (exists) {
+            throw new common_1.BadRequestException('Meeting already exists for this time slot');
+        }
+        const service = await (0, service_utils_2.findServiceOrThrowwithId)(this.prisma, serviceId);
         const enquiry = await this.prisma.enquiryForm.create({
             data: {
-                regionId,
-                slotId: timeId,
-                serviceId: service.id,
                 name,
                 email,
                 phone,
                 additionalNotes,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                TimeSlots: data.timeSlots,
-                VisitFrequency: data.visitFrequency,
+                meetingsDate: new Date(meetingsDate),
+                meetingsTimeSlots: meetingsTimeSlots,
+                seviceStartDate: new Date(seviceStartDate),
+                serviceEndDate: new Date(serviceEndDate),
+                VisitFrequency: visitFrequency,
+                serviceTimeSlots: serviceTimeSlots,
+                serviceName: service.name,
+                regionId,
+                slotId: slot.id,
+                serviceId: service.id,
                 clientId: profile.id
             },
         });
-        const enquiryForm = { email: enquiry.email, slotId: enquiry.slotId, additionalNotes: enquiry.additionalNotes, name: service.name };
-        console.log(enquiry);
-        const meeting = await this.schedule.scheduleMeeting(enquiryForm, client.clientProfile.id, zoneManager.id, client_1.Role.ZONE_MANAGER, slot.dateId);
-        await this.prisma.availableSlotsTimeForMeeting.update({
-            where: { id: timeId },
-            data: { isBooked: true, availabe: false },
-        });
+        const [startTime, endTime] = meetingsTimeSlots.split('-');
+        if (!startTime || !endTime) {
+            throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
+        }
+        const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
+        const endDateTime = new Date(`${meetingsDate}T${endTime}:00`);
+        const enquiryData = { email: enquiry.email, startTime: startDateTime, endTime: endDateTime, date: new Date(meetingsDate), additionalNotes: enquiry.additionalNotes, serviceName: service.name };
+        console.log("enquiry data", enquiryData);
+        const meeting = await this.schedule.scheduleMeeting(enquiryData, client.clientProfile.id, zoneManager.id, client_1.Role.ZONE_MANAGER, slot.id);
         return {
             message: 'Enquiry submitted successfully',
             enquiry,
@@ -80,20 +95,29 @@ let EnquiryService = class EnquiryService {
             page,
             limit,
             orderBy: { createdAt: 'desc' },
-            include: {
-                region: true,
-                service: true,
-                slot: true,
-            },
         });
     }
     async getEnquiryById(id) {
         const enquiry = await this.prisma.enquiryForm.findUnique({
             where: { id },
-            include: {
-                region: true,
-                service: true,
-                slot: true,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                additionalNotes: true,
+                meetingsDate: true,
+                meetingsTimeSlots: true,
+                seviceStartDate: true,
+                serviceEndDate: true,
+                VisitFrequency: true,
+                serviceTimeSlots: true,
+                serviceName: true,
+                createdAt: true,
+                updatedAt: true,
+                regionId: true,
+                slotId: true,
+                serviceId: true,
             },
         });
         if (!enquiry) {

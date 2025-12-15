@@ -3,6 +3,7 @@ import {
     Role,
     BookingStatus,
     MeetingStatus,
+    WeekDays,
 } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -13,8 +14,10 @@ async function main() {
     /* =======================
        USER + CLIENT PROFILE
        ======================= */
-    const clientUser = await prisma.user.create({
-        data: {
+    const clientUser = await prisma.user.upsert({
+        where: { email: 'client1@test.com' },
+        update: {},
+        create: {
             name: 'Test Client',
             email: 'client1@test.com',
             phone: '9000000100',
@@ -34,8 +37,10 @@ async function main() {
     /* =======================
        DOULA USER + PROFILE
        ======================= */
-    const doulaUser = await prisma.user.create({
-        data: {
+    const doulaUser = await prisma.user.upsert({
+        where: { email: 'doula1@test.com' },
+        update: {},
+        create: {
             name: 'Test Doula',
             email: 'doula1@test.com',
             phone: '9000000200',
@@ -56,8 +61,10 @@ async function main() {
     /* =======================
        REGION
        ======================= */
-    const region = await prisma.region.create({
-        data: {
+    const region = await prisma.region.upsert({
+        where: { pincode: '682002' },
+        update: {},
+        create: {
             regionName: 'Kochi',
             pincode: '682002',
             district: 'Ernakulam',
@@ -94,25 +101,19 @@ async function main() {
     });
 
     /* =======================
-       SERVICE BOOKING (ACTIVE)
+       SERVICE BOOKINGS
        ======================= */
-    const serviceBooking = await prisma.serviceBooking.create({
+    await prisma.serviceBooking.create({
         data: {
             clientId: clientProfile.id,
             doulaProfileId: doulaProfile.id,
             regionId: region.id,
             servicePricingId: pricing.id,
             status: BookingStatus.ACTIVE,
-            paymentDetails: {
-                amount: 2000,
-                method: 'UPI',
-            },
+            paymentDetails: { amount: 2000, method: 'UPI' },
         },
     });
 
-    /* =======================
-       SERVICE BOOKING (CANCELED)
-       ======================= */
     await prisma.serviceBooking.create({
         data: {
             clientId: clientProfile.id,
@@ -121,67 +122,67 @@ async function main() {
             servicePricingId: pricing.id,
             status: BookingStatus.CANCELED,
             cancelledAt: new Date(),
-            paymentDetails: {
-                amount: 2000,
-                method: 'UPI',
-            },
+            paymentDetails: { amount: 2000, method: 'UPI' },
         },
     });
 
     /* =======================
-       MEETING SLOT
+       MEETING AVAILABILITY
        ======================= */
-    const meetingDay = await prisma.availableSlotsForMeeting.create({
-        data: {
-            date: new Date('2025-12-10'),
-            weekday: 'Wednesday',
+    const meetingDay = await prisma.availableSlotsForMeeting.upsert({
+        where: {
+            doulaId_weekday: {
+                doulaId: doulaProfile.id,
+                weekday: WeekDays.WEDNESDAY,
+            },
+        },
+        update: {},
+        create: {
+            weekday: WeekDays.WEDNESDAY,
             ownerRole: Role.DOULA,
             doulaId: doulaProfile.id,
         },
     });
 
-    const meetingSlot = await prisma.availableSlotsTimeForMeeting.create({
+    await prisma.availableSlotsTimeForMeeting.create({
         data: {
-            startTime: new Date('2025-12-10T10:00:00'),
-            endTime: new Date('2025-12-10T11:00:00'),
+            startTime: new Date('1970-01-01T10:00:00'),
+            endTime: new Date('1970-01-01T11:00:00'),
             dateId: meetingDay.id,
             isBooked: true,
         },
     });
 
     /* =======================
-       MEETING (SCHEDULED)
+       MEETINGS
        ======================= */
     await prisma.meetings.create({
         data: {
             link: 'https://meet.test/abc',
             status: MeetingStatus.SCHEDULED,
+            date: new Date('2025-12-10'),
+            startTime: new Date('1970-01-01T10:00:00'),
+            endTime: new Date('1970-01-01T11:00:00'),
+            serviceName: service.name,
             bookedById: clientProfile.id,
-            slotId: meetingSlot.id,
-            availableSlotsForMeetingId: meetingDay.id,
             doulaProfileId: doulaProfile.id,
+            availableSlotsForMeetingId: meetingDay.id,
             serviceId: service.id,
         },
     });
 
-    /* =======================
-       MEETING (CANCELED)
-       ======================= */
     await prisma.meetings.create({
         data: {
             link: 'https://meet.test/cancelled',
             status: MeetingStatus.CANCELED,
             cancelledAt: new Date(),
+            date: new Date('2025-12-11'),
+            startTime: new Date('1970-01-01T12:00:00'),
+            endTime: new Date('1970-01-01T13:00:00'),
+            serviceName: service.name,
             bookedById: clientProfile.id,
-            slotId: (await prisma.availableSlotsTimeForMeeting.create({
-                data: {
-                    startTime: new Date('2025-12-11T12:00:00'),
-                    endTime: new Date('2025-12-11T13:00:00'),
-                    dateId: meetingDay.id,
-                },
-            })).id,
-            availableSlotsForMeetingId: meetingDay.id,
             doulaProfileId: doulaProfile.id,
+            availableSlotsForMeetingId: meetingDay.id,
             serviceId: service.id,
         },
     });
@@ -190,8 +191,5 @@ async function main() {
 }
 
 main()
-    .catch((e) => {
-        console.error(e);
-        process.exit(1);
-    })
+    .catch(console.error)
     .finally(() => prisma.$disconnect());

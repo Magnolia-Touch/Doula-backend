@@ -1,5 +1,7 @@
 export declare class ScheduleDoulaDto {
     enquiryId: string;
-    slotId: string;
+    meetingsDate: string;
+    meetingsTimeSlots: string;
     doulaId: string;
+    additionalNotes?: string;
 }

@@ -54,6 +54,22 @@ let MeetingsController = class MeetingsController {
     async getAllMeetings() {
         return this.service.findAllmeetings();
     }
+    async getBookedMeetingsByDate(date, doulaProfileId, zoneManagerProfileId) {
+        if (!date) {
+            throw new common_1.BadRequestException('date is required');
+        }
+        if (!doulaProfileId && !zoneManagerProfileId) {
+            throw new common_1.BadRequestException('Either doulaProfileId or zoneManagerProfileId is required');
+        }
+        if (doulaProfileId && zoneManagerProfileId) {
+            throw new common_1.BadRequestException('Provide only one: doulaProfileId OR zoneManagerProfileId');
+        }
+        return this.service.getBookedMeetingsByDate({
+            date,
+            doulaProfileId,
+            zoneManagerProfileId,
+        });
+    }
 };
 exports.MeetingsController = MeetingsController;
 __decorate([
@@ -249,6 +265,18 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], MeetingsController.prototype, "getAllMeetings", null);
+__decorate([
+    (0, common_1.Get)('booked/slots'),
+    (0, swagger_1.ApiQuery)({ name: 'date', required: true, example: '2025-02-12' }),
+    (0, swagger_1.ApiQuery)({ name: 'doulaProfileId', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'zoneManagerProfileId', required: false }),
+    __param(0, (0, common_1.Query)('date')),
+    __param(1, (0, common_1.Query)('doulaProfileId')),
+    __param(2, (0, common_1.Query)('zoneManagerProfileId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], MeetingsController.prototype, "getBookedMeetingsByDate", null);
 exports.MeetingsController = MeetingsController = __decorate([
     (0, swagger_1.ApiTags)('Meetings'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

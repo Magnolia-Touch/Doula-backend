@@ -18,16 +18,16 @@ export class DoulaServiceAvailabilityService {
             where: { userId: user.id }
         })
         // const user = findUserOrThrowwithId(this.prisma, userId)
-        const { date, startTime, endTime } = dto;
+        const { weekday, startTime, endTime } = dto;
         //created time setup withdate.
-        const startDateTime = new Date(`${date}T${startTime}:00`);
-        const endDateTime = new Date(`${date}T${endTime}:00`);
+        const startDateTime = new Date(`${"1970-01-01"}T${startTime}:00`);
+        const endDateTime = new Date(`${"1970-01-01"}T${endTime}:00`);
 
         if (startDateTime >= endDateTime) {
             throw new BadRequestException("Start time must be before end time.");
         }
         //create AvailableSlotsForMeeting instance first:
-        const dateslot = await getServiceSlotOrCreateSlot(this.prisma, dto.date, profile.id)
+        const dateslot = await getServiceSlotOrCreateSlot(this.prisma, dto.weekday, profile.id)
 
         //create AvailableSlotsTimeForMeeting for AvailableSlotsForMeeting.
         const timings = await this.prisma.availableSlotsTimeForService.create({
@@ -43,7 +43,7 @@ export class DoulaServiceAvailabilityService {
         return {
             message: "Service Slots created successfully",
             data: {
-                date: dateslot.date,
+                date: dateslot.weekday,
                 ownerRole: user.role,
                 timeslot: {
                     startTime: timings.startTime,
@@ -57,6 +57,70 @@ export class DoulaServiceAvailabilityService {
 
     //continue from here. booked or unbooked filter not needed on slots.
     //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
+    async getMyAvailabilities(userId: string) {
+        // 1. Fetch user role
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true },
+        });
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        // 2. Resolve profileId based on role
+        let whereClause: any = {};
+
+        if (user.role === Role.DOULA) {
+            const doulaProfile = await this.prisma.doulaProfile.findUnique({
+                where: { userId },
+                select: { id: true },
+            });
+
+            if (!doulaProfile) {
+                throw new NotFoundException('Doula profile not found');
+            }
+
+            whereClause.doulaId = doulaProfile.id;
+        }
+
+        else if (user.role === Role.ZONE_MANAGER) {
+            const zoneManagerProfile = await this.prisma.zoneManagerProfile.findUnique({
+                where: { userId },
+                select: { id: true },
+            });
+
+            if (!zoneManagerProfile) {
+                throw new NotFoundException('Zone Manager profile not found');
+            }
+
+            whereClause.zoneManagerId = zoneManagerProfile.id;
+        }
+
+        else {
+            throw new ForbiddenException('This role has no availability');
+        }
+
+        // 3. Fetch availability with time slots
+        const availabilities = await this.prisma.availableSlotsForService.findMany({
+            where: whereClause,
+            orderBy: { weekday: 'asc' },
+            include: {
+                AvailableSlotsTimeForService: {
+                    orderBy: { startTime: 'asc' },
+                    select: {
+                        id: true,
+                        startTime: true,
+                        endTime: true,
+                        availabe: true,
+                        isBooked: true,
+                    },
+                },
+            },
+        });
+
+        return availabilities;
+    }
 
     async getAllSlots(
         doulaId: string,
@@ -139,8 +203,8 @@ export class DoulaServiceAvailabilityService {
 
         const parentSlot = timeSlot.date; // AvailableSlotsForMeeting record
         // ⏰ Build new date-time values
-        const startDateTime = new Date(`${parentSlot.date.toISOString().split("T")[0]}T${dto.startTime}:00`);
-        const endDateTime = new Date(`${parentSlot.date.toISOString().split("T")[0]}T${dto.endTime}:00`);
+        const startDateTime = new Date(`${"1970-01-01"}T${dto.startTime}:00`);
+        const endDateTime = new Date(`${"1970-01-01"}T${dto.endTime}:00`);
 
         // 🚀 Update time slot
         const updatedTimeSlot = await this.prisma.availableSlotsTimeForService.update({

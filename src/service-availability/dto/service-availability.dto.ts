@@ -1,10 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { WeekDays } from '@prisma/client';
+import { IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
 
 export class CreateDoulaServiceAvailability {
-    @ApiProperty({ example: '2025-11-21' })
-    @IsString()
-    date: string;
+    @ApiProperty({
+        enum: WeekDays,
+        example: WeekDays.MONDAY,
+        description: 'Day of the week',
+    })
+    @IsEnum(WeekDays, {
+        message:
+            'weekday must be one of MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY',
+    })
+    weekday: WeekDays;
 
     @ApiProperty({ example: '09:00' })
     @IsString()

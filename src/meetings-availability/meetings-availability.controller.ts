@@ -183,48 +183,6 @@ export class AvailableSlotsController {
         return this.service.updateTimeSlotAvailability(id, booked, availabe);
     }
 
-    // Disable slots for a date range
-    @UseGuards(JwtAuthGuard)
-    @Roles('ADMIN', 'ZONE_MANAGER', 'DOULA')
-    @ApiOperation({ summary: 'Disable ALL meeting available slots in a date range' })
-    @ApiQuery({ name: 'startDate', required: true })
-    @ApiQuery({ name: 'endDate', required: true })
-    @ApiResponse({
-        status: 200,
-        type: SwaggerResponseDto,
-        schema: {
-            example: {
-                success: true,
-                message: 'Slots disabled',
-                data: {
-                    startDate: '2025-01-10',
-                    endDate: '2025-01-15',
-                    count: 8
-                }
-            }
-        }
-    })
-    @Post('disable')
-    async disableSlots(
-        @Query('startDate') startDate: string,
-        @Query('endDate') endDate: string
-    ) {
-        if (!startDate) throw new BadRequestException('startDate is required');
-        if (!endDate) throw new BadRequestException('endDate is required');
-
-        const result = await this.service.disableSlotsInRange(startDate, endDate);
-
-        return {
-            success: true,
-            message: 'Slots disabled',
-            data: {
-                startDate,
-                endDate,
-                ...result
-            }
-        };
-    }
-
     // Get SLOT (filtered)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ADMIN, Role.ZONE_MANAGER, Role.DOULA)
@@ -263,17 +221,10 @@ export class AvailableSlotsController {
     })
     @Get('my/availability')
     async findall(
-        @Query('startDate') startDate: string,
-        @Query('endDate') endDate: string,
-        @Query('filter') filter: 'all' | 'booked' | 'unbooked' = 'all',
-        @Query('page') page: string = '1',
-        @Query('limit') limit: string = '10',
         @Req() req
     ) {
-        if (!startDate) throw new BadRequestException('startDate is required');
-        if (!endDate) throw new BadRequestException('endDate is required');
 
-        return this.service.findall(req.user, startDate, endDate, filter, parseInt(page, 10), parseInt(limit, 10));
+        return this.service.getMyAvailabilities(req.user.id);
     }
 
 }
