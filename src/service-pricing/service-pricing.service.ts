@@ -25,38 +25,95 @@ export class ServicePricingService {
         });
     }
 
+
     async findAll(userId: string) {
         const doula = await this.prisma.doulaProfile.findUnique({
-            where: { userId: userId }
+            where: { userId },
         });
 
         if (!doula) {
             throw new NotFoundException('Doula profile not found');
         }
 
-        return this.prisma.servicePricing.findMany({
+        const pricingList = await this.prisma.servicePricing.findMany({
             where: { doulaProfileId: doula.id },
             orderBy: { createdAt: 'desc' },
             include: {
-                DoulaProfile: true,
-                service: true
-            }
+                DoulaProfile: {
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                service: true,
+            },
         });
+
+        const data = pricingList.map((pricing) => ({
+            servicePricingId: pricing.id,
+            price: pricing.price,
+
+            doulaProfileId: pricing.doulaProfileId,
+            doulaName: pricing.DoulaProfile.user.name,
+            doulaEmail: pricing.DoulaProfile.user.email,
+            doulaPhone: pricing.DoulaProfile.user.phone,
+
+            serviceId: pricing.service.id,
+            serviceName: pricing.service.name,
+            serviceDescription: pricing.service.description,
+        }));
+
+        return {
+            message: 'Service pricing fetched successfully',
+            data,
+        };
     }
 
-    // Get a single service Pricing
+
+
     async findOne(id: string) {
-        const service = await this.prisma.servicePricing.findUnique({
+        const pricing = await this.prisma.servicePricing.findUnique({
             where: { id },
             include: {
-                DoulaProfile: true,
-                service: true
-            }
+                DoulaProfile: {
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                service: true,
+            },
         });
 
-        if (!service) throw new NotFoundException('Service not found');
-        return service;
+        if (!pricing) {
+            throw new NotFoundException('Service pricing not found');
+        }
+
+        return {
+            servicePricingId: pricing.id,
+            price: pricing.price,
+
+            doulaProfileId: pricing.doulaProfileId,
+            doulaName: pricing.DoulaProfile.user.name,
+            doulaEmail: pricing.DoulaProfile.user.email,
+            doulaPhone: pricing.DoulaProfile.user.phone,
+
+            serviceId: pricing.service.id,
+            serviceName: pricing.service.name,
+            serviceDescription: pricing.service.description,
+        };
     }
+
 
     // Update a service Pricing
     async update(id: string, dto: UpdateServicePricingDto) {

@@ -11,44 +11,44 @@ export declare class EnquiryService {
         message: string;
         enquiry: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            regionId: string;
             email: string;
             phone: string;
-            serviceName: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string;
             serviceId: string;
             clientId: string;
-            additionalNotes: string | null;
+            serviceName: string;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date;
             serviceEndDate: Date;
-            VisitFrequency: number;
             serviceTimeSlots: string;
+            additionalNotes: string | null;
+            VisitFrequency: number;
             slotId: string;
         };
     }>;
     getAllEnquiries(page?: number, limit?: number): Promise<{
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            regionId: string;
             email: string;
             phone: string;
-            serviceName: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            regionId: string;
             serviceId: string;
             clientId: string;
-            additionalNotes: string | null;
+            serviceName: string;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date;
             serviceEndDate: Date;
-            VisitFrequency: number;
             serviceTimeSlots: string;
+            additionalNotes: string | null;
+            VisitFrequency: number;
             slotId: string;
         }[];
         meta: {
@@ -62,21 +62,21 @@ export declare class EnquiryService {
     }>;
     getEnquiryById(id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
-        regionId: string;
         email: string;
         phone: string;
-        serviceName: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        regionId: string;
         serviceId: string;
-        additionalNotes: string | null;
+        serviceName: string;
         meetingsDate: Date;
         meetingsTimeSlots: string;
         seviceStartDate: Date;
         serviceEndDate: Date;
-        VisitFrequency: number;
         serviceTimeSlots: string;
+        additionalNotes: string | null;
+        VisitFrequency: number;
         slotId: string;
     }>;
     deleteEnquiry(id: string): Promise<{

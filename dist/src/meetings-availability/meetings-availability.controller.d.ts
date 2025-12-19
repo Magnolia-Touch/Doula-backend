@@ -44,9 +44,9 @@ export declare class AvailableSlotsController {
         slot: {
             AvailableSlotsTimeForMeeting: {
                 id: string;
-                availabe: boolean;
                 createdAt: Date;
                 updatedAt: Date;
+                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
                 isBooked: boolean;
@@ -55,23 +55,23 @@ export declare class AvailableSlotsController {
             }[];
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            zoneManagerId: string | null;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             ownerRole: import("@prisma/client").$Enums.Role;
             doulaId: string | null;
             adminId: string | null;
-            zoneManagerId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     updateSlot(dto: UpdateSlotsForMeetingTimeDto, req: any): Promise<{
         message: string;
         data: {
             id: string;
-            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
             startTime: Date;
             endTime: Date;
             isBooked: boolean;
@@ -99,13 +99,13 @@ export declare class AvailableSlotsController {
         }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        zoneManagerId: string | null;
         weekday: import("@prisma/client").$Enums.WeekDays;
         availabe: boolean;
         ownerRole: import("@prisma/client").$Enums.Role;
         doulaId: string | null;
         adminId: string | null;
-        zoneManagerId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     })[]>;
 }

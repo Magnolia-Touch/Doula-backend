@@ -36,6 +36,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Role } from '@prisma/client';
 const ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
     'image/png',
@@ -253,4 +254,281 @@ export class DoulaController {
     async updateRegions(@Body() dto: UpdateDoulaRegionDto, @Req() req) {
         return this.service.UpdateDoulaRegions(dto, req.user.id);
     }
+
+    // UPDATE DOULA REGIONS
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/meetings')
+    @ApiOperation({ summary: 'Get Meetings of Doula' })
+    @ApiQuery({ name: 'date', required: false, example: '2025-01-20' })
+    @ApiQuery({ name: 'page', required: false, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, example: 10 })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Doula meetings fetched successfully',
+                data: [
+                    {
+                        date: '2025-01-20T00:00:00.000Z',
+                        serviceName: 'Postnatal Consultation',
+                        clientName: 'Anita Joseph',
+                    },
+                ],
+                meta: {
+                    total: 2,
+                    page: 1,
+                    limit: 10,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPrevPage: false,
+                },
+            },
+        },
+    })
+    async getDoulaMeetings(
+        @Req() req,
+        @Query('date') date?: string,
+        @Query('page') page = '1',
+        @Query('limit') limit = '10',
+    ) {
+        console.log("hellooooo")
+        return this.service.getDoulaMeetings(
+            req.user,
+            Number(page),
+            Number(limit),
+            date,
+        );
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/schedules')
+    @ApiOperation({ summary: 'Get schedules of logged-in doula' })
+    @ApiQuery({
+        name: 'date',
+        required: false,
+        example: '2025-01-20',
+        description: 'Fetch schedules on a specific date (YYYY-MM-DD)',
+    })
+    @ApiQuery({
+        name: 'page',
+        required: false,
+        example: 1,
+    })
+    @ApiQuery({
+        name: 'limit',
+        required: false,
+        example: 10,
+    })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Doula schedules fetched successfully',
+                data: [
+                    {
+                        startTime: '2025-01-20T09:00:00.000Z',
+                        endTime: '2025-01-20T10:00:00.000Z',
+                        serviceName: 'Postnatal Consultation',
+                        clientName: 'Anita Joseph',
+                    },
+                ],
+                meta: {
+                    total: 5,
+                    page: 1,
+                    limit: 10,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPrevPage: false,
+                },
+            },
+        },
+    })
+    async getDoulaSchedules(
+        @Req() req,
+        @Query('date') date?: string,
+        @Query('page') page = '1',
+        @Query('limit') limit = '10',
+    ) {
+        return this.service.getDoulaSchedules(
+            req.user,
+            Number(page),
+            Number(limit),
+            date,
+        );
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/schedules/count')
+    @ApiOperation({ summary: 'Get today and weekly schedule count for doula' })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Doula schedule counts fetched successfully',
+                data: {
+                    today: 2,
+                    thisWeek: 7,
+                },
+            },
+        },
+    })
+    async getDoulaScheduleCount(@Req() req) {
+        return this.service.getDoulaScheduleCount(req.user);
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/meetings/immediate')
+    @ApiOperation({ summary: 'Get next immediate meeting for doula dashboard' })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Immediate meeting fetched successfully',
+                data: {
+                    clientName: 'Sarah Johnson',
+                    serviceName: 'Prenatal Consultation',
+                    startTime: '2025-01-20T10:00:00.000Z',
+                    timeToStart: 'in 30 mins',
+                    meetingLink: 'https://meet.example.com/abc123',
+                },
+            },
+        },
+    })
+    async getImmediateMeeting(@Req() req) {
+        return this.service.ImmediateMeeting(req.user);
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/ratings/summary')
+    @ApiOperation({ summary: 'Get doula rating summary' })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Doula rating summary fetched successfully',
+                data: {
+                    averageRating: 4.8,
+                    totalReviews: 5,
+                    distribution: {
+                        5: 4,
+                        4: 1,
+                        3: 0,
+                        2: 0,
+                        1: 0,
+                    },
+                },
+            },
+        },
+    })
+    async getRatingSummary(@Req() req) {
+        return this.service.getDoulaRatingSummary(req.user);
+    }
+
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/testimonials')
+    @ApiOperation({ summary: 'Get testimonials associated with the logged-in doula' })
+    @ApiQuery({ name: 'page', required: false, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, example: 10 })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Doula testimonials fetched successfully',
+                data: [
+                    {
+                        clientId: 'client-uuid',
+                        clientName: 'Sarah Johnson',
+                        email: 'sarah@example.com',
+                        phone: '9876543210',
+                        ratings: 5,
+                        reviews: 'Very supportive and professional.',
+                        createdAt: '2025-01-18T08:30:00.000Z',
+                        serviceName: 'Prenatal Consultation',
+                    },
+                ],
+                meta: {
+                    total: 5,
+                    page: 1,
+                    limit: 10,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPrevPage: false,
+                },
+            },
+        },
+    })
+    async getDoulaTestimonials(
+        @Req() req,
+        @Query('page') page = '1',
+        @Query('limit') limit = '10',
+    ) {
+        return this.service.getDoulaTestimonials(
+            req.user,
+            Number(page),
+            Number(limit),
+        );
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/profile')
+    @ApiOperation({ summary: 'Get logged-in doula profile details' })
+    @ApiResponse({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Doula profile fetched successfully',
+                data: {
+                    id: 'doula-uuid',
+                    name: 'Jane Doe',
+                    title: 'Certified Birth Doula',
+                    averageRating: 4.9,
+                    totalReviews: 156,
+                    births: 156,
+                    experience: 8,
+                    satisfaction: 98,
+                    contact: {
+                        email: 'jane.doe@doula.com',
+                        phone: '5551234567',
+                        location: 'San Francisco, CA',
+                    },
+                    about:
+                        'I am a passionate birth doula with over 8 years of experience...',
+                    certifications: [
+                        'Certified Birth Doula',
+                        'Childbirth Educator',
+                        'Lactation Counselor',
+                        'CPR & First Aid',
+                    ],
+                    gallery: [
+                        {
+                            id: 'img-uuid',
+                            url: 'https://cdn.app.com/img1.jpg',
+                            altText: 'Session photo',
+                        },
+                    ],
+                },
+            },
+        },
+    })
+    async getDoulaProfile(@Req() req) {
+        return this.service.doulaProfile(req.user);
+    }
+
 }

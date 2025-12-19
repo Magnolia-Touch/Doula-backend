@@ -27,29 +27,72 @@ let RegionService = class RegionService {
         const where = search
             ? {
                 OR: [
-                    { regionName: { contains: search.toLowerCase() } },
-                    { district: { contains: search.toLowerCase() } },
-                    { state: { contains: search.toLowerCase() } },
-                    { country: { contains: search.toLowerCase() } },
+                    { regionName: { contains: search, mode: 'insensitive' } },
+                    { district: { contains: search, mode: 'insensitive' } },
+                    { state: { contains: search, mode: 'insensitive' } },
+                    { country: { contains: search, mode: 'insensitive' } },
                 ],
             }
             : undefined;
-        return (0, pagination_util_1.paginate)({
+        const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.region,
             page,
             limit,
             where,
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
         });
+        const data = result.data.map((region) => ({
+            regionId: region.id,
+            regionName: region.regionName,
+            pincode: region.pincode,
+            district: region.district,
+            state: region.state,
+            country: region.country,
+            latitude: region.latitude,
+            longitude: region.longitude,
+            is_active: region.is_active,
+        }));
+        return {
+            message: 'Regions fetched successfully',
+            data,
+            meta: result.meta,
+        };
     }
     async findOne(id) {
         const region = await this.prisma.region.findUnique({
             where: { id },
-            include: { zoneManager: true },
+            include: {
+                zoneManager: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+            },
         });
-        if (!region)
+        if (!region) {
             throw new common_1.NotFoundException('Region not found');
-        return region;
+        }
+        return {
+            regionId: region.id,
+            regionName: region.regionName,
+            pincode: region.pincode,
+            district: region.district,
+            state: region.state,
+            country: region.country,
+            latitude: region.latitude,
+            longitude: region.longitude,
+            zoneManagerId: region.zoneManager?.id ?? null,
+            zonemanagerName: region.zoneManager?.user?.name ?? null,
+            zonemanagerPhone: region.zoneManager?.user?.phone ?? null,
+            zonemanagerEmail: region.zoneManager?.user?.email ?? null,
+        };
     }
     async update(id, dto) {
         await this.findOne(id);

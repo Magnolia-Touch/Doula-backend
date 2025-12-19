@@ -18,19 +18,17 @@ export declare class RegionController {
         zoneManagerId: string | null;
     }>;
     findAll(page?: number, limit?: number, search?: string): Promise<{
+        message: string;
         data: {
-            id: string;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
-            pincode: string;
+            regionId: string;
             regionName: string;
+            pincode: string;
             district: string;
             state: string;
             country: string;
             latitude: string;
             longitude: string;
-            zoneManagerId: string | null;
+            is_active: boolean;
         }[];
         meta: {
             total: number;
@@ -42,26 +40,18 @@ export declare class RegionController {
         };
     }>;
     findOne(id: string): Promise<{
-        zoneManager: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            profile_image: string | null;
-            userId: string | null;
-        } | null;
-    } & {
-        id: string;
-        is_active: boolean;
-        createdAt: Date;
-        updatedAt: Date;
-        pincode: string;
+        regionId: string;
         regionName: string;
+        pincode: string;
         district: string;
         state: string;
         country: string;
         latitude: string;
         longitude: string;
         zoneManagerId: string | null;
+        zonemanagerName: string | null;
+        zonemanagerPhone: string | null;
+        zonemanagerEmail: string | null;
     }>;
     update(id: string, dto: UpdateRegionDto): Promise<{
         id: string;

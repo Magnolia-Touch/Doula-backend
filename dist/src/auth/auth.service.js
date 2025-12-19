@@ -108,66 +108,138 @@ let AuthService = class AuthService {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
-                adminProfile: true,
-                doulaProfile: true,
+                adminProfile: {
+                    include: {
+                        notes: true,
+                    },
+                },
+                doulaProfile: {
+                    include: {
+                        Region: true,
+                        DoulaImages: true,
+                    },
+                },
                 clientProfile: true,
-                zonemanagerprofile: true,
+                zonemanagerprofile: {
+                    include: {
+                        managingRegion: true,
+                        doulas: {
+                            include: {
+                                user: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        email: true,
+                                        phone: true,
+                                        is_active: true,
+                                        role: true,
+                                    },
+                                },
+                                Region: true,
+                                DoulaImages: true,
+                            },
+                        },
+                        notes: true,
+                    },
+                },
             },
         });
         if (!user)
-            throw new common_1.NotFoundException("User not found");
-        const role = user.role;
-        switch (role) {
+            throw new common_1.NotFoundException('User not found');
+        const baseUser = {
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            is_active: user.is_active,
+            role: user.role,
+        };
+        switch (user.role) {
             case client_1.Role.ADMIN:
                 return {
-                    role,
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        phone: user.phone,
-                        is_active: user.is_active,
-                    },
-                    profile: user.adminProfile,
-                };
-            case client_1.Role.DOULA:
-                return {
-                    role,
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        phone: user.phone,
-                        is_active: user.is_active,
-                    },
-                    profile: user.doulaProfile,
-                };
-            case client_1.Role.CLIENT:
-                return {
-                    role,
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        phone: user.phone,
-                        is_active: user.is_active,
-                    },
-                    profile: user.clientProfile,
+                    role: user.role,
+                    user: baseUser,
+                    profile: user.adminProfile
+                        ? {
+                            profileId: user.adminProfile.id,
+                            profile_image: user.adminProfile.profile_image,
+                            notes: user.adminProfile.notes,
+                        }
+                        : null,
                 };
             case client_1.Role.ZONE_MANAGER:
                 return {
-                    role,
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        phone: user.phone,
-                        is_active: user.is_active,
-                    },
-                    profile: user.zonemanagerprofile,
+                    role: user.role,
+                    user: baseUser,
+                    profile: user.zonemanagerprofile
+                        ? {
+                            profileId: user.zonemanagerprofile.id,
+                            profile_image: user.zonemanagerprofile.profile_image,
+                            managingRegions: user.zonemanagerprofile.managingRegion.map((region) => ({
+                                regionId: region.id,
+                                regionName: region.regionName,
+                            })),
+                            doulas: user.zonemanagerprofile.doulas.map((doula) => ({
+                                doulaId: doula.id,
+                                doulaProfile: {
+                                    userId: doula.user.id,
+                                    name: doula.user.name,
+                                    email: doula.user.email,
+                                    phone: doula.user.phone,
+                                    is_active: doula.user.is_active,
+                                    role: doula.user.role,
+                                    qualification: doula.qualification,
+                                    description: doula.description,
+                                    achievements: doula.achievements,
+                                    yoe: doula.yoe,
+                                    languages: doula.languages,
+                                    regions: doula.Region.map((r) => ({
+                                        regionId: r.id,
+                                        regionName: r.regionName,
+                                    })),
+                                    doulaImages: doula.DoulaImages,
+                                },
+                            })),
+                            notes: user.zonemanagerprofile.notes,
+                        }
+                        : null,
+                };
+            case client_1.Role.DOULA:
+                return {
+                    role: user.role,
+                    user: baseUser,
+                    profile: user.doulaProfile
+                        ? {
+                            profileId: user.doulaProfile.id,
+                            description: user.doulaProfile.description,
+                            qualification: user.doulaProfile.qualification,
+                            achievements: user.doulaProfile.achievements,
+                            yoe: user.doulaProfile.yoe,
+                            languages: user.doulaProfile.languages,
+                            regions: user.doulaProfile.Region.map((region) => ({
+                                regionId: region.id,
+                                regionName: region.regionName,
+                            })),
+                            doulaImages: user.doulaProfile.DoulaImages,
+                        }
+                        : null,
+                };
+            case client_1.Role.CLIENT:
+                return {
+                    role: user.role,
+                    user: baseUser,
+                    profile: user.clientProfile
+                        ? {
+                            profileId: user.clientProfile.id,
+                            profile_image: user.clientProfile.profile_image,
+                            region: user.clientProfile.region,
+                            address: user.clientProfile.address,
+                            is_verified: user.clientProfile.is_verified,
+                        }
+                        : null,
                 };
             default:
-                throw new common_1.BadRequestException("Unknown role or profile not assigned");
+                throw new common_1.BadRequestException('Unknown role or profile not assigned');
         }
     }
 };

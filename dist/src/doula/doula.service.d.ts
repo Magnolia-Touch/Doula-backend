@@ -1,5 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
+import { Prisma } from '@prisma/client';
 import { UpdateDoulaRegionDto } from './dto/update-doula.dto';
 export declare class DoulaService {
     private prisma;
@@ -47,7 +48,7 @@ export declare class DoulaService {
                     updatedAt: Date;
                     serviceId: string;
                     doulaProfileId: string;
-                    price: import("@prisma/client/runtime/library").Decimal;
+                    price: Prisma.Decimal;
                 })[];
                 DoulaImages: {
                     id: string;
@@ -67,7 +68,7 @@ export declare class DoulaService {
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
-                languages: import("@prisma/client/runtime/library").JsonValue | null;
+                languages: Prisma.JsonValue | null;
             }) | null;
         } & {
             id: string;
@@ -187,7 +188,131 @@ export declare class DoulaService {
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
+            languages: Prisma.JsonValue | null;
         };
     }>;
+    getDoulaMeetings(user: any, page?: number, limit?: number, date?: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            date: Date;
+            serviceName: string;
+            clientName: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getDoulaSchedules(user: any, page?: number, limit?: number, date?: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            date: Date;
+            startTime: Date;
+            endTime: Date;
+            serviceName: string;
+            clientName: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getDoulaScheduleCount(user: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            today: number;
+            thisWeek: number;
+        };
+    }>;
+    ImmediateMeeting(user: any): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    } | {
+        success: boolean;
+        message: string;
+        data: {
+            clientName: string;
+            serviceName: string;
+            startTime: Date;
+            timeToStart: string;
+            meetingLink: string;
+        };
+    }>;
+    getDoulaRatingSummary(user: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            averageRating: number;
+            totalReviews: number;
+            distribution: {
+                5: number;
+                4: number;
+                3: number;
+                2: number;
+                1: number;
+            };
+        };
+    }>;
+    getDoulaTestimonials(user: any, page?: number, limit?: number): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            clientId: string;
+            clientName: string;
+            email: string;
+            phone: string | null;
+            ratings: number;
+            reviews: string;
+            createdAt: Date;
+            serviceName: string;
+            servicePricingId: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    doulaProfile(user: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+            name: string;
+            title: string;
+            averageRating: number;
+            totalReviews: number;
+            births: number;
+            experience: number;
+            satisfaction: number;
+            contact: {
+                email: string;
+                phone: string | null;
+                location: string;
+            };
+            about: string | null;
+            certifications: string[];
+            gallery: {
+                id: string;
+                url: string;
+                altText: string | null;
+            }[];
+        };
+    }>;
+    blockDateRange(): Promise<void>;
 }

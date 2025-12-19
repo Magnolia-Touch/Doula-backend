@@ -44,74 +44,164 @@ export declare class AuthController {
     myProfile(req: any): Promise<{
         role: "ADMIN";
         user: {
-            id: string;
-            name: string;
+            userId: string;
             email: string;
+            name: string;
             phone: string | null;
             is_active: boolean;
+            role: import("@prisma/client").$Enums.Role;
         };
         profile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
+            profileId: string;
             profile_image: string | null;
-        } | null;
-    } | {
-        role: "DOULA";
-        user: {
-            id: string;
-            name: string;
-            email: string;
-            phone: string | null;
-            is_active: boolean;
-        };
-        profile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            regionId: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
-        } | null;
-    } | {
-        role: "CLIENT";
-        user: {
-            id: string;
-            name: string;
-            email: string;
-            phone: string | null;
-            is_active: boolean;
-        };
-        profile: {
-            region: string | null;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            is_verified: boolean;
-            address: string | null;
+            notes: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                zoneManagerId: string | null;
+                remarks: string;
+                adminId: string | null;
+            }[];
+            managingRegions?: undefined;
+            doulas?: undefined;
+            description?: undefined;
+            qualification?: undefined;
+            achievements?: undefined;
+            yoe?: undefined;
+            languages?: undefined;
+            regions?: undefined;
+            doulaImages?: undefined;
+            region?: undefined;
+            address?: undefined;
+            is_verified?: undefined;
         } | null;
     } | {
         role: "ZONE_MANAGER";
         user: {
-            id: string;
-            name: string;
+            userId: string;
             email: string;
+            name: string;
             phone: string | null;
             is_active: boolean;
+            role: import("@prisma/client").$Enums.Role;
         };
         profile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string | null;
+            profileId: string;
             profile_image: string | null;
+            managingRegions: {
+                regionId: string;
+                regionName: string;
+            }[];
+            doulas: {
+                doulaId: string;
+                doulaProfile: {
+                    userId: string;
+                    name: string;
+                    email: string;
+                    phone: string | null;
+                    is_active: boolean;
+                    role: import("@prisma/client").$Enums.Role;
+                    qualification: string | null;
+                    description: string | null;
+                    achievements: string | null;
+                    yoe: number | null;
+                    languages: import("@prisma/client/runtime/library").JsonValue;
+                    regions: {
+                        regionId: string;
+                        regionName: string;
+                    }[];
+                    doulaImages: {
+                        id: string;
+                        sortOrder: number;
+                        doulaProfileId: string;
+                        url: string;
+                        altText: string | null;
+                        isMain: boolean;
+                    }[];
+                };
+            }[];
+            notes: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                zoneManagerId: string | null;
+                remarks: string;
+                adminId: string | null;
+            }[];
+            description?: undefined;
+            qualification?: undefined;
+            achievements?: undefined;
+            yoe?: undefined;
+            languages?: undefined;
+            regions?: undefined;
+            doulaImages?: undefined;
+            region?: undefined;
+            address?: undefined;
+            is_verified?: undefined;
+        } | null;
+    } | {
+        role: "DOULA";
+        user: {
+            userId: string;
+            email: string;
+            name: string;
+            phone: string | null;
+            is_active: boolean;
+            role: import("@prisma/client").$Enums.Role;
+        };
+        profile: {
+            profileId: string;
+            description: string | null;
+            qualification: string | null;
+            achievements: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue;
+            regions: {
+                regionId: string;
+                regionName: string;
+            }[];
+            doulaImages: {
+                id: string;
+                sortOrder: number;
+                doulaProfileId: string;
+                url: string;
+                altText: string | null;
+                isMain: boolean;
+            }[];
+            profile_image?: undefined;
+            notes?: undefined;
+            managingRegions?: undefined;
+            doulas?: undefined;
+            region?: undefined;
+            address?: undefined;
+            is_verified?: undefined;
+        } | null;
+    } | {
+        role: "CLIENT";
+        user: {
+            userId: string;
+            email: string;
+            name: string;
+            phone: string | null;
+            is_active: boolean;
+            role: import("@prisma/client").$Enums.Role;
+        };
+        profile: {
+            profileId: string;
+            profile_image: string | null;
+            region: string | null;
+            address: string | null;
+            is_verified: boolean;
+            notes?: undefined;
+            managingRegions?: undefined;
+            doulas?: undefined;
+            description?: undefined;
+            qualification?: undefined;
+            achievements?: undefined;
+            yoe?: undefined;
+            languages?: undefined;
+            regions?: undefined;
+            doulaImages?: undefined;
         } | null;
     }>;
 }

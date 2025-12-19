@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
-import { Role } from '@prisma/client';
+import { MeetingStatus, Prisma, Role } from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
 import { checkUserExistorNot } from 'src/common/utility/service-utils';
 import { UpdateDoulaRegionDto } from './dto/update-doula.dto';
@@ -707,5 +707,630 @@ export class DoulaService {
 
         throw new BadRequestException("Invalid purpose");
     }
+
+    async getDoulaMeetings(
+        user: any,
+        page = 1,
+        limit = 10,
+        date?: string,
+    ) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        const where: any = {
+            doulaProfileId: doulaProfile.id,
+        };
+
+        // ✅ Apply date filter only if date param exists
+        if (date) {
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            where.date = {
+                gte: startOfDay,
+                lte: endOfDay,
+            };
+        }
+
+        const result = await paginate({
+            prismaModel: this.prisma.meetings,
+            page,
+            limit,
+            where,
+            include: {
+                bookedBy: {
+                    include: {
+                        user: {
+                            select: { name: true },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                date: 'desc',
+            },
+        });
+
+        type DoulaMeetingWithClient =
+            Prisma.MeetingsGetPayload<{
+                include: {
+                    bookedBy: {
+                        include: {
+                            user: {
+                                select: {
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                };
+            }>;
+
+        const meetings = result.data as DoulaMeetingWithClient[];
+
+        return {
+            success: true,
+            message: 'Doula meetings fetched successfully',
+            data: meetings.map((meeting) => ({
+                date: meeting.date,
+                serviceName: meeting.serviceName,
+                clientName: meeting.bookedBy.user.name,
+            })),
+            meta: result.meta,
+        };
+    }
+
+
+
+    async getDoulaSchedules(
+        user: any,
+        page = 1,
+        limit = 10,
+        date?: string,
+    ) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        // Fetch doula profile
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        const where: any = {
+            doulaProfileId: doulaProfile.id,
+        };
+
+        // ✅ Optional date filter (Schedules.date is @db.Date)
+        if (date) {
+            where.date = new Date(date);
+        }
+
+        const result = await paginate({
+            prismaModel: this.prisma.schedules,
+            page,
+            limit,
+            where,
+            include: {
+                ServicePricing: {
+                    include: {
+                        service: {
+                            select: { name: true },
+                        },
+                    },
+                },
+                client: {
+                    include: {
+                        user: {
+                            select: { name: true },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                date: 'desc',
+            },
+        });
+
+        type DoulaScheduleWithRelations =
+            Prisma.SchedulesGetPayload<{
+                include: {
+                    ServicePricing: {
+                        include: {
+                            service: {
+                                select: { name: true };
+                            };
+                        };
+                    };
+                    client: {
+                        include: {
+                            user: {
+                                select: { name: true };
+                            };
+                        };
+                    };
+                };
+            }>;
+
+        const schedules = result.data as DoulaScheduleWithRelations[];
+
+        return {
+            success: true,
+            message: 'Doula schedules fetched successfully',
+            data: schedules.map((schedule) => ({
+                date: schedule.date,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                serviceName: schedule.ServicePricing.service.name,
+                clientName: schedule.client.user.name,
+            })),
+            meta: result.meta,
+        };
+    }
+
+    async getDoulaScheduleCount(user: any) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        // Get Doula profile
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        /** -----------------------------
+         * Date calculations
+         * ----------------------------- */
+
+        // Today (Schedules.date is @db.Date)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Start of week (Monday)
+        const startOfWeek = new Date(today);
+        const day = startOfWeek.getDay(); // 0 = Sunday
+        const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+        startOfWeek.setDate(diff);
+
+        // End of week (Sunday)
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        /** -----------------------------
+         * Counts
+         * ----------------------------- */
+
+        const [todayCount, weeklyCount] = await Promise.all([
+            // Today's schedules
+            this.prisma.schedules.count({
+                where: {
+                    doulaProfileId: doulaProfile.id,
+                    date: today,
+                },
+            }),
+
+            // Weekly schedules
+            this.prisma.schedules.count({
+                where: {
+                    doulaProfileId: doulaProfile.id,
+                    date: {
+                        gte: startOfWeek,
+                        lte: endOfWeek,
+                    },
+                },
+            }),
+        ]);
+
+        return {
+            success: true,
+            message: 'Doula schedule counts fetched successfully',
+            data: {
+                today: todayCount,
+                thisWeek: weeklyCount,
+            },
+        };
+    }
+
+
+    async ImmediateMeeting(user: any) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        // Fetch doula profile
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        const now = new Date();
+
+        // Fetch next upcoming meeting
+        const meeting = await this.prisma.meetings.findFirst({
+            where: {
+                doulaProfileId: doulaProfile.id,
+                status: MeetingStatus.SCHEDULED, // adjust if needed
+                OR: [
+                    {
+                        date: { gt: now },
+                    },
+                    {
+                        date: now,
+                        startTime: { gte: now },
+                    },
+                ],
+            },
+            include: {
+                bookedBy: {
+                    include: {
+                        user: {
+                            select: { name: true },
+                        },
+                    },
+                },
+                Service: {
+                    select: { name: true },
+                },
+            },
+            orderBy: [
+                { date: 'asc' },
+                { startTime: 'asc' },
+            ],
+        });
+
+        if (!meeting) {
+            return {
+                success: true,
+                message: 'No upcoming meetings',
+                data: null,
+            };
+        }
+
+        // Calculate time remaining
+        const meetingDateTime = new Date(meeting.date);
+        meetingDateTime.setHours(
+            meeting.startTime.getHours(),
+            meeting.startTime.getMinutes(),
+            0,
+            0,
+        );
+
+        const diffMs = meetingDateTime.getTime() - now.getTime();
+        const diffMinutes = Math.max(Math.floor(diffMs / 60000), 0);
+
+        return {
+            success: true,
+            message: 'Immediate meeting fetched successfully',
+            data: {
+                clientName: meeting.bookedBy.user.name,
+                serviceName: meeting.Service?.name ?? meeting.serviceName,
+                startTime: meeting.startTime,
+                timeToStart: `in ${diffMinutes} mins`,
+                meetingLink: meeting.link,
+            },
+        };
+    }
+
+
+    async getDoulaRatingSummary(user: any) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        // Fetch all ratings for this doula
+        const testimonials = await this.prisma.testimonials.findMany({
+            where: {
+                doulaProfileId: doulaProfile.id,
+            },
+            select: {
+                ratings: true,
+            },
+        });
+
+        const totalReviews = testimonials.length;
+
+        if (totalReviews === 0) {
+            return {
+                success: true,
+                message: 'No reviews yet',
+                data: {
+                    averageRating: 0,
+                    totalReviews: 0,
+                    distribution: {
+                        5: 0,
+                        4: 0,
+                        3: 0,
+                        2: 0,
+                        1: 0,
+                    },
+                },
+            };
+        }
+
+        // Initialize distribution
+        const distribution = {
+            5: 0,
+            4: 0,
+            3: 0,
+            2: 0,
+            1: 0,
+        };
+
+        let ratingSum = 0;
+
+        for (const t of testimonials) {
+            distribution[t.ratings]++;
+            ratingSum += t.ratings;
+        }
+
+        const averageRating = Number((ratingSum / totalReviews).toFixed(1));
+
+        return {
+            success: true,
+            message: 'Doula rating summary fetched successfully',
+            data: {
+                averageRating,
+                totalReviews,
+                distribution,
+            },
+        };
+    }
+
+    async getDoulaTestimonials(
+        user: any,
+        page = 1,
+        limit = 10,
+    ) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        // Fetch doula profile
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        const result = await paginate({
+            prismaModel: this.prisma.testimonials,
+            page,
+            limit,
+            where: {
+                doulaProfileId: doulaProfile.id,
+            },
+            include: {
+                client: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                ServicePricing: {
+                    include: {
+                        service: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        type DoulaTestimonialWithRelations =
+            Prisma.TestimonialsGetPayload<{
+                include: {
+                    client: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                    email: true;
+                                    phone: true;
+                                };
+                            };
+                        };
+                    };
+                    ServicePricing: {
+                        include: {
+                            service: {
+                                select: {
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                };
+            }>;
+
+        const testimonials = result.data as DoulaTestimonialWithRelations[];
+
+        return {
+            success: true,
+            message: 'Doula testimonials fetched successfully',
+            data: testimonials.map((t) => ({
+                clientId: t.client.user.id,
+                clientName: t.client.user.name,
+                email: t.client.user.email,
+                phone: t.client.user.phone,
+                ratings: t.ratings,
+                reviews: t.reviews,
+                createdAt: t.createdAt,
+                serviceName: t.ServicePricing.service.name,
+                servicePricingId: t.ServicePricing.id,
+            })),
+            meta: result.meta,
+        };
+    }
+
+
+    async doulaProfile(user: any) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        const doula = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            include: {
+                user: {
+                    select: {
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                Region: {
+                    select: {
+                        regionName: true,
+                    },
+                },
+                Testimonials: {
+                    select: {
+                        ratings: true,
+                    },
+                },
+                DoulaGallery: {
+                    select: {
+                        id: true,
+                        url: true,
+                        altText: true,
+                    },
+                },
+            },
+        });
+
+        if (!doula) {
+            throw new NotFoundException('Doula profile not found');
+        }
+
+        /** -----------------------
+         * Rating calculations
+         * ---------------------- */
+        const totalReviews = doula.Testimonials.length;
+        const ratingSum = doula.Testimonials.reduce(
+            (sum, r) => sum + r.ratings,
+            0,
+        );
+
+        const averageRating =
+            totalReviews > 0
+                ? Number((ratingSum / totalReviews).toFixed(1))
+                : 0;
+
+        const satisfaction =
+            totalReviews > 0
+                ? Math.round((ratingSum / (totalReviews * 5)) * 100)
+                : 0;
+
+        /** -----------------------
+         * Response
+         * ---------------------- */
+        return {
+            success: true,
+            message: 'Doula profile fetched successfully',
+            data: {
+                id: doula.id,
+
+                // Header
+                name: doula.user.name,
+                title: 'Certified Birth Doula',
+                averageRating,
+                totalReviews,
+
+                // Stats
+                births: 0, // optional: derive from ServiceBooking
+                experience: doula.yoe ?? 0,
+                satisfaction,
+
+                // Contact
+                contact: {
+                    email: doula.user.email,
+                    phone: doula.user.phone,
+                    location: doula.Region?.[0]?.regionName ?? null,
+                },
+
+                // About
+                about: doula.description,
+
+                // Certifications
+                certifications: [
+                    ...(doula.qualification
+                        ? doula.qualification.split(',').map((q) => q.trim())
+                        : []),
+                    ...(doula.achievements
+                        ? doula.achievements.split(',').map((a) => a.trim())
+                        : []),
+                ],
+
+                // Gallery
+                gallery: doula.DoulaGallery.map((img) => ({
+                    id: img.id,
+                    url: img.url,
+                    altText: img.altText,
+                })),
+            },
+        };
+    }
+
+
+    //take start and end date. and mark unavavailble for that particular range.
+    //update doula booking to look on that before booking doulas.
+    async blockDateRange() { }
+
+
+
+
+
 
 }

@@ -190,4 +190,127 @@ export declare class DoulaController {
             languages: import("@prisma/client/runtime/library").JsonValue | null;
         };
     }>;
+    getDoulaMeetings(req: any, date?: string, page?: string, limit?: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            date: Date;
+            serviceName: string;
+            clientName: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getDoulaSchedules(req: any, date?: string, page?: string, limit?: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            date: Date;
+            startTime: Date;
+            endTime: Date;
+            serviceName: string;
+            clientName: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getDoulaScheduleCount(req: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            today: number;
+            thisWeek: number;
+        };
+    }>;
+    getImmediateMeeting(req: any): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    } | {
+        success: boolean;
+        message: string;
+        data: {
+            clientName: string;
+            serviceName: string;
+            startTime: Date;
+            timeToStart: string;
+            meetingLink: string;
+        };
+    }>;
+    getRatingSummary(req: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            averageRating: number;
+            totalReviews: number;
+            distribution: {
+                5: number;
+                4: number;
+                3: number;
+                2: number;
+                1: number;
+            };
+        };
+    }>;
+    getDoulaTestimonials(req: any, page?: string, limit?: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            clientId: string;
+            clientName: string;
+            email: string;
+            phone: string | null;
+            ratings: number;
+            reviews: string;
+            createdAt: Date;
+            serviceName: string;
+            servicePricingId: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getDoulaProfile(req: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+            name: string;
+            title: string;
+            averageRating: number;
+            totalReviews: number;
+            births: number;
+            experience: number;
+            satisfaction: number;
+            contact: {
+                email: string;
+                phone: string | null;
+                location: string;
+            };
+            about: string | null;
+            certifications: string[];
+            gallery: {
+                id: string;
+                url: string;
+                altText: string | null;
+            }[];
+        };
+    }>;
 }

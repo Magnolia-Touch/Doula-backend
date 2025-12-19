@@ -106,6 +106,7 @@ model DoulaProfile {
   Testimonials             Testimonials[]
   Schedules                Schedules[]
   DoulaImages              DoulaImages[]
+  DoulaGallery             DoulaGallery[]
 }
 
 // Client Profile
@@ -476,4 +477,13 @@ model DoulaImages {
   doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 
   @@unique([doulaProfileId, isMain], map: "unique_main_image")
+}
+
+model DoulaGallery {
+  id             String  @id @default(uuid())
+  doulaProfileId String
+  url            String
+  altText        String?
+
+  doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 }
