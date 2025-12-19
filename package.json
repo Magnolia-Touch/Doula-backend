@@ -8,7 +8,8 @@
   "prisma": {
     "seed": "ts-node prisma/seed.ts",
     "seed:client": "ts-node prisma/seed.client.ts",
-    "seed:doula": "ts-node prisma/seed.doula.ts"
+    "seed:doula": "ts-node prisma/seed.doula.ts",
+    "seed:missing": "ts-node prisma/seed.missing.ts"
   },
   "scripts": {
     "build": "nest build",
@@ -28,6 +29,7 @@
     "seed": "prisma db seed",
     "seed:client": "ts-node prisma/seed.client.ts",
     "seed:doula": "ts-node prisma/seed.doula.ts",
+    "seed:missing": "ts-node prisma/seed.missing.ts",
     "seed:all": "npm run seed && npm run seed:client && npm run seed:doula"
   },
   "dependencies": {

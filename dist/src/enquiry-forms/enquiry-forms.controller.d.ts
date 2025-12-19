@@ -16,13 +16,13 @@ export declare class EnquiryController {
             serviceId: string;
             clientId: string;
             serviceName: string;
+            additionalNotes: string | null;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date;
             serviceEndDate: Date;
-            serviceTimeSlots: string;
-            additionalNotes: string | null;
             VisitFrequency: number;
+            serviceTimeSlots: string;
             slotId: string;
         };
     }>;
@@ -38,13 +38,13 @@ export declare class EnquiryController {
             serviceId: string;
             clientId: string;
             serviceName: string;
+            additionalNotes: string | null;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date;
             serviceEndDate: Date;
-            serviceTimeSlots: string;
-            additionalNotes: string | null;
             VisitFrequency: number;
+            serviceTimeSlots: string;
             slotId: string;
         }[];
         meta: {
@@ -66,13 +66,13 @@ export declare class EnquiryController {
         regionId: string;
         serviceId: string;
         serviceName: string;
+        additionalNotes: string | null;
         meetingsDate: Date;
         meetingsTimeSlots: string;
         seviceStartDate: Date;
         serviceEndDate: Date;
-        serviceTimeSlots: string;
-        additionalNotes: string | null;
         VisitFrequency: number;
+        serviceTimeSlots: string;
         slotId: string;
     }>;
     deleteEnquiry(id: string): Promise<{
