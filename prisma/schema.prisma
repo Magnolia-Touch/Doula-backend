@@ -467,23 +467,25 @@ model DeviceToken {
 }
 
 model DoulaImages {
-  id             String  @id @default(uuid())
+  id             String   @id @default(uuid())
   doulaProfileId String
   url            String
   altText        String?
-  isMain         Boolean @default(false)
-  sortOrder      Int     @default(0)
+  isMain         Boolean  @default(false)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
 
   doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 
-  @@unique([doulaProfileId, isMain], map: "unique_main_image")
+  @@index([doulaProfileId])
 }
 
 model DoulaGallery {
-  id             String  @id @default(uuid())
+  id             String   @id @default(uuid())
   doulaProfileId String
   url            String
   altText        String?
+  createdAt      DateTime @default(now())
 
   doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 }

@@ -101,6 +101,24 @@ let DoulaController = class DoulaController {
     async getDoulaProfile(req) {
         return this.service.doulaProfile(req.user);
     }
+    async uploadDoulaImage(req, file, isMain, sortOrder, altText) {
+        return this.service.addDoulaprofileImage(req.user.id, file, isMain === 'true', sortOrder ? Number(sortOrder) : 0, altText);
+    }
+    async getDoulaImages(req) {
+        return this.service.getDoulaImages(req.user.id);
+    }
+    async deleteDoulaImage(req, imageId) {
+        return this.service.deleteDoulaprofileImage(req.user.id, imageId);
+    }
+    async addGalleryImage(req, file, altText) {
+        return this.service.addDoulaGalleryImage(req.user.id, file, altText);
+    }
+    async getGalleryImages(req) {
+        return this.service.getDoulaGalleryImages(req.user.id);
+    }
+    async deleteGalleryImage(req, imageId) {
+        return this.service.deleteDoulaGalleryImage(req.user.id, imageId);
+    }
 };
 exports.DoulaController = DoulaController;
 __decorate([
@@ -510,6 +528,90 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "getDoulaProfile", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Post)('profile/images'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: multerStorage(),
+        limits: { fileSize: MAX_FILE_SIZE },
+        fileFilter: (req, file, cb) => {
+            if (ALLOWED_IMAGE_TYPES.includes(file.mimetype))
+                cb(null, true);
+            else
+                cb(new common_1.BadRequestException('Unsupported file type'), false);
+        },
+    })),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __param(2, (0, common_1.Body)('isMain')),
+    __param(3, (0, common_1.Body)('sortOrder')),
+    __param(4, (0, common_1.Body)('altText')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, String, String, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "uploadDoulaImage", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Get)('profile/images'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getDoulaImages", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Delete)('profile/images/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "deleteDoulaImage", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Post)('gallery/images'),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: multerStorage(),
+        limits: { fileSize: MAX_FILE_SIZE },
+        fileFilter: (req, file, cb) => {
+            if (ALLOWED_IMAGE_TYPES.includes(file.mimetype))
+                cb(null, true);
+            else
+                cb(new common_1.BadRequestException('Unsupported file type'), false);
+        },
+    })),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __param(2, (0, common_1.Body)('altText')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "addGalleryImage", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Get)('gallery/images/'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getGalleryImages", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Delete)('gallery/images/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "deleteGalleryImage", null);
 exports.DoulaController = DoulaController = __decorate([
     (0, swagger_1.ApiTags)('Doula'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

@@ -13,6 +13,7 @@ import {
     UploadedFiles,
     BadRequestException,
     InternalServerErrorException,
+    UploadedFile,
 } from '@nestjs/common';
 import { DoulaService } from './doula.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
@@ -35,8 +36,9 @@ import {
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
+import { AddDoulaImageDto } from './dto/add-doula-image.dto';
 const ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
     'image/png',
@@ -530,5 +532,108 @@ export class DoulaController {
     async getDoulaProfile(@Req() req) {
         return this.service.doulaProfile(req.user);
     }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Post('profile/images')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: multerStorage(),
+            limits: { fileSize: MAX_FILE_SIZE },
+            fileFilter: (req, file, cb) => {
+                if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
+                else cb(new BadRequestException('Unsupported file type'), false);
+            },
+        }),
+    )
+    @ApiConsumes('multipart/form-data')
+    async uploadDoulaImage(
+        @Req() req,
+        @UploadedFile() file: Express.Multer.File,
+        @Body('isMain') isMain?: string,
+        @Body('sortOrder') sortOrder?: string,
+        @Body('altText') altText?: string,
+    ) {
+        return this.service.addDoulaprofileImage(
+            req.user.id,
+            file,
+            isMain === 'true',
+            sortOrder ? Number(sortOrder) : 0,
+            altText,
+        );
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('profile/images')
+    async getDoulaImages(@Req() req) {
+        return this.service.getDoulaImages(req.user.id);
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Delete('profile/images/:id')
+    async deleteDoulaImage(
+        @Req() req,
+        @Param('id') imageId: string,
+    ) {
+        return this.service.deleteDoulaprofileImage(req.user.id, imageId);
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Post('gallery/images')
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: multerStorage(),
+            limits: { fileSize: MAX_FILE_SIZE },
+            fileFilter: (req, file, cb) => {
+                if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
+                else cb(new BadRequestException('Unsupported file type'), false);
+            },
+        }),
+    )
+    async addGalleryImage(
+        @Req() req,
+        @UploadedFile() file: Express.Multer.File,
+        @Body('altText') altText?: string,
+    ) {
+        return this.service.addDoulaGalleryImage(
+            req.user.id,
+            file,
+            altText,
+        );
+    }
+
+    // =========================
+    // GET GALLERY IMAGES
+    // =========================
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('gallery/images/')
+    async getGalleryImages(@Req() req) {
+        return this.service.getDoulaGalleryImages(req.user.id);
+    }
+
+    // =========================
+    // DELETE GALLERY IMAGE
+    // =========================
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Delete('gallery/images/:id')
+    async deleteGalleryImage(
+        @Req() req,
+        @Param('id') imageId: string,
+    ) {
+        return this.service.deleteDoulaGalleryImage(
+            req.user.id,
+            imageId,
+        );
+    }
+
 
 }

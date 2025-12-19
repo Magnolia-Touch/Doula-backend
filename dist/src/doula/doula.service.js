@@ -918,7 +918,148 @@ let DoulaService = class DoulaService {
             },
         };
     }
-    async blockDateRange() { }
+    async addDoulaprofileImage(userId, file, isMain = false, sortOrder = 0, altText) {
+        if (!file) {
+            throw new common_1.BadRequestException('Image file is required');
+        }
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const imageUrl = `/uploads/doula/${file.filename}`;
+        return this.prisma.$transaction(async (tx) => {
+            if (isMain) {
+                await tx.doulaImages.updateMany({
+                    where: {
+                        doulaProfileId: doulaProfile.id,
+                        isMain: true,
+                    },
+                    data: { isMain: false },
+                });
+            }
+            const image = await tx.doulaImages.create({
+                data: {
+                    doulaProfileId: doulaProfile.id,
+                    url: imageUrl,
+                    altText,
+                    isMain,
+                    sortOrder,
+                },
+            });
+            return {
+                message: 'Image uploaded successfully',
+                data: image,
+            };
+        });
+    }
+    async getDoulaImages(userId) {
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const images = await this.prisma.doulaImages.findMany({
+            where: {
+                doulaProfileId: doulaProfile.id,
+            },
+            orderBy: [
+                { isMain: 'desc' },
+                { sortOrder: 'asc' },
+            ],
+        });
+        return {
+            status: 'success',
+            message: 'Doula images fetched successfully',
+            data: images,
+        };
+    }
+    async deleteDoulaprofileImage(userId, imageId) {
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const image = await this.prisma.doulaImages.findUnique({
+            where: { id: imageId },
+        });
+        if (!image || image.doulaProfileId !== doulaProfile.id) {
+            throw new common_1.NotFoundException('Image not found');
+        }
+        await this.prisma.doulaImages.delete({
+            where: { id: imageId },
+        });
+        return { message: 'Image deleted successfully' };
+    }
+    async addDoulaGalleryImage(userId, file, altText) {
+        if (!file) {
+            throw new common_1.BadRequestException('Image file is required');
+        }
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const imageUrl = `uploads/doulas/${file.filename}`;
+        const image = await this.prisma.doulaGallery.create({
+            data: {
+                doulaProfileId: doulaProfile.id,
+                url: imageUrl,
+                altText,
+            },
+        });
+        return {
+            message: 'Gallery image uploaded successfully',
+            data: image,
+        };
+    }
+    async getDoulaGalleryImages(userId) {
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const images = await this.prisma.doulaGallery.findMany({
+            where: {
+                doulaProfileId: doulaProfile.id,
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+        });
+        return {
+            status: 'success',
+            message: 'Doula gallery images fetched successfully',
+            data: images,
+        };
+    }
+    async deleteDoulaGalleryImage(userId, imageId) {
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const image = await this.prisma.doulaGallery.findUnique({
+            where: { id: imageId },
+        });
+        if (!image || image.doulaProfileId !== doulaProfile.id) {
+            throw new common_1.NotFoundException('Image not found');
+        }
+        await this.prisma.doulaGallery.delete({
+            where: { id: imageId },
+        });
+        return {
+            message: 'Gallery image deleted successfully',
+        };
+    }
 };
 exports.DoulaService = DoulaService;
 exports.DoulaService = DoulaService = __decorate([
