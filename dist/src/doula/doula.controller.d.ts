@@ -17,8 +17,8 @@ export declare class DoulaController {
                     is_active: boolean;
                     createdAt: Date;
                     updatedAt: Date;
-                    pincode: string;
                     regionName: string;
+                    pincode: string;
                     district: string;
                     state: string;
                     country: string;
@@ -30,8 +30,8 @@ export declare class DoulaController {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    profile_image: string | null;
                     userId: string | null;
+                    profile_image: string | null;
                 }[];
                 ServicePricing: ({
                     service: {
@@ -45,18 +45,18 @@ export declare class DoulaController {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    price: import("@prisma/client/runtime/library").Decimal;
                     serviceId: string;
                     doulaProfileId: string;
+                    price: import("@prisma/client/runtime/library").Decimal;
                 })[];
                 DoulaImages: {
                     id: string;
                     createdAt: Date;
+                    sortOrder: number;
                     doulaProfileId: string;
-                    isMain: boolean;
                     url: string;
                     altText: string | null;
-                    sortOrder: number;
+                    isMain: boolean;
                 }[];
             } & {
                 id: string;
@@ -86,10 +86,10 @@ export declare class DoulaController {
     get(page?: number, limit?: number, search?: string, serviceId?: string, isAvailable?: boolean, isActive?: boolean, regionName?: string, minExperience?: number, serviceName?: string, startDate?: string, endDate?: string): Promise<{
         data: ({
             userId: any;
+            isActive: any;
             name: any;
             email: any;
             profileId: any;
-            profileImage: any;
             yoe: any;
             serviceNames: any;
             regionNames: any;
@@ -97,6 +97,7 @@ export declare class DoulaController {
             reviewsCount: any;
             isAvailable: boolean | null;
             nextImmediateAvailabilityDate: Date | null;
+            images: any;
         } | null)[];
         meta: {
             total: number;
@@ -124,6 +125,12 @@ export declare class DoulaController {
             ratings: number | null;
             reviewsCount: number;
             nextImmediateAvailabilityDate: Date | null;
+            images: {
+                id: string;
+                url: string;
+                isPrimary: boolean;
+                createdAt: Date;
+            }[];
             testimonials: {
                 id: string;
                 rating: number;
@@ -162,8 +169,8 @@ export declare class DoulaController {
                 is_active: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                pincode: string;
                 regionName: string;
+                pincode: string;
                 district: string;
                 state: string;
                 country: string;
@@ -175,8 +182,8 @@ export declare class DoulaController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string | null;
+                profile_image: string | null;
             }[];
         } & {
             id: string;
@@ -319,11 +326,11 @@ export declare class DoulaController {
         data: {
             id: string;
             createdAt: Date;
+            sortOrder: number;
             doulaProfileId: string;
-            isMain: boolean;
             url: string;
             altText: string | null;
-            sortOrder: number;
+            isMain: boolean;
         };
     }>;
     getDoulaImages(req: any): Promise<{
@@ -332,11 +339,11 @@ export declare class DoulaController {
         data: {
             id: string;
             createdAt: Date;
+            sortOrder: number;
             doulaProfileId: string;
-            isMain: boolean;
             url: string;
             altText: string | null;
-            sortOrder: number;
+            isMain: boolean;
         }[];
     }>;
     deleteDoulaImage(req: any, imageId: string): Promise<{

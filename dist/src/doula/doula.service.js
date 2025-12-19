@@ -210,6 +210,7 @@ let DoulaService = class DoulaService {
                         Region: true,
                         ServicePricing: { include: { service: true } },
                         Testimonials: true,
+                        DoulaImages: true
                     },
                 },
             },
@@ -278,10 +279,10 @@ let DoulaService = class DoulaService {
             }
             return {
                 userId: user.id,
+                isActive: user.is_active,
                 name: user.name,
                 email: user.email,
                 profileId: profile.id,
-                profileImage: profile.profileImage ?? null,
                 yoe: profile.yoe ?? null,
                 serviceNames: services,
                 regionNames: regions,
@@ -289,6 +290,11 @@ let DoulaService = class DoulaService {
                 reviewsCount: reviewCount,
                 isAvailable: available,
                 nextImmediateAvailabilityDate: bookedDates.length ? bookedDates[0] : null,
+                images: profile.DoulaImages?.map(img => ({
+                    id: img.id,
+                    url: img.url,
+                    isPrimary: img.isPrimary ?? false,
+                })) ?? [],
             };
         })
             .filter(Boolean);
@@ -323,6 +329,7 @@ let DoulaService = class DoulaService {
                                 },
                             },
                         },
+                        DoulaImages: true,
                     },
                 },
             },
@@ -372,6 +379,12 @@ let DoulaService = class DoulaService {
             ratings: avgRating,
             reviewsCount,
             nextImmediateAvailabilityDate,
+            images: profile?.DoulaImages?.map(img => ({
+                id: img.id,
+                url: img.url,
+                isPrimary: img.isMain ?? false,
+                createdAt: img.createdAt,
+            })) ?? [],
             testimonials: testimonials.map(t => ({
                 id: t.id,
                 rating: t.ratings,

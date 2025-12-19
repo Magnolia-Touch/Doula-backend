@@ -71,8 +71,8 @@ export declare class AuthService {
                 createdAt: Date;
                 updatedAt: Date;
                 zoneManagerId: string | null;
-                adminId: string | null;
                 remarks: string;
+                adminId: string | null;
             }[];
             managingRegions?: undefined;
             doulas?: undefined;
@@ -125,11 +125,11 @@ export declare class AuthService {
                     doulaImages: {
                         id: string;
                         createdAt: Date;
+                        sortOrder: number;
                         doulaProfileId: string;
-                        isMain: boolean;
                         url: string;
                         altText: string | null;
-                        sortOrder: number;
+                        isMain: boolean;
                     }[];
                 };
             }[];
@@ -138,8 +138,8 @@ export declare class AuthService {
                 createdAt: Date;
                 updatedAt: Date;
                 zoneManagerId: string | null;
-                adminId: string | null;
                 remarks: string;
+                adminId: string | null;
             }[];
             description?: undefined;
             qualification?: undefined;
@@ -176,11 +176,11 @@ export declare class AuthService {
             doulaImages: {
                 id: string;
                 createdAt: Date;
+                sortOrder: number;
                 doulaProfileId: string;
-                isMain: boolean;
                 url: string;
                 altText: string | null;
-                sortOrder: number;
+                isMain: boolean;
             }[];
             profile_image?: undefined;
             notes?: undefined;

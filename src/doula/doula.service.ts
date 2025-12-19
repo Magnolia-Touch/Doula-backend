@@ -307,6 +307,8 @@ export class DoulaService {
                         Region: true,
                         ServicePricing: { include: { service: true } },
                         Testimonials: true,
+                        DoulaImages: true
+
                     },
                 },
             },
@@ -405,19 +407,31 @@ export class DoulaService {
 
                 return {
                     userId: user.id,
+                    isActive: user.is_active,
                     name: user.name,
                     email: user.email,
+
                     profileId: profile.id,
-                    profileImage: profile.profileImage ?? null,
                     yoe: profile.yoe ?? null,
+
                     serviceNames: services,
                     regionNames: regions,
+
                     ratings: avgRating,
                     reviewsCount: reviewCount,
+
                     isAvailable: available,
                     nextImmediateAvailabilityDate:
                         bookedDates.length ? bookedDates[0] : null,
+
+                    // ✅ ADD THIS
+                    images: profile.DoulaImages?.map(img => ({
+                        id: img.id,
+                        url: img.url,
+                        isPrimary: img.isPrimary ?? false,
+                    })) ?? [],
                 };
+
             })
             .filter(Boolean);
 
@@ -455,6 +469,7 @@ export class DoulaService {
                                 },
                             },
                         },
+                        DoulaImages: true,
                     },
                 },
             },
@@ -545,6 +560,15 @@ export class DoulaService {
             reviewsCount,
 
             nextImmediateAvailabilityDate,
+
+            // ✅ ADD THIS
+            images:
+                profile?.DoulaImages?.map(img => ({
+                    id: img.id,
+                    url: img.url,
+                    isPrimary: img.isMain ?? false,
+                    createdAt: img.createdAt,
+                })) ?? [],
 
             testimonials: testimonials.map(t => ({
                 id: t.id,
