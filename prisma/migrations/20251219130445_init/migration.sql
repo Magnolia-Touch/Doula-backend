@@ -340,6 +340,7 @@ CREATE TABLE `DoulaImages` (
     `altText` VARCHAR(191) NULL,
     `isMain` BOOLEAN NOT NULL DEFAULT false,
     `sortOrder` INTEGER NOT NULL DEFAULT 0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `DoulaImages_doulaProfileId_idx`(`doulaProfileId`),
     PRIMARY KEY (`id`)
@@ -351,6 +352,7 @@ CREATE TABLE `DoulaGallery` (
     `doulaProfileId` VARCHAR(191) NOT NULL,
     `url` VARCHAR(191) NOT NULL,
     `altText` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
