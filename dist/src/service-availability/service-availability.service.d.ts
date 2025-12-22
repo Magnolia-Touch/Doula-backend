@@ -19,9 +19,9 @@ export declare class DoulaServiceAvailabilityService {
     getMyAvailabilities(userId: string): Promise<({
         AvailableSlotsTimeForService: {
             id: string;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
         }[];
     } & {
@@ -59,13 +59,13 @@ export declare class DoulaServiceAvailabilityService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
+                bookingId: string | null;
+                availabe: boolean;
                 isBooked: boolean;
                 dateId: string;
                 formId: string | null;
-                bookingId: string | null;
             }[];
         } & {
             id: string;
@@ -83,13 +83,13 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            bookingId: string | null;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             formId: string | null;
-            bookingId: string | null;
         };
     }>;
     deleteSlots(timeSlotId: string, userId: string): Promise<{
@@ -98,13 +98,13 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            bookingId: string | null;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             formId: string | null;
-            bookingId: string | null;
         };
     }>;
     updateSlotTimeByDate(timeSlotId: string): Promise<{

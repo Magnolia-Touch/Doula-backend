@@ -18,9 +18,9 @@ export declare class MeetingsService {
         doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
         cancelledAt: Date | null;
+        date: Date;
         startTime: Date;
         endTime: Date;
-        date: Date;
         serviceName: string;
         remarks: string | null;
         rescheduledAt: Date | null;
@@ -119,9 +119,9 @@ export declare class MeetingsService {
         doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
         cancelledAt: Date | null;
+        date: Date;
         startTime: Date;
         endTime: Date;
-        date: Date;
         serviceName: string;
         remarks: string | null;
         rescheduledAt: Date | null;
@@ -141,9 +141,9 @@ export declare class MeetingsService {
             doulaProfileId: string | null;
             status: import("@prisma/client").$Enums.MeetingStatus;
             cancelledAt: Date | null;
+            date: Date;
             startTime: Date;
             endTime: Date;
-            date: Date;
             serviceName: string;
             remarks: string | null;
             rescheduledAt: Date | null;
@@ -168,9 +168,9 @@ export declare class MeetingsService {
             doulaProfileId: string | null;
             status: import("@prisma/client").$Enums.MeetingStatus;
             cancelledAt: Date | null;
+            date: Date;
             startTime: Date;
             endTime: Date;
-            date: Date;
             serviceName: string;
             remarks: string | null;
             rescheduledAt: Date | null;
@@ -181,12 +181,19 @@ export declare class MeetingsService {
         };
     }>;
     findAllmeetings(): Promise<({
+        ZoneManagerProfile: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string | null;
+            profile_image: string | null;
+        } | null;
         DoulaProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            profile_image: string | null;
             userId: string;
+            profile_image: string | null;
             regionId: string | null;
             description: string | null;
             achievements: string | null;
@@ -202,6 +209,16 @@ export declare class MeetingsService {
             updatedAt: Date;
             description: string | null;
         } | null;
+        bookedBy: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            profile_image: string | null;
+            region: string | null;
+            is_verified: boolean;
+            address: string | null;
+        };
         AvailableSlotsForMeeting: {
             id: string;
             createdAt: Date;
@@ -213,29 +230,12 @@ export declare class MeetingsService {
             doulaId: string | null;
             adminId: string | null;
         } | null;
-        bookedBy: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            is_verified: boolean;
-            region: string | null;
-            address: string | null;
-            profile_image: string | null;
-            userId: string;
-        };
-        ZoneManagerProfile: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            profile_image: string | null;
-            userId: string | null;
-        } | null;
         AdminProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            profile_image: string | null;
             userId: string;
+            profile_image: string | null;
         } | null;
     } & {
         id: string;
@@ -246,9 +246,9 @@ export declare class MeetingsService {
         doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
         cancelledAt: Date | null;
+        date: Date;
         startTime: Date;
         endTime: Date;
-        date: Date;
         serviceName: string;
         remarks: string | null;
         rescheduledAt: Date | null;

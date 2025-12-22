@@ -10,11 +10,11 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                is_verified: boolean;
-                region: string | null;
-                address: string | null;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
+                region: string | null;
+                is_verified: boolean;
+                address: string | null;
             } | null;
         } & {
             id: string;
@@ -36,11 +36,11 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                is_verified: boolean;
-                region: string | null;
-                address: string | null;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
+                region: string | null;
+                is_verified: boolean;
+                address: string | null;
             } | null;
         } & {
             id: string;
@@ -62,11 +62,11 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                is_verified: boolean;
-                region: string | null;
-                address: string | null;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
+                region: string | null;
+                is_verified: boolean;
+                address: string | null;
             } | null;
         } & {
             id: string;

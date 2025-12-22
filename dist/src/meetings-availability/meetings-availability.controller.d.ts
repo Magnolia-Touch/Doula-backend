@@ -46,9 +46,9 @@ export declare class AvailableSlotsController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
+                availabe: boolean;
                 isBooked: boolean;
                 dateId: string;
                 meetingsId: string | null;
@@ -71,9 +71,9 @@ export declare class AvailableSlotsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             meetingsId: string | null;
@@ -92,9 +92,9 @@ export declare class AvailableSlotsController {
     findall(req: any): Promise<({
         AvailableSlotsTimeForMeeting: {
             id: string;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
         }[];
     } & {

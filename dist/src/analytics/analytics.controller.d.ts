@@ -64,4 +64,11 @@ export declare class AnalyticsController {
         noOfBookings: number;
         noOfMeetings: number;
     }[]>;
+    calenderSummary(req: any, startDate: string, endDate: string): Promise<{
+        data: {
+            date: string;
+            appointmentCount: number;
+            scheduleCount: number;
+        }[];
+    }>;
 }

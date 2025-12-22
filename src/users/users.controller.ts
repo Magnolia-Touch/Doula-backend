@@ -4,6 +4,7 @@ import {
     Body,
     UseGuards,
     Req,
+    Delete,
 } from '@nestjs/common';
 import { UserService } from './users.service';
 import { UserRegistrationDto } from './dto/user-registration.dto';
@@ -40,6 +41,11 @@ export class UserController {
     @Post('register/user')
     async RegisterUser(@Body() dto: UserRegistrationDto) {
         return this.service.RegisterUser(dto);
+    }
+
+    @Delete('delete')
+    async deleteAll() {
+        return this.service.deleteAll();
     }
 
 

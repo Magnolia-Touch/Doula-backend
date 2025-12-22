@@ -94,13 +94,13 @@ export declare class IntakeFormService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            bookingId: string | null;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             formId: string | null;
-            bookingId: string | null;
         }[];
         createdAt: Date;
         updatedAt: Date;

@@ -324,7 +324,7 @@ export class DoulaController {
         @Query('page') page = '1',
         @Query('limit') limit = '10',
     ) {
-        console.log("hellooooo")
+
         return this.service.getDoulaMeetings(
             req.user,
             Number(page),
@@ -332,6 +332,23 @@ export class DoulaController {
             date,
         );
     }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/meetings/:meetingId')
+    async getDoulaMeetingDetail(
+        @Req() req,
+        @Param('meetingId') meetingId: string,
+    ) {
+        return this.service.getDoulaMeetingDetail(
+            req.user,
+            meetingId
+
+        );
+    }
+
+
 
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.DOULA)
@@ -389,6 +406,20 @@ export class DoulaController {
             Number(page),
             Number(limit),
             date,
+        );
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/schedules/:scheduleId')
+    async getDoulaScheduleDetail(
+        @Req() req,
+        @Param('scheduleId') scheduleId: string,
+    ) {
+        return this.service.getDoulaScheduleDetail(
+            req.user,
+            scheduleId
         );
     }
 
@@ -724,6 +755,40 @@ export class DoulaController {
         @Param('id') certificateId: string,
     ) {
         return this.service.deleteCertificate(req.user.id, certificateId);
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/service-bookings')
+    @ApiOperation({ summary: 'Get booked services of logged-in doula' })
+    async getServiceBookings(
+        @Req() req,
+        @Query('date') date?: string,
+        @Query('page') page = '1',
+        @Query('limit') limit = '10',
+    ) {
+        return this.service.getServiceBookings(
+            req.user.id,
+            Number(page),
+            Number(limit),
+        );
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('app/service-bookings/:id')
+    @ApiOperation({ summary: 'Get booked services of logged-in doula' })
+    async getServiceBookingsinDetail(
+        @Req() req,
+        @Param('id') serviceBookingId: string,
+    ) {
+        console.log(serviceBookingId)
+        return this.service.getServiceBookingsinDetail(
+            req.user.id,
+            serviceBookingId
+
+        );
     }
 
 }

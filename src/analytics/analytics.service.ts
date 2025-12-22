@@ -2,7 +2,7 @@
 
 // All with filter date rang
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { paginate } from 'src/common/utility/pagination.util';
 import { FilterUserDto } from './filter-user.dto';
@@ -203,4 +203,79 @@ export class AnalyticsService {
         return result;
     }
 
+
+    async calenderSummary(userId: string, startDate: string, endDate: string) {
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId: userId },
+            include: {
+                doulas: {
+                    select: { id: true }
+                }
+            }
+        });
+        if (!zoneManager) {
+            throw new NotFoundException("Zone Manager Not Found")
+        }
+
+        const doulaIds = zoneManager.doulas.map(d => d.id);
+
+        const meetings = await this.prisma.meetings.findMany({
+            where: {
+                date: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate)
+                },
+                OR: [
+                    { zoneManagerProfileId: zoneManager.id },
+                    { doulaProfileId: { in: doulaIds } }
+                ]
+            },
+            select: {
+                date: true
+            }
+        })
+
+        const schedules = await this.prisma.schedules.findMany({
+            where: {
+                date: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate)
+                },
+                doulaProfileId: { in: doulaIds }
+            },
+            select: { date: true }
+        })
+
+        const resultMap = new Map<string, { appointmentCount: number; scheduleCount: number }>();
+        const normalizeDate = (date: Date) =>
+            date.toISOString().split("T")[0];
+        // Meetings count
+        meetings.forEach(m => {
+            const key = normalizeDate(m.date);
+            if (!resultMap.has(key)) {
+                resultMap.set(key, { appointmentCount: 0, scheduleCount: 0 });
+            }
+            resultMap.get(key)!.appointmentCount += 1;
+        });
+        // Schedules count
+        schedules.forEach(s => {
+            const key = normalizeDate(s.date);
+            if (!resultMap.has(key)) {
+                resultMap.set(key, { appointmentCount: 0, scheduleCount: 0 });
+            }
+            resultMap.get(key)!.scheduleCount += 1;
+        });
+        const response = Array.from(resultMap.entries()).map(
+            ([date, counts]) => ({
+                date,
+                appointmentCount: counts.appointmentCount,
+                scheduleCount: counts.scheduleCount
+            })
+        );
+
+        return { data: response }
+
+
+
+    }
 }

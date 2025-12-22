@@ -64,4 +64,11 @@ export declare class AnalyticsService {
         noOfBookings: number;
         noOfMeetings: number;
     }[]>;
+    calenderSummary(userId: string, startDate: string, endDate: string): Promise<{
+        data: {
+            date: string;
+            appointmentCount: number;
+            scheduleCount: number;
+        }[];
+    }>;
 }

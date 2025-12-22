@@ -91,11 +91,16 @@ let DoulaController = class DoulaController {
         return this.service.UpdateDoulaRegions(dto, req.user.id);
     }
     async getDoulaMeetings(req, date, page = '1', limit = '10') {
-        console.log("hellooooo");
         return this.service.getDoulaMeetings(req.user, Number(page), Number(limit), date);
+    }
+    async getDoulaMeetingDetail(req, meetingId) {
+        return this.service.getDoulaMeetingDetail(req.user, meetingId);
     }
     async getDoulaSchedules(req, date, page = '1', limit = '10') {
         return this.service.getDoulaSchedules(req.user, Number(page), Number(limit), date);
+    }
+    async getDoulaScheduleDetail(req, scheduleId) {
+        return this.service.getDoulaScheduleDetail(req.user, scheduleId);
     }
     async getDoulaScheduleCount(req) {
         return this.service.getDoulaScheduleCount(req.user);
@@ -151,6 +156,13 @@ let DoulaController = class DoulaController {
     }
     async deleteCertificate(req, certificateId) {
         return this.service.deleteCertificate(req.user.id, certificateId);
+    }
+    async getServiceBookings(req, date, page = '1', limit = '10') {
+        return this.service.getServiceBookings(req.user.id, Number(page), Number(limit));
+    }
+    async getServiceBookingsinDetail(req, serviceBookingId) {
+        console.log(serviceBookingId);
+        return this.service.getServiceBookingsinDetail(req.user.id, serviceBookingId);
     }
 };
 exports.DoulaController = DoulaController;
@@ -345,6 +357,16 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Get)('app/meetings/:meetingId'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('meetingId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getDoulaMeetingDetail", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
     (0, common_1.Get)('app/schedules'),
     (0, swagger_1.ApiOperation)({ summary: 'Get schedules of logged-in doula' }),
     (0, swagger_1.ApiQuery)({
@@ -396,6 +418,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "getDoulaSchedules", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Get)('app/schedules/:scheduleId'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('scheduleId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getDoulaScheduleDetail", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
@@ -698,6 +730,30 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "deleteCertificate", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Get)('app/service-bookings'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get booked services of logged-in doula' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('date')),
+    __param(2, (0, common_1.Query)('page')),
+    __param(3, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getServiceBookings", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Get)('app/service-bookings/:id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get booked services of logged-in doula' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getServiceBookingsinDetail", null);
 exports.DoulaController = DoulaController = __decorate([
     (0, swagger_1.ApiTags)('Doula'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

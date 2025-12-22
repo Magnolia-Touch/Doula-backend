@@ -20,8 +20,8 @@ export declare function findRegionOrThrow(prisma: PrismaService, regionId: strin
     is_active: boolean;
     createdAt: Date;
     updatedAt: Date;
-    pincode: string;
     regionName: string;
+    pincode: string;
     district: string;
     state: string;
     country: string;
@@ -33,15 +33,15 @@ export declare function findZoneManagerOrThrowWithId(prisma: PrismaService, zone
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    profile_image: string | null;
     userId: string | null;
+    profile_image: string | null;
 }>;
 export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId: string): Promise<{
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    profile_image: string | null;
     userId: string;
+    profile_image: string | null;
     regionId: string | null;
     description: string | null;
     achievements: string | null;
@@ -87,9 +87,9 @@ export declare function createTimeForSlot(prisma: PrismaService, slotId: string,
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    availabe: boolean;
     startTime: Date;
     endTime: Date;
+    availabe: boolean;
     isBooked: boolean;
     dateId: string;
     meetingsId: string | null;

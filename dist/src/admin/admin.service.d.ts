@@ -10,8 +10,8 @@ export declare class AdminService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string | null;
+                profile_image: string | null;
             } | null;
         } & {
             id: string;
@@ -33,8 +33,8 @@ export declare class AdminService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
             } | null;
         } & {
             id: string;
@@ -56,8 +56,8 @@ export declare class AdminService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
             } | null;
         } & {
             id: string;

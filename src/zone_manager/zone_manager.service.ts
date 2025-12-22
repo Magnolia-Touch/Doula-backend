@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
-import { Prisma, Role } from '@prisma/client';
+import { BookingStatus, Prisma, Role, ServiceStatus } from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
 import { findRegionOrThrow, findZoneManagerOrThrowWithId } from 'src/common/utility/service-utils';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
@@ -311,6 +311,710 @@ export class ZoneManagerService {
             unassignedCount: unassigned.length,
             assigned,
             unassigned
+        };
+    }
+
+
+    async getZoneManagerSchedules(
+        userId: string,
+        page = 1,
+        limit = 10,
+        filters?: {
+            status?: ServiceStatus;
+            serviceName?: string;
+            date?: string;
+        },
+    ) {
+
+        console.log("user", userId)
+        // Fetch zone manager profile
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!zoneManager) {
+            throw new ForbiddenException('Zone manager profile not found');
+        }
+
+        /**
+         * Build WHERE clause
+         */
+        const where: Prisma.SchedulesWhereInput = {
+            DoulaProfile: {
+                zoneManager: {
+                    some: {
+                        id: zoneManager.id,
+                    },
+                },
+            },
+        };
+
+        // ✅ Filter by service status
+        if (filters?.status) {
+            where.status = filters.status;
+        }
+
+        // ✅ Filter by date (Schedules.date is @db.Date)
+        if (filters?.date) {
+            where.date = new Date(filters.date);
+        }
+
+        // ✅ Filter by service name
+        if (filters?.serviceName) {
+            where.ServicePricing = {
+                service: {
+                    name: {
+                        contains: filters.serviceName.toLowerCase()
+                    },
+                },
+            };
+        }
+
+        const result = await paginate({
+            prismaModel: this.prisma.schedules,
+            page,
+            limit,
+            where,
+            include: {
+                client: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                DoulaProfile: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                ServicePricing: {
+                    include: {
+                        service: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                date: 'desc',
+            },
+        });
+
+        type ZoneManagerSchedule =
+            Prisma.SchedulesGetPayload<{
+                include: {
+                    client: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                    DoulaProfile: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                    ServicePricing: {
+                        include: {
+                            service: {
+                                select: {
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                };
+            }>;
+
+        const schedules = result.data as ZoneManagerSchedule[];
+
+        return {
+            success: true,
+            message: 'Schedules fetched successfully',
+            data: schedules.map((schedule) => {
+                const durationMs =
+                    schedule.endTime.getTime() -
+                    schedule.startTime.getTime();
+
+                const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                const durationMinutes =
+                    (durationMs % (1000 * 60 * 60)) / (1000 * 60);
+
+                return {
+                    scheduleId: schedule.id,
+                    clientId: schedule.client.id,
+                    clientName: schedule.client.user.name,
+
+                    doulaId: schedule.DoulaProfile.id,
+                    doulaName: schedule.DoulaProfile.user.name,
+
+                    serviceName: schedule.ServicePricing.service.name,
+
+                    startDate: schedule.startTime,
+                    endDate: schedule.endTime,
+
+                    duration: `${durationHours}h ${durationMinutes}m`, // dummy / derived
+                    status: schedule.status,
+                };
+            }),
+            meta: result.meta,
+        };
+    }
+
+
+
+    async getZoneManagerBookedServices(
+        userId: string,
+        page = 1,
+        limit = 10,
+        filters?: {
+            serviceName?: string;
+            status?: BookingStatus;
+            startDate?: string;
+            endDate?: string;
+        },
+    ) {
+
+        // Fetch zone manager profile
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!zoneManager) {
+            throw new ForbiddenException('Zone manager profile not found');
+        }
+
+        /**
+         * Base WHERE clause
+         * → bookings of doulas managed by this zone manager
+         */
+        const where: Prisma.ServiceBookingWhereInput = {
+            DoulaProfile: {
+                zoneManager: {
+                    some: {
+                        id: zoneManager.id,
+                    },
+                },
+            },
+        };
+
+        /**
+         * Filter: Booking status
+         */
+        if (filters?.status) {
+            where.status = filters.status;
+        }
+
+        /**
+         * Filter: Date range
+         * If date falls between startDate and endDate
+         */
+        if (filters?.startDate || filters?.endDate) {
+            where.AND = [];
+
+            if (filters.startDate) {
+                where.AND.push({
+                    endDate: {
+                        gte: new Date(filters.startDate),
+                    },
+                });
+            }
+
+            if (filters.endDate) {
+                where.AND.push({
+                    startDate: {
+                        lte: new Date(filters.endDate),
+                    },
+                });
+            }
+        }
+
+        /**
+         * Filter: Service name
+         */
+        if (filters?.serviceName) {
+            where.service = {
+                service: {
+                    name: {
+                        contains: filters.serviceName.toLowerCase()
+                    },
+                },
+            };
+        }
+
+        const result = await paginate({
+            prismaModel: this.prisma.serviceBooking,
+            page,
+            limit,
+            where,
+            include: {
+                client: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                DoulaProfile: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                service: {
+                    include: {
+                        service: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                startDate: 'desc',
+            },
+        });
+
+        type ZoneManagerBooking =
+            Prisma.ServiceBookingGetPayload<{
+                include: {
+                    client: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                    DoulaProfile: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                    service: {
+                        include: {
+                            service: {
+                                select: {
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                };
+            }>;
+
+        const bookings = result.data as ZoneManagerBooking[];
+
+        return {
+            success: true,
+            message: 'Booked services fetched successfully',
+
+            data: bookings.map((booking) => ({
+                bookingId: booking.id,
+                clientId: booking.client.id,
+                clientName: booking.client.user.name,
+
+                doulaId: booking.DoulaProfile.id,
+                doulaName: booking.DoulaProfile.user.name,
+
+                servicePricingId: booking.service.id,
+                serviceName: booking.service.service.name,
+
+                startDate: booking.startDate,
+                endDate: booking.endDate,
+                status: booking.status,
+            })),
+            meta: result.meta,
+        };
+    }
+
+
+    async getZoneManagerMeetings(
+        userId: string,
+        page = 1,
+        limit = 10,
+    ) {
+
+        // Fetch zone manager profile
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!zoneManager) {
+            throw new ForbiddenException('Zone manager profile not found');
+        }
+
+        /**
+         * Fetch all doula IDs under this zone manager
+         */
+        const doulas = await this.prisma.doulaProfile.findMany({
+            where: {
+                zoneManager: {
+                    some: {
+                        id: zoneManager.id,
+                    },
+                },
+            },
+            select: { id: true },
+        });
+
+        const doulaIds = doulas.map((d) => d.id);
+
+        /**
+         * WHERE condition:
+         * 1. Meetings of zone manager
+         * 2. Meetings of doulas under zone manager
+         */
+        const where: Prisma.MeetingsWhereInput = {
+            OR: [
+                { zoneManagerProfileId: zoneManager.id },
+                { doulaProfileId: { in: doulaIds } },
+            ],
+        };
+
+        const result = await paginate({
+            prismaModel: this.prisma.meetings,
+            page,
+            limit,
+            where,
+            include: {
+                bookedBy: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                DoulaProfile: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                Service: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+            orderBy: {
+                date: 'desc',
+            },
+        });
+
+        type ZoneManagerMeeting =
+            Prisma.MeetingsGetPayload<{
+                include: {
+                    bookedBy: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                    DoulaProfile: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                    Service: {
+                        select: {
+                            id: true;
+                            name: true;
+                        };
+                    };
+                };
+            }>;
+
+        const meetings = result.data as ZoneManagerMeeting[];
+
+        return {
+            success: true,
+            message: 'Zone manager meetings fetched successfully',
+            data: meetings.map((meeting) => ({
+                meetingId: meeting.id,
+                clientId: meeting.bookedBy.id,
+                clientName: meeting.bookedBy.user.name,
+
+                doulaId: meeting.DoulaProfile?.id ?? null,
+                doulaName: meeting.DoulaProfile?.user.name ?? null,
+
+                servicePricingId: meeting.serviceId ?? null,
+                serviceName: meeting.Service?.name ?? meeting.serviceName,
+
+                startDate: meeting.startTime,
+                endDate: meeting.endTime,
+                status: meeting.status,
+            })),
+            meta: result.meta,
+        };
+    }
+
+    async getZoneManagerScheduleById(
+        userId: string,
+        scheduleId: string,
+    ) {
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+
+        if (!zoneManager) {
+            throw new ForbiddenException('Zone manager profile not found');
+        }
+
+        const schedule = await this.prisma.schedules.findFirst({
+            where: {
+                id: scheduleId,
+                DoulaProfile: {
+                    zoneManager: {
+                        some: { id: zoneManager.id },
+                    },
+                },
+            },
+            include: {
+                client: {
+                    include: {
+                        user: { select: { id: true, name: true } },
+                    },
+                },
+                DoulaProfile: {
+                    include: {
+                        user: { select: { id: true, name: true } },
+                    },
+                },
+                ServicePricing: {
+                    include: {
+                        service: { select: { name: true } },
+                    },
+                },
+            },
+        });
+
+        if (!schedule) {
+            throw new NotFoundException('Schedule not found');
+        }
+
+        const durationMs =
+            schedule.endTime.getTime() - schedule.startTime.getTime();
+
+        const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+        const durationMinutes =
+            (durationMs % (1000 * 60 * 60)) / (1000 * 60);
+
+        return {
+            success: true,
+            message: 'Schedule fetched successfully',
+            data: {
+                clientId: schedule.client.id,
+                clientName: schedule.client.user.name,
+
+                doulaId: schedule.DoulaProfile.id,
+                doulaName: schedule.DoulaProfile.user.name,
+
+                serviceName: schedule.ServicePricing.service.name,
+
+                startDate: schedule.startTime,
+                endDate: schedule.endTime,
+                duration: `${durationHours}h ${durationMinutes}m`,
+                status: schedule.status,
+            },
+        };
+    }
+
+    async getZoneManagerBookedServiceById(
+        userId: string,
+        bookingId: string,
+    ) {
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+
+        if (!zoneManager) {
+            throw new ForbiddenException('Zone manager profile not found');
+        }
+
+        const booking = await this.prisma.serviceBooking.findFirst({
+            where: {
+                id: bookingId,
+                DoulaProfile: {
+                    zoneManager: {
+                        some: { id: zoneManager.id },
+                    },
+                },
+            },
+            include: {
+                client: {
+                    include: {
+                        user: { select: { id: true, name: true } },
+                    },
+                },
+                DoulaProfile: {
+                    include: {
+                        user: { select: { id: true, name: true } },
+                    },
+                },
+                service: {
+                    include: {
+                        service: { select: { name: true } },
+                    },
+                },
+            },
+        });
+
+        if (!booking) {
+            throw new NotFoundException('Booked service not found');
+        }
+
+        return {
+            success: true,
+            message: 'Booked service fetched successfully',
+            data: {
+                clientId: booking.client.id,
+                clientName: booking.client.user.name,
+
+                doulaId: booking.DoulaProfile.id,
+                doulaName: booking.DoulaProfile.user.name,
+
+                servicePricingId: booking.service.id,
+                serviceName: booking.service.service.name,
+
+                startDate: booking.startDate,
+                endDate: booking.endDate,
+                status: booking.status,
+            },
+        };
+    }
+
+
+    async getZoneManagerMeetingById(
+        userId: string,
+        meetingId: string,
+    ) {
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+
+        if (!zoneManager) {
+            throw new ForbiddenException('Zone manager profile not found');
+        }
+
+        const doulas = await this.prisma.doulaProfile.findMany({
+            where: {
+                zoneManager: {
+                    some: { id: zoneManager.id },
+                },
+            },
+            select: { id: true },
+        });
+
+        const doulaIds = doulas.map(d => d.id);
+
+        const meeting = await this.prisma.meetings.findFirst({
+            where: {
+                id: meetingId,
+                OR: [
+                    { zoneManagerProfileId: zoneManager.id },
+                    { doulaProfileId: { in: doulaIds } },
+                ],
+            },
+            include: {
+                bookedBy: {
+                    include: {
+                        user: { select: { id: true, name: true } },
+                    },
+                },
+                DoulaProfile: {
+                    include: {
+                        user: { select: { id: true, name: true } },
+                    },
+                },
+                Service: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+
+        if (!meeting) {
+            throw new NotFoundException('Meeting not found');
+        }
+
+        return {
+            success: true,
+            message: 'Meeting fetched successfully',
+            data: {
+                clientId: meeting.bookedBy.id,
+                clientName: meeting.bookedBy.user.name,
+
+                doulaId: meeting.DoulaProfile?.id ?? null,
+                doulaName: meeting.DoulaProfile?.user.name ?? null,
+
+                servicePricingId: meeting.serviceId ?? null,
+                serviceName: meeting.Service?.name ?? meeting.serviceName,
+
+                startDate: meeting.startTime,
+                endDate: meeting.endTime,
+                status: meeting.status,
+            },
         };
     }
 

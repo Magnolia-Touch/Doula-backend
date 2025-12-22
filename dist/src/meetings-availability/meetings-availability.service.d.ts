@@ -20,9 +20,9 @@ export declare class AvailableSlotsService {
     getMyAvailabilities(userId: string): Promise<({
         AvailableSlotsTimeForMeeting: {
             id: string;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
         }[];
     } & {
@@ -65,9 +65,9 @@ export declare class AvailableSlotsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
+                availabe: boolean;
                 isBooked: boolean;
                 dateId: string;
                 meetingsId: string | null;
@@ -90,9 +90,9 @@ export declare class AvailableSlotsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             meetingsId: string | null;

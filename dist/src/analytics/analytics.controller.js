@@ -18,6 +18,10 @@ const analytics_service_1 = require("./analytics.service");
 const filter_user_dto_1 = require("./filter-user.dto");
 const swagger_1 = require("@nestjs/swagger");
 const swagger_response_dto_1 = require("../common/dto/swagger-response.dto");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let AnalyticsController = class AnalyticsController {
     service;
     constructor(service) {
@@ -43,6 +47,9 @@ let AnalyticsController = class AnalyticsController {
     }
     async getDailyActivity(startDate, endDate) {
         return this.service.getDailyActivity(startDate, endDate);
+    }
+    async calenderSummary(req, startDate, endDate) {
+        return this.service.calenderSummary(req.user.id, startDate, endDate);
     }
 };
 exports.AnalyticsController = AnalyticsController;
@@ -269,6 +276,17 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], AnalyticsController.prototype, "getDailyActivity", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('calender/summary'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('startDate')),
+    __param(2, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], AnalyticsController.prototype, "calenderSummary", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('Analytics'),
     (0, common_1.Controller)({

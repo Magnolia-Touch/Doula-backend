@@ -375,6 +375,7 @@ model ServiceBooking {
   region                   Region                         @relation(fields: [regionId], references: [id])
   slot                     AvailableSlotsTimeForService[]
   AvailableSlotsForService AvailableSlotsForService[]
+  schedules                Schedules[]
 }
 
 // Service Model
@@ -434,9 +435,11 @@ model Schedules {
   doulaProfileId String
   serviceId      String
   clientId       String
+  bookingId      String
 
   DoulaProfile   DoulaProfile   @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
   ServicePricing ServicePricing @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceBooking ServiceBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   client         ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -487,4 +490,3 @@ model Certificates {
 
   doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 }
-

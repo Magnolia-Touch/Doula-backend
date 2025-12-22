@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { FilterUserDto } from './filter-user.dto';
 import {
@@ -9,6 +9,10 @@ import {
     ApiBearerAuth,
 } from '@nestjs/swagger';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @ApiTags('Analytics')
 @Controller({
@@ -236,5 +240,16 @@ export class AnalyticsController {
         @Query('endDate') endDate?: string,
     ) {
         return this.service.getDailyActivity(startDate, endDate);
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('calender/summary')
+    async calenderSummary(
+        @Req() req,
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+    ) {
+        return this.service.calenderSummary(req.user.id, startDate, endDate);
     }
 }

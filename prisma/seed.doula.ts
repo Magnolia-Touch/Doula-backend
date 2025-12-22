@@ -159,17 +159,43 @@ async function main() {
        SCHEDULES (FUTURE)
     ========================= */
 
+    /* =========================
+   SERVICE BOOKING (REQUIRED)
+========================= */
+
+    const booking = await prisma.serviceBooking.create({
+        data: {
+            startDate: addUtcDays(2),
+            endDate: addUtcDays(2),
+            status: BookingStatus.ACTIVE,
+            doulaProfileId: doula.id,
+            clientId: client.id,
+            servicePricingId: pricing.id,
+            regionId: (
+                await prisma.region.findFirst({
+                    where: { doula: { some: { id: doula.id } } },
+                })
+            )!.id,
+        },
+    });
+
+    /* =========================
+       SCHEDULE
+    ========================= */
+
     await prisma.schedules.create({
         data: {
             date: addUtcDays(2),
             startTime: new Date('1970-01-01T09:00:00Z'),
             endTime: new Date('1970-01-01T10:00:00Z'),
+            status: ServiceStatus.PENDING,
             doulaProfileId: doula.id,
             serviceId: pricing.id,
             clientId: client.id,
-            status: ServiceStatus.PENDING,
+            bookingId: booking.id, // ✅ FIXED
         },
     });
+
 
     /* =========================
        TESTIMONIALS

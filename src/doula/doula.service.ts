@@ -11,6 +11,7 @@ import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { UpdateCertificateDto } from './dto/certificate.dto';
+import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
 
 const MAX_GALLERY_IMAGES = 5;
 
@@ -412,8 +413,10 @@ export class DoulaService {
                     profile.ServicePricing?.map(p => {
                         if (!p.service) return null
                         return {
-                            id: p.service.id,
-                            name: p.service.name,
+                            servicePricingId: p.id,        // ✅ FIX
+                            serviceId: p.service.id,
+                            serviceName: p.service.name,
+                            price: p.price,
                         };
                     }).filter(Boolean) ??
                     [];
@@ -524,8 +527,10 @@ export class DoulaService {
             profile?.ServicePricing?.map(p => {
                 if (!p.service) return null
                 return {
-                    id: p.service.id,
-                    name: p.service.name,
+                    servicePricingId: p.id,        // ✅ FIX
+                    serviceId: p.service.id,
+                    serviceName: p.service.name,
+                    price: p.price,
                 };
             }).filter(Boolean) ??
             [];
@@ -852,11 +857,76 @@ export class DoulaService {
             success: true,
             message: 'Doula meetings fetched successfully',
             data: meetings.map((meeting) => ({
+                meetingId: meeting.id,
                 date: meeting.date,
                 serviceName: meeting.serviceName,
                 clientName: meeting.bookedBy.user.name,
             })),
             meta: result.meta,
+        };
+    }
+
+    async getDoulaMeetingDetail(
+        user: any,
+        meetingId: string,
+    ) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        // Fetch doula profile
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        const meeting = await this.prisma.meetings.findFirst({
+            where: {
+                id: meetingId,
+                doulaProfileId: doulaProfile.id,
+            },
+            include: {
+                bookedBy: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!meeting) {
+            throw new NotFoundException('Meeting not found');
+        }
+
+        return {
+            success: true,
+            message: 'Doula meeting fetched successfully',
+            data: {
+                meetingId: meeting.id,
+                date: meeting.date,
+                startTime: meeting.startTime,
+                endTime: meeting.endTime,
+                status: meeting.status,
+                serviceName: meeting.serviceName,
+
+                client: meeting.bookedBy?.user
+                    ? {
+                        clientId: meeting.bookedBy.user.id,
+                        name: meeting.bookedBy.user.name,
+                        email: meeting.bookedBy.user.email,
+                    }
+                    : null,
+            },
         };
     }
 
@@ -943,6 +1013,7 @@ export class DoulaService {
             success: true,
             message: 'Doula schedules fetched successfully',
             data: schedules.map((schedule) => ({
+                scheduleId: schedule.id,
                 date: schedule.date,
                 startTime: schedule.startTime,
                 endTime: schedule.endTime,
@@ -952,6 +1023,89 @@ export class DoulaService {
             meta: result.meta,
         };
     }
+
+    async getDoulaScheduleDetail(
+        user: any,
+        scheduleId: string,
+    ) {
+        if (user.role !== Role.DOULA) {
+            throw new ForbiddenException('Access denied');
+        }
+
+        // Fetch doula profile
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+        });
+
+        if (!doulaProfile) {
+            throw new ForbiddenException('Doula profile not found');
+        }
+
+        const schedule = await this.prisma.schedules.findFirst({
+            where: {
+                id: scheduleId,
+                doulaProfileId: doulaProfile.id,
+            },
+            include: {
+                ServicePricing: {
+                    include: {
+                        service: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                client: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!schedule) {
+            throw new NotFoundException('Schedule not found');
+        }
+
+        return {
+            success: true,
+            message: 'Doula schedule fetched successfully',
+            data: {
+                scheduleId: schedule.id,
+                date: schedule.date,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                status: schedule.status,
+
+                service: {
+                    servicePricingId: schedule.ServicePricing.id,
+                    serviceId: schedule.ServicePricing.service.id,
+                    serviceName: schedule.ServicePricing.service.name,
+                    price: schedule.ServicePricing.price,
+                },
+
+                client: schedule.client?.user
+                    ? {
+                        clientId: schedule.client.user.id,
+                        name: schedule.client.user.name,
+                        email: schedule.client.user.email,
+                    }
+                    : null,
+            },
+        };
+    }
+
+
+
 
     async getDoulaScheduleCount(user: any) {
         if (user.role !== Role.DOULA) {
@@ -1704,6 +1858,197 @@ export class DoulaService {
     }
 
 
+    async getServiceBookings(
+        userId: string,
+        page = 1,
+        limit = 10,
+    ) {
+        const doula = await this.prisma.doulaProfile.findUnique({
+            where: { userId: userId },
+            select: {
+                id: true,
+                user: {
+                    select: { name: true },
+                },
+            },
+        });
+        if (!doula) {
+            throw new NotFoundException('Doula profile not found');
+        }
+        type ServiceBookingWithRelations =
+            Prisma.ServiceBookingGetPayload<{
+                include: {
+                    region: {
+                        select: {
+                            id: true;
+                            regionName: true;
+                        };
+                    };
+                    service: {
+                        select: {
+                            id: true;
+                            service: {
+                                select: {
+                                    id: true;
+                                    name: true;
+                                };
+                            };
+                        };
+                    };
+                    schedules: {
+                        select: {
+                            id: true;
+                        };
+                    };
+                };
+            }>;
 
+        const result = await paginateWithRelations<ServiceBookingWithRelations>({
+            page,
+            limit,
+            query: () =>
+                this.prisma.serviceBooking.findMany({
+                    skip: (page - 1) * limit,
+                    take: limit,
+                    where: {
+                        doulaProfileId: doula.id,
+                    },
+                    orderBy: {
+                        startDate: 'desc',
+                    },
+                    include: {
+                        region: {
+                            select: {
+                                id: true,
+                                regionName: true,
+                            },
+                        },
+                        service: {
+                            select: {
+                                id: true,
+                                service: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                        schedules: {
+                            select: {
+                                id: true,
+                            },
+                        },
+                    },
+                }),
+            countQuery: () =>
+                this.prisma.serviceBooking.count({
+                    where: {
+                        doulaProfileId: doula.id,
+                    },
+                }),
+        });
+
+        return {
+            data: result.data.map((booking) => ({
+                serviceBookingId: booking.id,
+                satisfiestartDate: booking.startDate,
+                endDate: booking.endDate,
+                status: booking.status,
+                regionId: booking.region.id,
+                regionName: booking.region.regionName,
+                servicePricingId: booking.service.id,
+                serviceName: booking.service.service.name,
+                serviceId: booking.service.service.id,
+                schedulesCount: booking.schedules.length,
+            })),
+            meta: result.meta,
+        };
+    }
+
+
+    async getServiceBookingsinDetail(userId: string, serviceBookingId: string) {
+        const doula = await this.prisma.doulaProfile.findUnique({
+            where: { userId: userId },
+            select: {
+                id: true,
+                user: {
+                    select: { name: true },
+                },
+            },
+        });
+        if (!doula) {
+            throw new NotFoundException('Doula profile not found');
+        }
+        const booking = await this.prisma.serviceBooking.findUnique({
+            where: { id: serviceBookingId },
+            select: {
+                id: true,
+                startDate: true,
+                endDate: true,
+                status: true,
+                region: {
+                    select: {
+                        id: true,
+                        regionName: true,
+                        zoneManager: {
+                            select: { id: true, user: { select: { id: true, email: true, name: true } } }
+                        },
+                    },
+                },
+                service: {
+                    select: {
+                        id: true,
+                        price: true,
+                        service: {
+                            select: {
+                                id: true,
+                                name: true,
+                            }
+                        }
+                    }
+                },
+                schedules: true,
+            }
+        })
+        if (!booking) {
+            throw new NotFoundException('Service booking not found');
+        }
+
+
+        return {
+            serviceBookingId: booking.id,
+            startDate: booking.startDate,
+            endDate: booking.endDate,
+            status: booking.status,
+
+            region: {
+                id: booking.region.id,
+                name: booking.region.regionName,
+                zoneManager: booking.region.zoneManager?.user
+                    ? {
+                        id: booking.region.zoneManager.id,
+                        name: booking.region.zoneManager.user.name,
+                        email: booking.region.zoneManager.user.email,
+                    }
+                    : null,
+            },
+
+            service: {
+                servicePricingId: booking.service.id,
+                serviceId: booking.service.service.id,
+                serviceName: booking.service.service.name,
+                price: booking.service.price,
+            },
+
+            schedules: booking.schedules.map((schedule) => ({
+                id: schedule.id,
+                date: schedule.date,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                status: schedule.status,
+            })),
+        };
+    }
 
 }

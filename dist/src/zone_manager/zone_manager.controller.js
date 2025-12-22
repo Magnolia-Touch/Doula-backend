@@ -80,6 +80,33 @@ let ZoneManagerController = class ZoneManagerController {
     async regionAlreadyAssignedOrNot(dto) {
         return this.service.regionAlreadyAssignedOrNot(dto.regionIds);
     }
+    async getSchedules(req, page, limit, status, serviceName, date) {
+        return this.service.getZoneManagerSchedules(req.user.id, Number(page) || 1, Number(limit) || 10, {
+            status,
+            serviceName,
+            date,
+        });
+    }
+    async getBookedServices(req, page, limit, serviceName, status, startDate, endDate) {
+        return this.service.getZoneManagerBookedServices(req.user.id, Number(page) || 1, Number(limit) || 10, {
+            serviceName,
+            status,
+            startDate,
+            endDate,
+        });
+    }
+    async getZoneManagerMeetings(req, page, limit) {
+        return this.service.getZoneManagerMeetings(req.user.id, Number(page) || 1, Number(limit) || 10);
+    }
+    async getScheduleById(req, id) {
+        return this.service.getZoneManagerScheduleById(req.user.id, id);
+    }
+    async getBookedServiceById(req, id) {
+        return this.service.getZoneManagerBookedServiceById(req.user.id, id);
+    }
+    async getMeetingById(req, id) {
+        return this.service.getZoneManagerMeetingById(req.user.id, id);
+    }
 };
 exports.ZoneManagerController = ZoneManagerController;
 __decorate([
@@ -319,6 +346,77 @@ __decorate([
     __metadata("design:paramtypes", [update_zone_manager_dto_1.RegionAssignmentCheckDto]),
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "regionAlreadyAssignedOrNot", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('schedules/list'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)('status')),
+    __param(4, (0, common_1.Query)('serviceName')),
+    __param(5, (0, common_1.Query)('date')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getSchedules", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('booked-services/list'),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)('serviceName')),
+    __param(4, (0, common_1.Query)('status')),
+    __param(5, (0, common_1.Query)('startDate')),
+    __param(6, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getBookedServices", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('meetings/list'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getZoneManagerMeetings", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('schedules/list/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getScheduleById", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('booked-services/list/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getBookedServiceById", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('meetings/list/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getMeetingById", null);
 exports.ZoneManagerController = ZoneManagerController = __decorate([
     (0, swagger_1.ApiTags)('Zone Managers'),
     (0, swagger_1.ApiBearerAuth)(),

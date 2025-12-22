@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
-import { Prisma } from '@prisma/client';
+import { BookingStatus, Prisma, ServiceStatus } from '@prisma/client';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 export declare class ZoneManagerService {
     private prisma;
@@ -16,10 +16,10 @@ export declare class ZoneManagerService {
                 userId: string | null;
             } | null;
         } & {
+            id: string;
             name: string;
             email: string;
             phone: string | null;
-            id: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -101,10 +101,10 @@ export declare class ZoneManagerService {
     updateStatus(id: string, isActive: boolean): Promise<{
         message: string;
         data: {
+            id: string;
             name: string;
             email: string;
             phone: string | null;
-            id: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -130,5 +130,131 @@ export declare class ZoneManagerService {
             regionName: string;
             zoneManagerId: string | null;
         }[];
+    }>;
+    getZoneManagerSchedules(userId: string, page?: number, limit?: number, filters?: {
+        status?: ServiceStatus;
+        serviceName?: string;
+        date?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            scheduleId: string;
+            clientId: string;
+            clientName: string;
+            doulaId: string;
+            doulaName: string;
+            serviceName: string;
+            startDate: Date;
+            endDate: Date;
+            duration: string;
+            status: import("@prisma/client").$Enums.ServiceStatus;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getZoneManagerBookedServices(userId: string, page?: number, limit?: number, filters?: {
+        serviceName?: string;
+        status?: BookingStatus;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            bookingId: string;
+            clientId: string;
+            clientName: string;
+            doulaId: string;
+            doulaName: string;
+            servicePricingId: string;
+            serviceName: string;
+            startDate: Date;
+            endDate: Date;
+            status: import("@prisma/client").$Enums.BookingStatus;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getZoneManagerMeetings(userId: string, page?: number, limit?: number): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            meetingId: string;
+            clientId: string;
+            clientName: string;
+            doulaId: string | null;
+            doulaName: string | null;
+            servicePricingId: string | null;
+            serviceName: string;
+            startDate: Date;
+            endDate: Date;
+            status: import("@prisma/client").$Enums.MeetingStatus;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getZoneManagerScheduleById(userId: string, scheduleId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            clientId: string;
+            clientName: string;
+            doulaId: string;
+            doulaName: string;
+            serviceName: string;
+            startDate: Date;
+            endDate: Date;
+            duration: string;
+            status: import("@prisma/client").$Enums.ServiceStatus;
+        };
+    }>;
+    getZoneManagerBookedServiceById(userId: string, bookingId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            clientId: string;
+            clientName: string;
+            doulaId: string;
+            doulaName: string;
+            servicePricingId: string;
+            serviceName: string;
+            startDate: Date;
+            endDate: Date;
+            status: import("@prisma/client").$Enums.BookingStatus;
+        };
+    }>;
+    getZoneManagerMeetingById(userId: string, meetingId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            clientId: string;
+            clientName: string;
+            doulaId: string | null;
+            doulaName: string | null;
+            servicePricingId: string | null;
+            serviceName: string;
+            startDate: Date;
+            endDate: Date;
+            status: import("@prisma/client").$Enums.MeetingStatus;
+        };
     }>;
 }

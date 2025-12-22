@@ -11,6 +11,7 @@ import {
     UseInterceptors,
     BadRequestException,
     UploadedFiles,
+    Req,
 } from '@nestjs/common';
 import { ZoneManagerService } from './zone_manager.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
@@ -18,7 +19,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { BookingStatus, Role, ServiceStatus } from '@prisma/client';
 import { RegionAssignmentCheckDto, UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -315,7 +316,104 @@ export class ZoneManagerController {
         return this.service.regionAlreadyAssignedOrNot(dto.regionIds);
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('schedules/list')
+    async getSchedules(
+        @Req() req: any,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('status') status?: ServiceStatus,
+        @Query('serviceName') serviceName?: string,
+        @Query('date') date?: string,
+    ) {
+        return this.service.getZoneManagerSchedules(
+            req.user.id,
+            Number(page) || 1,
+            Number(limit) || 10,
+            {
+                status,
+                serviceName,
+                date,
+            },
+        );
+    }
 
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('booked-services/list')
+    @Roles(Role.ZONE_MANAGER)
+    async getBookedServices(
+        @Req() req: any,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('serviceName') serviceName?: string,
+        @Query('status') status?: BookingStatus,
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string,
+    ) {
+        return this.service.getZoneManagerBookedServices(
+            req.user.id,
+            Number(page) || 1,
+            Number(limit) || 10,
+            {
+                serviceName,
+                status,
+                startDate,
+                endDate,
+            },
+        );
+
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('meetings/list')
+    async getZoneManagerMeetings(
+        @Req() req: any,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.service.getZoneManagerMeetings(
+            req.user.id,
+            Number(page) || 1,
+            Number(limit) || 10,
+        );
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('schedules/list/:id')
+    async getScheduleById(
+        @Req() req: any,
+        @Param('id') id: string,
+    ) {
+        return this.service.getZoneManagerScheduleById(req.user.id, id);
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('booked-services/list/:id')
+    async getBookedServiceById(
+        @Req() req: any,
+        @Param('id') id: string,
+    ) {
+        return this.service.getZoneManagerBookedServiceById(req.user.id, id);
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
+    @Get('meetings/list/:id')
+    async getMeetingById(
+        @Req() req: any,
+        @Param('id') id: string,
+    ) {
+        return this.service.getZoneManagerMeetingById(req.user.id, id);
+    }
 
 
 }

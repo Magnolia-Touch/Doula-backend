@@ -58,5 +58,10 @@ export class UserService {
         return { message: "Otp Sent Succesfully", data: created }
     }
 
+    async deleteAll() {
+        return this.prisma.schedules.deleteMany({});
+    }
+
+
 
 }

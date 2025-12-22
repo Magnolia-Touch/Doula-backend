@@ -9,7 +9,9 @@
     "seed": "ts-node prisma/seed.ts",
     "seed:client": "ts-node prisma/seed.client.ts",
     "seed:doula": "ts-node prisma/seed.doula.ts",
-    "seed:missing": "ts-node prisma/seed.missing.ts"
+    "seed:missing": "ts-node prisma/seed.missing.ts",
+    "seed:calender": "ts-node prisma/seed.cal-summary.ts",
+    "seed:manager": "ts-node prisma/seed-zone-manager-test-data.ts"
   },
   "scripts": {
     "build": "nest build",
@@ -30,6 +32,8 @@
     "seed:client": "ts-node prisma/seed.client.ts",
     "seed:doula": "ts-node prisma/seed.doula.ts",
     "seed:missing": "ts-node prisma/seed.missing.ts",
+    "seed:calender": "ts-node prisma/seed.cal-summary.ts",
+    "seed:manager": "ts-node prisma/seed-zone-manager-test-data.ts",
     "seed:all": "npm run seed && npm run seed:client && npm run seed:doula"
   },
   "dependencies": {
