@@ -16,10 +16,10 @@ export declare class ZoneManagerService {
                 userId: string | null;
             } | null;
         } & {
-            id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
+            id: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -101,10 +101,10 @@ export declare class ZoneManagerService {
     updateStatus(id: string, isActive: boolean): Promise<{
         message: string;
         data: {
-            id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
+            id: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;

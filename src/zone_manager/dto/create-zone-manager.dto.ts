@@ -8,7 +8,7 @@ export class CreateZoneManagerDto {
   @IsEmail()
   email: string;
 
-  @IsPhoneNumber()
+  @IsString()
   phone: string;
 
   @Transform(({ value }) => {
