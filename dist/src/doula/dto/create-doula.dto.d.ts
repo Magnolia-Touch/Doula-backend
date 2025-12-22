@@ -1,3 +1,4 @@
+import { CreateCertificateDto } from './certificate.dto';
 export declare class CreateDoulaDto {
     name: string;
     email: string;
@@ -9,4 +10,7 @@ export declare class CreateDoulaDto {
     yoe: number;
     languages: string[];
     services: Record<string, number>;
+    specialities: string;
+    certificates?: string;
+    get parsedCertificates(): CreateCertificateDto[];
 }

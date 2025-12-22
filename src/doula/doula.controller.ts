@@ -14,10 +14,12 @@ import {
     BadRequestException,
     InternalServerErrorException,
     UploadedFile,
+    ValidationPipe,
+    UsePipes,
 } from '@nestjs/common';
 import { DoulaService } from './doula.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
-import { UpdateDoulaRegionDto } from './dto/update-doula.dto';
+import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
 import { UpdateDoulaStatusDto } from './dto/update-doula-status.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -36,9 +38,11 @@ import {
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import { AddDoulaImageDto } from './dto/add-doula-image.dto';
+import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
+import { UpdateCertificateDto } from './dto/certificate.dto';
 const ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
     'image/png',
@@ -74,10 +78,17 @@ export class DoulaController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('ADMIN', 'ZONE_MANAGER')
     @Post()
+    @UsePipes(
+        new ValidationPipe({
+            transform: true,
+            whitelist: true,
+        }),
+    )
     @UseInterceptors(
         FileFieldsInterceptor(
             [
-                { name: 'images', maxCount: 5 }, // allow multiple images
+                { name: 'profile_image', maxCount: 1 }, // allow multiple images
+                { name: 'gallery_image', maxCount: 5 }
             ],
             {
                 storage: multerStorage(),
@@ -95,21 +106,39 @@ export class DoulaController {
         @Req() req,
         @UploadedFiles()
         files: {
-            images?: Express.Multer.File[];
+            profile_image?: Express.Multer.File[];
+            gallery_image?: Express.Multer.File[];
         },
     ) {
-        const images = files?.images ?? [];
+        const images = files?.gallery_image ?? [];
+        const profileImage = files?.profile_image?.[0];
+        let profileImageUrl: string | undefined;
+        if (profileImage) {
+            // double-check mimetype and size (extra safety)
+            if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
+                // remove saved file (optional cleanup) and throw
+                throw new BadRequestException('Unsupported image type.');
+            }
+            if (profileImage.size > MAX_FILE_SIZE) {
+                throw new BadRequestException('Profile image exceeds maximum size of 5 MB.');
+            }
+
+            // Construct a URL or a path to store in DB. Two options:
+            // 1) store relative path and serve with ServeStaticModule
+            // 2) store full public URL if hosted
+            // Here we store a relative path (uploads/doulas/<filename>)
+            profileImageUrl = `uploads/doulas/${profileImage.filename}`;
+        }
 
         const imagePayload = images.map((file, index) => ({
             url: `uploads/doulas/${file.filename}`,
-            isMain: index === 0,   // first image = main
-            sortOrder: index,
         }));
 
         const result = await this.service.create(
             dto,
             req.user.id,
-            imagePayload
+            imagePayload,
+            profileImageUrl
         );
 
         return {
@@ -538,7 +567,7 @@ export class DoulaController {
     @Roles(Role.DOULA)
     @Post('profile/images')
     @UseInterceptors(
-        FileInterceptor('file', {
+        FileInterceptor('profile_image', {
             storage: multerStorage(),
             limits: { fileSize: MAX_FILE_SIZE },
             fileFilter: (req, file, cb) => {
@@ -551,16 +580,20 @@ export class DoulaController {
     async uploadDoulaImage(
         @Req() req,
         @UploadedFile() file: Express.Multer.File,
-        @Body('isMain') isMain?: string,
-        @Body('sortOrder') sortOrder?: string,
-        @Body('altText') altText?: string,
     ) {
+        if (!file) {
+            throw new BadRequestException('Profile image is required');
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            throw new BadRequestException('Profile image exceeds maximum size of 5 MB.');
+        }
+
+        const profileImageUrl = `uploads/doulas/${file.filename}`;
+
         return this.service.addDoulaprofileImage(
             req.user.id,
-            file,
-            isMain === 'true',
-            sortOrder ? Number(sortOrder) : 0,
-            altText,
+            profileImageUrl,
         );
     }
 
@@ -574,37 +607,39 @@ export class DoulaController {
 
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.DOULA)
-    @Delete('profile/images/:id')
+    @Delete('profile/images/')
     async deleteDoulaImage(
         @Req() req,
-        @Param('id') imageId: string,
-    ) {
-        return this.service.deleteDoulaprofileImage(req.user.id, imageId);
-    }
 
+    ) {
+        return this.service.deleteDoulaprofileImage(req.user.id);
+    }
 
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.DOULA)
     @Post('gallery/images')
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(
-        FileInterceptor('file', {
+        FilesInterceptor('files', 10, {
             storage: multerStorage(),
             limits: { fileSize: MAX_FILE_SIZE },
             fileFilter: (req, file, cb) => {
-                if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
-                else cb(new BadRequestException('Unsupported file type'), false);
+                if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+                    cb(null, true);
+                } else {
+                    cb(new BadRequestException('Unsupported file type'), false);
+                }
             },
         }),
     )
-    async addGalleryImage(
+    async addGalleryImages(
         @Req() req,
-        @UploadedFile() file: Express.Multer.File,
+        @UploadedFiles() files: Express.Multer.File[],
         @Body('altText') altText?: string,
     ) {
-        return this.service.addDoulaGalleryImage(
+        return this.service.addDoulaGalleryImages(
             req.user.id,
-            file,
+            files,
             altText,
         );
     }
@@ -635,5 +670,60 @@ export class DoulaController {
         );
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Patch('app/profile')
+    async updateDoulaProfile(
+        @Req() req,
+        @Body() dto: UpdateDoulaProfileDto,
+    ) {
+        return this.service.updateDoulaProfile(req.user.id, dto);
+    }
+
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get("list/certificates")
+    async getCertificates(@Req() req) {
+        return this.service.getCertificates(req.user.id);
+    }
+
+    // GET certificate by ID
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Get('list/certificates/:id')
+    async getCertificateById(
+        @Req() req,
+        @Param('id') certificateId: string,
+    ) {
+        return this.service.getCertificateById(req.user.id, certificateId);
+    }
+
+    // UPDATE certificate
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Patch('list/certificates/:id')
+    async updateCertificate(
+        @Req() req,
+        @Param('id') certificateId: string,
+        @Body() dto: UpdateCertificateDto,
+    ) {
+        return this.service.updateCertificate(
+            req.user.id,
+            certificateId,
+            dto,
+        );
+    }
+
+    // DELETE certificate
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA)
+    @Delete('list/certificates/:id')
+    async deleteCertificate(
+        @Req() req,
+        @Param('id') certificateId: string,
+    ) {
+        return this.service.deleteCertificate(req.user.id, certificateId);
+    }
 
 }

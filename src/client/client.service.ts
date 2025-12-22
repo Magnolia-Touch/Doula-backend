@@ -126,8 +126,7 @@ export class ClientsService {
                                         name: true,
                                     },
                                 },
-                                DoulaImages: {
-                                    where: { isMain: true },
+                                DoulaGallery: {
                                     select: {
                                         url: true,
                                     },
@@ -176,8 +175,8 @@ export class ClientsService {
             // Doula details
             doulaName: booking.DoulaProfile.user.name,
             mainDoulaImage:
-                booking.DoulaProfile.DoulaImages.length > 0
-                    ? booking.DoulaProfile.DoulaImages[0].url
+                booking.DoulaProfile.DoulaGallery.length > 0
+                    ? booking.DoulaProfile.DoulaGallery[0].url
                     : null,
         }));
     }
@@ -224,8 +223,7 @@ export class ClientsService {
                                 name: true,
                             },
                         },
-                        DoulaImages: {
-                            where: { isMain: true },
+                        DoulaGallery: {
                             select: {
                                 url: true,
                             },
@@ -269,8 +267,8 @@ export class ClientsService {
             // Doula details
             doulaName: booking.DoulaProfile.user.name,
             mainDoulaImage:
-                booking.DoulaProfile.DoulaImages.length > 0
-                    ? booking.DoulaProfile.DoulaImages[0].url
+                booking.DoulaProfile.DoulaGallery.length > 0
+                    ? booking.DoulaProfile.DoulaGallery[0].url
                     : null,
         };
     }

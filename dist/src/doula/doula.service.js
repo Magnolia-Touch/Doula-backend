@@ -14,12 +14,14 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const pagination_util_1 = require("../common/utility/pagination.util");
+const MAX_GALLERY_IMAGES = 5;
 let DoulaService = class DoulaService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto, userId, images = []) {
+    async create(dto, userId, images = [], profileImageUrl) {
+        console.log("loggg", dto.certificates);
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
         });
@@ -54,13 +56,15 @@ let DoulaService = class DoulaService {
                                 achievements: dto.achievements,
                                 yoe: dto.yoe,
                                 languages: dto.languages,
+                                profile_image: profileImageUrl ?? null,
+                                specialities: dto.specialities,
                                 Region: {
                                     connect: dto.regionIds.map((id) => ({ id })),
                                 },
                                 zoneManager: {
                                     connect: { id: manager.id },
                                 },
-                                DoulaImages: {
+                                DoulaGallery: {
                                     create: images,
                                 },
                             },
@@ -99,13 +103,15 @@ let DoulaService = class DoulaService {
                                 achievements: dto.achievements,
                                 yoe: dto.yoe,
                                 languages: dto.languages,
+                                profile_image: profileImageUrl ?? null,
+                                specialities: dto.specialities,
                                 Region: {
                                     connect: dto.regionIds.map((id) => ({ id })),
                                 },
                                 zoneManager: {
                                     connect: zoneManagerIds.map((id) => ({ id })),
                                 },
-                                DoulaImages: {
+                                DoulaGallery: {
                                     create: images,
                                 },
                             },
@@ -128,19 +134,29 @@ let DoulaService = class DoulaService {
                     },
                 })));
             }
+            const certificates = dto.parsedCertificates;
+            if (certificates.length) {
+                await tx.certificates.createMany({
+                    data: certificates.map((cert) => ({
+                        name: cert.name,
+                        issuedBy: cert.issuedBy ?? 'Unknown',
+                        year: cert.year ?? '0000',
+                        doulaProfileId: createdUser.doulaProfile.id,
+                    })),
+                });
+            }
             const doulaWithDetails = await tx.user.findUnique({
                 where: { id: createdUser.id },
                 include: {
                     doulaProfile: {
                         include: {
-                            DoulaImages: {
-                                orderBy: { sortOrder: 'asc' },
-                            },
                             ServicePricing: {
-                                include: { service: true },
+                                select: { id: true, serviceId: true, price: true, service: { select: { name: true, description: true } } },
                             },
-                            Region: true,
+                            Region: { select: { id: true, regionName: true, pincode: true, zoneManagerId: true } },
                             zoneManager: true,
+                            DoulaGallery: true,
+                            Certificates: true
                         },
                     },
                 },
@@ -210,7 +226,7 @@ let DoulaService = class DoulaService {
                         Region: true,
                         ServicePricing: { include: { service: true } },
                         Testimonials: true,
-                        DoulaImages: true
+                        DoulaGallery: true
                     },
                 },
             },
@@ -263,9 +279,19 @@ let DoulaService = class DoulaService {
             if (!profile)
                 return null;
             const bookedDates = scheduleMap.get(profile.id) ?? [];
-            const services = profile.ServicePricing?.map(p => p.service?.name).filter(Boolean) ??
+            const services = profile.ServicePricing?.map(p => {
+                if (!p.service)
+                    return null;
+                return {
+                    id: p.service.id,
+                    name: p.service.name,
+                };
+            }).filter(Boolean) ??
                 [];
-            const regions = profile.Region?.map(r => r.regionName).filter(Boolean) ?? [];
+            const regions = profile.Region?.map(r => ({
+                id: r.id,
+                name: r.regionName,
+            })) ?? [];
             const testimonials = profile.Testimonials ?? [];
             const reviewCount = testimonials.length;
             const avgRating = reviewCount > 0
@@ -284,13 +310,14 @@ let DoulaService = class DoulaService {
                 email: user.email,
                 profileId: profile.id,
                 yoe: profile.yoe ?? null,
+                profile_image: profile.profile_image,
                 serviceNames: services,
                 regionNames: regions,
                 ratings: avgRating,
                 reviewsCount: reviewCount,
                 isAvailable: available,
                 nextImmediateAvailabilityDate: bookedDates.length ? bookedDates[0] : null,
-                images: profile.DoulaImages?.map(img => ({
+                images: profile.DoulaGallery?.map(img => ({
                     id: img.id,
                     url: img.url,
                     isPrimary: img.isPrimary ?? false,
@@ -329,7 +356,7 @@ let DoulaService = class DoulaService {
                                 },
                             },
                         },
-                        DoulaImages: true,
+                        DoulaGallery: true,
                     },
                 },
             },
@@ -338,12 +365,19 @@ let DoulaService = class DoulaService {
             throw new common_1.NotFoundException('Doula not found');
         }
         const profile = doula.doulaProfile;
-        const services = profile?.ServicePricing
-            ?.map(p => p.service?.name)
-            .filter(Boolean) ?? [];
-        const regions = profile?.Region
-            ?.map(r => r.regionName)
-            .filter(Boolean) ?? [];
+        const services = profile?.ServicePricing?.map(p => {
+            if (!p.service)
+                return null;
+            return {
+                id: p.service.id,
+                name: p.service.name,
+            };
+        }).filter(Boolean) ??
+            [];
+        const regions = profile?.Region?.map(r => ({
+            id: r.id,
+            name: r.regionName,
+        })) ?? [];
         const testimonials = profile?.Testimonials ?? [];
         const reviewsCount = testimonials.length;
         const avgRating = reviewsCount > 0
@@ -371,18 +405,19 @@ let DoulaService = class DoulaService {
             email: doula.email,
             profileId: profile?.id ?? null,
             yoe: profile?.yoe ?? null,
+            specialities: profile?.specialities,
             description: profile?.description ?? null,
             achievements: profile?.achievements ?? null,
             qualification: profile?.qualification ?? null,
+            profileImage: profile?.profile_image ?? null,
             serviceNames: services,
             regionNames: regions,
             ratings: avgRating,
             reviewsCount,
             nextImmediateAvailabilityDate,
-            images: profile?.DoulaImages?.map(img => ({
+            galleryImages: profile?.DoulaGallery?.map(img => ({
                 id: img.id,
                 url: img.url,
-                isPrimary: img.isMain ?? false,
                 createdAt: img.createdAt,
             })) ?? [],
             testimonials: testimonials.map(t => ({
@@ -931,86 +966,59 @@ let DoulaService = class DoulaService {
             },
         };
     }
-    async addDoulaprofileImage(userId, file, isMain = false, sortOrder = 0, altText) {
-        if (!file) {
-            throw new common_1.BadRequestException('Image file is required');
-        }
+    async addDoulaprofileImage(userId, profileImageUrl) {
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
             where: { userId },
         });
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const imageUrl = `/uploads/doula/${file.filename}`;
-        return this.prisma.$transaction(async (tx) => {
-            if (isMain) {
-                await tx.doulaImages.updateMany({
-                    where: {
-                        doulaProfileId: doulaProfile.id,
-                        isMain: true,
-                    },
-                    data: { isMain: false },
-                });
-            }
-            const image = await tx.doulaImages.create({
-                data: {
-                    doulaProfileId: doulaProfile.id,
-                    url: imageUrl,
-                    altText,
-                    isMain,
-                    sortOrder,
-                },
-            });
-            return {
-                message: 'Image uploaded successfully',
-                data: image,
-            };
+        await this.prisma.doulaProfile.update({
+            where: { userId: userId },
+            data: { profile_image: profileImageUrl }
         });
+        return {
+            message: 'Image uploaded successfully',
+            data: doulaProfile
+        };
     }
+    ;
     async getDoulaImages(userId) {
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
             where: { userId },
-            select: { id: true },
+            select: { id: true, profile_image: true },
         });
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const images = await this.prisma.doulaImages.findMany({
+        const images = await this.prisma.doulaProfile.findUnique({
             where: {
-                doulaProfileId: doulaProfile.id,
+                userId: doulaProfile.id,
             },
-            orderBy: [
-                { isMain: 'desc' },
-                { sortOrder: 'asc' },
-            ],
+            select: { profile_image: true }
         });
         return {
             status: 'success',
-            message: 'Doula images fetched successfully',
-            data: images,
+            message: 'Doula Profile Image fetched successfully',
+            data: doulaProfile,
         };
     }
-    async deleteDoulaprofileImage(userId, imageId) {
+    async deleteDoulaprofileImage(userId) {
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
             where: { userId },
         });
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const image = await this.prisma.doulaImages.findUnique({
-            where: { id: imageId },
-        });
-        if (!image || image.doulaProfileId !== doulaProfile.id) {
-            throw new common_1.NotFoundException('Image not found');
-        }
-        await this.prisma.doulaImages.delete({
-            where: { id: imageId },
+        const image = await this.prisma.doulaProfile.update({
+            where: { userId: userId },
+            data: { profile_image: null }
         });
         return { message: 'Image deleted successfully' };
     }
-    async addDoulaGalleryImage(userId, file, altText) {
-        if (!file) {
-            throw new common_1.BadRequestException('Image file is required');
+    async addDoulaGalleryImages(userId, files, altText) {
+        if (!files || files.length === 0) {
+            throw new common_1.BadRequestException('At least one image is required');
         }
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
             where: { userId },
@@ -1018,17 +1026,31 @@ let DoulaService = class DoulaService {
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const imageUrl = `uploads/doulas/${file.filename}`;
-        const image = await this.prisma.doulaGallery.create({
-            data: {
+        const galleryData = files.map((file) => ({
+            doulaProfileId: doulaProfile.id,
+            url: `uploads/doulas/${file.filename}`,
+            altText,
+        }));
+        await this.prisma.doulaGallery.createMany({
+            data: galleryData,
+        });
+        const images = await this.prisma.doulaGallery.findMany({
+            where: {
                 doulaProfileId: doulaProfile.id,
-                url: imageUrl,
-                altText,
+                url: {
+                    in: galleryData.map((g) => g.url),
+                },
+            },
+            select: {
+                id: true,
+                url: true,
+                altText: true,
+                createdAt: true,
             },
         });
         return {
-            message: 'Gallery image uploaded successfully',
-            data: image,
+            message: 'Gallery images uploaded successfully',
+            data: images,
         };
     }
     async getDoulaGalleryImages(userId) {
@@ -1071,6 +1093,107 @@ let DoulaService = class DoulaService {
         });
         return {
             message: 'Gallery image deleted successfully',
+        };
+    }
+    async updateDoulaProfile(userId, dto) {
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, } = dto;
+        const data = await this.prisma.$transaction([
+            this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    ...(name !== undefined && { name }),
+                    ...(is_active !== undefined && { is_active }),
+                },
+            }),
+            this.prisma.doulaProfile.update({
+                where: { userId },
+                data: {
+                    ...(description !== undefined && { description }),
+                    ...(achievements !== undefined && { achievements }),
+                    ...(qualification !== undefined && { qualification }),
+                    ...(yoe !== undefined && { yoe }),
+                    ...(languages !== undefined && { languages }),
+                    ...(specialities !== undefined && { specialities }),
+                },
+            }),
+        ]);
+        return {
+            message: 'Doula profile updated successfully',
+            data: data
+        };
+    }
+    async getDoulaProfile(userId) {
+        const profile = await this.prisma.doulaProfile.findUnique({
+            where: { userId: userId },
+        });
+        if (!profile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        return profile;
+    }
+    async getCertificates(userId) {
+        const doulaProfile = await this.getDoulaProfile(userId);
+        console.log("dola, ", doulaProfile);
+        return this.prisma.certificates.findMany({
+            where: { doulaProfileId: doulaProfile.id },
+            orderBy: { year: 'desc' },
+        });
+    }
+    async getCertificateById(userId, certificateId) {
+        const doulaProfile = await this.getDoulaProfile(userId);
+        const certificate = await this.prisma.certificates.findFirst({
+            where: {
+                id: certificateId,
+                doulaProfileId: doulaProfile.id,
+            },
+        });
+        if (!certificate) {
+            throw new common_1.NotFoundException('Certificate not found');
+        }
+        return certificate;
+    }
+    async updateCertificate(userId, certificateId, dto) {
+        const doulaProfile = await this.getDoulaProfile(userId);
+        const certificate = await this.prisma.certificates.findFirst({
+            where: {
+                id: certificateId,
+                doulaProfileId: doulaProfile.id,
+            },
+        });
+        if (!certificate) {
+            throw new common_1.NotFoundException('Certificate not found');
+        }
+        return this.prisma.certificates.update({
+            where: { id: certificateId },
+            data: {
+                ...(dto.name !== undefined && { name: dto.name }),
+                ...(dto.issuedBy !== undefined && { issuedBy: dto.issuedBy }),
+                ...(dto.year !== undefined && { year: dto.year }),
+            },
+        });
+    }
+    async deleteCertificate(userId, certificateId) {
+        const doulaProfile = await this.getDoulaProfile(userId);
+        const certificate = await this.prisma.certificates.findFirst({
+            where: {
+                id: certificateId,
+                doulaProfileId: doulaProfile.id,
+            },
+        });
+        if (!certificate) {
+            throw new common_1.NotFoundException('Certificate not found');
+        }
+        await this.prisma.certificates.delete({
+            where: { id: certificateId },
+        });
+        return {
+            message: 'Certificate deleted successfully',
         };
     }
 };

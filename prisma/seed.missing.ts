@@ -131,26 +131,6 @@ async function main() {
     });
 
     /* =========================
-       DOULA IMAGES
-    ========================= */
-
-    await prisma.doulaImages.createMany({
-        data: [
-            {
-                doulaProfileId: doula.id,
-                url: 'https://cdn.test/doula/main.jpg',
-                altText: 'Profile Image',
-                isMain: true,
-            },
-            {
-                doulaProfileId: doula.id,
-                url: 'https://cdn.test/doula/secondary.jpg',
-                altText: 'Secondary Image',
-            },
-        ],
-    });
-
-    /* =========================
        DOULA GALLERY
     ========================= */
 

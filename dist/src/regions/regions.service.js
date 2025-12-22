@@ -51,6 +51,7 @@ let RegionService = class RegionService {
             latitude: region.latitude,
             longitude: region.longitude,
             is_active: region.is_active,
+            zoneManagerId: region.zoneManagerId,
         }));
         return {
             message: 'Regions fetched successfully',

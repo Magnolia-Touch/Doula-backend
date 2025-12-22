@@ -1,6 +1,8 @@
-import { IsArray, IsEmail, IsNumber, IsObject, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { IsArray, IsEmail, IsNumber, IsObject, IsOptional, IsPhoneNumber, IsString, ValidateNested } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { CreateCertificateDto } from './certificate.dto';
+import { BadRequestException } from '@nestjs/common';
 
 export class CreateDoulaDto {
     @IsString()
@@ -33,6 +35,7 @@ export class CreateDoulaDto {
     description: string;
 
     @IsString()
+    @IsOptional()
     achievements: string;
 
     @IsString()
@@ -80,4 +83,48 @@ export class CreateDoulaDto {
     })
     @IsObject()
     services: Record<string, number>;
+
+    // languages also from string → convert to array
+    @Transform(({ value }) => {
+        if (!value) return [];
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch {
+                return value.split(','); // support comma separated
+            }
+        }
+        return value;
+    })
+    @IsArray()
+    @IsOptional()
+    @IsString({ each: true })
+    @IsOptional()
+    specialities: string;
+
+    // ----------------------------------------
+    // Certificates (DTO1 inside DTO2)
+    // ----------------------------------------
+    // ⛔ accept as string ONLY
+    @IsOptional()
+    @IsString()
+    certificates?: string;
+
+    // ✅ derived, validated property
+    get parsedCertificates(): CreateCertificateDto[] {
+        if (!this.certificates) return [];
+
+        const parsed = JSON.parse(this.certificates);
+
+        if (!Array.isArray(parsed)) {
+            throw new Error('Certificates must be an array');
+        }
+
+        return parsed.map((item) =>
+            Object.assign(new CreateCertificateDto(), item),
+        );
+    }
+
+
+
 }

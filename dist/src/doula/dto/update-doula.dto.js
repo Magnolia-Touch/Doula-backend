@@ -9,34 +9,58 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateDoulaRegionDto = void 0;
-const swagger_1 = require("@nestjs/swagger");
+exports.UpdateDoulaProfileDto = void 0;
 const class_validator_1 = require("class-validator");
-class UpdateDoulaRegionDto {
-    profileId;
-    regionIds;
-    purpose;
+const class_transformer_1 = require("class-transformer");
+class UpdateDoulaProfileDto {
+    name;
+    is_active;
+    description;
+    achievements;
+    qualification;
+    yoe;
+    languages;
+    specialities;
 }
-exports.UpdateDoulaRegionDto = UpdateDoulaRegionDto;
+exports.UpdateDoulaProfileDto = UpdateDoulaProfileDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5' }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateDoulaRegionDto.prototype, "profileId", void 0);
+], UpdateDoulaProfileDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        example: [
-            '96efbdce-d7cb-43bb-8787-626c198be1a4',
-            '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
-        ],
-    }),
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsString)({ each: true }),
-    __metadata("design:type", Array)
-], UpdateDoulaRegionDto.prototype, "regionIds", void 0);
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateDoulaProfileDto.prototype, "is_active", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "'add' or 'remove'", description: "Use 'add' to attach regions or 'remove' to detach" }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateDoulaRegionDto.prototype, "purpose", void 0);
+], UpdateDoulaProfileDto.prototype, "description", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateDoulaProfileDto.prototype, "achievements", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateDoulaProfileDto.prototype, "qualification", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], UpdateDoulaProfileDto.prototype, "yoe", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Object)
+], UpdateDoulaProfileDto.prototype, "languages", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Object)
+], UpdateDoulaProfileDto.prototype, "specialities", void 0);
 //# sourceMappingURL=update-doula.dto.js.map

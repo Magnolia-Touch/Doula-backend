@@ -125,11 +125,9 @@ export declare class AuthService {
                     doulaImages: {
                         id: string;
                         createdAt: Date;
-                        sortOrder: number;
                         doulaProfileId: string;
                         url: string;
                         altText: string | null;
-                        isMain: boolean;
                     }[];
                 };
             }[];
@@ -176,11 +174,9 @@ export declare class AuthService {
             doulaImages: {
                 id: string;
                 createdAt: Date;
-                sortOrder: number;
                 doulaProfileId: string;
                 url: string;
                 altText: string | null;
-                isMain: boolean;
             }[];
             profile_image?: undefined;
             notes?: undefined;

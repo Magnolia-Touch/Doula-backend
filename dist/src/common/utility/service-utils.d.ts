@@ -40,6 +40,7 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
     id: string;
     createdAt: Date;
     updatedAt: Date;
+    profile_image: string | null;
     userId: string;
     regionId: string | null;
     description: string | null;
@@ -47,6 +48,7 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
     qualification: string | null;
     yoe: number | null;
     languages: import("@prisma/client/runtime/library").JsonValue | null;
+    specialities: import("@prisma/client/runtime/library").JsonValue | null;
 }>;
 export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;
 export declare function findUserOrThrowwithId(prisma: PrismaService, userId: string): Promise<{

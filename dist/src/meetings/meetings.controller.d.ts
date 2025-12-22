@@ -162,6 +162,7 @@ export declare class MeetingsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            profile_image: string | null;
             userId: string;
             regionId: string | null;
             description: string | null;
@@ -169,6 +170,7 @@ export declare class MeetingsController {
             qualification: string | null;
             yoe: number | null;
             languages: import("@prisma/client/runtime/library").JsonValue | null;
+            specialities: import("@prisma/client/runtime/library").JsonValue | null;
         } | null;
         Service: {
             id: string;

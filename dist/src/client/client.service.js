@@ -93,8 +93,7 @@ let ClientsService = class ClientsService {
                                         name: true,
                                     },
                                 },
-                                DoulaImages: {
-                                    where: { isMain: true },
+                                DoulaGallery: {
                                     select: {
                                         url: true,
                                     },
@@ -128,8 +127,8 @@ let ClientsService = class ClientsService {
             servicePricingId: booking.servicePricingId,
             service: booking.service.service.name,
             doulaName: booking.DoulaProfile.user.name,
-            mainDoulaImage: booking.DoulaProfile.DoulaImages.length > 0
-                ? booking.DoulaProfile.DoulaImages[0].url
+            mainDoulaImage: booking.DoulaProfile.DoulaGallery.length > 0
+                ? booking.DoulaProfile.DoulaGallery[0].url
                 : null,
         }));
     }
@@ -171,8 +170,7 @@ let ClientsService = class ClientsService {
                                 name: true,
                             },
                         },
-                        DoulaImages: {
-                            where: { isMain: true },
+                        DoulaGallery: {
                             select: {
                                 url: true,
                             },
@@ -201,8 +199,8 @@ let ClientsService = class ClientsService {
             servicePricingId: booking.servicePricingId,
             service: booking.service.service.name,
             doulaName: booking.DoulaProfile.user.name,
-            mainDoulaImage: booking.DoulaProfile.DoulaImages.length > 0
-                ? booking.DoulaProfile.DoulaImages[0].url
+            mainDoulaImage: booking.DoulaProfile.DoulaGallery.length > 0
+                ? booking.DoulaProfile.DoulaGallery[0].url
                 : null,
         };
     }

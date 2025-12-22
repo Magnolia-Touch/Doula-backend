@@ -13,6 +13,7 @@ exports.CreateDoulaDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
+const certificate_dto_1 = require("./certificate.dto");
 class CreateDoulaDto {
     name;
     email;
@@ -24,6 +25,17 @@ class CreateDoulaDto {
     yoe;
     languages;
     services;
+    specialities;
+    certificates;
+    get parsedCertificates() {
+        if (!this.certificates)
+            return [];
+        const parsed = JSON.parse(this.certificates);
+        if (!Array.isArray(parsed)) {
+            throw new Error('Certificates must be an array');
+        }
+        return parsed.map((item) => Object.assign(new certificate_dto_1.CreateCertificateDto(), item));
+    }
 }
 exports.CreateDoulaDto = CreateDoulaDto;
 __decorate([
@@ -60,6 +72,7 @@ __decorate([
 ], CreateDoulaDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateDoulaDto.prototype, "achievements", void 0);
 __decorate([
@@ -114,4 +127,29 @@ __decorate([
     (0, class_validator_1.IsObject)(),
     __metadata("design:type", Object)
 ], CreateDoulaDto.prototype, "services", void 0);
+__decorate([
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (!value)
+            return [];
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            }
+            catch {
+                return value.split(',');
+            }
+        }
+        return value;
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateDoulaDto.prototype, "specialities", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateDoulaDto.prototype, "certificates", void 0);
 //# sourceMappingURL=create-doula.dto.js.map

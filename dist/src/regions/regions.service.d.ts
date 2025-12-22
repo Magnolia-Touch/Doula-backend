@@ -29,6 +29,7 @@ export declare class RegionService {
             latitude: string;
             longitude: string;
             is_active: boolean;
+            zoneManagerId: string | null;
         }[];
         meta: {
             total: number;

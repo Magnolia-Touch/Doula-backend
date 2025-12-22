@@ -1,22 +1,38 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class UpdateDoulaRegionDto {
-    @ApiProperty({ example: '4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5' })
+export class UpdateDoulaProfileDto {
+    // User table
+    @IsOptional()
     @IsString()
-    profileId: string;
+    name?: string;
 
-    @ApiProperty({
-        example: [
-            '96efbdce-d7cb-43bb-8787-626c198be1a4',
-            '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
-        ],
-    })
-    @IsArray()
-    @IsString({ each: true })
-    regionIds: string[];
+    @IsOptional()
+    @IsBoolean()
+    is_active?: boolean;
 
-    @ApiProperty({ example: "'add' or 'remove'", description: "Use 'add' to attach regions or 'remove' to detach" })
+    // DoulaProfile table
+    @IsOptional()
     @IsString()
-    purpose: string;
+    description?: string;
+
+    @IsOptional()
+    @IsString()
+    achievements?: string;
+
+    @IsOptional()
+    @IsString()
+    qualification?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(0)
+    yoe?: number;
+
+    @IsOptional()
+    languages?: any;
+
+    @IsOptional()
+    specialities?: any;
 }

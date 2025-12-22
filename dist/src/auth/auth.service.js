@@ -116,7 +116,7 @@ let AuthService = class AuthService {
                 doulaProfile: {
                     include: {
                         Region: true,
-                        DoulaImages: true,
+                        DoulaGallery: true,
                     },
                 },
                 clientProfile: true,
@@ -136,7 +136,7 @@ let AuthService = class AuthService {
                                     },
                                 },
                                 Region: true,
-                                DoulaImages: true,
+                                DoulaGallery: true,
                             },
                         },
                         notes: true,
@@ -197,7 +197,7 @@ let AuthService = class AuthService {
                                         regionId: r.id,
                                         regionName: r.regionName,
                                     })),
-                                    doulaImages: doula.DoulaImages,
+                                    doulaImages: doula.DoulaGallery,
                                 },
                             })),
                             notes: user.zonemanagerprofile.notes,
@@ -220,7 +220,7 @@ let AuthService = class AuthService {
                                 regionId: region.id,
                                 regionName: region.regionName,
                             })),
-                            doulaImages: user.doulaProfile.DoulaImages,
+                            doulaImages: user.doulaProfile.DoulaGallery,
                         }
                         : null,
                 };

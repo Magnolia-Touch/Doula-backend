@@ -86,11 +86,13 @@ model DoulaProfile {
   user          User     @relation("UserDoulaProfile", fields: [userId], references: [id], onDelete: Cascade)
   userId        String   @unique
   regionId      String?
+  profile_image String?
   description   String?  @db.Text()
   achievements  String?  @db.Text()
   qualification String?  @db.Text()
   yoe           Int?
   languages     Json?
+  specialities  Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -105,8 +107,8 @@ model DoulaProfile {
   ServicePricing           ServicePricing[]
   Testimonials             Testimonials[]
   Schedules                Schedules[]
-  DoulaImages              DoulaImages[]
   DoulaGallery             DoulaGallery[]
+  Certificates             Certificates[]
 }
 
 // Client Profile
@@ -466,20 +468,6 @@ model DeviceToken {
   createdAt DateTime @default(now())
 }
 
-model DoulaImages {
-  id             String   @id @default(uuid())
-  doulaProfileId String
-  url            String
-  altText        String?
-  isMain         Boolean  @default(false)
-  sortOrder      Int      @default(0)
-  createdAt      DateTime @default(now())
-
-  doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
-
-  @@index([doulaProfileId])
-}
-
 model DoulaGallery {
   id             String   @id @default(uuid())
   doulaProfileId String
@@ -489,3 +477,14 @@ model DoulaGallery {
 
   doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 }
+
+model Certificates {
+  id             String @id @default(uuid())
+  name           String
+  issuedBy       String @default("Unknown")
+  year           String @default("0000")
+  doulaProfileId String
+
+  doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+}
+

@@ -140,7 +140,7 @@ export class AuthService {
                 doulaProfile: {
                     include: {
                         Region: true,
-                        DoulaImages: true,
+                        DoulaGallery: true,
                     },
                 },
                 clientProfile: true,
@@ -160,7 +160,7 @@ export class AuthService {
                                     },
                                 },
                                 Region: true,
-                                DoulaImages: true,
+                                DoulaGallery: true,
                             },
                         },
                         notes: true,
@@ -233,7 +233,7 @@ export class AuthService {
                                         regionName: r.regionName,
                                     })),
 
-                                    doulaImages: doula.DoulaImages,
+                                    doulaImages: doula.DoulaGallery,
                                 },
                             })),
 
@@ -261,7 +261,7 @@ export class AuthService {
                                 regionName: region.regionName,
                             })),
 
-                            doulaImages: user.doulaProfile.DoulaImages,
+                            doulaImages: user.doulaProfile.DoulaGallery,
                         }
                         : null,
                 };
