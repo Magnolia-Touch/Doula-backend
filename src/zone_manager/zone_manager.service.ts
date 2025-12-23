@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
-import { BookingStatus, Prisma, Role, ServiceStatus } from '@prisma/client';
+import { BookingStatus, MeetingStatus, Prisma, Role, ServiceStatus } from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
 import { findRegionOrThrow, findZoneManagerOrThrowWithId } from 'src/common/utility/service-utils';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
@@ -670,6 +670,7 @@ export class ZoneManagerService {
         page = 1,
         limit = 10,
         search?: string,
+        status?: MeetingStatus
     ) {
 
         // Fetch zone manager profile
@@ -709,39 +710,44 @@ export class ZoneManagerService {
                 { doulaProfileId: { in: doulaIds } },
             ],
         };
+        where.AND = [];
         if (search) {
-            where.AND = [
-                {
-                    OR: [
-                        // Client name search
-                        {
-                            bookedBy: {
-                                user: {
-                                    name: {
-                                        contains: search.toLowerCase()
-                                    },
-                                },
-                            },
-                        },
-
-                        // Service name via Service relation
-                        {
-                            Service: {
+            where.AND.push({
+                OR: [
+                    // Client name search
+                    {
+                        bookedBy: {
+                            user: {
                                 name: {
                                     contains: search.toLowerCase()
                                 },
                             },
                         },
+                    },
 
-                        // Fallback serviceName stored in Meetings table
-                        {
-                            serviceName: {
+                    // Service name via Service relation
+                    {
+                        Service: {
+                            name: {
                                 contains: search.toLowerCase()
                             },
                         },
-                    ],
-                },
-            ];
+                    },
+
+                    // Fallback serviceName stored in Meetings table
+                    {
+                        serviceName: {
+                            contains: search.toLowerCase()
+                        },
+                    },
+                ],
+            })
+        }
+
+        if (status) {
+            where.AND.push({
+                status: status
+            })
         }
 
 

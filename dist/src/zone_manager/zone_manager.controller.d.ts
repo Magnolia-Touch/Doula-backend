@@ -1,6 +1,6 @@
 import { ZoneManagerService } from './zone_manager.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
-import { BookingStatus, ServiceStatus } from '@prisma/client';
+import { BookingStatus, MeetingStatus, ServiceStatus } from '@prisma/client';
 import { RegionAssignmentCheckDto, UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 export declare class ZoneManagerController {
     private readonly service;
@@ -181,7 +181,7 @@ export declare class ZoneManagerController {
             hasPrevPage: boolean;
         };
     }>;
-    getZoneManagerMeetings(req: any, page?: string, limit?: string, search?: string): Promise<{
+    getZoneManagerMeetings(req: any, page?: string, limit?: string, search?: string, status?: MeetingStatus): Promise<{
         success: boolean;
         message: string;
         data: {

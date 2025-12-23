@@ -19,7 +19,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { BookingStatus, Role, ServiceStatus } from '@prisma/client';
+import { BookingStatus, MeetingStatus, Role, ServiceStatus } from '@prisma/client';
 import { RegionAssignmentCheckDto, UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -376,12 +376,14 @@ export class ZoneManagerController {
         @Query('page') page?: string,
         @Query('limit') limit?: string,
         @Query('search') search?: string,
+        @Query('status') status?: MeetingStatus,
     ) {
         return this.service.getZoneManagerMeetings(
             req.user.id,
             Number(page) || 1,
             Number(limit) || 10,
             search?.trim(),
+            status
         );
     }
 

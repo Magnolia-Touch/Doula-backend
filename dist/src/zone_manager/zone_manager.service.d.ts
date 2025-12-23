@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
-import { BookingStatus, Prisma, ServiceStatus } from '@prisma/client';
+import { BookingStatus, MeetingStatus, Prisma, ServiceStatus } from '@prisma/client';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 export declare class ZoneManagerService {
     private prisma;
@@ -188,7 +188,7 @@ export declare class ZoneManagerService {
             hasPrevPage: boolean;
         };
     }>;
-    getZoneManagerMeetings(userId: string, page?: number, limit?: number, search?: string): Promise<{
+    getZoneManagerMeetings(userId: string, page?: number, limit?: number, search?: string, status?: MeetingStatus): Promise<{
         success: boolean;
         message: string;
         data: {
