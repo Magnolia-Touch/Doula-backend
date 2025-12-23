@@ -90,13 +90,6 @@ export class EnquiryService {
             region.zoneManagerId,
         );
 
-        // Get User (manager email)
-        //Every User have two table- one user table(to store common) and one profile table
-        // const zoneMngrssertbldata = await findUserOrThrowwithId(
-        //     this.prisma,
-        //     zoneManager.userId || '',
-        // );
-
         // 2. Validate Slot
         const slot = await findSlotOrThrow(this.prisma, {
             ownerRole: Role.ZONE_MANAGER,

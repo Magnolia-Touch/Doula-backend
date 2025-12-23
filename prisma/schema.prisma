@@ -78,6 +78,7 @@ model ZoneManagerProfile {
   notes                    Notes[]
   availableSlotsForMeeting AvailableSlotsForMeeting[]
   Meeting                  Meetings[]
+  OffDays                  OffDays[]
 }
 
 // Doula Profile
@@ -109,6 +110,7 @@ model DoulaProfile {
   Schedules                Schedules[]
   DoulaGallery             DoulaGallery[]
   Certificates             Certificates[]
+  OffDays                  OffDays[]
 }
 
 // Client Profile
@@ -490,4 +492,20 @@ model Certificates {
   doulaProfileId String
 
   doulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+}
+
+model OffDays {
+  id        String    @id @default(uuid())
+  date      DateTime
+  startTime DateTime? @db.Time(0)
+  endTime   DateTime? @db.Time(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  zoneManagerProfileId String?
+  doulaProfileId       String?
+
+  ZoneManagerProfile ZoneManagerProfile? @relation(fields: [zoneManagerProfileId], references: [id], onDelete: Cascade)
+  DoulaProfile       DoulaProfile?       @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 }

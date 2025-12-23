@@ -22,7 +22,7 @@ const MAX_GALLERY_IMAGES = 5;
 
 @Injectable()
 export class DoulaService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Create new Doula
   //if admin is creating doula, zone manager of regions are added to doulas profile.
@@ -383,11 +383,11 @@ export class DoulaService {
         doulaProfileId: { in: doulaProfileIds },
         ...(rangeStart || rangeEnd
           ? {
-              date: {
-                ...(rangeStart && { gte: rangeStart }),
-                ...(rangeEnd && { lte: rangeEnd }),
-              },
-            }
+            date: {
+              ...(rangeStart && { gte: rangeStart }),
+              ...(rangeEnd && { lte: rangeEnd }),
+            },
+          }
           : {}),
       },
       select: {
@@ -488,6 +488,7 @@ export class DoulaService {
     };
   }
 
+
   async getById(id: string) {
     const doula = await this.prisma.user.findUnique({
       where: { id },
@@ -558,36 +559,19 @@ export class DoulaService {
     /* ----------------------------------------------------
      * Next availability (computed from weekday)
      * -------------------------------------------------- */
-    const today = new Date();
-    const todayIndex = today.getDay(); // 0 (Sun) - 6 (Sat)
+    /* ----------------------------------------------------
+  * Next availability (from schedules – SAME as get())
+  * -------------------------------------------------- */
+    const nextSchedule = await this.prisma.schedules.findFirst({
+      where: {
+        doulaProfileId: doula.id,
+        date: { gte: new Date() },
+      },
+      orderBy: { date: 'asc' },
+      select: { date: true },
+    });
 
-    const weekdayOrder: Record<string, number> = {
-      SUNDAY: 0,
-      MONDAY: 1,
-      TUESDAY: 2,
-      WEDNESDAY: 3,
-      THURSDAY: 4,
-      FRIDAY: 5,
-      SATURDAY: 6,
-    };
-
-    const availableWeekdays =
-      profile?.AvailableSlotsForService?.map((s) => weekdayOrder[s.weekday]) ??
-      [];
-
-    const nextImmediateAvailabilityDate =
-      availableWeekdays.length > 0
-        ? new Date(
-            today.setDate(
-              today.getDate() +
-                Math.min(
-                  ...availableWeekdays.map((d) =>
-                    d >= todayIndex ? d - todayIndex : 7 - todayIndex + d,
-                  ),
-                ),
-            ),
-          )
-        : null;
+    const nextImmediateAvailabilityDate = nextSchedule?.date ?? null;
 
     /* ----------------------------------------------------
      * Final Response
@@ -913,10 +897,10 @@ export class DoulaService {
 
         client: meeting.bookedBy?.user
           ? {
-              clientId: meeting.bookedBy.user.id,
-              name: meeting.bookedBy.user.name,
-              email: meeting.bookedBy.user.email,
-            }
+            clientId: meeting.bookedBy.user.id,
+            name: meeting.bookedBy.user.name,
+            email: meeting.bookedBy.user.email,
+          }
           : null,
       },
     };
@@ -1003,6 +987,7 @@ export class DoulaService {
         endTime: schedule.endTime,
         serviceName: schedule.ServicePricing.service.name,
         clientName: schedule.client.user.name,
+        status: schedule.status,
       })),
       meta: result.meta,
     };
@@ -1076,10 +1061,10 @@ export class DoulaService {
 
         client: schedule.client?.user
           ? {
-              clientId: schedule.client.user.id,
-              name: schedule.client.user.name,
-              email: schedule.client.user.email,
-            }
+            clientId: schedule.client.user.id,
+            name: schedule.client.user.name,
+            email: schedule.client.user.email,
+          }
           : null,
       },
     };
@@ -1435,6 +1420,7 @@ export class DoulaService {
             altText: true,
           },
         },
+        Certificates: { select: { id: true, issuedBy: true, name: true, year: true } }
       },
     });
 
@@ -1484,15 +1470,12 @@ export class DoulaService {
         // About
         about: doula.description,
 
-        // Certifications
-        certifications: [
-          ...(doula.qualification
-            ? doula.qualification.split(',').map((q) => q.trim())
-            : []),
-          ...(doula.achievements
-            ? doula.achievements.split(',').map((a) => a.trim())
-            : []),
-        ],
+        certificates: doula.Certificates.map((cert) => ({
+          id: cert.id,
+          name: cert.name,
+          issuedBy: cert.issuedBy,
+          year: cert.year
+        })),
 
         // Gallery
         gallery: doula.DoulaGallery.map((img) => ({
@@ -1970,10 +1953,10 @@ export class DoulaService {
         name: booking.region.regionName,
         zoneManager: booking.region.zoneManager?.user
           ? {
-              id: booking.region.zoneManager.id,
-              name: booking.region.zoneManager.user.name,
-              email: booking.region.zoneManager.user.email,
-            }
+            id: booking.region.zoneManager.id,
+            name: booking.region.zoneManager.user.name,
+            email: booking.region.zoneManager.user.email,
+          }
           : null,
       },
 

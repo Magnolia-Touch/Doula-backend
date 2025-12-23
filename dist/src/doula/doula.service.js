@@ -398,23 +398,15 @@ let DoulaService = class DoulaService {
         const avgRating = reviewsCount > 0
             ? testimonials.reduce((sum, t) => sum + t.ratings, 0) / reviewsCount
             : null;
-        const today = new Date();
-        const todayIndex = today.getDay();
-        const weekdayOrder = {
-            SUNDAY: 0,
-            MONDAY: 1,
-            TUESDAY: 2,
-            WEDNESDAY: 3,
-            THURSDAY: 4,
-            FRIDAY: 5,
-            SATURDAY: 6,
-        };
-        const availableWeekdays = profile?.AvailableSlotsForService?.map((s) => weekdayOrder[s.weekday]) ??
-            [];
-        const nextImmediateAvailabilityDate = availableWeekdays.length > 0
-            ? new Date(today.setDate(today.getDate() +
-                Math.min(...availableWeekdays.map((d) => d >= todayIndex ? d - todayIndex : 7 - todayIndex + d))))
-            : null;
+        const nextSchedule = await this.prisma.schedules.findFirst({
+            where: {
+                doulaProfileId: doula.id,
+                date: { gte: new Date() },
+            },
+            orderBy: { date: 'asc' },
+            select: { date: true },
+        });
+        const nextImmediateAvailabilityDate = nextSchedule?.date ?? null;
         const transformed = {
             userId: doula.id,
             name: doula.name,
@@ -720,6 +712,7 @@ let DoulaService = class DoulaService {
                 endTime: schedule.endTime,
                 serviceName: schedule.ServicePricing.service.name,
                 clientName: schedule.client.user.name,
+                status: schedule.status,
             })),
             meta: result.meta,
         };
@@ -1055,6 +1048,7 @@ let DoulaService = class DoulaService {
                         altText: true,
                     },
                 },
+                Certificates: { select: { id: true, issuedBy: true, name: true, year: true } }
             },
         });
         if (!doula) {
@@ -1082,14 +1076,12 @@ let DoulaService = class DoulaService {
                     location: doula.Region?.[0]?.regionName ?? null,
                 },
                 about: doula.description,
-                certifications: [
-                    ...(doula.qualification
-                        ? doula.qualification.split(',').map((q) => q.trim())
-                        : []),
-                    ...(doula.achievements
-                        ? doula.achievements.split(',').map((a) => a.trim())
-                        : []),
-                ],
+                certificates: doula.Certificates.map((cert) => ({
+                    id: cert.id,
+                    name: cert.name,
+                    issuedBy: cert.issuedBy,
+                    year: cert.year
+                })),
                 gallery: doula.DoulaGallery.map((img) => ({
                     id: img.id,
                     url: img.url,

@@ -20,9 +20,10 @@ import {
 import { paginate } from 'src/common/utility/pagination.util';
 import { format } from 'date-fns';
 import { Role } from '@prisma/client';
+import { MarkOffDaysDto } from './dto/off-days.dto';
 @Injectable()
 export class AvailableSlotsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async createAvailability(dto: AvailableSlotsForMeetingDto, user: any) {
     let profile: any;
@@ -516,4 +517,105 @@ export class AvailableSlotsService {
       meta: result.meta,
     };
   }
+
+
+  async markOffDays(user: any, dto: MarkOffDaysDto) {
+    const { date, startTime, endTime } = dto
+    const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
+    const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
+
+    if (user.role === Role.DOULA) {
+      const doula = await this.prisma.doulaProfile.findUnique({
+        where: { userId: user.id }
+      })
+      if (!doula) {
+        throw new NotFoundException("Doula Not Found")
+      }
+      const offdays = await this.prisma.offDays.create({
+        data: {
+          date: new Date(date),
+          startTime: startDateTime,
+          endTime: endDateTime,
+          doulaProfileId: doula.id
+        }
+      })
+    }
+    else if (user.role === Role.ZONE_MANAGER) {
+      const zm = await this.prisma.zoneManagerProfile.findUnique({
+        where: { userId: user.id }
+      })
+      console.log(user)
+      if (!zm) {
+        throw new NotFoundException("Zone Manager Not Found")
+      }
+      const offdays = await this.prisma.offDays.create({
+        data: {
+          date: new Date(date),
+          startTime: startDateTime,
+          endTime: endDateTime,
+          zoneManagerProfileId: zm.id
+        }
+      })
+    }
+  }
+
+
+  //debug purpose only
+  async fetchOffdays(userId: string) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const offdays = await this.prisma.offDays.findMany({
+      where: {
+        date: { gte: today },
+        OR: [
+          { DoulaProfile: { userId: userId } },
+          { ZoneManagerProfile: { userId: userId } }
+        ]
+      },
+      orderBy: {
+        date: "asc"
+      }
+    })
+    return offdays
+  }
+
+  async fetchOffdaysbyid(userId: string, id: string) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const offdays = await this.prisma.offDays.findFirst({
+      where: {
+        id: id,
+        OR: [
+          { DoulaProfile: { userId: userId } },
+          { ZoneManagerProfile: { userId: userId } }
+        ]
+      },
+      orderBy: {
+        date: "asc"
+      }
+    })
+    return offdays
+  }
+
+
+
+  async DeleteOffdaysbyid(userId: string, id: string) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const offdays = await this.prisma.offDays.delete({
+      where: {
+        id: id,
+        OR: [
+          { DoulaProfile: { userId: userId } },
+          { ZoneManagerProfile: { userId: userId } }
+        ]
+      },
+    })
+    return { message: "Off days Deleted Successfully", data: offdays }
+  }
+
+
 }

@@ -22,6 +22,7 @@ const swagger_1 = require("@nestjs/swagger");
 const swagger_response_dto_1 = require("../common/dto/swagger-response.dto");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const client_1 = require("@prisma/client");
+const off_days_dto_1 = require("./dto/off-days.dto");
 let AvailableSlotsController = class AvailableSlotsController {
     service;
     constructor(service) {
@@ -53,6 +54,9 @@ let AvailableSlotsController = class AvailableSlotsController {
     }
     async findall(req) {
         return this.service.getMyAvailabilities(req.user.id);
+    }
+    async markOffDays(req, dto) {
+        return this.service.markOffDays(req.user, dto);
     }
 };
 exports.AvailableSlotsController = AvailableSlotsController;
@@ -316,6 +320,16 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AvailableSlotsController.prototype, "findall", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
+    (0, common_1.Get)('mark/offdays'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, off_days_dto_1.MarkOffDaysDto]),
+    __metadata("design:returntype", Promise)
+], AvailableSlotsController.prototype, "markOffDays", null);
 exports.AvailableSlotsController = AvailableSlotsController = __decorate([
     (0, swagger_1.ApiTags)('Meeting Slots'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

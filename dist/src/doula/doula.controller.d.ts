@@ -22,21 +22,6 @@ export declare class DoulaController {
                     userId: string | null;
                     profile_image: string | null;
                 }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
-                }[];
-                ServicePricing: {
-                    id: string;
-                    service: {
-                        name: string;
-                        description: string | null;
-                    };
-                    price: import("@prisma/client/runtime/library").Decimal;
-                    serviceId: string;
-                }[];
                 DoulaGallery: {
                     id: string;
                     createdAt: Date;
@@ -51,14 +36,29 @@ export declare class DoulaController {
                     issuedBy: string;
                     year: string;
                 }[];
+                ServicePricing: {
+                    service: {
+                        name: string;
+                        description: string | null;
+                    };
+                    id: string;
+                    serviceId: string;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                }[];
+                Region: {
+                    id: string;
+                    regionName: string;
+                    pincode: string;
+                    zoneManagerId: string | null;
+                }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
-                profile_image: string | null;
-                regionId: string | null;
                 description: string | null;
+                userId: string;
+                regionId: string | null;
+                profile_image: string | null;
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
@@ -194,10 +194,10 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            regionId: string | null;
             description: string | null;
+            userId: string;
+            regionId: string | null;
+            profile_image: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -250,6 +250,7 @@ export declare class DoulaController {
             endTime: Date;
             serviceName: string;
             clientName: string;
+            status: import("@prisma/client").$Enums.ServiceStatus;
         }[];
         meta: {
             total: number;
@@ -361,7 +362,12 @@ export declare class DoulaController {
                 location: string;
             };
             about: string | null;
-            certifications: string[];
+            certificates: {
+                id: string;
+                name: string;
+                issuedBy: string;
+                year: string;
+            }[];
             gallery: {
                 id: string;
                 url: string;
@@ -375,10 +381,10 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            regionId: string | null;
             description: string | null;
+            userId: string;
+            regionId: string | null;
+            profile_image: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -437,10 +443,10 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            regionId: string | null;
             description: string | null;
+            userId: string;
+            regionId: string | null;
+            profile_image: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;

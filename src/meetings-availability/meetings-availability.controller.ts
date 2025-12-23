@@ -33,6 +33,7 @@ import { toUTCDate } from 'src/common/utility/service-utils';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Role } from '@prisma/client';
+import { MarkOffDaysDto } from './dto/off-days.dto';
 
 @ApiTags('Meeting Slots')
 @ApiBearerAuth('bearer')
@@ -41,7 +42,7 @@ import { Role } from '@prisma/client';
   version: '1',
 })
 export class AvailableSlotsController {
-  constructor(private readonly service: AvailableSlotsService) {}
+  constructor(private readonly service: AvailableSlotsService) { }
 
   // CREATE SLOTS
   @UseGuards(JwtAuthGuard)
@@ -306,4 +307,13 @@ export class AvailableSlotsController {
   async findall(@Req() req) {
     return this.service.getMyAvailabilities(req.user.id);
   }
+
+  // Get SLOT (filtered)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER, Role.DOULA)
+  @Get('mark/offdays')
+  async markOffDays(@Req() req, @Body() dto: MarkOffDaysDto) {
+    return this.service.markOffDays(req.user, dto);
+  }
+
 }
