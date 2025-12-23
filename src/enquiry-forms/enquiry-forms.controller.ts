@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { EnquiryService } from './enquiry-forms.service';
 import { EnquiryFormDto } from './dto/create-enquiry-forms.dto';
 import {
@@ -10,6 +10,10 @@ import {
     ApiBody,
 } from '@nestjs/swagger';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @ApiTags('Enquiry Forms')
 @Controller({
@@ -56,10 +60,17 @@ export class EnquiryController {
             },
         },
     })
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
     @Get()
-    getAllEnquiries(@Query('page') page = '1', @Query('limit') limit = '10') {
-        return this.enquiryService.getAllEnquiries(parseInt(page), parseInt(limit));
+    getAllEnquiries(
+        @Query('page') page = '1',
+        @Query('limit') limit = '10',
+        @Req() req
+    ) {
+        return this.enquiryService.getAllEnquiries(parseInt(page), parseInt(limit), req.user.id);
     }
+
 
     @ApiOperation({ summary: 'Get enquiry by ID' })
     @ApiParam({ name: 'id', type: String })
@@ -74,10 +85,13 @@ export class EnquiryController {
             },
         },
     })
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
     @Get(':id')
-    getEnquiryById(@Param('id') id: string) {
-        return this.enquiryService.getEnquiryById(id);
+    getEnquiryById(@Param('id') id: string, @Req() req) {
+        return this.enquiryService.getEnquiryById(id, req.user.id);
     }
+
 
     @ApiOperation({ summary: 'Delete enquiry' })
     @ApiParam({ name: 'id', type: String })
@@ -90,6 +104,7 @@ export class EnquiryController {
     deleteEnquiry(@Param('id') id: string) {
         return this.enquiryService.deleteEnquiry(id);
     }
+
 
     @ApiOperation({ summary: 'Delete all enquiries' })
     @ApiResponse({

@@ -327,49 +327,6 @@ let MeetingsService = class MeetingsService {
                 : null,
         };
     }
-    async cancelMeeting(dto, user) {
-        const meeting = await this.prisma.meetings.findUnique({
-            where: { id: dto.meetingId },
-            include: {
-                DoulaProfile: {
-                    include: {
-                        zoneManager: true,
-                    },
-                },
-            },
-        });
-        if (!meeting)
-            throw new common_1.NotFoundException("Meeting not found");
-        if (user.role === client_1.Role.ADMIN) {
-        }
-        else if (user.role === client_1.Role.ZONE_MANAGER) {
-            const zoneManagerProfile = await this.prisma.zoneManagerProfile.findUnique({
-                where: { userId: user.id },
-                include: {
-                    doulas: true,
-                },
-            });
-            if (!zoneManagerProfile)
-                throw new common_1.ForbiddenException("Zone Manager profile not found");
-            const zoneManagerId = zoneManagerProfile.id;
-            const ownsMeeting = meeting.zoneManagerProfileId === zoneManagerId;
-            const doulaBelongsToZoneManager = zoneManagerProfile.doulas.some((doula) => doula.id === meeting.doulaProfileId);
-            if (!ownsMeeting && !doulaBelongsToZoneManager) {
-                throw new common_1.ForbiddenException("You can cancel only your meetings or meetings of your doulas");
-            }
-        }
-        else {
-            throw new common_1.ForbiddenException("You are not allowed to cancel meetings");
-        }
-        await this.prisma.meetings.update({
-            where: { id: dto.meetingId },
-            data: {
-                status: client_1.MeetingStatus.CANCELED,
-                cancelledAt: new Date(),
-            },
-        });
-        return { message: "Meeting canceled Successfully" };
-    }
     async rescheduleMeeting(dto, user) {
         const meeting = await this.prisma.meetings.findUnique({
             where: { id: dto.meetingId },
@@ -420,9 +377,20 @@ let MeetingsService = class MeetingsService {
         });
         return updated;
     }
-    async updateMeetingStatus(dto, user) {
-        const meeting = await this.prisma.meetings.findUnique({
-            where: { id: dto.meetingId },
+    async updateMeetingStatus(dto, userId) {
+        const { status, meetingId } = dto;
+        const meeting = await this.prisma.meetings.findFirst({
+            where: {
+                id: meetingId,
+                OR: [
+                    {
+                        ZoneManagerProfile: { userId: userId }
+                    },
+                    {
+                        DoulaProfile: { userId: userId }
+                    }
+                ]
+            },
             select: { status: true },
         });
         if (!meeting) {
@@ -457,6 +425,7 @@ let MeetingsService = class MeetingsService {
         };
     }
     async doulasMeetingSchedule(dto, user) {
+        const { clientId, serviceName, meetingsDate, meetingsTimeSlots, doulaId, additionalNotes, serviceId } = dto;
         console.log(user);
         if (user.role !== client_1.Role.ZONE_MANAGER) {
             throw new common_1.ForbiddenException("Only Zone Manager can schedule doula meetings");
@@ -468,7 +437,7 @@ let MeetingsService = class MeetingsService {
             throw new common_1.ForbiddenException("Zone Manager profile not found");
         }
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
-            where: { id: dto.doulaId },
+            where: { id: doulaId },
         });
         if (!doulaProfile) {
             throw new common_1.NotFoundException("Doula profile not found");
@@ -479,48 +448,40 @@ let MeetingsService = class MeetingsService {
         if (!doulaUser) {
             throw new common_1.NotFoundException("Doula user not found");
         }
-        const weekday = await (0, service_utils_1.getWeekdayFromDate)(dto.meetingsDate);
-        const exists = await (0, service_utils_1.isMeetingExists)(this.prisma, new Date(dto.meetingsDate), dto.meetingsTimeSlots, {
+        const weekday = await (0, service_utils_1.getWeekdayFromDate)(meetingsDate);
+        const slot = await (0, service_utils_1.findSlotOrThrow)(this.prisma, {
+            ownerRole: client_1.Role.DOULA,
+            ownerProfileId: doulaProfile.id,
+            weekday,
+        });
+        console.log("slot", slot);
+        const exists = await (0, service_utils_1.isMeetingExists)(this.prisma, new Date(meetingsDate), meetingsTimeSlots, {
             doulaProfileId: doulaProfile.id,
         });
         if (exists) {
             throw new common_1.BadRequestException('Meeting already exists for this time slot');
         }
-        const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id: dto.enquiryId },
-            include: {
-                service: true,
-                region: true,
-                slot: true,
-                clientProfile: true,
-            },
-        });
-        if (!enquiry) {
-            throw new common_1.NotFoundException("Enquiry not found");
-        }
-        if (!enquiry.clientProfile) {
-            throw new common_1.BadRequestException("Client profile is missing for this enquiry");
-        }
         const meetCode = Math.random().toString(36).slice(2, 10);
         const meetLink = `https://meet.google.com/${meetCode}`;
-        const [startTime, endTime] = dto.meetingsTimeSlots.split('-');
+        const [startTime, endTime] = meetingsTimeSlots.split('-');
         if (!startTime || !endTime) {
             throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
         }
-        const startDateTime = new Date(`${dto.meetingsDate}T${startTime}:00`);
-        const endDateTime = new Date(`${dto.meetingsDate}T${startTime}:00`);
+        const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
+        const endDateTime = new Date(`${meetingsDate}T${startTime}:00`);
         const meeting = await this.prisma.meetings.create({
             data: {
                 link: meetLink,
                 status: client_1.MeetingStatus.SCHEDULED,
                 startTime: startDateTime,
                 endTime: endDateTime,
-                date: new Date(dto.meetingsDate),
-                serviceName: enquiry.serviceName,
-                remarks: dto.additionalNotes,
-                bookedById: enquiry.clientId,
-                availableSlotsForMeetingId: enquiry.slotId,
-                doulaProfileId: doulaProfile.id
+                date: new Date(meetingsDate),
+                serviceName: serviceName,
+                remarks: additionalNotes,
+                bookedById: clientId,
+                availableSlotsForMeetingId: slot.id,
+                doulaProfileId: doulaProfile.id,
+                serviceId: serviceId,
             },
         });
         console.log("meeting created succesfull");

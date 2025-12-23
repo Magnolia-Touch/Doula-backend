@@ -13,7 +13,9 @@ exports.ScheduleDoulaDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class ScheduleDoulaDto {
-    enquiryId;
+    clientId;
+    serviceName;
+    serviceId;
     meetingsDate;
     meetingsTimeSlots;
     doulaId;
@@ -21,10 +23,20 @@ class ScheduleDoulaDto {
 }
 exports.ScheduleDoulaDto = ScheduleDoulaDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-enquiry-id' }),
+    (0, swagger_1.ApiProperty)({ example: 'uuid' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ScheduleDoulaDto.prototype, "enquiryId", void 0);
+], ScheduleDoulaDto.prototype, "clientId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'john@example.com' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ScheduleDoulaDto.prototype, "serviceName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'uuid' }),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ScheduleDoulaDto.prototype, "serviceId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '2025-10-12' }),
     (0, class_validator_1.IsString)(),

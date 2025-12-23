@@ -159,22 +159,24 @@ export class EnquiryService {
     // --------------------------------------------------------------
     //  2️⃣  GET ALL ENQUIRIES (with pagination)
     // --------------------------------------------------------------
-    async getAllEnquiries(page = 1, limit = 10) {
+    async getAllEnquiries(page = 1, limit = 10, userId: string) {
         return paginate({
             prismaModel: this.prisma.enquiryForm,
             page,
             limit,
             orderBy: { createdAt: 'desc' },
+            where: { region: { zoneManager: { userId: userId } } }
         });
+
     }
 
 
     // --------------------------------------------------------------
     //  3️⃣  GET ENQUIRY BY ID
     // --------------------------------------------------------------
-    async getEnquiryById(id: string) {
+    async getEnquiryById(id: string, userId: string) {
         const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id },
+            where: { id, region: { zoneManager: { userId: userId } } },
             select: {
                 id: true,
                 name: true,
@@ -192,6 +194,7 @@ export class EnquiryService {
                 updatedAt: true,
                 regionId: true,
                 slotId: true,
+                clientId: true,
                 serviceId: true,
             },
         });

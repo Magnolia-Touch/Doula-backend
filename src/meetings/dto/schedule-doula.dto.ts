@@ -3,9 +3,17 @@ import { IsDateString, IsEnum, IsInt, IsOptional, IsString } from 'class-validat
 import { MeetingStatus } from '@prisma/client';
 
 export class ScheduleDoulaDto {
-    @ApiProperty({ example: 'uuid-enquiry-id' })
+    @ApiProperty({ example: 'uuid' })
     @IsString()
-    enquiryId: string;
+    clientId: string;
+
+    @ApiProperty({ example: 'john@example.com' })
+    @IsString()
+    serviceName: string;
+
+    @ApiProperty({ example: 'uuid' })
+    @IsString()
+    serviceId: string
 
     @ApiProperty({ example: '2025-10-12' })
     @IsString()

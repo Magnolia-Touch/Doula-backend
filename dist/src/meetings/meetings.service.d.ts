@@ -2,7 +2,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Role } from '@prisma/client';
 import { MailerService } from '@nestjs-modules/mailer';
 import { RescheduleDto } from './dto/reschedule.dto';
-import { cancelDto } from './dto/cancel.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ScheduleDoulaDto } from './dto/schedule-doula.dto';
 export declare class MeetingsService {
@@ -11,23 +10,23 @@ export declare class MeetingsService {
     constructor(prisma: PrismaService, mail: MailerService);
     scheduleMeeting(Form: any, clientId: string, profileId: string, role: Role, slotParentId?: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         link: string;
-        serviceId: string | null;
-        doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
-        cancelledAt: Date | null;
-        date: Date;
         startTime: Date;
         endTime: Date;
+        date: Date;
         serviceName: string;
         remarks: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        cancelledAt: Date | null;
         rescheduledAt: Date | null;
         bookedById: string;
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
+        doulaProfileId: string | null;
         adminProfileId: string | null;
+        serviceId: string | null;
     }>;
     getMeetings(params: {
         startDate?: string;
@@ -107,50 +106,47 @@ export declare class MeetingsService {
             zoneManagerEmail: string | undefined;
         } | null;
     }>;
-    cancelMeeting(dto: cancelDto, user: any): Promise<{
-        message: string;
-    }>;
     rescheduleMeeting(dto: RescheduleDto, user: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         link: string;
-        serviceId: string | null;
-        doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
-        cancelledAt: Date | null;
-        date: Date;
         startTime: Date;
         endTime: Date;
+        date: Date;
         serviceName: string;
         remarks: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        cancelledAt: Date | null;
         rescheduledAt: Date | null;
         bookedById: string;
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
+        doulaProfileId: string | null;
         adminProfileId: string | null;
+        serviceId: string | null;
     }>;
-    updateMeetingStatus(dto: UpdateStatusDto, user: any): Promise<{
+    updateMeetingStatus(dto: UpdateStatusDto, userId: string): Promise<{
         message: string;
         meeting: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             link: string;
-            serviceId: string | null;
-            doulaProfileId: string | null;
             status: import("@prisma/client").$Enums.MeetingStatus;
-            cancelledAt: Date | null;
-            date: Date;
             startTime: Date;
             endTime: Date;
+            date: Date;
             serviceName: string;
             remarks: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            cancelledAt: Date | null;
             rescheduledAt: Date | null;
             bookedById: string;
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
+            doulaProfileId: string | null;
             adminProfileId: string | null;
+            serviceId: string | null;
         };
     }>;
     deleteAllMeetings(user: any): Promise<{
@@ -161,26 +157,47 @@ export declare class MeetingsService {
         message: string;
         meeting: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             link: string;
-            serviceId: string | null;
-            doulaProfileId: string | null;
             status: import("@prisma/client").$Enums.MeetingStatus;
-            cancelledAt: Date | null;
-            date: Date;
             startTime: Date;
             endTime: Date;
+            date: Date;
             serviceName: string;
             remarks: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            cancelledAt: Date | null;
             rescheduledAt: Date | null;
             bookedById: string;
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
+            doulaProfileId: string | null;
             adminProfileId: string | null;
+            serviceId: string | null;
         };
     }>;
     findAllmeetings(): Promise<({
+        bookedBy: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            is_verified: boolean;
+            region: string | null;
+            address: string | null;
+            profile_image: string | null;
+        };
+        AvailableSlotsForMeeting: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            weekday: import("@prisma/client").$Enums.WeekDays;
+            availabe: boolean;
+            ownerRole: import("@prisma/client").$Enums.Role;
+            doulaId: string | null;
+            adminId: string | null;
+            zoneManagerId: string | null;
+        } | null;
         ZoneManagerProfile: {
             id: string;
             createdAt: Date;
@@ -202,34 +219,6 @@ export declare class MeetingsService {
             languages: import("@prisma/client/runtime/library").JsonValue | null;
             specialities: import("@prisma/client/runtime/library").JsonValue | null;
         } | null;
-        Service: {
-            id: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-        } | null;
-        bookedBy: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            region: string | null;
-            is_verified: boolean;
-            address: string | null;
-        };
-        AvailableSlotsForMeeting: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            zoneManagerId: string | null;
-            weekday: import("@prisma/client").$Enums.WeekDays;
-            availabe: boolean;
-            ownerRole: import("@prisma/client").$Enums.Role;
-            doulaId: string | null;
-            adminId: string | null;
-        } | null;
         AdminProfile: {
             id: string;
             createdAt: Date;
@@ -237,25 +226,32 @@ export declare class MeetingsService {
             userId: string;
             profile_image: string | null;
         } | null;
+        Service: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            description: string | null;
+        } | null;
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         link: string;
-        serviceId: string | null;
-        doulaProfileId: string | null;
         status: import("@prisma/client").$Enums.MeetingStatus;
-        cancelledAt: Date | null;
-        date: Date;
         startTime: Date;
         endTime: Date;
+        date: Date;
         serviceName: string;
         remarks: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        cancelledAt: Date | null;
         rescheduledAt: Date | null;
         bookedById: string;
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
+        doulaProfileId: string | null;
         adminProfileId: string | null;
+        serviceId: string | null;
     })[]>;
     getBookedMeetingsByDate(params: {
         doulaProfileId?: string;

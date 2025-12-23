@@ -89,17 +89,18 @@ let EnquiryService = class EnquiryService {
             enquiry,
         };
     }
-    async getAllEnquiries(page = 1, limit = 10) {
+    async getAllEnquiries(page = 1, limit = 10, userId) {
         return (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.enquiryForm,
             page,
             limit,
             orderBy: { createdAt: 'desc' },
+            where: { region: { zoneManager: { userId: userId } } }
         });
     }
-    async getEnquiryById(id) {
+    async getEnquiryById(id, userId) {
         const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id },
+            where: { id, region: { zoneManager: { userId: userId } } },
             select: {
                 id: true,
                 name: true,
@@ -117,6 +118,7 @@ let EnquiryService = class EnquiryService {
                 updatedAt: true,
                 regionId: true,
                 slotId: true,
+                clientId: true,
                 serviceId: true,
             },
         });

@@ -18,6 +18,10 @@ const enquiry_forms_service_1 = require("./enquiry-forms.service");
 const create_enquiry_forms_dto_1 = require("./dto/create-enquiry-forms.dto");
 const swagger_1 = require("@nestjs/swagger");
 const swagger_response_dto_1 = require("../common/dto/swagger-response.dto");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
+const client_1 = require("@prisma/client");
 let EnquiryController = class EnquiryController {
     enquiryService;
     constructor(enquiryService) {
@@ -26,11 +30,11 @@ let EnquiryController = class EnquiryController {
     async submit(dto) {
         return this.enquiryService.submitEnquiry(dto);
     }
-    getAllEnquiries(page = '1', limit = '10') {
-        return this.enquiryService.getAllEnquiries(parseInt(page), parseInt(limit));
+    getAllEnquiries(page = '1', limit = '10', req) {
+        return this.enquiryService.getAllEnquiries(parseInt(page), parseInt(limit), req.user.id);
     }
-    getEnquiryById(id) {
-        return this.enquiryService.getEnquiryById(id);
+    getEnquiryById(id, req) {
+        return this.enquiryService.getEnquiryById(id, req.user.id);
     }
     deleteEnquiry(id) {
         return this.enquiryService.deleteEnquiry(id);
@@ -80,11 +84,14 @@ __decorate([
             },
         },
     }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", void 0)
 ], EnquiryController.prototype, "getAllEnquiries", null);
 __decorate([
@@ -101,10 +108,13 @@ __decorate([
             },
         },
     }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], EnquiryController.prototype, "getEnquiryById", null);
 __decorate([

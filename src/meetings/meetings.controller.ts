@@ -92,39 +92,7 @@ export class MeetingsController {
         return this.service.getMeetings(params, req.user);
     }
 
-    // GET SINGLE MEETING
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(Role.ADMIN, Role.DOULA, Role.ZONE_MANAGER)
-    @ApiOperation({ summary: 'Get meeting by ID' })
-    @ApiParam({ name: 'id', description: 'Meeting UUID' })
-    @ApiResponse({
-        status: 200,
-        type: SwaggerResponseDto,
-        schema: {
-            example: {
-                success: true,
-                message: 'Meeting fetched',
-                data: {
-                    id: 'meeting-uuid-1',
-                    status: 'SCHEDULED',
-                    slot: {
-                        id: 'slot-uuid-1',
-                        date: '2025-11-25',
-                        startTime: '09:00',
-                        endTime: '09:30',
-                    },
-                    service: { id: 'serv-1', name: 'Prenatal Visit' },
-                    doula: { id: 'doula-1', name: 'Jane Doe' },
-                    bookedBy: { id: 'client-1', name: 'Asha Patel', phone: '+919876543210' },
-                    remarks: 'Client prefers video call',
-                },
-            },
-        },
-    })
-    @Get(':id')
-    async getMeetingById(@Param('id') id: string, @Req() req) {
-        return this.service.getMeetingById(id, req.user);
-    }
+
 
     // SCHEDULE MEETING (DOULA)
     @UseGuards(JwtAuthGuard, RolesGuard)
@@ -153,19 +121,6 @@ export class MeetingsController {
         return this.service.doulasMeetingSchedule(dto, req.user);
     }
 
-    // CANCEL MEETING
-    @ApiOperation({ summary: 'Cancel a meeting' })
-    @ApiBody({ type: cancelDto })
-    @ApiResponse({
-        status: 200,
-        type: SwaggerResponseDto,
-        schema: { example: { success: true, message: 'Meeting cancelled', data: { meetingId: 'meeting-uuid-1', status: 'CANCELED' } } },
-    })
-    @Post('cancel')
-    async cancelMeeting(@Body() dto: cancelDto, @Req() req) {
-        return this.service.cancelMeeting(dto, req.user);
-    }
-
     // RESCHEDULE MEETING
     @ApiOperation({ summary: 'Reschedule a meeting to a new slot' })
     @ApiBody({ type: RescheduleDto })
@@ -191,16 +146,18 @@ export class MeetingsController {
     }
 
     // UPDATE MEETING STATUS
-    @ApiOperation({ summary: 'Update meeting status (ADMIN/DOULA)' })
+    @ApiOperation({ summary: 'Update meeting status (ZM/DOULA)' })
     @ApiBody({ type: UpdateStatusDto })
     @ApiResponse({
         status: 200,
         type: SwaggerResponseDto,
         schema: { example: { success: true, message: 'Meeting status updated', data: { meetingId: 'meeting-uuid-1', status: 'COMPLETED' } } },
     })
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.DOULA, Role.ZONE_MANAGER)
     @Patch('status')
     async updateMeetingStatus(@Body() dto: UpdateStatusDto, @Req() req) {
-        return this.service.updateMeetingStatus(dto, req.user);
+        return this.service.updateMeetingStatus(dto, req.user.id);
     }
 
     // DELETE ALL MEETINGS (ONLY ADMIN)
@@ -252,5 +209,39 @@ export class MeetingsController {
             doulaProfileId,
             zoneManagerProfileId,
         });
+    }
+
+    // GET SINGLE MEETING
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ADMIN, Role.DOULA, Role.ZONE_MANAGER)
+    @ApiOperation({ summary: 'Get meeting by ID' })
+    @ApiParam({ name: 'id', description: 'Meeting UUID' })
+    @ApiResponse({
+        status: 200,
+        type: SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Meeting fetched',
+                data: {
+                    id: 'meeting-uuid-1',
+                    status: 'SCHEDULED',
+                    slot: {
+                        id: 'slot-uuid-1',
+                        date: '2025-11-25',
+                        startTime: '09:00',
+                        endTime: '09:30',
+                    },
+                    service: { id: 'serv-1', name: 'Prenatal Visit' },
+                    doula: { id: 'doula-1', name: 'Jane Doe' },
+                    bookedBy: { id: 'client-1', name: 'Asha Patel', phone: '+919876543210' },
+                    remarks: 'Client prefers video call',
+                },
+            },
+        },
+    })
+    @Get(':id')
+    async getMeetingById(@Param('id') id: string, @Req() req) {
+        return this.service.getMeetingById(id, req.user);
     }
 }
