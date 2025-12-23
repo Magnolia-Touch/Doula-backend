@@ -1,12 +1,15 @@
 export declare class IntakeFormDto {
-    name?: string;
-    email?: string;
-    phone?: string;
+    name: string;
+    email: string;
+    phone: string;
     doulaProfileId: string;
     serviceId: string;
     address: string;
     buffer: number;
-    enquiryId: string;
+    seviceStartDate: string;
+    serviceEndDate: string;
+    visitFrequency: number;
+    serviceTimeSlots: string;
 }
 export declare class BookDoulaDto {
     name: string;

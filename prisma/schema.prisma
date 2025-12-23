@@ -149,17 +149,17 @@ model AdminProfile {
 
 // Enquiry Form
 model EnquiryForm {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   name              String
   email             String
   phone             String
   additionalNotes   String?
   meetingsDate      DateTime
   meetingsTimeSlots String
-  seviceStartDate   DateTime
-  serviceEndDate    DateTime
-  VisitFrequency    Int
-  serviceTimeSlots  String
+  seviceStartDate   DateTime?
+  serviceEndDate    DateTime?
+  VisitFrequency    Int?
+  serviceTimeSlots  String?
   serviceName       String
 
   createdAt DateTime @default(now())

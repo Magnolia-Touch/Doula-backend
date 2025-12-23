@@ -3,19 +3,16 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class IntakeFormDto {
     @ApiProperty({ required: false, description: 'Name of the person (optional)', example: 'Jane Doe' })
-    @IsOptional()
     @IsString()
-    name?: string;
+    name: string;
 
     @ApiProperty({ required: false, description: 'Email of the person (optional)', example: 'jane@example.com' })
-    @IsOptional()
     @IsString()
-    email?: string;
+    email: string;
 
     @ApiProperty({ required: false, description: 'Phone number (optional)', example: '+919876543210' })
-    @IsOptional()
     @IsString()
-    phone?: string;
+    phone: string;
 
     @ApiProperty({ example: 'doula-uuid', description: 'Doula profile id' })
     @IsString()
@@ -33,9 +30,23 @@ export class IntakeFormDto {
     @IsNumber()
     buffer: number;
 
-    @ApiProperty({ example: 'uuid-enquiry-id' })
+    //Below Are Required Service 
+    @ApiProperty({ example: '2025-12-05', description: 'Service Start Date (ISO format)' })
+    @IsDateString()
+    seviceStartDate: string;
+
+    @ApiProperty({ example: '2025-12-10', description: 'Service End Date (ISO format)' })
+    @IsDateString()
+    serviceEndDate: string;
+
+    //set defalut 0.
+    @ApiProperty({ example: 2, description: 'Visit Frequency for Services (e.g., twice a week)' })
+    @IsInt()
+    visitFrequency: number = 1;
+
+    @ApiProperty({ example: '09:00-11:00', description: 'Time slot for the service' })
     @IsString()
-    enquiryId: string;
+    serviceTimeSlots: string;
 }
 
 

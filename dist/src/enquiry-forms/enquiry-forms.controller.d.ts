@@ -19,10 +19,10 @@ export declare class EnquiryController {
             additionalNotes: string | null;
             meetingsDate: Date;
             meetingsTimeSlots: string;
-            seviceStartDate: Date;
-            serviceEndDate: Date;
-            VisitFrequency: number;
-            serviceTimeSlots: string;
+            seviceStartDate: Date | null;
+            serviceEndDate: Date | null;
+            VisitFrequency: number | null;
+            serviceTimeSlots: string | null;
             slotId: string;
         };
     }>;
@@ -41,10 +41,10 @@ export declare class EnquiryController {
             additionalNotes: string | null;
             meetingsDate: Date;
             meetingsTimeSlots: string;
-            seviceStartDate: Date;
-            serviceEndDate: Date;
-            VisitFrequency: number;
-            serviceTimeSlots: string;
+            seviceStartDate: Date | null;
+            serviceEndDate: Date | null;
+            VisitFrequency: number | null;
+            serviceTimeSlots: string | null;
             slotId: string;
         }[];
         meta: {
@@ -69,10 +69,10 @@ export declare class EnquiryController {
         additionalNotes: string | null;
         meetingsDate: Date;
         meetingsTimeSlots: string;
-        seviceStartDate: Date;
-        serviceEndDate: Date;
-        VisitFrequency: number;
-        serviceTimeSlots: string;
+        seviceStartDate: Date | null;
+        serviceEndDate: Date | null;
+        VisitFrequency: number | null;
+        serviceTimeSlots: string | null;
         slotId: string;
     }>;
     deleteEnquiry(id: string): Promise<{

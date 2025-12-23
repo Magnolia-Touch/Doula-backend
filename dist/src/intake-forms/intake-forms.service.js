@@ -24,7 +24,7 @@ let IntakeFormService = class IntakeFormService {
         this.mail = mail;
     }
     async createIntakeForm(dto) {
-        const { name, email, phone, doulaProfileId, serviceId, address, buffer = 0, enquiryId, } = dto;
+        const { name, email, phone, doulaProfileId, serviceId, address, buffer = 0, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeSlots } = dto;
         const clientUser = await (0, service_utils_1.getOrcreateClent)(this.prisma, {
             name,
             email,
@@ -34,18 +34,6 @@ let IntakeFormService = class IntakeFormService {
             where: { userId: clientUser.id },
             data: { address },
         });
-        const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id: enquiryId },
-            select: {
-                seviceStartDate: true,
-                serviceEndDate: true,
-                VisitFrequency: true,
-                serviceTimeSlots: true,
-            },
-        });
-        if (!enquiry) {
-            throw new common_1.BadRequestException('Enquiry not found');
-        }
         const region = await this.prisma.region.findFirst({
             where: { doula: { some: { id: doulaProfileId } } },
         });
@@ -58,14 +46,14 @@ let IntakeFormService = class IntakeFormService {
         if (!service) {
             throw new common_1.NotFoundException('Service not found');
         }
-        const startDate = new Date(enquiry.seviceStartDate);
+        const startDate = new Date(seviceStartDate);
         startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(enquiry.serviceEndDate);
+        const endDate = new Date(serviceEndDate);
         endDate.setHours(0, 0, 0, 0);
         if (startDate > endDate) {
             throw new common_1.BadRequestException('Invalid service date range');
         }
-        const [startStr, endStr] = enquiry.serviceTimeSlots.split('-');
+        const [startStr, endStr] = serviceTimeSlots.split('-');
         const slotStartTime = new Date(`1970-01-01T${startStr}:00`);
         const slotEndTime = new Date(`1970-01-01T${endStr}:00`);
         if (slotStartTime >= slotEndTime) {
@@ -80,7 +68,7 @@ let IntakeFormService = class IntakeFormService {
             5: client_1.WeekDays.FRIDAY,
             6: client_1.WeekDays.SATURDAY,
         };
-        const visitDates = await (0, service_utils_1.generateVisitDates)(startDate, endDate, enquiry.VisitFrequency, buffer);
+        const visitDates = await (0, service_utils_1.generateVisitDates)(startDate, endDate, visitFrequency, buffer);
         const schedulesToCreate = [];
         for (const visitDate of visitDates) {
             const weekday = DAY_TO_WEEKDAY[visitDate.getDay()];

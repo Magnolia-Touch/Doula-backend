@@ -57,7 +57,10 @@ export class IntakeFormService {
             serviceId,
             address,
             buffer = 0,
-            enquiryId,
+            seviceStartDate,
+            serviceEndDate,
+            visitFrequency,
+            serviceTimeSlots
         } = dto;
 
         /* ----------------------------------------------------
@@ -73,23 +76,6 @@ export class IntakeFormService {
             where: { userId: clientUser.id },
             data: { address },
         });
-
-        /* ----------------------------------------------------
-         * 2. Fetch enquiry
-         * -------------------------------------------------- */
-        const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id: enquiryId },
-            select: {
-                seviceStartDate: true,
-                serviceEndDate: true,
-                VisitFrequency: true,
-                serviceTimeSlots: true,
-            },
-        });
-
-        if (!enquiry) {
-            throw new BadRequestException('Enquiry not found');
-        }
 
         /* ----------------------------------------------------
          * 3. Validate region
@@ -116,10 +102,10 @@ export class IntakeFormService {
         /* ----------------------------------------------------
          * 5. Normalize service dates
          * -------------------------------------------------- */
-        const startDate = new Date(enquiry.seviceStartDate);
+        const startDate = new Date(seviceStartDate);
         startDate.setHours(0, 0, 0, 0);
 
-        const endDate = new Date(enquiry.serviceEndDate);
+        const endDate = new Date(serviceEndDate);
         endDate.setHours(0, 0, 0, 0);
 
         if (startDate > endDate) {
@@ -129,7 +115,7 @@ export class IntakeFormService {
         /* ----------------------------------------------------
          * 6. Parse time slot "09:00-11:00"
          * -------------------------------------------------- */
-        const [startStr, endStr] = enquiry.serviceTimeSlots.split('-');
+        const [startStr, endStr] = serviceTimeSlots.split('-');
         const slotStartTime = new Date(`1970-01-01T${startStr}:00`);
         const slotEndTime = new Date(`1970-01-01T${endStr}:00`);
 
@@ -153,7 +139,7 @@ export class IntakeFormService {
         const visitDates = await generateVisitDates(
             startDate,
             endDate,
-            enquiry.VisitFrequency,
+            visitFrequency,
             buffer,
         );
 
