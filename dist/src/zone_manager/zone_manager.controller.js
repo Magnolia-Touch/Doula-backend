@@ -95,8 +95,8 @@ let ZoneManagerController = class ZoneManagerController {
             endDate,
         });
     }
-    async getZoneManagerMeetings(req, page, limit) {
-        return this.service.getZoneManagerMeetings(req.user.id, Number(page) || 1, Number(limit) || 10);
+    async getZoneManagerMeetings(req, page, limit, search) {
+        return this.service.getZoneManagerMeetings(req.user.id, Number(page) || 1, Number(limit) || 10, search?.trim());
     }
     async getScheduleById(req, id) {
         return this.service.getZoneManagerScheduleById(req.user.id, id);
@@ -383,8 +383,9 @@ __decorate([
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)('search')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getZoneManagerMeetings", null);
 __decorate([

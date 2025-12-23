@@ -66,8 +66,7 @@ let ZoneManagerService = class ZoneManagerService {
                             managingRegion: {
                                 some: {
                                     regionName: {
-                                        contains: search,
-                                        mode: 'insensitive',
+                                        contains: search.toLowerCase()
                                     },
                                 },
                             },
@@ -459,7 +458,7 @@ let ZoneManagerService = class ZoneManagerService {
             meta: result.meta,
         };
     }
-    async getZoneManagerMeetings(userId, page = 1, limit = 10) {
+    async getZoneManagerMeetings(userId, page = 1, limit = 10, search) {
         const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
             where: { userId: userId },
             select: { id: true },
@@ -484,6 +483,35 @@ let ZoneManagerService = class ZoneManagerService {
                 { doulaProfileId: { in: doulaIds } },
             ],
         };
+        if (search) {
+            where.AND = [
+                {
+                    OR: [
+                        {
+                            bookedBy: {
+                                user: {
+                                    name: {
+                                        contains: search.toLowerCase()
+                                    },
+                                },
+                            },
+                        },
+                        {
+                            Service: {
+                                name: {
+                                    contains: search.toLowerCase()
+                                },
+                            },
+                        },
+                        {
+                            serviceName: {
+                                contains: search.toLowerCase()
+                            },
+                        },
+                    ],
+                },
+            ];
+        }
         const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.meetings,
             page,

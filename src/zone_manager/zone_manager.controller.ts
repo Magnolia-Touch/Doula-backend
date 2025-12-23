@@ -375,11 +375,13 @@ export class ZoneManagerController {
         @Req() req: any,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
+        @Query('search') search?: string,
     ) {
         return this.service.getZoneManagerMeetings(
             req.user.id,
             Number(page) || 1,
             Number(limit) || 10,
+            search?.trim(),
         );
     }
 

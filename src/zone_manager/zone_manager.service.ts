@@ -61,8 +61,7 @@ export class ZoneManagerService {
                             managingRegion: {
                                 some: {
                                     regionName: {
-                                        contains: search,
-                                        mode: 'insensitive',
+                                        contains: search.toLowerCase()
                                     },
                                 },
                             },
@@ -670,6 +669,7 @@ export class ZoneManagerService {
         userId: string,
         page = 1,
         limit = 10,
+        search?: string,
     ) {
 
         // Fetch zone manager profile
@@ -709,6 +709,41 @@ export class ZoneManagerService {
                 { doulaProfileId: { in: doulaIds } },
             ],
         };
+        if (search) {
+            where.AND = [
+                {
+                    OR: [
+                        // Client name search
+                        {
+                            bookedBy: {
+                                user: {
+                                    name: {
+                                        contains: search.toLowerCase()
+                                    },
+                                },
+                            },
+                        },
+
+                        // Service name via Service relation
+                        {
+                            Service: {
+                                name: {
+                                    contains: search.toLowerCase()
+                                },
+                            },
+                        },
+
+                        // Fallback serviceName stored in Meetings table
+                        {
+                            serviceName: {
+                                contains: search.toLowerCase()
+                            },
+                        },
+                    ],
+                },
+            ];
+        }
+
 
         const result = await paginate({
             prismaModel: this.prisma.meetings,
