@@ -564,7 +564,7 @@ export class DoulaService {
   * -------------------------------------------------- */
     const nextSchedule = await this.prisma.schedules.findFirst({
       where: {
-        doulaProfileId: doula.id,
+        doulaProfileId: profile?.id,
         date: { gte: new Date() },
       },
       orderBy: { date: 'asc' },
@@ -572,7 +572,6 @@ export class DoulaService {
     });
 
     const nextImmediateAvailabilityDate = nextSchedule?.date ?? null;
-
     /* ----------------------------------------------------
      * Final Response
      * -------------------------------------------------- */

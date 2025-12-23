@@ -400,7 +400,7 @@ let DoulaService = class DoulaService {
             : null;
         const nextSchedule = await this.prisma.schedules.findFirst({
             where: {
-                doulaProfileId: doula.id,
+                doulaProfileId: profile?.id,
                 date: { gte: new Date() },
             },
             orderBy: { date: 'asc' },
