@@ -1,1 +1,1 @@
-{"version":3,"file":"update-notes.dto.js","sourceRoot":"","sources":["../../../../src/notes/dto/update-notes.dto.ts"],"names":[],"mappings":";;;AAAA,uDAAmD;AACnD,yDAAmD;AACnD,MAAa,aAAc,SAAQ,IAAA,0BAAW,EAAC,gCAAa,CAAC;CAAI;AAAjE,sCAAiE"}
+{"version":3,"file":"update-notes.dto.js","sourceRoot":"","sources":["../../../../src/notes/dto/update-notes.dto.ts"],"names":[],"mappings":";;;AAAA,uDAAmD;AACnD,yDAAmD;AACnD,MAAa,aAAc,SAAQ,IAAA,0BAAW,EAAC,gCAAa,CAAC;CAAG;AAAhE,sCAAgE"}

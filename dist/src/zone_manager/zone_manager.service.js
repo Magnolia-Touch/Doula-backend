@@ -24,12 +24,12 @@ let ZoneManagerService = class ZoneManagerService {
         const existingUser = await this.prisma.user.findUnique({
             where: { email: dto.email },
         });
-        console.log("regionIds", dto.regionIds);
+        console.log('regionIds', dto.regionIds);
         const regions = await this.prisma.region.findMany({
             where: { id: { in: dto.regionIds } },
         });
         if (regions.length != dto.regionIds.length) {
-            throw new common_1.NotFoundException("One or more region IDs are invalid");
+            throw new common_1.NotFoundException('One or more region IDs are invalid');
         }
         if (existingUser) {
             throw new common_1.BadRequestException('User with this email already exists');
@@ -43,7 +43,7 @@ let ZoneManagerService = class ZoneManagerService {
                 zonemanagerprofile: {
                     create: {
                         managingRegion: {
-                            connect: dto.regionIds.map((id) => ({ id }))
+                            connect: dto.regionIds.map((id) => ({ id })),
                         },
                         profile_image: profileImageUrl ?? null,
                     },
@@ -66,7 +66,7 @@ let ZoneManagerService = class ZoneManagerService {
                             managingRegion: {
                                 some: {
                                     regionName: {
-                                        contains: search.toLowerCase()
+                                        contains: search.toLowerCase(),
                                     },
                                 },
                             },
@@ -106,7 +106,8 @@ let ZoneManagerService = class ZoneManagerService {
             role: user.role,
             is_active: user.is_active,
             profileId: user.zonemanagerprofile?.id ?? null,
-            regions: user.zonemanagerprofile?.managingRegion.map((r) => r.regionName) ?? [],
+            regions: user.zonemanagerprofile?.managingRegion.map((r) => r.regionName) ??
+                [],
             doulas: user.zonemanagerprofile?.doulas
                 .map((d) => d.user?.name)
                 .filter(Boolean) ?? [],
@@ -211,7 +212,10 @@ let ZoneManagerService = class ZoneManagerService {
                 is_active: isActive,
             },
         });
-        return { message: 'Zone Manager status updated successfully', data: updated };
+        return {
+            message: 'Zone Manager status updated successfully',
+            data: updated,
+        };
     }
     async UpdateZoneManagerRegions(dto) {
         const a = (0, service_utils_1.findZoneManagerOrThrowWithId)(this.prisma, dto.profileId);
@@ -220,43 +224,47 @@ let ZoneManagerService = class ZoneManagerService {
             where: { id: { in: dto.regionIds } },
         });
         if (regions.length != dto.regionIds.length) {
-            throw new common_1.NotFoundException("One or more region IDs are invalid");
+            throw new common_1.NotFoundException('One or more region IDs are invalid');
         }
-        if (dto.purpose == "add") {
+        if (dto.purpose == 'add') {
             const data = await this.prisma.region.updateMany({
                 where: { id: { in: dto.regionIds } },
-                data: { zoneManagerId: dto.profileId }
+                data: { zoneManagerId: dto.profileId },
             });
-            return { message: `${data.count} Region(s) successfully assigned to Manager` };
+            return {
+                message: `${data.count} Region(s) successfully assigned to Manager`,
+            };
         }
-        else if (dto.purpose == "remove") {
+        else if (dto.purpose == 'remove') {
             const data = await this.prisma.region.updateMany({
                 where: { id: { in: dto.regionIds } },
-                data: { zoneManagerId: null }
+                data: { zoneManagerId: null },
             });
-            return { message: `${data.count} Region(s) successfully removed from Manager` };
+            return {
+                message: `${data.count} Region(s) successfully removed from Manager`,
+            };
         }
     }
     async regionAlreadyAssignedOrNot(regionIds) {
         const regions = await this.prisma.region.findMany({
             where: { id: { in: regionIds } },
-            select: { id: true, regionName: true, zoneManagerId: true }
+            select: { id: true, regionName: true, zoneManagerId: true },
         });
         if (regions.length !== regionIds.length) {
-            throw new common_1.NotFoundException("One or more region IDs are invalid");
+            throw new common_1.NotFoundException('One or more region IDs are invalid');
         }
-        const assigned = regions.filter(r => r.zoneManagerId !== null);
-        const unassigned = regions.filter(r => r.zoneManagerId === null);
+        const assigned = regions.filter((r) => r.zoneManagerId !== null);
+        const unassigned = regions.filter((r) => r.zoneManagerId === null);
         return {
-            message: "Region assignment status fetched",
+            message: 'Region assignment status fetched',
             assignedCount: assigned.length,
             unassignedCount: unassigned.length,
             assigned,
-            unassigned
+            unassigned,
         };
     }
     async getZoneManagerSchedules(userId, page = 1, limit = 10, filters) {
-        console.log("user", userId);
+        console.log('user', userId);
         const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
             where: { userId: userId },
             select: { id: true },
@@ -283,7 +291,7 @@ let ZoneManagerService = class ZoneManagerService {
             where.ServicePricing = {
                 service: {
                     name: {
-                        contains: filters.serviceName.toLowerCase()
+                        contains: filters.serviceName.toLowerCase(),
                     },
                 },
             };
@@ -333,8 +341,7 @@ let ZoneManagerService = class ZoneManagerService {
             success: true,
             message: 'Schedules fetched successfully',
             data: schedules.map((schedule) => {
-                const durationMs = schedule.endTime.getTime() -
-                    schedule.startTime.getTime();
+                const durationMs = schedule.endTime.getTime() - schedule.startTime.getTime();
                 const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
                 const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
                 return {
@@ -394,7 +401,7 @@ let ZoneManagerService = class ZoneManagerService {
             where.service = {
                 service: {
                     name: {
-                        contains: filters.serviceName.toLowerCase()
+                        contains: filters.serviceName.toLowerCase(),
                     },
                 },
             };
@@ -491,7 +498,7 @@ let ZoneManagerService = class ZoneManagerService {
                         bookedBy: {
                             user: {
                                 name: {
-                                    contains: search.toLowerCase()
+                                    contains: search.toLowerCase(),
                                 },
                             },
                         },
@@ -499,13 +506,13 @@ let ZoneManagerService = class ZoneManagerService {
                     {
                         Service: {
                             name: {
-                                contains: search.toLowerCase()
+                                contains: search.toLowerCase(),
                             },
                         },
                     },
                     {
                         serviceName: {
-                            contains: search.toLowerCase()
+                            contains: search.toLowerCase(),
                         },
                     },
                 ],
@@ -513,7 +520,7 @@ let ZoneManagerService = class ZoneManagerService {
         }
         if (status) {
             where.AND.push({
-                status: status
+                status: status,
             });
         }
         const result = await (0, pagination_util_1.paginate)({
@@ -699,7 +706,7 @@ let ZoneManagerService = class ZoneManagerService {
             },
             select: { id: true },
         });
-        const doulaIds = doulas.map(d => d.id);
+        const doulaIds = doulas.map((d) => d.id);
         const meeting = await this.prisma.meetings.findFirst({
             where: {
                 id: meetingId,

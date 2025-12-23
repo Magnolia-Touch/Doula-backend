@@ -67,9 +67,9 @@ __decorate([
                     serviceId: 'uuid',
                     price: 4999,
                     createdAt: '2025-01-12T10:12:00.123Z',
-                }
-            }
-        }
+                },
+            },
+        },
     }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
@@ -81,7 +81,9 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all service pricing entries for current doula' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get all service pricing entries for current doula',
+    }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         schema: {
@@ -92,11 +94,11 @@ __decorate([
                         id: 'uuid',
                         serviceId: 'uuid',
                         price: 4999,
-                        doulaId: 'uuid'
-                    }
-                ]
-            }
-        }
+                        doulaId: 'uuid',
+                    },
+                ],
+            },
+        },
     }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -113,9 +115,9 @@ __decorate([
             example: {
                 id: 'uuid',
                 serviceId: 'uuid',
-                price: 4999
-            }
-        }
+                price: 4999,
+            },
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -136,9 +138,9 @@ __decorate([
                     id: 'uuid',
                     serviceId: 'uuid',
                     price: 5999,
-                }
-            }
-        }
+                },
+            },
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -156,8 +158,8 @@ __decorate([
         schema: {
             example: {
                 message: 'Deleted successfully',
-            }
-        }
+            },
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -165,7 +167,9 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ServicePricingController.prototype, "remove", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get services and pricing by service name and doula ID' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get services and pricing by service name and doula ID',
+    }),
     (0, swagger_1.ApiQuery)({ name: 'name', required: true, example: 'Pregnancy Yoga' }),
     (0, swagger_1.ApiQuery)({ name: 'doulaId', required: false, example: 'uuid' }),
     (0, swagger_1.ApiResponse)({
@@ -177,11 +181,11 @@ __decorate([
                     {
                         doulaId: 'uuid',
                         price: 4999,
-                        serviceId: 'uuid'
-                    }
-                ]
-            }
-        }
+                        serviceId: 'uuid',
+                    },
+                ],
+            },
+        },
     }),
     (0, common_1.Get)('all/list'),
     __param(0, (0, common_1.Query)()),
@@ -190,7 +194,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ServicePricingController.prototype, "getServiceWithPricing", null);
 __decorate([
-    (0, common_1.Post)("manager"),
+    (0, common_1.Post)('manager'),
     (0, swagger_1.ApiOperation)({ summary: 'Create a service pricing entry' }),
     (0, swagger_1.ApiResponse)({
         status: 201,
@@ -203,9 +207,9 @@ __decorate([
                     serviceId: 'uuid',
                     price: 4999,
                     createdAt: '2025-01-12T10:12:00.123Z',
-                }
-            }
-        }
+                },
+            },
+        },
     }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),

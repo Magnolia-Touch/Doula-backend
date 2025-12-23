@@ -3,7 +3,6 @@
 // import { CreateNotificationDto, UpdateNotificationDto } from './dto/notifications.dto';
 // import { FirebaseSender } from 'src/firebase/firebase.sender';
 
-
 // @Injectable()
 // export class NotificationService {
 //     constructor(private prisma: PrismaService,
@@ -65,7 +64,6 @@
 //             data: { deletedAt: new Date() }
 //         });
 //     }
-
 
 //     async sendNow(userId: string) {
 //         const tokens = await this.prisma.deviceToken.findMany({ where: { userId } });

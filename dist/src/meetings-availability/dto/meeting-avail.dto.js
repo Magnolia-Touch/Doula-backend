@@ -47,7 +47,10 @@ class UpdateSlotsForMeetingTimeDto {
 }
 exports.UpdateSlotsForMeetingTimeDto = UpdateSlotsForMeetingTimeDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'time-slot-uuid', description: 'Time slot id (entry) that you want to update' }),
+    (0, swagger_1.ApiProperty)({
+        example: 'time-slot-uuid',
+        description: 'Time slot id (entry) that you want to update',
+    }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateSlotsForMeetingTimeDto.prototype, "timeSlotId", void 0);

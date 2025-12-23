@@ -19,7 +19,7 @@ exports.ClientModule = ClientModule = __decorate([
         imports: [prisma_module_1.PrismaModule],
         providers: [client_service_1.ClientsService],
         exports: [client_service_1.ClientsService],
-        controllers: [client_controller_1.ClientController]
+        controllers: [client_controller_1.ClientController],
     })
 ], ClientModule);
 ``;

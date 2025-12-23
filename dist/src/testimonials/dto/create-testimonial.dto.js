@@ -21,16 +21,16 @@ class CreateTestimonialDto {
 exports.CreateTestimonialDto = CreateTestimonialDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: "d4b7d65a-9a46-4548-aabd-91c3bddd6e22",
-        description: "UUID of the Doula Profile"
+        example: 'd4b7d65a-9a46-4548-aabd-91c3bddd6e22',
+        description: 'UUID of the Doula Profile',
     }),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], CreateTestimonialDto.prototype, "doulaProfileId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: "8e9c559d-d9f6-438c-a36d-0a77c7a8c8c4",
-        description: "UUID of the Service for which feedback is given"
+        example: '8e9c559d-d9f6-438c-a36d-0a77c7a8c8c4',
+        description: 'UUID of the Service for which feedback is given',
     }),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
@@ -38,7 +38,7 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: 5,
-        description: "Customer rating between 1–5"
+        description: 'Customer rating between 1–5',
     }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.Min)(1),
@@ -47,8 +47,8 @@ __decorate([
 ], CreateTestimonialDto.prototype, "ratings", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: "The doula was extremely supportive throughout the entire journey.",
-        description: "Written review from the client"
+        example: 'The doula was extremely supportive throughout the entire journey.',
+        description: 'Written review from the client',
     }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

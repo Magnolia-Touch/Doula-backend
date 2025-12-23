@@ -19,18 +19,18 @@ class UpdateZoneManagerRegionDto {
 }
 exports.UpdateZoneManagerRegionDto = UpdateZoneManagerRegionDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5" }),
+    (0, swagger_1.ApiProperty)({ example: '4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateZoneManagerRegionDto.prototype, "profileId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: [
-            "96efbdce-d7cb-43bb-8787-626c198be1a4",
-            "4fd68b32-cb85-4f8b-9375-d4477dc7c3ae"
+            '96efbdce-d7cb-43bb-8787-626c198be1a4',
+            '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
         ],
         type: [String],
-        description: "List of Region IDs to assign to the Zone Manager"
+        description: 'List of Region IDs to assign to the Zone Manager',
     }),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
@@ -49,9 +49,9 @@ exports.RegionAssignmentCheckDto = RegionAssignmentCheckDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: [
-            "96efbdce-d7cb-43bb-8787-626c198be1a4",
-            "4fd68b32-cb85-4f8b-9375-d4477dc7c3ae"
-        ]
+            '96efbdce-d7cb-43bb-8787-626c198be1a4',
+            '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
+        ],
     }),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),

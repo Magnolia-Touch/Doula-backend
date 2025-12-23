@@ -36,7 +36,7 @@ let MeetingsService = class MeetingsService {
         else if (role === client_1.Role.ADMIN) {
             profileData.adminProfileId = profileId;
         }
-        console.log("form", Form);
+        console.log('form', Form);
         const meeting = await this.prisma.meetings.create({
             data: {
                 link: meetLink,
@@ -48,10 +48,10 @@ let MeetingsService = class MeetingsService {
                 remarks: Form.additionalNotes,
                 bookedById: clientId,
                 availableSlotsForMeetingId: slotParentId,
-                ...profileData
+                ...profileData,
             },
         });
-        console.log("meeting created succesfull");
+        console.log('meeting created succesfull');
         await this.mail.sendMail({
             to: Form.email,
             subject: `Confirmation of your Meeting with ${role} for Service ${Form.name}`,
@@ -339,7 +339,7 @@ let MeetingsService = class MeetingsService {
             },
         });
         if (!meeting)
-            throw new common_1.NotFoundException("Meeting not found");
+            throw new common_1.NotFoundException('Meeting not found');
         if (user.role === client_1.Role.ADMIN) {
         }
         else if (user.role === client_1.Role.ZONE_MANAGER) {
@@ -348,7 +348,7 @@ let MeetingsService = class MeetingsService {
                 include: { doulas: true },
             });
             if (!zoneManagerProfile)
-                throw new common_1.ForbiddenException("Zone Manager profile not found");
+                throw new common_1.ForbiddenException('Zone Manager profile not found');
             const zoneManagerId = zoneManagerProfile.id;
             const ownsMeeting = meeting.zoneManagerProfileId === zoneManagerId;
             const doulaBelongsToZoneManager = zoneManagerProfile.doulas.some((d) => d.id === meeting.doulaProfileId);
@@ -357,7 +357,7 @@ let MeetingsService = class MeetingsService {
             }
         }
         else {
-            throw new common_1.ForbiddenException("You are not allowed to reschedule meetings");
+            throw new common_1.ForbiddenException('You are not allowed to reschedule meetings');
         }
         const [startTime, endTime] = dto.meetingsTimeSlots.split('-');
         if (!startTime || !endTime) {
@@ -384,17 +384,17 @@ let MeetingsService = class MeetingsService {
                 id: meetingId,
                 OR: [
                     {
-                        ZoneManagerProfile: { userId: userId }
+                        ZoneManagerProfile: { userId: userId },
                     },
                     {
-                        DoulaProfile: { userId: userId }
-                    }
-                ]
+                        DoulaProfile: { userId: userId },
+                    },
+                ],
             },
             select: { status: true },
         });
         if (!meeting) {
-            throw new common_1.NotFoundException("Meeting not found");
+            throw new common_1.NotFoundException('Meeting not found');
         }
         const updated = await this.prisma.meetings.update({
             where: { id: dto.meetingId },
@@ -404,49 +404,49 @@ let MeetingsService = class MeetingsService {
             },
         });
         return {
-            message: "Meeting status updated",
+            message: 'Meeting status updated',
             meeting: updated,
         };
     }
     async deleteAllMeetings(user) {
         if (user.role !== client_1.Role.ADMIN) {
-            throw new common_1.ForbiddenException("Only Admin can perform bulk deletion");
+            throw new common_1.ForbiddenException('Only Admin can perform bulk deletion');
         }
         await this.prisma.availableSlotsTimeForMeeting.updateMany({
             data: {
                 isBooked: false,
-                availabe: true
-            }
+                availabe: true,
+            },
         });
         const result = await this.prisma.meetings.deleteMany({});
         return {
-            message: "All meetings deleted successfully",
-            count: result.count
+            message: 'All meetings deleted successfully',
+            count: result.count,
         };
     }
     async doulasMeetingSchedule(dto, user) {
-        const { clientId, serviceName, meetingsDate, meetingsTimeSlots, doulaId, additionalNotes, serviceId } = dto;
+        const { clientId, serviceName, meetingsDate, meetingsTimeSlots, doulaId, additionalNotes, serviceId, } = dto;
         console.log(user);
         if (user.role !== client_1.Role.ZONE_MANAGER) {
-            throw new common_1.ForbiddenException("Only Zone Manager can schedule doula meetings");
+            throw new common_1.ForbiddenException('Only Zone Manager can schedule doula meetings');
         }
         const zoneManagerProfile = await this.prisma.zoneManagerProfile.findUnique({
             where: { userId: user.id },
         });
         if (!zoneManagerProfile) {
-            throw new common_1.ForbiddenException("Zone Manager profile not found");
+            throw new common_1.ForbiddenException('Zone Manager profile not found');
         }
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
             where: { id: doulaId },
         });
         if (!doulaProfile) {
-            throw new common_1.NotFoundException("Doula profile not found");
+            throw new common_1.NotFoundException('Doula profile not found');
         }
         const doulaUser = await this.prisma.user.findUnique({
-            where: { id: doulaProfile.userId }
+            where: { id: doulaProfile.userId },
         });
         if (!doulaUser) {
-            throw new common_1.NotFoundException("Doula user not found");
+            throw new common_1.NotFoundException('Doula user not found');
         }
         const weekday = await (0, service_utils_1.getWeekdayFromDate)(meetingsDate);
         const slot = await (0, service_utils_1.findSlotOrThrow)(this.prisma, {
@@ -454,7 +454,7 @@ let MeetingsService = class MeetingsService {
             ownerProfileId: doulaProfile.id,
             weekday,
         });
-        console.log("slot", slot);
+        console.log('slot', slot);
         const exists = await (0, service_utils_1.isMeetingExists)(this.prisma, new Date(meetingsDate), meetingsTimeSlots, {
             doulaProfileId: doulaProfile.id,
         });
@@ -484,9 +484,9 @@ let MeetingsService = class MeetingsService {
                 serviceId: serviceId,
             },
         });
-        console.log("meeting created succesfull");
+        console.log('meeting created succesfull');
         return {
-            message: "Doula meeting scheduled successfully",
+            message: 'Doula meeting scheduled successfully',
             meeting,
         };
     }
@@ -499,7 +499,7 @@ let MeetingsService = class MeetingsService {
                 ZoneManagerProfile: true,
                 DoulaProfile: true,
                 AdminProfile: true,
-                Service: true
+                Service: true,
             },
         });
     }

@@ -24,7 +24,10 @@ __decorate([
     __metadata("design:type", String)
 ], RescheduleDto.prototype, "meetingsDate", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
+    (0, swagger_1.ApiProperty)({
+        example: '09:00-11:00',
+        description: 'Time slot for the service',
+    }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RescheduleDto.prototype, "meetingsTimeSlots", void 0);

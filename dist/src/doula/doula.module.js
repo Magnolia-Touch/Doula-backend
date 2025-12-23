@@ -19,7 +19,7 @@ exports.DoulaModule = DoulaModule = __decorate([
         exports: [doula_service_1.DoulaService],
         imports: [prisma_module_1.PrismaModule],
         providers: [doula_service_1.DoulaService],
-        controllers: [doula_controller_1.DoulaController]
+        controllers: [doula_controller_1.DoulaController],
     })
 ], DoulaModule);
 //# sourceMappingURL=doula.module.js.map

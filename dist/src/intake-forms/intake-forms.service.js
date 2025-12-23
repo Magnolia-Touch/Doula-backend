@@ -24,7 +24,7 @@ let IntakeFormService = class IntakeFormService {
         this.mail = mail;
     }
     async createIntakeForm(dto) {
-        const { name, email, phone, doulaProfileId, serviceId, address, buffer = 0, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeSlots } = dto;
+        const { name, email, phone, doulaProfileId, serviceId, address, buffer = 0, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeSlots, } = dto;
         const clientUser = await (0, service_utils_1.getOrcreateClent)(this.prisma, {
             name,
             email,
@@ -87,7 +87,7 @@ let IntakeFormService = class IntakeFormService {
             });
             if (!daySlot || !daySlot.availabe)
                 continue;
-            const hasTimeSlot = daySlot.AvailableSlotsTimeForService.some(ts => (0, service_utils_1.isOverlapping)(slotStartTime, slotEndTime, ts.startTime, ts.endTime));
+            const hasTimeSlot = daySlot.AvailableSlotsTimeForService.some((ts) => (0, service_utils_1.isOverlapping)(slotStartTime, slotEndTime, ts.startTime, ts.endTime));
             if (!hasTimeSlot)
                 continue;
             const conflict = await this.prisma.schedules.findFirst({
@@ -289,7 +289,7 @@ let IntakeFormService = class IntakeFormService {
     async deleteAllIntakeForms() {
         const result = await this.prisma.intakeForm.deleteMany({});
         return {
-            message: "All enquiry forms deleted successfully",
+            message: 'All enquiry forms deleted successfully',
             deletedCount: result.count,
         };
     }
@@ -353,7 +353,7 @@ let IntakeFormService = class IntakeFormService {
             });
             if (!daySlot || !daySlot.availabe)
                 continue;
-            const hasTimeAvailability = daySlot.AvailableSlotsTimeForService.some(ts => (0, service_utils_1.isOverlapping)(slotStartTime, slotEndTime, ts.startTime, ts.endTime));
+            const hasTimeAvailability = daySlot.AvailableSlotsTimeForService.some((ts) => (0, service_utils_1.isOverlapping)(slotStartTime, slotEndTime, ts.startTime, ts.endTime));
             if (!hasTimeAvailability)
                 continue;
             const conflict = await this.prisma.schedules.findFirst({

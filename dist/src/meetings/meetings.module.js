@@ -22,7 +22,7 @@ exports.MeetingsModule = MeetingsModule = __decorate([
         imports: [mailer_1.MailerModule],
         controllers: [meetings_controller_1.MeetingsController],
         providers: [meetings_service_1.MeetingsService, prisma_service_1.PrismaService, roles_guard_1.RolesGuard, core_1.Reflector],
-        exports: [meetings_service_1.MeetingsService]
+        exports: [meetings_service_1.MeetingsService],
     })
 ], MeetingsModule);
 //# sourceMappingURL=meetings.module.js.map

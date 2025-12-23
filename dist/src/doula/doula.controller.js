@@ -42,7 +42,10 @@ function multerStorage() {
             cb(null, './uploads/doulas');
         },
         filename: (req, file, cb) => {
-            const safeName = Date.now() + '-' + Math.round(Math.random() * 1e9) + (0, path_1.extname)(file.originalname);
+            const safeName = Date.now() +
+                '-' +
+                Math.round(Math.random() * 1e9) +
+                (0, path_1.extname)(file.originalname);
             cb(null, safeName);
         },
     });
@@ -176,7 +179,7 @@ __decorate([
     })),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileFieldsInterceptor)([
         { name: 'profile_image', maxCount: 1 },
-        { name: 'gallery_image', maxCount: 5 }
+        { name: 'gallery_image', maxCount: 5 },
     ], {
         storage: multerStorage(),
         limits: { fileSize: MAX_FILE_SIZE },
@@ -200,17 +203,37 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all doulas with filters & pagination' }),
     (0, swagger_1.ApiQuery)({ name: 'page', required: false, type: Number, example: 1 }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false, type: Number, example: 10 }),
-    (0, swagger_1.ApiQuery)({ name: 'search', required: false, type: String, description: 'Search by name, email, phone, region' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'search',
+        required: false,
+        type: String,
+        description: 'Search by name, email, phone, region',
+    }),
     (0, swagger_1.ApiQuery)({ name: 'serviceId', required: false, type: String }),
     (0, swagger_1.ApiQuery)({ name: 'isAvailable', required: false, type: Boolean }),
     (0, swagger_1.ApiQuery)({ name: 'isActive', required: false, type: Boolean }),
     (0, swagger_1.ApiQuery)({ name: 'regionName', required: false, type: String }),
-    (0, swagger_1.ApiQuery)({ name: 'minExperience', required: false, type: Number, description: 'Minimum years of experience' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'minExperience',
+        required: false,
+        type: Number,
+        description: 'Minimum years of experience',
+    }),
     (0, swagger_1.ApiQuery)({ name: 'serviceName', required: false, type: String }),
-    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, type: String, description: 'ISO date yyyy-MM-dd' }),
-    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, type: String, description: 'ISO date yyyy-MM-dd' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'startDate',
+        required: false,
+        type: String,
+        description: 'ISO date yyyy-MM-dd',
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'endDate',
+        required: false,
+        type: String,
+        description: 'ISO date yyyy-MM-dd',
+    }),
     (0, swagger_1.ApiOkResponse)({
-        description: 'Returns a filtered & paginated list of doulas'
+        description: 'Returns a filtered & paginated list of doulas',
     }),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
@@ -243,10 +266,10 @@ __decorate([
                     name: 'Jane Doe',
                     email: 'jane@example.com',
                     phone: '+919876543210',
-                    regions: [{ id: 'region-1', name: 'Region A' }]
-                }
-            }
-        }
+                    regions: [{ id: 'region-1', name: 'Region A' }],
+                },
+            },
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -263,8 +286,8 @@ __decorate([
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
         schema: {
-            example: { success: true, message: 'Doula deleted', data: null }
-        }
+            example: { success: true, message: 'Doula deleted', data: null },
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -282,8 +305,12 @@ __decorate([
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
         schema: {
-            example: { success: true, message: 'Status updated', data: { id: 'doula-uuid', isActive: true } }
-        }
+            example: {
+                success: true,
+                message: 'Status updated',
+                data: { id: 'doula-uuid', isActive: true },
+            },
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -304,9 +331,13 @@ __decorate([
             example: {
                 success: true,
                 message: 'Doula regions updated',
-                data: { profileId: 'profile-uuid', regionIds: ['r1', 'r2'], purpose: 'add' }
-            }
-        }
+                data: {
+                    profileId: 'profile-uuid',
+                    regionIds: ['r1', 'r2'],
+                    purpose: 'add',
+                },
+            },
+        },
     }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
@@ -511,7 +542,9 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
     (0, common_1.Get)('app/testimonials'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get testimonials associated with the logged-in doula' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get testimonials associated with the logged-in doula',
+    }),
     (0, swagger_1.ApiQuery)({ name: 'page', required: false, example: 1 }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false, example: 10 }),
     (0, swagger_1.ApiResponse)({
@@ -693,7 +726,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
-    (0, common_1.Get)("list/certificates"),
+    (0, common_1.Get)('list/certificates'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

@@ -23,13 +23,13 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
     async createAvailability(dto, user) {
         let profile;
         profile = await this.prisma.doulaProfile.findUnique({
-            where: { userId: user.id }
+            where: { userId: user.id },
         });
         const { weekday, startTime, endTime } = dto;
-        const startDateTime = new Date(`${"1970-01-01"}T${startTime}:00`);
-        const endDateTime = new Date(`${"1970-01-01"}T${endTime}:00`);
+        const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
+        const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
         if (startDateTime >= endDateTime) {
-            throw new common_1.BadRequestException("Start time must be before end time.");
+            throw new common_1.BadRequestException('Start time must be before end time.');
         }
         const dateslot = await (0, service_utils_1.getServiceSlotOrCreateSlot)(this.prisma, dto.weekday, profile.id);
         const timings = await this.prisma.availableSlotsTimeForService.create({
@@ -38,11 +38,11 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
                 startTime: startDateTime,
                 endTime: endDateTime,
                 availabe: true,
-            }
+            },
         });
         console.log(dateslot);
         return {
-            message: "Service Slots created successfully",
+            message: 'Service Slots created successfully',
             data: {
                 date: dateslot.weekday,
                 ownerRole: user.role,
@@ -50,8 +50,8 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
                     startTime: timings.startTime,
                     endTime: timings.endTime,
                     available: timings.availabe,
-                }
-            }
+                },
+            },
         };
     }
     async getMyAvailabilities(userId) {
@@ -62,7 +62,7 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
         if (!user) {
             throw new common_1.NotFoundException('User not found');
         }
-        let whereClause = {};
+        const whereClause = {};
         if (user.role === client_1.Role.DOULA) {
             const doulaProfile = await this.prisma.doulaProfile.findUnique({
                 where: { userId },
@@ -115,7 +115,7 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
             date: {
                 gte: firstDate,
                 lt: secondDate,
-            }
+            },
         };
         const timeFilter = {};
         if (filter === 'booked')
@@ -130,10 +130,10 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
             include: {
                 AvailableSlotsTimeForService: {
                     where: filter === 'all' ? undefined : timeFilter,
-                    orderBy: { startTime: 'asc' }
-                }
+                    orderBy: { startTime: 'asc' },
+                },
             },
-            orderBy: { date: 'asc' }
+            orderBy: { date: 'asc' },
         });
     }
     async getSlotById(id) {
@@ -141,15 +141,15 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
             where: { id },
             include: {
                 AvailableSlotsTimeForService: {
-                    orderBy: { startTime: 'asc' }
-                }
-            }
+                    orderBy: { startTime: 'asc' },
+                },
+            },
         });
         if (!slot) {
-            throw new common_1.NotFoundException("Slot not found");
+            throw new common_1.NotFoundException('Slot not found');
         }
         return {
-            message: "Slot retrieved successfully",
+            message: 'Slot retrieved successfully',
             slot,
         };
     }
@@ -158,23 +158,23 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
             where: { id: timeSlotId, date: { doula: { userId: userId } } },
             include: {
                 date: true,
-            }
+            },
         });
         if (!timeSlot)
-            throw new common_1.NotFoundException("Time slot not found");
+            throw new common_1.NotFoundException('Time slot not found');
         const parentSlot = timeSlot.date;
-        const startDateTime = new Date(`${"1970-01-01"}T${dto.startTime}:00`);
-        const endDateTime = new Date(`${"1970-01-01"}T${dto.endTime}:00`);
+        const startDateTime = new Date(`${'1970-01-01'}T${dto.startTime}:00`);
+        const endDateTime = new Date(`${'1970-01-01'}T${dto.endTime}:00`);
         const updatedTimeSlot = await this.prisma.availableSlotsTimeForService.update({
             where: { id: timeSlotId },
             data: {
                 startTime: startDateTime,
-                endTime: endDateTime
-            }
+                endTime: endDateTime,
+            },
         });
         return {
-            message: "Time slot updated successfully",
-            data: updatedTimeSlot
+            message: 'Time slot updated successfully',
+            data: updatedTimeSlot,
         };
     }
     async deleteSlots(timeSlotId, userId) {
@@ -182,40 +182,40 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
             where: { id: timeSlotId, date: { doula: { userId: userId } } },
             include: {
                 date: true,
-            }
+            },
         });
         if (!timeSlot)
-            throw new common_1.NotFoundException("Time slot not found");
+            throw new common_1.NotFoundException('Time slot not found');
         const deletedTimeSlot = await this.prisma.availableSlotsTimeForService.delete({
             where: { id: timeSlotId },
         });
         return {
-            message: "Time slot Deleted successfully",
-            data: deletedTimeSlot
+            message: 'Time slot Deleted successfully',
+            data: deletedTimeSlot,
         };
     }
     async updateSlotTimeByDate(timeSlotId) {
         const timeSlot = await this.prisma.availableSlotsForService.findUnique({
-            where: { id: timeSlotId }
+            where: { id: timeSlotId },
         });
         if (!timeSlot)
-            throw new common_1.NotFoundException("Time slot not found");
+            throw new common_1.NotFoundException('Time slot not found');
         const updatedslot = await this.prisma.availableSlotsForService.update({
             where: { id: timeSlotId },
             data: {
                 availabe: true,
-                isBooked: false
-            }
+                isBooked: false,
+            },
         });
         await this.prisma.availableSlotsTimeForService.updateMany({
             where: { id: timeSlotId },
             data: {
                 availabe: true,
-            }
+            },
         });
         return {
-            message: "Slot updated successfully",
-            data: updatedslot
+            message: 'Slot updated successfully',
+            data: updatedslot,
         };
     }
 };

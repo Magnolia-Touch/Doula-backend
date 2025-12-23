@@ -58,9 +58,24 @@ __decorate([
         summary: 'List users (paginated + optional role filter)',
         description: 'Returns a paginated list of users. Use `page` and `limit` for pagination. Optionally filter by `role`.',
     }),
-    (0, swagger_1.ApiQuery)({ name: 'page', required: false, description: 'Page number', type: Number }),
-    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Items per page', type: Number }),
-    (0, swagger_1.ApiQuery)({ name: 'role', required: false, description: 'Filter by role (ADMIN, CLIENT, DOULA, ZONE_MANAGER)', type: String }),
+    (0, swagger_1.ApiQuery)({
+        name: 'page',
+        required: false,
+        description: 'Page number',
+        type: Number,
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'limit',
+        required: false,
+        description: 'Items per page',
+        type: Number,
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'role',
+        required: false,
+        description: 'Filter by role (ADMIN, CLIENT, DOULA, ZONE_MANAGER)',
+        type: String,
+    }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
@@ -70,8 +85,18 @@ __decorate([
                 message: 'Users fetched successfully',
                 data: {
                     items: [
-                        { id: 'uuid-1', name: 'Jane Doe', email: 'jane@example.com', role: 'CLIENT' },
-                        { id: 'uuid-2', name: 'Admin User', email: 'admin@example.com', role: 'ADMIN' }
+                        {
+                            id: 'uuid-1',
+                            name: 'Jane Doe',
+                            email: 'jane@example.com',
+                            role: 'CLIENT',
+                        },
+                        {
+                            id: 'uuid-2',
+                            name: 'Admin User',
+                            email: 'admin@example.com',
+                            role: 'ADMIN',
+                        },
                     ],
                     total: 2,
                     page: 1,
@@ -167,7 +192,7 @@ __decorate([
                 data: {
                     ACTIVE: 64,
                     COMPLETED: 100,
-                    CANCELED: 4
+                    CANCELED: 4,
                 },
             },
         },
@@ -189,7 +214,7 @@ __decorate([
                 data: {
                     SCHEDULED: 12,
                     COMPLETED: 5,
-                    CANCELED: 0
+                    CANCELED: 0,
                 },
             },
         },

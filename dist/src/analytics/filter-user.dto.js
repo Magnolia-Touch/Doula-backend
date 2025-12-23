@@ -22,7 +22,10 @@ class FilterUserDto {
 }
 exports.FilterUserDto = FilterUserDto;
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: "Status filter to identify active user.", example: true }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Status filter to identify active user.',
+        example: true,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     (0, class_transformer_1.Transform)(({ value }) => {
@@ -35,19 +38,28 @@ __decorate([
     __metadata("design:type", Boolean)
 ], FilterUserDto.prototype, "is_active", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Role to filter (ADMIN, CLIENT, DOULA, ZONE_MANAGER)', example: client_1.Role.CLIENT }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Role to filter (ADMIN, CLIENT, DOULA, ZONE_MANAGER)',
+        example: client_1.Role.CLIENT,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(client_1.Role),
     __metadata("design:type", String)
 ], FilterUserDto.prototype, "role", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Page number (string numeric allowed)', example: '1' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Page number (string numeric allowed)',
+        example: '1',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumberString)(),
     __metadata("design:type", String)
 ], FilterUserDto.prototype, "page", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Limit per page (string numeric allowed)', example: '10' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Limit per page (string numeric allowed)',
+        example: '10',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumberString)(),
     __metadata("design:type", String)

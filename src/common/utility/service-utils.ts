@@ -3,14 +3,13 @@ import { MeetingStatus, Role, WeekDays } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 // utils/meeting.util.ts
 
-
 export async function findSlotOrThrow(
   prisma: PrismaService,
   params: {
     ownerRole: Role;
     ownerProfileId: string;
     weekday: WeekDays;
-  }
+  },
 ) {
   const { ownerRole, ownerProfileId, weekday } = params;
 
@@ -18,7 +17,7 @@ export async function findSlotOrThrow(
   console.log('ownerProfileId', ownerProfileId);
   console.log('weekday', weekday);
 
-  let where: any = {};
+  const where: any = {};
 
   if (ownerRole === Role.DOULA) {
     where.doulaId_weekday = {
@@ -46,7 +45,6 @@ export async function findSlotOrThrow(
 
   return slot;
 }
-
 
 export async function findRegionOrThrow(
   prisma: PrismaService,
@@ -78,8 +76,6 @@ export async function findZoneManagerOrThrowWithId(
   return zoneManager;
 }
 
-
-
 export async function findDoulaOrThrowWithId(
   prisma: PrismaService,
   profileId: string,
@@ -109,7 +105,6 @@ export async function checkUserExistorNot(
   return existingUser;
 }
 
-
 export async function findUserOrThrowwithId(
   prisma: PrismaService,
   userId: string,
@@ -124,7 +119,6 @@ export async function findUserOrThrowwithId(
 
   return user;
 }
-
 
 export async function findServiceOrThrowwithId(
   prisma: PrismaService,
@@ -141,32 +135,24 @@ export async function findServiceOrThrowwithId(
   return service;
 }
 
-
-
-export async function findUserRoleById(
-  prisma: PrismaService,
-  userId: string
-) {
+export async function findUserRoleById(prisma: PrismaService, userId: string) {
   const user = await prisma.user.findUnique({
-    where: { id: userId }
-  })
+    where: { id: userId },
+  });
   if (!user) {
-    throw new NotFoundException("User Not found")
+    throw new NotFoundException('User Not found');
   }
-  return user?.role
+  return user?.role;
 }
 
-export async function findUserProfileId(
-  prisma: PrismaService,
-  userId: string
-) {
+export async function findUserProfileId(prisma: PrismaService, userId: string) {
   const user = await prisma.user.findUnique({
-    where: { id: userId }
-  })
+    where: { id: userId },
+  });
   if (!user) {
-    throw new NotFoundException("User Not found")
+    throw new NotFoundException('User Not found');
   }
-  return user?.role
+  return user?.role;
 
   let id;
 
@@ -190,7 +176,7 @@ export async function getSlotOrCreateSlot(
   prisma: PrismaService,
   week: WeekDays,
   userRole: Role,
-  profileId: string
+  profileId: string,
 ) {
   // FORCE UTC MIDNIGHT MATCH FOR MYSQL @db.Date
   // const formatted = dateString.split("T")[0];
@@ -203,12 +189,16 @@ export async function getSlotOrCreateSlot(
       ? { doulaId_weekday: { doulaId: profileId, weekday: week } }
       : userRole === Role.ADMIN
         ? { adminId_weekday: { adminId: profileId, weekday: week } }
-        : { zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week } };
-  console.log("unique where", uniqueWhere)
+        : {
+            zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
+          };
+  console.log('unique where', uniqueWhere);
   const ownerField =
-    userRole === Role.DOULA ? "doulaId" :
-      userRole === Role.ADMIN ? "adminId" :
-        "zoneManagerId";
+    userRole === Role.DOULA
+      ? 'doulaId'
+      : userRole === Role.ADMIN
+        ? 'adminId'
+        : 'zoneManagerId';
 
   // 1. Try existing slot
   let slot = await prisma.availableSlotsForMeeting.findUnique({
@@ -230,12 +220,11 @@ export async function getSlotOrCreateSlot(
   return slot;
 }
 
-
 export async function createTimeForSlot(
   prisma: PrismaService,
   slotId: string,
   startTime: Date,
-  endTime: Date
+  endTime: Date,
 ) {
   return prisma.availableSlotsTimeForMeeting.create({
     data: {
@@ -243,29 +232,27 @@ export async function createTimeForSlot(
       startTime,
       endTime,
       availabe: true,
-      isBooked: false
-    }
+      isBooked: false,
+    },
   });
 }
 
 export function toUTCDate(dateString: string) {
   const d = new Date(dateString);
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
 }
 
-
-export async function getOrcreateClent(
-  prisma: PrismaService,
-  data: any) {
-
+export async function getOrcreateClent(prisma: PrismaService, data: any) {
   // 1. Try existing slot
   let user;
-  console.log("data", data)
+  console.log('data', data);
   user = await prisma.user.findUnique({
     where: { email: data.email },
     include: {
-      clientProfile: true
-    }
+      clientProfile: true,
+    },
   });
 
   if (user) return user;
@@ -276,15 +263,14 @@ export async function getOrcreateClent(
       email: data.email,
       phone: data.phone,
       role: Role.CLIENT,
-      clientProfile: { create: { is_verified: true } }
+      clientProfile: { create: { is_verified: true } },
     },
     include: {
-      clientProfile: true
-    }
-  })
-  return user
+      clientProfile: true,
+    },
+  });
+  return user;
 }
-
 
 export function getWeekdayFromDate(date: string | Date): WeekDays {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -306,12 +292,10 @@ export function getWeekdayFromDate(date: string | Date): WeekDays {
   return map[d.getDay()];
 }
 
-
-
 export async function getServiceSlotOrCreateSlot(
   prisma: PrismaService,
   weekday: WeekDays,
-  profileId: string
+  profileId: string,
 ) {
   // FORCE UTC MIDNIGHT MATCH FOR MYSQL @db.Date
   // const formatted = dateString.split("T")[0];
@@ -323,8 +307,8 @@ export async function getServiceSlotOrCreateSlot(
     where: {
       doulaId_weekday: {
         doulaId: profileId,
-        weekday: weekday
-      }
+        weekday: weekday,
+      },
     },
   });
 
@@ -335,7 +319,7 @@ export async function getServiceSlotOrCreateSlot(
     data: {
       weekday: weekday,
       availabe: true,
-      doulaId: profileId
+      doulaId: profileId,
     },
   });
 
@@ -346,7 +330,9 @@ export function parseTimeSlot(timeSlot: string): {
   startTime: Date;
   endTime: Date;
 } {
-  const match = timeSlot.match(/^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$/);
+  const match = timeSlot.match(
+    /^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$/,
+  );
 
   if (!match) {
     throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
@@ -361,7 +347,6 @@ export function parseTimeSlot(timeSlot: string): {
     endTime: new Date(`${baseDate}T${eh}:${em}:00`),
   };
 }
-
 
 export async function isMeetingExists(
   prisma: PrismaService,
@@ -418,8 +403,6 @@ export async function isMeetingExists(
   return Boolean(meeting);
 }
 
-
-
 export async function isOverlapping(
   aStart: Date,
   aEnd: Date,
@@ -428,7 +411,6 @@ export async function isOverlapping(
 ) {
   return aStart < bEnd && bStart < aEnd;
 }
-
 
 export async function generateVisitDates(
   start: Date,

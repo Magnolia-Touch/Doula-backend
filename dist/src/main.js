@@ -15,7 +15,7 @@ async function bootstrap() {
     });
     app.setGlobalPrefix('backend');
     app.enableVersioning({
-        type: common_2.VersioningType.URI
+        type: common_2.VersioningType.URI,
     });
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
     const config = new swagger_1.DocumentBuilder()
@@ -37,7 +37,9 @@ async function bootstrap() {
     app.useGlobalInterceptors(new response_interceptor_1.ResponseInterceptor());
     await app.listen(process.env.PORT ?? 3000);
     console.log(`🚀 Server running at http://localhost:${process.env.PORT ?? 3000}`);
-    console.log('📚 Swagger docs: http://localhost:' + (process.env.PORT ?? 3000) + '/api/docs');
+    console.log('📚 Swagger docs: http://localhost:' +
+        (process.env.PORT ?? 3000) +
+        '/api/docs');
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

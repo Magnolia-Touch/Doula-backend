@@ -54,7 +54,11 @@ __decorate([
             example: {
                 success: true,
                 message: 'Enquiry submitted successfully',
-                data: { id: 'enquiry-uuid', name: 'John Doe', serviceId: 'service-uuid' },
+                data: {
+                    id: 'enquiry-uuid',
+                    name: 'John Doe',
+                    serviceId: 'service-uuid',
+                },
             },
         },
     }),
@@ -123,7 +127,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'Enquiry deleted', data: null } },
+        schema: {
+            example: { success: true, message: 'Enquiry deleted', data: null },
+        },
     }),
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -136,7 +142,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'All enquiries deleted', data: null } },
+        schema: {
+            example: { success: true, message: 'All enquiries deleted', data: null },
+        },
     }),
     (0, common_1.Delete)(),
     __metadata("design:type", Function),

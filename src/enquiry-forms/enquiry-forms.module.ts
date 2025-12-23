@@ -7,12 +7,8 @@ import { MeetingsModule } from 'src/meetings/meetings.module';
 import { MeetingsService } from 'src/meetings/meetings.service';
 
 @Module({
-    imports: [MeetingsModule],
-    controllers: [EnquiryController],
-    providers: [
-        EnquiryService,
-        PrismaService,
-        MeetingsService
-    ],
+  imports: [MeetingsModule],
+  controllers: [EnquiryController],
+  providers: [EnquiryService, PrismaService, MeetingsService],
 })
-export class EnquiryModule { }
+export class EnquiryModule {}

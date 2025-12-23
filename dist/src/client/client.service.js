@@ -42,9 +42,9 @@ let ClientsService = class ClientsService {
     async get() {
         const clientss = await this.prisma.user.findMany({
             where: { role: client_1.Role.CLIENT },
-            include: { clientProfile: true }
+            include: { clientProfile: true },
         });
-        return { message: "Clients Fetched Successfully", data: clientss };
+        return { message: 'Clients Fetched Successfully', data: clientss };
     }
     async getById(id) {
         const clients = await this.prisma.user.findUnique({
@@ -278,7 +278,7 @@ let ClientsService = class ClientsService {
         if (!clientProfile) {
             throw new common_1.NotFoundException('Client profile not found');
         }
-        return clientProfile.Meetings.map(meeting => {
+        return clientProfile.Meetings.map((meeting) => {
             const hostname = meeting.DoulaProfile?.user?.name ??
                 meeting.ZoneManagerProfile?.user?.name ??
                 null;
@@ -421,7 +421,7 @@ let ClientsService = class ClientsService {
                 await tx.availableSlotsTimeForMeeting.updateMany({
                     where: {
                         id: {
-                            in: meeting.AvailableSlotsTimeForMeeting.map(s => s.id),
+                            in: meeting.AvailableSlotsTimeForMeeting.map((s) => s.id),
                         },
                     },
                     data: {

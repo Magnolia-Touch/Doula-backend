@@ -53,7 +53,10 @@ __decorate([
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "meetingsDate", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
+    (0, swagger_1.ApiProperty)({
+        example: '09:00-11:00',
+        description: 'Time slot for the service',
+    }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "meetingsTimeSlots", void 0);
@@ -63,26 +66,38 @@ __decorate([
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "serviceId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '2025-12-05', description: 'Service Start Date (ISO format)' }),
+    (0, swagger_1.ApiProperty)({
+        example: '2025-12-05',
+        description: 'Service Start Date (ISO format)',
+    }),
     (0, class_validator_1.IsDateString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "seviceStartDate", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '2025-12-10', description: 'Service End Date (ISO format)' }),
+    (0, swagger_1.ApiProperty)({
+        example: '2025-12-10',
+        description: 'Service End Date (ISO format)',
+    }),
     (0, class_validator_1.IsDateString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], EnquiryFormDto.prototype, "serviceEndDate", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 2, description: 'Visit Frequency for Services (e.g., twice a week)' }),
+    (0, swagger_1.ApiProperty)({
+        example: 2,
+        description: 'Visit Frequency for Services (e.g., twice a week)',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], EnquiryFormDto.prototype, "visitFrequency", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '09:00-11:00', description: 'Time slot for the service' }),
+    (0, swagger_1.ApiProperty)({
+        example: '09:00-11:00',
+        description: 'Time slot for the service',
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)

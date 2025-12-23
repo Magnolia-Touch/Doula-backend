@@ -19,7 +19,7 @@ exports.ZoneManagerModule = ZoneManagerModule = __decorate([
         exports: [zone_manager_service_1.ZoneManagerService],
         imports: [prisma_module_1.PrismaModule],
         controllers: [zone_manager_controller_1.ZoneManagerController],
-        providers: [zone_manager_service_1.ZoneManagerService]
+        providers: [zone_manager_service_1.ZoneManagerService],
     })
 ], ZoneManagerModule);
 //# sourceMappingURL=zone_manager.module.js.map

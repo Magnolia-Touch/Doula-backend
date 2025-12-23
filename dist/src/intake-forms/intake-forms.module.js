@@ -17,10 +17,7 @@ exports.IntakeFormModule = IntakeFormModule;
 exports.IntakeFormModule = IntakeFormModule = __decorate([
     (0, common_1.Module)({
         controllers: [intake_forms_controller_1.IntakeFormController],
-        providers: [
-            intake_forms_service_1.IntakeFormService,
-            prisma_service_1.PrismaService,
-        ],
+        providers: [intake_forms_service_1.IntakeFormService, prisma_service_1.PrismaService],
     })
 ], IntakeFormModule);
 //# sourceMappingURL=intake-forms.module.js.map

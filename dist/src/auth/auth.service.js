@@ -40,9 +40,11 @@ let AuthService = class AuthService {
     async RegisterAdmin(dto) {
         const { name, email, phone } = dto;
         console.log(dto.email);
-        let user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        const user = await this.prisma.user.findUnique({
+            where: { email: dto.email },
+        });
         if (user) {
-            throw new Error("User with this email already exists");
+            throw new Error('User with this email already exists');
         }
         console.log(user);
         const created = await this.prisma.user.create({
@@ -51,29 +53,32 @@ let AuthService = class AuthService {
                 email: email,
                 phone: phone,
                 role: client_1.Role.ADMIN,
-            }
+            },
         });
-        return { message: "Otp Sent Succesfully", data: created };
+        return { message: 'Otp Sent Succesfully', data: created };
     }
     async LoginOtp(dto) {
         const { email } = dto;
         const otp = (0, utils_1.generate6DigitOtp)();
-        let user = await this.prisma.user.findUnique({ where: { email: email } });
+        const user = await this.prisma.user.findUnique({ where: { email: email } });
         if (!user) {
-            throw new Error("No User Found");
+            throw new Error('No User Found');
         }
-        if (user.role == client_1.Role.DOULA || user.role == client_1.Role.ADMIN || user.role == client_1.Role.ZONE_MANAGER || user.role == client_1.Role.CLIENT) {
+        if (user.role == client_1.Role.DOULA ||
+            user.role == client_1.Role.ADMIN ||
+            user.role == client_1.Role.ZONE_MANAGER ||
+            user.role == client_1.Role.CLIENT) {
             await this.prisma.user.update({
                 where: { email: email },
                 data: {
                     otp: otp,
-                    otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
-                }
+                    otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+                },
             });
-            return { message: "Otp Sent Succesfully", data: otp };
+            return { message: 'Otp Sent Succesfully', data: otp };
         }
         else {
-            throw new Error("Invalid Role.");
+            throw new Error('Invalid Role.');
         }
     }
     async verifyOtp(dto) {
@@ -100,7 +105,7 @@ let AuthService = class AuthService {
                 sub: user.id,
                 email: user.email,
             }),
-            message: "User Verified Successfully",
+            message: 'User Verified Successfully',
             status: 200,
         };
     }

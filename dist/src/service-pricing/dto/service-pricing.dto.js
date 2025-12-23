@@ -21,7 +21,7 @@ exports.CreateServicePricingDto = CreateServicePricingDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: '6b117e03-d8cd-4c7a-b0fa-2a9300b8a812',
-        description: 'UUID of the service'
+        description: 'UUID of the service',
     }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

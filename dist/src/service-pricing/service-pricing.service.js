@@ -20,17 +20,17 @@ let ServicePricingService = class ServicePricingService {
     }
     async create(dto, userId) {
         const user = await this.prisma.doulaProfile.findUnique({
-            where: { userId: userId }
+            where: { userId: userId },
         });
         if (!user) {
-            throw new common_1.NotFoundException("User Not found Exception");
+            throw new common_1.NotFoundException('User Not found Exception');
         }
         return this.prisma.servicePricing.create({
             data: {
                 serviceId: dto.serviceId,
                 doulaProfileId: user.id,
-                price: dto.price
-            }
+                price: dto.price,
+            },
         });
     }
     async findAll(userId) {
@@ -126,7 +126,7 @@ let ServicePricingService = class ServicePricingService {
         if (name) {
             where.service = {
                 name: {
-                    contains: name.toLowerCase()
+                    contains: name.toLowerCase(),
                 },
             };
         }
@@ -147,17 +147,17 @@ let ServicePricingService = class ServicePricingService {
     }
     async createPricing(dto) {
         const user = await this.prisma.doulaProfile.findUnique({
-            where: { id: dto.doulaId }
+            where: { id: dto.doulaId },
         });
         if (!user) {
-            throw new common_1.NotFoundException("User Not found Exception");
+            throw new common_1.NotFoundException('User Not found Exception');
         }
         return this.prisma.servicePricing.create({
             data: {
                 serviceId: dto.serviceId,
                 doulaProfileId: dto.doulaId,
-                price: dto.price
-            }
+                price: dto.price,
+            },
         });
     }
 };

@@ -25,27 +25,27 @@ let AvailableSlotsService = class AvailableSlotsService {
         switch (user.role) {
             case client_1.Role.ZONE_MANAGER:
                 profile = await this.prisma.zoneManagerProfile.findUnique({
-                    where: { userId: user.id }
+                    where: { userId: user.id },
                 });
                 break;
             case client_1.Role.DOULA:
                 profile = await this.prisma.doulaProfile.findUnique({
-                    where: { userId: user.id }
+                    where: { userId: user.id },
                 });
                 break;
             case client_1.Role.ADMIN:
                 profile = await this.prisma.adminProfile.findUnique({
-                    where: { userId: user.id }
+                    where: { userId: user.id },
                 });
                 break;
             default:
-                throw new common_1.ForbiddenException("Invalid user role");
+                throw new common_1.ForbiddenException('Invalid user role');
         }
         const { weekday, startTime, endTime } = dto;
-        const startDateTime = new Date(`${"1970-01-01"}T${startTime}:00`);
-        const endDateTime = new Date(`${"1970-01-01"}T${endTime}:00`);
+        const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
+        const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
         if (startDateTime >= endDateTime) {
-            throw new common_1.BadRequestException("Start time must be before end time.");
+            throw new common_1.BadRequestException('Start time must be before end time.');
         }
         const dateslot = await (0, service_utils_1.getSlotOrCreateSlot)(this.prisma, weekday, user.role, profile.id);
         const timings = await this.prisma.availableSlotsTimeForMeeting.create({
@@ -55,11 +55,11 @@ let AvailableSlotsService = class AvailableSlotsService {
                 endTime: endDateTime,
                 availabe: true,
                 isBooked: false,
-            }
+            },
         });
         console.log(dateslot);
         return {
-            message: "Slots created successfully",
+            message: 'Slots created successfully',
             data: {
                 weekday: dateslot.weekday,
                 ownerRole: user.role,
@@ -67,9 +67,9 @@ let AvailableSlotsService = class AvailableSlotsService {
                     startTime: timings.startTime,
                     endTime: timings.endTime,
                     available: timings.availabe,
-                    is_booked: timings.isBooked
-                }
-            }
+                    is_booked: timings.isBooked,
+                },
+            },
         };
     }
     async getMyAvailabilities(userId) {
@@ -80,7 +80,7 @@ let AvailableSlotsService = class AvailableSlotsService {
         if (!user) {
             throw new common_1.NotFoundException('User not found');
         }
-        let whereClause = {};
+        const whereClause = {};
         if (user.role === client_1.Role.DOULA) {
             const doulaProfile = await this.prisma.doulaProfile.findUnique({
                 where: { userId },
@@ -130,7 +130,7 @@ let AvailableSlotsService = class AvailableSlotsService {
         await (0, service_utils_1.findRegionOrThrow)(this.prisma, regionId);
         const region = await this.prisma.region.findUnique({
             where: { id: regionId },
-            include: { zoneManager: true }
+            include: { zoneManager: true },
         });
         const manager = region?.zoneManagerId;
         const where = {
@@ -138,7 +138,7 @@ let AvailableSlotsService = class AvailableSlotsService {
             date: {
                 gte: firstDate,
                 lt: secondDate,
-            }
+            },
         };
         const timeFilter = {};
         if (filter === 'booked')
@@ -153,12 +153,12 @@ let AvailableSlotsService = class AvailableSlotsService {
             include: {
                 AvailableSlotsTimeForMeeting: {
                     where: filter === 'all' ? undefined : timeFilter,
-                    orderBy: { startTime: 'asc' }
-                }
+                    orderBy: { startTime: 'asc' },
+                },
             },
-            orderBy: { date: 'asc' }
+            orderBy: { date: 'asc' },
         });
-        const mapped = result.data.map(slot => ({
+        const mapped = result.data.map((slot) => ({
             dateId: slot.id,
             weekday: slot.weekday,
             availabe: slot.availabe,
@@ -173,12 +173,12 @@ let AvailableSlotsService = class AvailableSlotsService {
                 startTime: t.startTime,
                 endTime: t.endTime,
                 availabe: t.availabe,
-                isBooked: t.isBooked
-            })) || []
+                isBooked: t.isBooked,
+            })) || [],
         }));
         return {
             data: mapped,
-            meta: result.meta
+            meta: result.meta,
         };
     }
     async getSlotById(id) {
@@ -186,15 +186,15 @@ let AvailableSlotsService = class AvailableSlotsService {
             where: { id },
             include: {
                 AvailableSlotsTimeForMeeting: {
-                    orderBy: { startTime: 'asc' }
-                }
-            }
+                    orderBy: { startTime: 'asc' },
+                },
+            },
         });
         if (!slot) {
-            throw new common_1.NotFoundException("Slot not found");
+            throw new common_1.NotFoundException('Slot not found');
         }
         return {
-            message: "Slot retrieved successfully",
+            message: 'Slot retrieved successfully',
             slot,
         };
     }
@@ -204,15 +204,15 @@ let AvailableSlotsService = class AvailableSlotsService {
             where: { id: dto.timeSlotId },
             include: {
                 date: true,
-            }
+            },
         });
         if (!timeSlot)
-            throw new common_1.NotFoundException("Time slot not found");
+            throw new common_1.NotFoundException('Time slot not found');
         const parentSlot = timeSlot.date;
         if (role === client_1.Role.ZONE_MANAGER) {
             const profile = await this.prisma.zoneManagerProfile.findUnique({
                 where: { userId },
-                select: { id: true }
+                select: { id: true },
             });
             if (profile?.id !== parentSlot.zoneManagerId)
                 throw new common_1.ForbiddenException("You cannot update another Zone Manager's slot");
@@ -220,26 +220,28 @@ let AvailableSlotsService = class AvailableSlotsService {
         if (role === client_1.Role.DOULA) {
             const profile = await this.prisma.doulaProfile.findUnique({
                 where: { userId },
-                select: { id: true }
+                select: { id: true },
             });
             if (profile?.id !== parentSlot.doulaId)
                 throw new common_1.ForbiddenException("You cannot update another Doula's slot");
         }
-        if (role !== client_1.Role.ADMIN && role !== client_1.Role.ZONE_MANAGER && role !== client_1.Role.DOULA) {
-            throw new common_1.BadRequestException("Authorization Failed");
+        if (role !== client_1.Role.ADMIN &&
+            role !== client_1.Role.ZONE_MANAGER &&
+            role !== client_1.Role.DOULA) {
+            throw new common_1.BadRequestException('Authorization Failed');
         }
-        const startDateTime = new Date(`${"1970-01-01"}T${dto.startTime}:00`);
-        const endDateTime = new Date(`${"1970-01-01"}T${dto.endTime}:00`);
+        const startDateTime = new Date(`${'1970-01-01'}T${dto.startTime}:00`);
+        const endDateTime = new Date(`${'1970-01-01'}T${dto.endTime}:00`);
         const updatedTimeSlot = await this.prisma.availableSlotsTimeForMeeting.update({
             where: { id: dto.timeSlotId },
             data: {
                 startTime: startDateTime,
-                endTime: endDateTime
-            }
+                endTime: endDateTime,
+            },
         });
         return {
-            message: "Time slot updated successfully",
-            data: updatedTimeSlot
+            message: 'Time slot updated successfully',
+            data: updatedTimeSlot,
         };
     }
     async deleteSlots(slotId, userId) {
@@ -248,62 +250,64 @@ let AvailableSlotsService = class AvailableSlotsService {
             where: { id: slotId },
         });
         if (!slot) {
-            throw new common_1.NotFoundException("Slot Not Found");
+            throw new common_1.NotFoundException('Slot Not Found');
         }
         if (role === client_1.Role.ADMIN) {
             await this.prisma.availableSlotsForMeeting.delete({
                 where: { id: slotId },
             });
-            return { message: "Slot Deleted Successfully", status: common_1.HttpStatus.NO_CONTENT };
+            return {
+                message: 'Slot Deleted Successfully',
+                status: common_1.HttpStatus.NO_CONTENT,
+            };
         }
         if (role === client_1.Role.ZONE_MANAGER) {
             const manager = await this.prisma.zoneManagerProfile.findUnique({
                 where: { userId },
             });
             if (slot.zoneManagerId !== manager?.id) {
-                throw new common_1.ForbiddenException("You are not allowed to delete this slot");
+                throw new common_1.ForbiddenException('You are not allowed to delete this slot');
             }
             await this.prisma.availableSlotsTimeForMeeting.deleteMany({
-                where: { dateId: slotId }
+                where: { dateId: slotId },
             });
             await this.prisma.availableSlotsForMeeting.delete({
                 where: { id: slotId },
             });
-            return { message: "Slot Deleted Successfully" };
+            return { message: 'Slot Deleted Successfully' };
         }
         if (role === client_1.Role.DOULA) {
             const doula = await this.prisma.doulaProfile.findUnique({
                 where: { userId },
             });
             if (slot.doulaId !== doula?.id) {
-                throw new common_1.ForbiddenException("You are not allowed to delete this slot");
+                throw new common_1.ForbiddenException('You are not allowed to delete this slot');
             }
             await this.prisma.availableSlotsTimeForMeeting.deleteMany({
-                where: { dateId: slotId }
+                where: { dateId: slotId },
             });
             await this.prisma.availableSlotsForMeeting.delete({
                 where: { id: slotId },
             });
-            return { message: "Slot Deleted Successfully" };
+            return { message: 'Slot Deleted Successfully' };
         }
-        throw new common_1.BadRequestException("Authorization failed");
+        throw new common_1.BadRequestException('Authorization failed');
     }
     async updateTimeSlotAvailability(id, booked, availabe) {
         const slot = await this.prisma.availableSlotsTimeForMeeting.findUnique({
             where: { id: id },
         });
         if (!slot) {
-            throw new common_1.NotFoundException("Slot Not Found");
+            throw new common_1.NotFoundException('Slot Not Found');
         }
-        ;
         await this.prisma.availableSlotsTimeForMeeting.update({
             where: { id: id },
             data: {
                 isBooked: false,
-                availabe: true
-            }
+                availabe: true,
+            },
         });
-        return { message: "Slot Updated Successfully" };
+        return { message: 'Slot Updated Successfully' };
     }
     async findall(user, startDate, endDate, filter = 'all', page = 1, limit = 10) {
         let profile;
@@ -357,12 +361,12 @@ let AvailableSlotsService = class AvailableSlotsService {
             include: {
                 AvailableSlotsTimeForMeeting: {
                     where: filter === 'all' ? undefined : timeFilter,
-                    orderBy: { startTime: 'asc' }
-                }
+                    orderBy: { startTime: 'asc' },
+                },
             },
-            orderBy: { date: 'asc' }
+            orderBy: { date: 'asc' },
         });
-        const mapped = result.data.map(slot => ({
+        const mapped = result.data.map((slot) => ({
             dateId: slot.id,
             weekday: slot.weekday,
             availabe: slot.availabe,
@@ -377,12 +381,12 @@ let AvailableSlotsService = class AvailableSlotsService {
                 startTime: t.startTime,
                 endTime: t.endTime,
                 availabe: t.availabe,
-                isBooked: t.isBooked
-            })) || []
+                isBooked: t.isBooked,
+            })) || [],
         }));
         return {
             data: mapped,
-            meta: result.meta
+            meta: result.meta,
         };
     }
 };

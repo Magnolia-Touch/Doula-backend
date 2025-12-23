@@ -1,14 +1,14 @@
 import { IsString, IsOptional } from 'class-validator';
 
 export class CreateNoteDto {
-    @IsString()
-    content: string;
+  @IsString()
+  content: string;
 
-    @IsOptional()
-    @IsString()
-    bookingId?: string;
+  @IsOptional()
+  @IsString()
+  bookingId?: string;
 
-    @IsOptional()
-    @IsString()
-    userId?: string;
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

@@ -5,48 +5,48 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 
 @Injectable()
 export class ServicesService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    // Create a service
-    async create(dto: CreateServiceDto) {
-        return this.prisma.service.create({
-            data: dto,
-        });
-    }
+  // Create a service
+  async create(dto: CreateServiceDto) {
+    return this.prisma.service.create({
+      data: dto,
+    });
+  }
 
-    // List all services
-    async findAll() {
-        return this.prisma.service.findMany({
-            orderBy: { createdAt: 'desc' },
-        });
-    }
+  // List all services
+  async findAll() {
+    return this.prisma.service.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
-    // Get a single service
-    async findOne(id: string) {
-        const service = await this.prisma.service.findUnique({
-            where: { id },
-        });
+  // Get a single service
+  async findOne(id: string) {
+    const service = await this.prisma.service.findUnique({
+      where: { id },
+    });
 
-        if (!service) throw new NotFoundException('Service not found');
-        return service;
-    }
+    if (!service) throw new NotFoundException('Service not found');
+    return service;
+  }
 
-    // Update a service
-    async update(id: string, dto: UpdateServiceDto) {
-        await this.findOne(id); // ensures exists
+  // Update a service
+  async update(id: string, dto: UpdateServiceDto) {
+    await this.findOne(id); // ensures exists
 
-        return this.prisma.service.update({
-            where: { id },
-            data: dto,
-        });
-    }
+    return this.prisma.service.update({
+      where: { id },
+      data: dto,
+    });
+  }
 
-    // Delete a service
-    async remove(id: string) {
-        await this.findOne(id); // ensures exists
+  // Delete a service
+  async remove(id: string) {
+    await this.findOne(id); // ensures exists
 
-        return this.prisma.service.delete({
-            where: { id },
-        });
-    }
+    return this.prisma.service.delete({
+      where: { id },
+    });
+  }
 }

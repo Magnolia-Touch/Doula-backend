@@ -58,7 +58,9 @@ let AvailableSlotsController = class AvailableSlotsController {
 exports.AvailableSlotsController = AvailableSlotsController;
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiOperation)({ summary: 'Create availability slots (one or many time ranges per date)' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create availability slots (one or many time ranges per date)',
+    }),
     (0, swagger_1.ApiBody)({ type: meeting_avail_dto_1.AvailableSlotsForMeetingDto, isArray: true }),
     (0, swagger_1.ApiResponse)({
         status: 201,
@@ -72,8 +74,20 @@ __decorate([
                         id: 'date-slot-1',
                         date: '2025-11-21',
                         times: [
-                            { id: 'time-1', startTime: '09:00', endTime: '09:30', isBooked: false, available: true },
-                            { id: 'time-2', startTime: '10:00', endTime: '10:30', isBooked: false, available: true },
+                            {
+                                id: 'time-1',
+                                startTime: '09:00',
+                                endTime: '09:30',
+                                isBooked: false,
+                                available: true,
+                            },
+                            {
+                                id: 'time-2',
+                                startTime: '10:00',
+                                endTime: '10:30',
+                                isBooked: false,
+                                available: true,
+                            },
                         ],
                         regionId: 'region-1',
                     },
@@ -93,7 +107,11 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'regionId', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: true }),
-    (0, swagger_1.ApiQuery)({ name: 'filter', required: false, description: 'all | booked | unbooked' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'filter',
+        required: false,
+        description: 'all | booked | unbooked',
+    }),
     (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     (0, swagger_1.ApiResponse)({
@@ -109,8 +127,20 @@ __decorate([
                             id: 'date-slot-1',
                             date: '2025-11-21',
                             times: [
-                                { id: 'time-1', startTime: '09:00', endTime: '09:30', isBooked: false, available: true },
-                                { id: 'time-2', startTime: '10:00', endTime: '10:30', isBooked: true, available: false },
+                                {
+                                    id: 'time-1',
+                                    startTime: '09:00',
+                                    endTime: '09:30',
+                                    isBooked: false,
+                                    available: true,
+                                },
+                                {
+                                    id: 'time-2',
+                                    startTime: '10:00',
+                                    endTime: '10:30',
+                                    isBooked: true,
+                                    available: false,
+                                },
                             ],
                             regionId: 'region-1',
                         },
@@ -148,7 +178,13 @@ __decorate([
                     id: 'date-slot-1',
                     date: '2025-11-21',
                     times: [
-                        { id: 'time-1', startTime: '09:00', endTime: '09:30', isBooked: false, available: true },
+                        {
+                            id: 'time-1',
+                            startTime: '09:00',
+                            endTime: '09:30',
+                            isBooked: false,
+                            available: true,
+                        },
                     ],
                 },
             },
@@ -164,7 +200,17 @@ __decorate([
     (0, roles_decorator_1.Roles)('ZONE_MANAGER', 'ADMIN', 'DOULA'),
     (0, swagger_1.ApiOperation)({ summary: 'Update a timeslot (start/end) or its metadata' }),
     (0, swagger_1.ApiBody)({ type: meeting_avail_dto_1.UpdateSlotsForMeetingTimeDto }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Slot updated', data: { timeSlotId: 'time-1' } } } }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Slot updated',
+                data: { timeSlotId: 'time-1' },
+            },
+        },
+    }),
     (0, common_1.Patch)(),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
@@ -177,7 +223,11 @@ __decorate([
     (0, roles_decorator_1.Roles)('ZONE_MANAGER', 'ADMIN', 'DOULA'),
     (0, swagger_1.ApiOperation)({ summary: 'Delete a date-slot (and its time entries)' }),
     (0, swagger_1.ApiParam)({ name: 'slotId', description: 'Date slot id' }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Slot deleted', data: null } } }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: { example: { success: true, message: 'Slot deleted', data: null } },
+    }),
     (0, common_1.Delete)(':slotId'),
     __param(0, (0, common_1.Param)('slotId')),
     __param(1, (0, common_1.Req)()),
@@ -193,7 +243,13 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'Time availability updated', data: { id: 'time-1', booked: true, availabe: false } } },
+        schema: {
+            example: {
+                success: true,
+                message: 'Time availability updated',
+                data: { id: 'time-1', booked: true, availabe: false },
+            },
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('booked')),
@@ -209,7 +265,11 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'regionId', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: true }),
-    (0, swagger_1.ApiQuery)({ name: 'filter', required: false, description: 'all | booked | unbooked' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'filter',
+        required: false,
+        description: 'all | booked | unbooked',
+    }),
     (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     (0, swagger_1.ApiResponse)({
@@ -225,8 +285,20 @@ __decorate([
                             id: 'date-slot-1',
                             date: '2025-11-21',
                             times: [
-                                { id: 'time-1', startTime: '09:00', endTime: '09:30', isBooked: false, available: true },
-                                { id: 'time-2', startTime: '10:00', endTime: '10:30', isBooked: true, available: false },
+                                {
+                                    id: 'time-1',
+                                    startTime: '09:00',
+                                    endTime: '09:30',
+                                    isBooked: false,
+                                    available: true,
+                                },
+                                {
+                                    id: 'time-2',
+                                    startTime: '10:00',
+                                    endTime: '10:30',
+                                    isBooked: true,
+                                    available: false,
+                                },
                             ],
                             regionId: 'region-1',
                         },

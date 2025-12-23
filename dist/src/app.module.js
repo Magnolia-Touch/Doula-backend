@@ -37,7 +37,8 @@ let AppModule = class AppModule {
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [zone_manager_module_1.ZoneManagerModule,
+        imports: [
+            zone_manager_module_1.ZoneManagerModule,
             services_module_1.ServicesModule,
             auth_module_1.AuthModule,
             client_module_1.ClientModule,
@@ -60,10 +61,10 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UserModule,
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(process.cwd(), 'uploads'),
-                serveRoot: "/uploads",
+                serveRoot: '/uploads',
                 serveStaticOptions: {
                     index: false,
-                }
+                },
             }),
             mailer_1.MailerModule.forRoot({
                 transport: {
@@ -84,7 +85,7 @@ exports.AppModule = AppModule = __decorate([
                     options: {
                         strict: true,
                     },
-                }
+                },
             }),
         ],
         controllers: [app_controller_1.AppController],

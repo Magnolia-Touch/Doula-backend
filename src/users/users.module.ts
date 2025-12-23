@@ -17,17 +17,29 @@ import { JwtStrategy } from 'src/common/strategies/jwt.strategy';
 import { UserController } from './users.controller';
 
 @Module({
-    imports: [
-        PrismaModule, AdminModule, ZoneManagerModule, ClientModule, DoulaModule,
-        ConfigModule,
-        PassportModule,
-        JwtModule.register({
-            secret: process.env.JWT_SECRET || 'super-secret-key',
-            signOptions: { expiresIn: '7d' },
-        }),
-    ],
-    providers: [UserService, PrismaService, ZoneManagerService, DoulaService, ClientsService, AdminService, JwtStrategy],
-    controllers: [UserController],
-    exports: [UserService],
+  imports: [
+    PrismaModule,
+    AdminModule,
+    ZoneManagerModule,
+    ClientModule,
+    DoulaModule,
+    ConfigModule,
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'super-secret-key',
+      signOptions: { expiresIn: '7d' },
+    }),
+  ],
+  providers: [
+    UserService,
+    PrismaService,
+    ZoneManagerService,
+    DoulaService,
+    ClientsService,
+    AdminService,
+    JwtStrategy,
+  ],
+  controllers: [UserController],
+  exports: [UserService],
 })
-export class UserModule { }
+export class UserModule {}

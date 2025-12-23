@@ -21,14 +21,14 @@ exports.UpdateTestimonialDto = UpdateTestimonialDto;
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         example: 4,
-        description: "Updated rating (1–5)"
+        description: 'Updated rating (1–5)',
     }),
     __metadata("design:type", Number)
 ], UpdateTestimonialDto.prototype, "ratings", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        example: "Updated feedback: Doula was helpful and kind.",
-        description: "Updated review text"
+        example: 'Updated feedback: Doula was helpful and kind.',
+        description: 'Updated review text',
     }),
     __metadata("design:type", String)
 ], UpdateTestimonialDto.prototype, "reviews", void 0);

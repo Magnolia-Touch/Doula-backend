@@ -2,30 +2,28 @@
 import { IsOptional, IsString } from 'class-validator';
 
 export class CreateCertificateDto {
-    @IsString()
-    name: string;
+  @IsString()
+  name: string;
 
-    @IsOptional()
-    @IsString()
-    issuedBy?: string;
+  @IsOptional()
+  @IsString()
+  issuedBy?: string;
 
-    @IsOptional()
-    @IsString()
-    year?: string;
+  @IsOptional()
+  @IsString()
+  year?: string;
 }
 
-
-
 export class UpdateCertificateDto {
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsString()
-    issuedBy?: string;
+  @IsOptional()
+  @IsString()
+  issuedBy?: string;
 
-    @IsOptional()
-    @IsString()
-    year?: string;
+  @IsOptional()
+  @IsString()
+  year?: string;
 }

@@ -4,10 +4,7 @@ import { IntakeFormService } from './intake-forms.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
-    controllers: [IntakeFormController],
-    providers: [
-        IntakeFormService,
-        PrismaService,
-    ],
+  controllers: [IntakeFormController],
+  providers: [IntakeFormService, PrismaService],
 })
-export class IntakeFormModule { }
+export class IntakeFormModule {}

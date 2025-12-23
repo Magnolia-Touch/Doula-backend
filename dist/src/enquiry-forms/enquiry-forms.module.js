@@ -20,11 +20,7 @@ exports.EnquiryModule = EnquiryModule = __decorate([
     (0, common_1.Module)({
         imports: [meetings_module_1.MeetingsModule],
         controllers: [enquiry_forms_controller_1.EnquiryController],
-        providers: [
-            enquiry_forms_service_1.EnquiryService,
-            prisma_service_1.PrismaService,
-            meetings_service_1.MeetingsService
-        ],
+        providers: [enquiry_forms_service_1.EnquiryService, prisma_service_1.PrismaService, meetings_service_1.MeetingsService],
     })
 ], EnquiryModule);
 //# sourceMappingURL=enquiry-forms.module.js.map

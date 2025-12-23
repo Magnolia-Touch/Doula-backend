@@ -63,7 +63,14 @@ __decorate([
                     {
                         id: 'date-avail-1',
                         date: '2025-11-21',
-                        times: [{ id: 't1', startTime: '09:00', endTime: '09:30', isBooked: false }],
+                        times: [
+                            {
+                                id: 't1',
+                                startTime: '09:00',
+                                endTime: '09:30',
+                                isBooked: false,
+                            },
+                        ],
                         doulaId: 'doula-1',
                     },
                 ],
@@ -82,7 +89,11 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'doulaId', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: true }),
-    (0, swagger_1.ApiQuery)({ name: 'filter', required: false, description: 'all | booked | unbooked' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'filter',
+        required: false,
+        description: 'all | booked | unbooked',
+    }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
@@ -95,7 +106,14 @@ __decorate([
                         {
                             id: 'date-avail-1',
                             date: '2025-11-21',
-                            times: [{ id: 't1', startTime: '09:00', endTime: '09:30', isBooked: false }],
+                            times: [
+                                {
+                                    id: 't1',
+                                    startTime: '09:00',
+                                    endTime: '09:30',
+                                    isBooked: false,
+                                },
+                            ],
                         },
                     ],
                     total: 1,
@@ -116,7 +134,21 @@ __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Get availability by date id' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Date availability id' }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Availability fetched', data: { id: 'date-avail-1', date: '2025-11-21', times: [{ id: 't1', startTime: '09:00' }] } } } }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Availability fetched',
+                data: {
+                    id: 'date-avail-1',
+                    date: '2025-11-21',
+                    times: [{ id: 't1', startTime: '09:00' }],
+                },
+            },
+        },
+    }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -128,7 +160,17 @@ __decorate([
     (0, common_1.Patch)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Update a specific availability time' }),
     (0, swagger_1.ApiBody)({ type: service_availability_dto_1.UpdateDoulaServiceAvailabilityDTO }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Availability updated', data: { id: 'date-avail-1', timeId: 't1' } } } }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Availability updated',
+                data: { id: 'date-avail-1', timeId: 't1' },
+            },
+        },
+    }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Req)()),
@@ -141,7 +183,13 @@ __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
     (0, common_1.Delete)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Delete availability (by id) for the doula' }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Availability deleted', data: null } } }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: { success: true, message: 'Availability deleted', data: null },
+        },
+    }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
@@ -152,8 +200,20 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
     (0, common_1.Patch)('/date/:id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Update all time entries for a date availability (helper)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Availability times updated', data: null } } }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update all time entries for a date availability (helper)',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Availability times updated',
+                data: null,
+            },
+        },
+    }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

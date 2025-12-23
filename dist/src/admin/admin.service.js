@@ -42,9 +42,9 @@ let AdminService = class AdminService {
     async get() {
         const admin = await this.prisma.user.findMany({
             where: { role: client_1.Role.ADMIN },
-            include: { adminProfile: true }
+            include: { adminProfile: true },
         });
-        return { message: "Admins Fetched Successfully", data: admin };
+        return { message: 'Admins Fetched Successfully', data: admin };
     }
     async getById(id) {
         const admin = await this.prisma.user.findUnique({

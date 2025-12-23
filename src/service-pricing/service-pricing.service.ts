@@ -1,183 +1,177 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateServicePricingDto, UpdateServicePricingDto } from './dto/service-pricing.dto';
+import {
+  CreateServicePricingDto,
+  UpdateServicePricingDto,
+} from './dto/service-pricing.dto';
 import { paginate } from 'src/common/utility/pagination.util';
-
 
 @Injectable()
 export class ServicePricingService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    // Create a service Pricing
-    async create(dto: CreateServicePricingDto, userId: string) {
-        const user = await this.prisma.doulaProfile.findUnique({
-            where: { userId: userId }
-        })
-        if (!user) {
-            throw new NotFoundException("User Not found Exception")
-        }
-        return this.prisma.servicePricing.create({
-            data: {
-                serviceId: dto.serviceId,
-                doulaProfileId: user.id,
-                price: dto.price
-            }
-        });
+  // Create a service Pricing
+  async create(dto: CreateServicePricingDto, userId: string) {
+    const user = await this.prisma.doulaProfile.findUnique({
+      where: { userId: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('User Not found Exception');
+    }
+    return this.prisma.servicePricing.create({
+      data: {
+        serviceId: dto.serviceId,
+        doulaProfileId: user.id,
+        price: dto.price,
+      },
+    });
+  }
+
+  async findAll(userId: string) {
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!doula) {
+      throw new NotFoundException('Doula profile not found');
     }
 
-
-    async findAll(userId: string) {
-        const doula = await this.prisma.doulaProfile.findUnique({
-            where: { userId },
-        });
-
-        if (!doula) {
-            throw new NotFoundException('Doula profile not found');
-        }
-
-        const pricingList = await this.prisma.servicePricing.findMany({
-            where: { doulaProfileId: doula.id },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                DoulaProfile: {
-                    include: {
-                        user: {
-                            select: {
-                                name: true,
-                                email: true,
-                                phone: true,
-                            },
-                        },
-                    },
-                },
-                service: true,
+    const pricingList = await this.prisma.servicePricing.findMany({
+      where: { doulaProfileId: doula.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        DoulaProfile: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+              },
             },
-        });
+          },
+        },
+        service: true,
+      },
+    });
 
-        const data = pricingList.map((pricing) => ({
-            servicePricingId: pricing.id,
-            price: pricing.price,
+    const data = pricingList.map((pricing) => ({
+      servicePricingId: pricing.id,
+      price: pricing.price,
 
-            doulaProfileId: pricing.doulaProfileId,
-            doulaName: pricing.DoulaProfile.user.name,
-            doulaEmail: pricing.DoulaProfile.user.email,
-            doulaPhone: pricing.DoulaProfile.user.phone,
+      doulaProfileId: pricing.doulaProfileId,
+      doulaName: pricing.DoulaProfile.user.name,
+      doulaEmail: pricing.DoulaProfile.user.email,
+      doulaPhone: pricing.DoulaProfile.user.phone,
 
-            serviceId: pricing.service.id,
-            serviceName: pricing.service.name,
-            serviceDescription: pricing.service.description,
-        }));
+      serviceId: pricing.service.id,
+      serviceName: pricing.service.name,
+      serviceDescription: pricing.service.description,
+    }));
 
-        return {
-            message: 'Service pricing fetched successfully',
-            data,
-        };
-    }
+    return {
+      message: 'Service pricing fetched successfully',
+      data,
+    };
+  }
 
-
-
-    async findOne(id: string) {
-        const pricing = await this.prisma.servicePricing.findUnique({
-            where: { id },
-            include: {
-                DoulaProfile: {
-                    include: {
-                        user: {
-                            select: {
-                                name: true,
-                                email: true,
-                                phone: true,
-                            },
-                        },
-                    },
-                },
-                service: true,
+  async findOne(id: string) {
+    const pricing = await this.prisma.servicePricing.findUnique({
+      where: { id },
+      include: {
+        DoulaProfile: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+              },
             },
-        });
+          },
+        },
+        service: true,
+      },
+    });
 
-        if (!pricing) {
-            throw new NotFoundException('Service pricing not found');
-        }
-
-        return {
-            servicePricingId: pricing.id,
-            price: pricing.price,
-
-            doulaProfileId: pricing.doulaProfileId,
-            doulaName: pricing.DoulaProfile.user.name,
-            doulaEmail: pricing.DoulaProfile.user.email,
-            doulaPhone: pricing.DoulaProfile.user.phone,
-
-            serviceId: pricing.service.id,
-            serviceName: pricing.service.name,
-            serviceDescription: pricing.service.description,
-        };
+    if (!pricing) {
+      throw new NotFoundException('Service pricing not found');
     }
 
+    return {
+      servicePricingId: pricing.id,
+      price: pricing.price,
 
-    // Update a service Pricing
-    async update(id: string, dto: UpdateServicePricingDto) {
-        await this.findOne(id); // ensures exists
+      doulaProfileId: pricing.doulaProfileId,
+      doulaName: pricing.DoulaProfile.user.name,
+      doulaEmail: pricing.DoulaProfile.user.email,
+      doulaPhone: pricing.DoulaProfile.user.phone,
 
-        return this.prisma.servicePricing.update({
-            where: { id: id },
-            data: dto,
-        });
+      serviceId: pricing.service.id,
+      serviceName: pricing.service.name,
+      serviceDescription: pricing.service.description,
+    };
+  }
+
+  // Update a service Pricing
+  async update(id: string, dto: UpdateServicePricingDto) {
+    await this.findOne(id); // ensures exists
+
+    return this.prisma.servicePricing.update({
+      where: { id: id },
+      data: dto,
+    });
+  }
+
+  // Delete a service Pricing
+  async remove(id: string) {
+    await this.findOne(id); // ensures exists
+
+    return this.prisma.servicePricing.delete({
+      where: { id },
+    });
+  }
+
+  async listServices(query: any) {
+    const { name, doulaId, page = 1, limit = 10 } = query;
+    const where: any = {};
+    if (name) {
+      where.service = {
+        name: {
+          contains: name.toLowerCase(),
+        },
+      };
     }
-
-    // Delete a service Pricing
-    async remove(id: string) {
-        await this.findOne(id); // ensures exists
-
-        return this.prisma.servicePricing.delete({
-            where: { id },
-        });
+    if (doulaId) {
+      where.doulaProfileId = doulaId;
     }
+    return paginate({
+      prismaModel: this.prisma.servicePricing,
+      page: Number(page),
+      limit: Number(limit),
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        DoulaProfile: true,
+        service: true,
+      },
+    });
+  }
 
-
-    async listServices(query: any) {
-        const { name, doulaId, page = 1, limit = 10 } = query;
-        const where: any = {};
-        if (name) {
-            where.service = {
-                name: {
-                    contains: name.toLowerCase()
-                },
-            };
-        }
-        if (doulaId) {
-            where.doulaProfileId = doulaId;
-        }
-        return paginate({
-            prismaModel: this.prisma.servicePricing,
-            page: Number(page),
-            limit: Number(limit),
-            where,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                DoulaProfile: true,
-                service: true,
-            },
-        });
+  // Create a service Pricing
+  async createPricing(dto: CreateServicePricingDto) {
+    const user = await this.prisma.doulaProfile.findUnique({
+      where: { id: dto.doulaId },
+    });
+    if (!user) {
+      throw new NotFoundException('User Not found Exception');
     }
-
-
-    // Create a service Pricing
-    async createPricing(dto: CreateServicePricingDto) {
-        const user = await this.prisma.doulaProfile.findUnique({
-            where: { id: dto.doulaId }
-        })
-        if (!user) {
-            throw new NotFoundException("User Not found Exception")
-        }
-        return this.prisma.servicePricing.create({
-            data: {
-                serviceId: dto.serviceId,
-                doulaProfileId: dto.doulaId,
-                price: dto.price
-            }
-        });
-    }
-
-
+    return this.prisma.servicePricing.create({
+      data: {
+        serviceId: dto.serviceId,
+        doulaProfileId: dto.doulaId,
+        price: dto.price,
+      },
+    });
+  }
 }

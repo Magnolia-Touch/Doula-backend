@@ -13,7 +13,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
     return next.handle().pipe(
       map((data: any) => {
         // If paginated result (contains data + meta)
-        if (data && typeof data === 'object' && 'data' in data && 'meta' in data) {
+        if (
+          data &&
+          typeof data === 'object' &&
+          'data' in data &&
+          'meta' in data
+        ) {
           return {
             status: 'success',
             message: data.message ?? 'Request successful',

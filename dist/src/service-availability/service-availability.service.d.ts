@@ -1,6 +1,6 @@
-import { PrismaService } from "src/prisma/prisma.service";
-import { CreateDoulaServiceAvailability } from "./dto/service-availability.dto";
-import { UpdateDoulaServiceAvailabilityDTO } from "./dto/service-availability.dto";
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateDoulaServiceAvailability } from './dto/service-availability.dto';
+import { UpdateDoulaServiceAvailabilityDTO } from './dto/service-availability.dto';
 export declare class DoulaServiceAvailabilityService {
     private prisma;
     constructor(prisma: PrismaService);

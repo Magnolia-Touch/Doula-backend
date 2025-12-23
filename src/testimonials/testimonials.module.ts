@@ -4,7 +4,7 @@ import { TestimonialsController } from './testimonials.controller';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
-    controllers: [TestimonialsController],
-    providers: [TestimonialsService, PrismaService],
+  controllers: [TestimonialsController],
+  providers: [TestimonialsService, PrismaService],
 })
-export class TestimonialsModule { }
+export class TestimonialsModule {}

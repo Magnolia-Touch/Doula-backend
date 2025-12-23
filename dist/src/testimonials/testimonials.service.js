@@ -20,12 +20,14 @@ let TestimonialsService = class TestimonialsService {
     }
     async create(dto, user) {
         const bookedservice = await this.prisma.serviceBooking.findFirst({
-            where: { client: { userId: user.id }, servicePricingId: dto.serviceId }
+            where: { client: { userId: user.id }, servicePricingId: dto.serviceId },
         });
         if (!bookedservice) {
-            throw new common_1.NotFoundException("No purchased service found for adding testimonial");
+            throw new common_1.NotFoundException('No purchased service found for adding testimonial');
         }
-        return this.prisma.testimonials.create({ data: { ...dto, clientId: user.id } });
+        return this.prisma.testimonials.create({
+            data: { ...dto, clientId: user.id },
+        });
     }
     async findAll(query) {
         const { doulaId, serviceId } = query;
@@ -44,19 +46,19 @@ let TestimonialsService = class TestimonialsService {
             include: {
                 DoulaProfile: {
                     include: {
-                        user: { select: { name: true } }
-                    }
+                        user: { select: { name: true } },
+                    },
                 },
                 ServicePricing: {
                     include: {
-                        service: { select: { name: true } }
-                    }
+                        service: { select: { name: true } },
+                    },
                 },
                 client: {
                     include: {
-                        user: { select: { name: true } }
-                    }
-                }
+                        user: { select: { name: true } },
+                    },
+                },
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -79,15 +81,15 @@ let TestimonialsService = class TestimonialsService {
             where: { id },
             include: {
                 DoulaProfile: {
-                    include: { user: { select: { name: true } } }
+                    include: { user: { select: { name: true } } },
                 },
                 ServicePricing: {
-                    include: { service: { select: { name: true } } }
+                    include: { service: { select: { name: true } } },
                 },
                 client: {
-                    include: { user: { select: { name: true } } }
-                }
-            }
+                    include: { user: { select: { name: true } } },
+                },
+            },
         });
         if (!testimonial) {
             throw new common_1.NotFoundException('Testimonial not found');
@@ -121,7 +123,7 @@ let TestimonialsService = class TestimonialsService {
     async getZoneManagerTestimonials(zoneManagerId, page = 1, limit = 10) {
         const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
             where: { userId: zoneManagerId },
-            select: { id: true }
+            select: { id: true },
         });
         if (!zoneManager)
             return [];
@@ -129,13 +131,13 @@ let TestimonialsService = class TestimonialsService {
             where: {
                 zoneManager: {
                     some: {
-                        id: zoneManager.id
-                    }
-                }
+                        id: zoneManager.id,
+                    },
+                },
             },
-            select: { id: true }
+            select: { id: true },
         });
-        const doulaIds = doulas.map(d => d.id);
+        const doulaIds = doulas.map((d) => d.id);
         if (doulaIds.length === 0)
             return [];
         return await (0, pagination_util_1.paginate)({
@@ -143,32 +145,32 @@ let TestimonialsService = class TestimonialsService {
             page,
             limit,
             where: {
-                doulaProfileId: { in: doulaIds }
+                doulaProfileId: { in: doulaIds },
             },
             orderBy: { createdAt: 'desc' },
             include: {
                 DoulaProfile: {
                     include: {
                         user: {
-                            select: { name: true }
-                        }
-                    }
+                            select: { name: true },
+                        },
+                    },
                 },
                 ServicePricing: {
                     include: {
                         service: {
-                            select: { name: true }
-                        }
-                    }
+                            select: { name: true },
+                        },
+                    },
                 },
                 client: {
                     include: {
                         user: {
-                            select: { name: true }
-                        }
-                    }
-                }
-            }
+                            select: { name: true },
+                        },
+                    },
+                },
+            },
         });
     }
 };

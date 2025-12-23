@@ -7,9 +7,9 @@ import { Reflector } from '@nestjs/core';
 import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
-    imports: [MailerModule],
-    controllers: [MeetingsController],
-    providers: [MeetingsService, PrismaService, RolesGuard, Reflector],
-    exports: [MeetingsService]
+  imports: [MailerModule],
+  controllers: [MeetingsController],
+  providers: [MeetingsService, PrismaService, RolesGuard, Reflector],
+  exports: [MeetingsService],
 })
-export class MeetingsModule { }
+export class MeetingsModule {}

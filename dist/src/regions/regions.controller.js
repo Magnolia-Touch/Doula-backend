@@ -114,7 +114,13 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'Region fetched', data: { id: 'region-1', regionName: 'South City' } } },
+        schema: {
+            example: {
+                success: true,
+                message: 'Region fetched',
+                data: { id: 'region-1', regionName: 'South City' },
+            },
+        },
     }),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -127,7 +133,17 @@ __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'ZONE_MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Update region' }),
     (0, swagger_1.ApiBody)({ type: regions_dto_1.UpdateRegionDto }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Region updated', data: { id: 'region-1' } } } }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: {
+                success: true,
+                message: 'Region updated',
+                data: { id: 'region-1' },
+            },
+        },
+    }),
     (0, common_1.Put)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -140,7 +156,13 @@ __decorate([
     (0, roles_decorator_1.Roles)('ADMIN', 'ZONE_MANAGER'),
     (0, swagger_1.ApiOperation)({ summary: 'Delete region' }),
     (0, swagger_1.ApiParam)({ name: 'id' }),
-    (0, swagger_1.ApiResponse)({ status: 200, type: swagger_response_dto_1.SwaggerResponseDto, schema: { example: { success: true, message: 'Region deleted', data: null } } }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        type: swagger_response_dto_1.SwaggerResponseDto,
+        schema: {
+            example: { success: true, message: 'Region deleted', data: null },
+        },
+    }),
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

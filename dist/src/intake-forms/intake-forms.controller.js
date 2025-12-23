@@ -110,7 +110,11 @@ __decorate([
             example: {
                 success: true,
                 message: 'Intake form fetched',
-                data: { id: 'intake-uuid', name: 'Jane Doe', email: 'jane@example.com' },
+                data: {
+                    id: 'intake-uuid',
+                    name: 'Jane Doe',
+                    email: 'jane@example.com',
+                },
             },
         },
     }),
@@ -126,7 +130,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'Intake form deleted', data: null } },
+        schema: {
+            example: { success: true, message: 'Intake form deleted', data: null },
+        },
     }),
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -139,7 +145,13 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'All intake forms deleted', data: null } },
+        schema: {
+            example: {
+                success: true,
+                message: 'All intake forms deleted',
+                data: null,
+            },
+        },
     }),
     (0, common_1.Delete)(),
     __metadata("design:type", Function),

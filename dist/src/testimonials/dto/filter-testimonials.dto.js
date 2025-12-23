@@ -21,8 +21,8 @@ class FilterTestimonialsDto {
 exports.FilterTestimonialsDto = FilterTestimonialsDto;
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        example: "d4b7d65a-9a46-4548-aabd-91c3bddd6e22",
-        description: "Filter testimonials for a specific doula"
+        example: 'd4b7d65a-9a46-4548-aabd-91c3bddd6e22',
+        description: 'Filter testimonials for a specific doula',
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -30,8 +30,8 @@ __decorate([
 ], FilterTestimonialsDto.prototype, "doulaId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        example: "8e9c559d-d9f6-438c-a36d-0a77c7a8c8c4",
-        description: "Filter testimonials based on a specific service"
+        example: '8e9c559d-d9f6-438c-a36d-0a77c7a8c8c4',
+        description: 'Filter testimonials based on a specific service',
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -39,8 +39,8 @@ __decorate([
 ], FilterTestimonialsDto.prototype, "serviceId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        example: "1",
-        description: "Page number for pagination"
+        example: '1',
+        description: 'Page number for pagination',
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumberString)(),
@@ -48,8 +48,8 @@ __decorate([
 ], FilterTestimonialsDto.prototype, "page", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        example: "10",
-        description: "Limit number of testimonials per page"
+        example: '10',
+        description: 'Limit number of testimonials per page',
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumberString)(),

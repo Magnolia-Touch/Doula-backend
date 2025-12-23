@@ -76,11 +76,20 @@ __decorate([
                 data: {
                     id: 'booking-1',
                     service: { id: 'service-1', name: 'Prenatal Visit' },
-                    client: { id: 'client-1', name: 'Ravi Kumar', phone: '+919876543210' },
+                    client: {
+                        id: 'client-1',
+                        name: 'Ravi Kumar',
+                        phone: '+919876543210',
+                    },
                     doula: { id: 'doula-1', name: 'Neeta' },
                     slot: { id: 'slot-1', date: '2025-12-01', startTime: '14:00' },
                     status: 'CONFIRMED',
-                    payment: { id: 'pay-1', amount: 1200, currency: 'INR', status: 'PAID' },
+                    payment: {
+                        id: 'pay-1',
+                        amount: 1200,
+                        currency: 'INR',
+                        status: 'PAID',
+                    },
                 },
             },
         },

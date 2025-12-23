@@ -26,7 +26,7 @@ async function findSlotOrThrow(prisma, params) {
     console.log('ownerRole', ownerRole);
     console.log('ownerProfileId', ownerProfileId);
     console.log('weekday', weekday);
-    let where = {};
+    const where = {};
     if (ownerRole === client_1.Role.DOULA) {
         where.doulaId_weekday = {
             doulaId: ownerProfileId,
@@ -104,19 +104,19 @@ async function findServiceOrThrowwithId(prisma, serviceId) {
 }
 async function findUserRoleById(prisma, userId) {
     const user = await prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
     });
     if (!user) {
-        throw new common_1.NotFoundException("User Not found");
+        throw new common_1.NotFoundException('User Not found');
     }
     return user?.role;
 }
 async function findUserProfileId(prisma, userId) {
     const user = await prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
     });
     if (!user) {
-        throw new common_1.NotFoundException("User Not found");
+        throw new common_1.NotFoundException('User Not found');
     }
     return user?.role;
     let id;
@@ -142,11 +142,15 @@ async function getSlotOrCreateSlot(prisma, week, userRole, profileId) {
         ? { doulaId_weekday: { doulaId: profileId, weekday: week } }
         : userRole === client_1.Role.ADMIN
             ? { adminId_weekday: { adminId: profileId, weekday: week } }
-            : { zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week } };
-    console.log("unique where", uniqueWhere);
-    const ownerField = userRole === client_1.Role.DOULA ? "doulaId" :
-        userRole === client_1.Role.ADMIN ? "adminId" :
-            "zoneManagerId";
+            : {
+                zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
+            };
+    console.log('unique where', uniqueWhere);
+    const ownerField = userRole === client_1.Role.DOULA
+        ? 'doulaId'
+        : userRole === client_1.Role.ADMIN
+            ? 'adminId'
+            : 'zoneManagerId';
     let slot = await prisma.availableSlotsForMeeting.findUnique({
         where: uniqueWhere,
     });
@@ -169,8 +173,8 @@ async function createTimeForSlot(prisma, slotId, startTime, endTime) {
             startTime,
             endTime,
             availabe: true,
-            isBooked: false
-        }
+            isBooked: false,
+        },
     });
 }
 function toUTCDate(dateString) {
@@ -179,12 +183,12 @@ function toUTCDate(dateString) {
 }
 async function getOrcreateClent(prisma, data) {
     let user;
-    console.log("data", data);
+    console.log('data', data);
     user = await prisma.user.findUnique({
         where: { email: data.email },
         include: {
-            clientProfile: true
-        }
+            clientProfile: true,
+        },
     });
     if (user)
         return user;
@@ -194,11 +198,11 @@ async function getOrcreateClent(prisma, data) {
             email: data.email,
             phone: data.phone,
             role: client_1.Role.CLIENT,
-            clientProfile: { create: { is_verified: true } }
+            clientProfile: { create: { is_verified: true } },
         },
         include: {
-            clientProfile: true
-        }
+            clientProfile: true,
+        },
     });
     return user;
 }
@@ -223,8 +227,8 @@ async function getServiceSlotOrCreateSlot(prisma, weekday, profileId) {
         where: {
             doulaId_weekday: {
                 doulaId: profileId,
-                weekday: weekday
-            }
+                weekday: weekday,
+            },
         },
     });
     if (slot)
@@ -233,7 +237,7 @@ async function getServiceSlotOrCreateSlot(prisma, weekday, profileId) {
         data: {
             weekday: weekday,
             availabe: true,
-            doulaId: profileId
+            doulaId: profileId,
         },
     });
     return slot;

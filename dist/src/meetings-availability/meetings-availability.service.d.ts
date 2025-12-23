@@ -1,6 +1,6 @@
-import { HttpStatus } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
-import { AvailableSlotsForMeetingDto, UpdateSlotsForMeetingTimeDto } from "./dto/meeting-avail.dto";
+import { HttpStatus } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AvailableSlotsForMeetingDto, UpdateSlotsForMeetingTimeDto } from './dto/meeting-avail.dto';
 export declare class AvailableSlotsService {
     private prisma;
     constructor(prisma: PrismaService);

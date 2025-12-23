@@ -21,13 +21,11 @@ async function bootstrap() {
   // Optional: set a global prefix (nice for staging/prod)
   app.setGlobalPrefix('backend');
   app.enableVersioning({
-    type: VersioningType.URI
-  })
-
+    type: VersioningType.URI,
+  });
 
   // Enable validation pipe so class-validator/class-transformer metadata is consistent
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-
 
   const config = new DocumentBuilder()
     .setTitle('Doulas API')
@@ -59,7 +57,13 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   await app.listen(process.env.PORT ?? 3000);
-  console.log(`🚀 Server running at http://localhost:${process.env.PORT ?? 3000}`);
-  console.log('📚 Swagger docs: http://localhost:' + (process.env.PORT ?? 3000) + '/api/docs');
+  console.log(
+    `🚀 Server running at http://localhost:${process.env.PORT ?? 3000}`,
+  );
+  console.log(
+    '📚 Swagger docs: http://localhost:' +
+      (process.env.PORT ?? 3000) +
+      '/api/docs',
+  );
 }
 bootstrap();

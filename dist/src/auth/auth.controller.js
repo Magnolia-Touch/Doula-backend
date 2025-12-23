@@ -102,11 +102,11 @@ __decorate([
                     user: {
                         id: 'user-uuid',
                         email: 'user@example.com',
-                        role: 'CLIENT'
-                    }
-                }
-            }
-        }
+                        role: 'CLIENT',
+                    },
+                },
+            },
+        },
     }),
     (0, common_1.Post)('verify/otp'),
     __param(0, (0, common_1.Body)()),

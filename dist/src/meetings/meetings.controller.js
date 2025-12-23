@@ -77,7 +77,11 @@ __decorate([
     }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, description: 'YYYY-MM-DD' }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, description: 'YYYY-MM-DD' }),
-    (0, swagger_1.ApiQuery)({ name: 'status', required: false, description: 'SCHEDULED | COMPLETED | CANCELED' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'status',
+        required: false,
+        description: 'SCHEDULED | COMPLETED | CANCELED',
+    }),
     (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     (0, swagger_1.ApiResponse)({
@@ -101,8 +105,16 @@ __decorate([
                                 region: { id: 'region-1', regionName: 'South City' },
                             },
                             service: { id: 'service-1', name: 'Postnatal Visit' },
-                            doula: { id: 'doula-1', name: 'Jane Doe', phone: '+919876543210' },
-                            bookedBy: { id: 'client-1', name: 'Asha Patel', email: 'asha@example.com' },
+                            doula: {
+                                id: 'doula-1',
+                                name: 'Jane Doe',
+                                phone: '+919876543210',
+                            },
+                            bookedBy: {
+                                id: 'client-1',
+                                name: 'Asha Patel',
+                                email: 'asha@example.com',
+                            },
                         },
                     ],
                     total: 1,
@@ -134,7 +146,12 @@ __decorate([
                 data: {
                     id: 'meeting-uuid-new',
                     status: 'SCHEDULED',
-                    slot: { id: 'slot-uuid', date: '2025-11-30', startTime: '10:00', endTime: '10:30' },
+                    slot: {
+                        id: 'slot-uuid',
+                        date: '2025-11-30',
+                        startTime: '10:00',
+                        endTime: '10:30',
+                    },
                     doula: { id: 'doula-5', name: 'Priya Singh' },
                     bookedBy: { id: 'client-12', name: 'Ragini' },
                 },
@@ -161,7 +178,12 @@ __decorate([
                 data: {
                     meetingId: 'meeting-uuid-1',
                     oldSlotId: 'slot-old',
-                    newSlot: { id: 'slot-new', date: '2025-12-05', startTime: '11:00', endTime: '11:30' },
+                    newSlot: {
+                        id: 'slot-new',
+                        date: '2025-12-05',
+                        startTime: '11:00',
+                        endTime: '11:30',
+                    },
                     status: 'SCHEDULED',
                 },
             },
@@ -180,7 +202,13 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'Meeting status updated', data: { meetingId: 'meeting-uuid-1', status: 'COMPLETED' } } },
+        schema: {
+            example: {
+                success: true,
+                message: 'Meeting status updated',
+                data: { meetingId: 'meeting-uuid-1', status: 'COMPLETED' },
+            },
+        },
     }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA, client_1.Role.ZONE_MANAGER),
@@ -198,7 +226,9 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         type: swagger_response_dto_1.SwaggerResponseDto,
-        schema: { example: { success: true, message: 'All meetings deleted', data: null } },
+        schema: {
+            example: { success: true, message: 'All meetings deleted', data: null },
+        },
     }),
     (0, common_1.Delete)('delete-all'),
     __param(0, (0, common_1.Req)()),
@@ -207,7 +237,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MeetingsController.prototype, "deleteAllMeetings", null);
 __decorate([
-    (0, common_1.Get)("all/meetings"),
+    (0, common_1.Get)('all/meetings'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -247,7 +277,11 @@ __decorate([
                     },
                     service: { id: 'serv-1', name: 'Prenatal Visit' },
                     doula: { id: 'doula-1', name: 'Jane Doe' },
-                    bookedBy: { id: 'client-1', name: 'Asha Patel', phone: '+919876543210' },
+                    bookedBy: {
+                        id: 'client-1',
+                        name: 'Asha Patel',
+                        phone: '+919876543210',
+                    },
                     remarks: 'Client prefers video call',
                 },
             },

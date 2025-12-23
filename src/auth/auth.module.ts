@@ -17,17 +17,29 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/common/strategies/jwt.strategy';
 
 @Module({
-    imports: [
-        PrismaModule, AdminModule, ZoneManagerModule, ClientModule, DoulaModule,
-        ConfigModule,
-        PassportModule,
-        JwtModule.register({
-            secret: process.env.JWT_SECRET || 'super-secret-key',
-            signOptions: { expiresIn: '7d' },
-        }),
-    ],
-    providers: [AuthService, PrismaService, ZoneManagerService, DoulaService, ClientsService, AdminService, JwtStrategy],
-    controllers: [AuthController],
-    exports: [AuthService],
+  imports: [
+    PrismaModule,
+    AdminModule,
+    ZoneManagerModule,
+    ClientModule,
+    DoulaModule,
+    ConfigModule,
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'super-secret-key',
+      signOptions: { expiresIn: '7d' },
+    }),
+  ],
+  providers: [
+    AuthService,
+    PrismaService,
+    ZoneManagerService,
+    DoulaService,
+    ClientsService,
+    AdminService,
+    JwtStrategy,
+  ],
+  controllers: [AuthController],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

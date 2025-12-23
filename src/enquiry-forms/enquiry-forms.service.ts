@@ -6,7 +6,10 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EnquiryFormDto } from './dto/create-enquiry-forms.dto';
 import { paginate } from 'src/common/utility/pagination.util';
-import { getWeekdayFromDate, isMeetingExists } from 'src/common/utility/service-utils';
+import {
+    getWeekdayFromDate,
+    isMeetingExists,
+} from 'src/common/utility/service-utils';
 
 import {
     findRegionOrThrow,
@@ -36,37 +39,50 @@ export class EnquiryService {
     async submitEnquiry(data: EnquiryFormDto) {
         // create meeting instance - done
         // slot Lock-- done
-        // create client-- done, take client email from here.add meeting history to client 
+        // create client-- done, take client email from here.add meeting history to client
         // add meeting history to zone manager or doula profile
         // send mail to zone manager and user
         // //client is created while submiting the enquiry form. might be useful for followup
         // const client = await createClent(this.prisma, data)
 
-        // 
-        // 
-        // take availablemeetinginstance with date and weekday 
+        //
+        //
+        // take availablemeetinginstance with date and weekday
         // check if the meetingsTimeSlots is free by checking the meeting table with date, starttime, endtime.if not availale throw error
         // if no meeting exist for selected meetingsTimeSlots, create a meeting instance.
         const {
-            name, email, phone, regionId, meetingsDate, meetingsTimeSlots,
-            serviceId, seviceStartDate, serviceEndDate, visitFrequency,
-            serviceTimeSlots, additionalNotes
+            name,
+            email,
+            phone,
+            regionId,
+            meetingsDate,
+            meetingsTimeSlots,
+            serviceId,
+            seviceStartDate,
+            serviceEndDate,
+            visitFrequency,
+            serviceTimeSlots,
+            additionalNotes,
         } = data;
 
-        const client = await getOrcreateClent(this.prisma, data)
+        const client = await getOrcreateClent(this.prisma, data);
         const profile = await this.prisma.clientProfile.findUnique({
-            where: { userId: client.id }
-        })
-        if (!profile) { throw new NotFoundException("profile not found") }
+            where: { userId: client.id },
+        });
+        if (!profile) {
+            throw new NotFoundException('profile not found');
+        }
 
         // weekday is taken from Date
-        const weekday = await getWeekdayFromDate(meetingsDate)
-        console.log("weekday", weekday)
+        const weekday = await getWeekdayFromDate(meetingsDate);
+        console.log('weekday', weekday);
 
-        // doulaId is taken from region of regionId. 
+        // doulaId is taken from region of regionId.
         const region = await findRegionOrThrow(this.prisma, regionId);
         if (!region.zoneManagerId) {
-            throw new BadRequestException("Region does not have a zone manager assigned");
+            throw new BadRequestException(
+                'Region does not have a zone manager assigned',
+            );
         }
         // Get Zone Manager
         const zoneManager = await findZoneManagerOrThrowWithId(
@@ -88,7 +104,7 @@ export class EnquiryService {
             weekday,
         });
 
-        console.log("slot", slot)
+        console.log('slot', slot);
 
         const exists = await isMeetingExists(
             this.prisma,
@@ -100,7 +116,9 @@ export class EnquiryService {
         );
 
         if (exists) {
-            throw new BadRequestException('Meeting already exists for this time slot');
+            throw new BadRequestException(
+                'Meeting already exists for this time slot',
+            );
         }
         // 3. Validate Service
         const service = await findServiceOrThrowwithId(this.prisma, serviceId);
@@ -122,7 +140,7 @@ export class EnquiryService {
                 regionId,
                 slotId: slot.id,
                 serviceId: service.id,
-                clientId: profile.id
+                clientId: profile.id,
             },
         });
 
@@ -134,22 +152,23 @@ export class EnquiryService {
         const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
         const endDateTime = new Date(`${meetingsDate}T${endTime}:00`);
 
-        const enquiryData = { email: enquiry.email, startTime: startDateTime, endTime: endDateTime, date: new Date(meetingsDate), additionalNotes: enquiry.additionalNotes, serviceName: service.name }
-        console.log("enquiry data", enquiryData)
-        const meeting = await this.schedule.scheduleMeeting(enquiryData, client.clientProfile.id, zoneManager.id, Role.ZONE_MANAGER, slot.id)
-
-        // 8. Send Mail
-        // await this.mail.sendMail({
-        //     to: zoneMngrssertbldata.email,
-        //     subject: `New Enquiry from ${name}`,
-        //     template: 'enquiry',
-        //     context: {
-        //         name,
-        //         phone_number: phone,
-        //         email,
-        //         message: `A client has shown interest in ${service.name} and booked a meeting slot.`,
-        //     },
-        // });
+        const enquiryData = {
+            email: enquiry.email,
+            startTime: startDateTime,
+            endTime: endDateTime,
+            date: new Date(meetingsDate),
+            additionalNotes: enquiry.additionalNotes,
+            serviceName: service.name,
+        };
+        console.log('enquiry data', enquiryData);
+        const meeting = await this.schedule.scheduleMeeting(
+            enquiryData,
+            client.clientProfile.id,
+            zoneManager.id,
+            Role.ZONE_MANAGER,
+            slot.id,
+        );
+        await enquiry.meetingsId === meeting.id
         return {
             message: 'Enquiry submitted successfully',
             enquiry,
@@ -165,11 +184,9 @@ export class EnquiryService {
             page,
             limit,
             orderBy: { createdAt: 'desc' },
-            where: { region: { zoneManager: { userId: userId } } }
+            where: { region: { zoneManager: { userId: userId } } },
         });
-
     }
-
 
     // --------------------------------------------------------------
     //  3️⃣  GET ENQUIRY BY ID
@@ -196,6 +213,7 @@ export class EnquiryService {
                 slotId: true,
                 clientId: true,
                 serviceId: true,
+                meetingsId: true,
             },
         });
 
@@ -205,7 +223,6 @@ export class EnquiryService {
 
         return enquiry;
     }
-
 
     // --------------------------------------------------------------
     //  4️⃣  DELETE ENQUIRY (auto-unlock slot)
@@ -236,7 +253,7 @@ export class EnquiryService {
     async deleteAllEnquiryForms() {
         const result = await this.prisma.enquiryForm.deleteMany({});
         return {
-            message: "All enquiry forms deleted successfully",
+            message: 'All enquiry forms deleted successfully',
             deletedCount: result.count,
         };
     }

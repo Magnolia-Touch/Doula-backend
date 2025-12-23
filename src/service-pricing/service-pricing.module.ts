@@ -6,9 +6,9 @@ import { ServicesModule } from 'src/services/services.module';
 import { ServicesService } from 'src/services/services.service';
 
 @Module({
-    imports: [ServicesModule],
-    controllers: [ServicePricingController],
-    providers: [ServicePricingService, PrismaService, ServicesService],
-    exports: [ServicePricingModule]
+  imports: [ServicesModule],
+  controllers: [ServicePricingController],
+  providers: [ServicePricingService, PrismaService, ServicesService],
+  exports: [ServicePricingModule],
 })
-export class ServicePricingModule { }
+export class ServicePricingModule {}

@@ -21,7 +21,7 @@ exports.ServicePricingModule = ServicePricingModule = __decorate([
         imports: [services_module_1.ServicesModule],
         controllers: [service_pricing_controller_1.ServicePricingController],
         providers: [service_pricing_service_1.ServicePricingService, prisma_service_1.PrismaService, services_service_1.ServicesService],
-        exports: [ServicePricingModule]
+        exports: [ServicePricingModule],
     })
 ], ServicePricingModule);
 //# sourceMappingURL=service-pricing.module.js.map

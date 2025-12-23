@@ -107,9 +107,9 @@ __decorate([
         type: 'object',
         additionalProperties: { type: 'number' },
         example: {
-            "86ee0ee2-11fb-4f15-b403-9a94a3cfe868": 1000,
-            "a9943bf1-3678-4981-a7f8-96d260c9bb55": 1500
-        }
+            '86ee0ee2-11fb-4f15-b403-9a94a3cfe868': 1000,
+            'a9943bf1-3678-4981-a7f8-96d260c9bb55': 1500,
+        },
     }),
     (0, class_transformer_1.Transform)(({ value }) => {
         if (!value)

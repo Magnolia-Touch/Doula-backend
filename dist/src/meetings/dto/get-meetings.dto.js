@@ -20,13 +20,19 @@ class GetMeetingsDto {
 }
 exports.GetMeetingsDto = GetMeetingsDto;
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ example: '2025-02-10', description: 'Filter meetings by date (YYYY-MM-DD)' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        example: '2025-02-10',
+        description: 'Filter meetings by date (YYYY-MM-DD)',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], GetMeetingsDto.prototype, "date", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ enum: ['SCHEDULED', 'COMPLETED', 'CANCELED'], example: 'SCHEDULED' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: ['SCHEDULED', 'COMPLETED', 'CANCELED'],
+        example: 'SCHEDULED',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsIn)(['SCHEDULED', 'COMPLETED', 'CANCELED']),

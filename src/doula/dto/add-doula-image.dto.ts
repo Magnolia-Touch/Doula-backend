@@ -1,18 +1,18 @@
 import { IsBoolean, IsInt, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class AddDoulaImageDto {
-    @IsUrl()
-    url: string;
+  @IsUrl()
+  url: string;
 
-    @IsOptional()
-    @IsString()
-    altText?: string;
+  @IsOptional()
+  @IsString()
+  altText?: string;
 
-    @IsOptional()
-    @IsBoolean()
-    isMain?: boolean = false;
+  @IsOptional()
+  @IsBoolean()
+  isMain?: boolean = false;
 
-    @IsOptional()
-    @IsInt()
-    sortOrder?: number = 0;
+  @IsOptional()
+  @IsInt()
+  sortOrder?: number = 0;
 }

@@ -38,7 +38,10 @@ function multerStorage() {
             cb(null, './uploads/manager');
         },
         filename: (req, file, cb) => {
-            const safeName = Date.now() + '-' + Math.round(Math.random() * 1e9) + (0, path_1.extname)(file.originalname);
+            const safeName = Date.now() +
+                '-' +
+                Math.round(Math.random() * 1e9) +
+                (0, path_1.extname)(file.originalname);
             cb(null, safeName);
         },
     });
@@ -226,7 +229,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
-    (0, swagger_1.ApiOperation)(({ summary: "Update Status of Zone Manager" })),
+    (0, swagger_1.ApiOperation)({ summary: 'Update Status of Zone Manager' }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         type: String,
@@ -312,35 +315,40 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
-    (0, common_1.Get)("region/assignment-status"),
-    (0, swagger_1.ApiOperation)({ summary: "Check whether regions are already assigned to a Zone Manager" }),
+    (0, common_1.Get)('region/assignment-status'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Check whether regions are already assigned to a Zone Manager',
+    }),
     (0, swagger_1.ApiBody)({ type: update_zone_manager_dto_1.RegionAssignmentCheckDto }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: "Region assignment status fetched",
+        description: 'Region assignment status fetched',
         schema: {
             example: {
-                message: "Region assignment status fetched",
+                message: 'Region assignment status fetched',
                 assignedCount: 1,
                 unassignedCount: 1,
                 assigned: [
                     {
-                        id: "96efbdce-d7cb-43bb-8787-626c198be1a4",
-                        regionName: "Bangalore East",
-                        zoneManagerId: "9e9c77fa-2cd4-4d92-b7cb-4f6851f1f3a8"
-                    }
+                        id: '96efbdce-d7cb-43bb-8787-626c198be1a4',
+                        regionName: 'Bangalore East',
+                        zoneManagerId: '9e9c77fa-2cd4-4d92-b7cb-4f6851f1f3a8',
+                    },
                 ],
                 unassigned: [
                     {
-                        id: "4fd68b32-cb85-4f8b-9375-d4477dc7c3ae",
-                        regionName: "Chennai North",
-                        zoneManagerId: null
-                    }
-                ]
-            }
-        }
+                        id: '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
+                        regionName: 'Chennai North',
+                        zoneManagerId: null,
+                    },
+                ],
+            },
+        },
     }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: "One or more region IDs are invalid" }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'One or more region IDs are invalid',
+    }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [update_zone_manager_dto_1.RegionAssignmentCheckDto]),

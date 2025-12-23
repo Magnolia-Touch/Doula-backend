@@ -22,7 +22,7 @@ let DoulaService = class DoulaService {
         this.prisma = prisma;
     }
     async create(dto, userId, images = [], profileImageUrl) {
-        console.log("loggg", dto.certificates);
+        console.log('loggg', dto.certificates);
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
         });
@@ -152,12 +152,24 @@ let DoulaService = class DoulaService {
                     doulaProfile: {
                         include: {
                             ServicePricing: {
-                                select: { id: true, serviceId: true, price: true, service: { select: { name: true, description: true } } },
+                                select: {
+                                    id: true,
+                                    serviceId: true,
+                                    price: true,
+                                    service: { select: { name: true, description: true } },
+                                },
                             },
-                            Region: { select: { id: true, regionName: true, pincode: true, zoneManagerId: true } },
+                            Region: {
+                                select: {
+                                    id: true,
+                                    regionName: true,
+                                    pincode: true,
+                                    zoneManagerId: true,
+                                },
+                            },
                             zoneManager: true,
                             DoulaGallery: true,
-                            Certificates: true
+                            Certificates: true,
                         },
                     },
                 },
@@ -199,7 +211,7 @@ let DoulaService = class DoulaService {
                 yoe: { gte: minExperience },
             };
         }
-        let servicePricingConditions = {};
+        const servicePricingConditions = {};
         if (serviceId)
             servicePricingConditions.serviceId = serviceId;
         if (serviceName) {
@@ -227,7 +239,7 @@ let DoulaService = class DoulaService {
                         Region: true,
                         ServicePricing: { include: { service: true } },
                         Testimonials: true,
-                        DoulaGallery: true
+                        DoulaGallery: true,
                     },
                 },
             },
@@ -280,7 +292,7 @@ let DoulaService = class DoulaService {
             if (!profile)
                 return null;
             const bookedDates = scheduleMap.get(profile.id) ?? [];
-            const services = profile.ServicePricing?.map(p => {
+            const services = profile.ServicePricing?.map((p) => {
                 if (!p.service)
                     return null;
                 return {
@@ -289,9 +301,8 @@ let DoulaService = class DoulaService {
                     serviceName: p.service.name,
                     price: p.price,
                 };
-            }).filter(Boolean) ??
-                [];
-            const regions = profile.Region?.map(r => ({
+            }).filter(Boolean) ?? [];
+            const regions = profile.Region?.map((r) => ({
                 id: r.id,
                 name: r.regionName,
             })) ?? [];
@@ -300,9 +311,7 @@ let DoulaService = class DoulaService {
             const avgRating = reviewCount > 0
                 ? testimonials.reduce((s, t) => s + t.ratings, 0) / reviewCount
                 : null;
-            const available = rangeStart && rangeEnd
-                ? bookedDates.length === 0
-                : null;
+            const available = rangeStart && rangeEnd ? bookedDates.length === 0 : null;
             if (typeof isAvailable === 'boolean' && available !== isAvailable) {
                 return null;
             }
@@ -319,8 +328,10 @@ let DoulaService = class DoulaService {
                 ratings: avgRating,
                 reviewsCount: reviewCount,
                 isAvailable: available,
-                nextImmediateAvailabilityDate: bookedDates.length ? bookedDates[0] : null,
-                images: profile.DoulaGallery?.map(img => ({
+                nextImmediateAvailabilityDate: bookedDates.length
+                    ? bookedDates[0]
+                    : null,
+                images: profile.DoulaGallery?.map((img) => ({
                     id: img.id,
                     url: img.url,
                     isPrimary: img.isPrimary ?? false,
@@ -368,7 +379,7 @@ let DoulaService = class DoulaService {
             throw new common_1.NotFoundException('Doula not found');
         }
         const profile = doula.doulaProfile;
-        const services = profile?.ServicePricing?.map(p => {
+        const services = profile?.ServicePricing?.map((p) => {
             if (!p.service)
                 return null;
             return {
@@ -377,9 +388,8 @@ let DoulaService = class DoulaService {
                 serviceName: p.service.name,
                 price: p.price,
             };
-        }).filter(Boolean) ??
-            [];
-        const regions = profile?.Region?.map(r => ({
+        }).filter(Boolean) ?? [];
+        const regions = profile?.Region?.map((r) => ({
             id: r.id,
             name: r.regionName,
         })) ?? [];
@@ -399,10 +409,11 @@ let DoulaService = class DoulaService {
             FRIDAY: 5,
             SATURDAY: 6,
         };
-        const availableWeekdays = profile?.AvailableSlotsForService?.map(s => weekdayOrder[s.weekday]) ?? [];
+        const availableWeekdays = profile?.AvailableSlotsForService?.map((s) => weekdayOrder[s.weekday]) ??
+            [];
         const nextImmediateAvailabilityDate = availableWeekdays.length > 0
             ? new Date(today.setDate(today.getDate() +
-                Math.min(...availableWeekdays.map(d => d >= todayIndex ? d - todayIndex : 7 - todayIndex + d))))
+                Math.min(...availableWeekdays.map((d) => d >= todayIndex ? d - todayIndex : 7 - todayIndex + d))))
             : null;
         const transformed = {
             userId: doula.id,
@@ -420,12 +431,12 @@ let DoulaService = class DoulaService {
             ratings: avgRating,
             reviewsCount,
             nextImmediateAvailabilityDate,
-            galleryImages: profile?.DoulaGallery?.map(img => ({
+            galleryImages: profile?.DoulaGallery?.map((img) => ({
                 id: img.id,
                 url: img.url,
                 createdAt: img.createdAt,
             })) ?? [],
-            testimonials: testimonials.map(t => ({
+            testimonials: testimonials.map((t) => ({
                 id: t.id,
                 rating: t.ratings,
                 review: t.reviews,
@@ -443,7 +454,7 @@ let DoulaService = class DoulaService {
     async delete(id) {
         const existingUser = await this.prisma.user.findUnique({
             where: { id },
-            include: { doulaProfile: true }
+            include: { doulaProfile: true },
         });
         if (!existingUser || existingUser.role !== client_1.Role.DOULA) {
             throw new common_1.NotFoundException('Doula not found');
@@ -478,75 +489,75 @@ let DoulaService = class DoulaService {
             include: { zoneManager: true, Region: true },
         });
         if (!doula)
-            throw new common_1.NotFoundException("Doula does not exist");
+            throw new common_1.NotFoundException('Doula does not exist');
         const regions = await this.prisma.region.findMany({
             where: { id: { in: dto.regionIds } },
-            select: { id: true, zoneManager: { select: { id: true } } }
+            select: { id: true, zoneManager: { select: { id: true } } },
         });
         if (regions.length !== dto.regionIds.length)
-            throw new common_1.NotFoundException("One or more region IDs are invalid");
+            throw new common_1.NotFoundException('One or more region IDs are invalid');
         if (user?.role === client_1.Role.ZONE_MANAGER) {
             const zn = await this.prisma.zoneManagerProfile.findUnique({
-                where: { userId }
+                where: { userId },
             });
             if (!zn)
-                throw new common_1.NotFoundException("Zone Manager profile not found");
-            const unauthorized = regions.some(r => r.zoneManager?.id !== zn.id);
+                throw new common_1.NotFoundException('Zone Manager profile not found');
+            const unauthorized = regions.some((r) => r.zoneManager?.id !== zn.id);
             if (unauthorized) {
-                throw new common_1.BadRequestException("You cannot assign regions that are not managed by you.");
+                throw new common_1.BadRequestException('You cannot assign regions that are not managed by you.');
             }
             const update = await this.prisma.doulaProfile.update({
                 where: { id: dto.profileId },
                 data: {
                     Region: {
-                        [dto.purpose === "add" ? "connect" : "disconnect"]: dto.regionIds.map(id => ({ id })),
+                        [dto.purpose === 'add' ? 'connect' : 'disconnect']: dto.regionIds.map((id) => ({ id })),
                     },
-                    ...(dto.purpose === "add"
+                    ...(dto.purpose === 'add'
                         ? { zoneManager: { connect: { id: zn.id } } }
                         : {}),
                 },
                 include: { Region: true, zoneManager: true },
             });
             return {
-                message: `Regions ${dto.purpose === "add" ? "added" : "removed"} successfully`,
+                message: `Regions ${dto.purpose === 'add' ? 'added' : 'removed'} successfully`,
                 data: update,
             };
         }
         if (user?.role === client_1.Role.ADMIN) {
-            if (dto.purpose === "add") {
+            if (dto.purpose === 'add') {
                 const zoneManagerIds = regions
-                    .map(r => r.zoneManager?.id)
-                    .filter(id => id);
+                    .map((r) => r.zoneManager?.id)
+                    .filter((id) => id);
                 if (zoneManagerIds.length !== regions.length)
-                    throw new common_1.BadRequestException("All selected regions must have a Zone Manager assigned");
+                    throw new common_1.BadRequestException('All selected regions must have a Zone Manager assigned');
                 const update = await this.prisma.doulaProfile.update({
                     where: { id: dto.profileId },
                     data: {
                         Region: {
-                            connect: dto.regionIds.map(id => ({ id }))
+                            connect: dto.regionIds.map((id) => ({ id })),
                         },
                         zoneManager: {
-                            connect: zoneManagerIds.map(id => ({ id }))
-                        }
+                            connect: zoneManagerIds.map((id) => ({ id })),
+                        },
                     },
                     include: { Region: true, zoneManager: true },
                 });
-                return { message: "Regions added successfully", data: update };
+                return { message: 'Regions added successfully', data: update };
             }
-            if (dto.purpose === "remove") {
+            if (dto.purpose === 'remove') {
                 const update = await this.prisma.doulaProfile.update({
                     where: { id: dto.profileId },
                     data: {
                         Region: {
-                            disconnect: dto.regionIds.map(id => ({ id }))
-                        }
+                            disconnect: dto.regionIds.map((id) => ({ id })),
+                        },
                     },
                     include: { Region: true, zoneManager: true },
                 });
-                return { message: "Regions removed successfully", data: update };
+                return { message: 'Regions removed successfully', data: update };
             }
         }
-        throw new common_1.BadRequestException("Invalid purpose");
+        throw new common_1.BadRequestException('Invalid purpose');
     }
     async getDoulaMeetings(user, page = 1, limit = 10, date) {
         if (user.role !== client_1.Role.DOULA) {
@@ -864,10 +875,7 @@ let DoulaService = class DoulaService {
                     select: { name: true },
                 },
             },
-            orderBy: [
-                { date: 'asc' },
-                { startTime: 'asc' },
-            ],
+            orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
         });
         if (!meeting) {
             return {
@@ -1054,12 +1062,8 @@ let DoulaService = class DoulaService {
         }
         const totalReviews = doula.Testimonials.length;
         const ratingSum = doula.Testimonials.reduce((sum, r) => sum + r.ratings, 0);
-        const averageRating = totalReviews > 0
-            ? Number((ratingSum / totalReviews).toFixed(1))
-            : 0;
-        const satisfaction = totalReviews > 0
-            ? Math.round((ratingSum / (totalReviews * 5)) * 100)
-            : 0;
+        const averageRating = totalReviews > 0 ? Number((ratingSum / totalReviews).toFixed(1)) : 0;
+        const satisfaction = totalReviews > 0 ? Math.round((ratingSum / (totalReviews * 5)) * 100) : 0;
         return {
             success: true,
             message: 'Doula profile fetched successfully',
@@ -1103,14 +1107,13 @@ let DoulaService = class DoulaService {
         }
         await this.prisma.doulaProfile.update({
             where: { userId: userId },
-            data: { profile_image: profileImageUrl }
+            data: { profile_image: profileImageUrl },
         });
         return {
             message: 'Image uploaded successfully',
-            data: doulaProfile
+            data: doulaProfile,
         };
     }
-    ;
     async getDoulaImages(userId) {
         const doulaProfile = await this.prisma.doulaProfile.findUnique({
             where: { userId },
@@ -1123,7 +1126,7 @@ let DoulaService = class DoulaService {
             where: {
                 userId: doulaProfile.id,
             },
-            select: { profile_image: true }
+            select: { profile_image: true },
         });
         return {
             status: 'success',
@@ -1140,7 +1143,7 @@ let DoulaService = class DoulaService {
         }
         const image = await this.prisma.doulaProfile.update({
             where: { userId: userId },
-            data: { profile_image: null }
+            data: { profile_image: null },
         });
         return { message: 'Image deleted successfully' };
     }
@@ -1253,7 +1256,7 @@ let DoulaService = class DoulaService {
         ]);
         return {
             message: 'Doula profile updated successfully',
-            data: data
+            data: data,
         };
     }
     async getDoulaProfile(userId) {
@@ -1267,7 +1270,7 @@ let DoulaService = class DoulaService {
     }
     async getCertificates(userId) {
         const doulaProfile = await this.getDoulaProfile(userId);
-        console.log("dola, ", doulaProfile);
+        console.log('dola, ', doulaProfile);
         return this.prisma.certificates.findMany({
             where: { doulaProfileId: doulaProfile.id },
             orderBy: { year: 'desc' },
@@ -1421,7 +1424,10 @@ let DoulaService = class DoulaService {
                         id: true,
                         regionName: true,
                         zoneManager: {
-                            select: { id: true, user: { select: { id: true, email: true, name: true } } }
+                            select: {
+                                id: true,
+                                user: { select: { id: true, email: true, name: true } },
+                            },
                         },
                     },
                 },
@@ -1433,12 +1439,12 @@ let DoulaService = class DoulaService {
                             select: {
                                 id: true,
                                 name: true,
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 schedules: true,
-            }
+            },
         });
         if (!booking) {
             throw new common_1.NotFoundException('Service booking not found');

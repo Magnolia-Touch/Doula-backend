@@ -161,6 +161,7 @@ model EnquiryForm {
   VisitFrequency    Int?
   serviceTimeSlots  String?
   serviceName       String
+  meetingsId        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

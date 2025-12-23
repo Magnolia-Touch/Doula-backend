@@ -5,8 +5,8 @@ import { RegionController } from './regions.controller';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
-    controllers: [RegionController],
-    providers: [RegionService, PrismaService],
-    exports: [RegionService],
+  controllers: [RegionController],
+  providers: [RegionService, PrismaService],
+  exports: [RegionService],
 })
-export class RegionModule { }
+export class RegionModule {}

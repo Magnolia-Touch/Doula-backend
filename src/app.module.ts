@@ -28,7 +28,8 @@ import { DeviceTokenModule } from './token/device-token.module';
 import { UserModule } from './users/users.module';
 
 @Module({
-  imports: [ZoneManagerModule,
+  imports: [
+    ZoneManagerModule,
     ServicesModule,
     AuthModule,
     ClientModule,
@@ -53,15 +54,15 @@ import { UserModule } from './users/users.module';
     UserModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: "/uploads",
+      serveRoot: '/uploads',
       serveStaticOptions: {
         index: false,
-      }
+      },
     }),
 
     MailerModule.forRoot({
       transport: {
-        host: 'smtp.gmail.com',       // your SMTP host
+        host: 'smtp.gmail.com', // your SMTP host
         port: 587,
         secure: false,
         auth: {
@@ -78,11 +79,10 @@ import { UserModule } from './users/users.module';
         options: {
           strict: true,
         },
-      }
+      },
     }),
-
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

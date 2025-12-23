@@ -30,7 +30,11 @@ exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            prisma_module_1.PrismaModule, admin_module_1.AdminModule, zone_manager_module_1.ZoneManagerModule, client_module_1.ClientModule, doula_module_1.DoulaModule,
+            prisma_module_1.PrismaModule,
+            admin_module_1.AdminModule,
+            zone_manager_module_1.ZoneManagerModule,
+            client_module_1.ClientModule,
+            doula_module_1.DoulaModule,
             config_1.ConfigModule,
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
@@ -38,7 +42,15 @@ exports.AuthModule = AuthModule = __decorate([
                 signOptions: { expiresIn: '7d' },
             }),
         ],
-        providers: [auth_service_1.AuthService, prisma_service_1.PrismaService, zone_manager_service_1.ZoneManagerService, doula_service_1.DoulaService, client_service_1.ClientsService, admin_service_1.AdminService, jwt_strategy_1.JwtStrategy],
+        providers: [
+            auth_service_1.AuthService,
+            prisma_service_1.PrismaService,
+            zone_manager_service_1.ZoneManagerService,
+            doula_service_1.DoulaService,
+            client_service_1.ClientsService,
+            admin_service_1.AdminService,
+            jwt_strategy_1.JwtStrategy,
+        ],
         controllers: [auth_controller_1.AuthController],
         exports: [auth_service_1.AuthService],
     })

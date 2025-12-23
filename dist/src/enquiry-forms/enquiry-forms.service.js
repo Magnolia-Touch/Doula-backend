@@ -28,19 +28,19 @@ let EnquiryService = class EnquiryService {
         this.schedule = schedule;
     }
     async submitEnquiry(data) {
-        const { name, email, phone, regionId, meetingsDate, meetingsTimeSlots, serviceId, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeSlots, additionalNotes } = data;
+        const { name, email, phone, regionId, meetingsDate, meetingsTimeSlots, serviceId, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeSlots, additionalNotes, } = data;
         const client = await (0, service_utils_2.getOrcreateClent)(this.prisma, data);
         const profile = await this.prisma.clientProfile.findUnique({
-            where: { userId: client.id }
+            where: { userId: client.id },
         });
         if (!profile) {
-            throw new common_1.NotFoundException("profile not found");
+            throw new common_1.NotFoundException('profile not found');
         }
         const weekday = await (0, service_utils_1.getWeekdayFromDate)(meetingsDate);
-        console.log("weekday", weekday);
+        console.log('weekday', weekday);
         const region = await (0, service_utils_2.findRegionOrThrow)(this.prisma, regionId);
         if (!region.zoneManagerId) {
-            throw new common_1.BadRequestException("Region does not have a zone manager assigned");
+            throw new common_1.BadRequestException('Region does not have a zone manager assigned');
         }
         const zoneManager = await (0, service_utils_2.findZoneManagerOrThrowWithId)(this.prisma, region.zoneManagerId);
         const slot = await (0, service_utils_2.findSlotOrThrow)(this.prisma, {
@@ -48,7 +48,7 @@ let EnquiryService = class EnquiryService {
             ownerProfileId: region.zoneManagerId,
             weekday,
         });
-        console.log("slot", slot);
+        console.log('slot', slot);
         const exists = await (0, service_utils_1.isMeetingExists)(this.prisma, new Date(meetingsDate), meetingsTimeSlots, {
             zoneManagerProfileId: region.zoneManagerId,
         });
@@ -72,7 +72,7 @@ let EnquiryService = class EnquiryService {
                 regionId,
                 slotId: slot.id,
                 serviceId: service.id,
-                clientId: profile.id
+                clientId: profile.id,
             },
         });
         const [startTime, endTime] = meetingsTimeSlots.split('-');
@@ -81,9 +81,17 @@ let EnquiryService = class EnquiryService {
         }
         const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
         const endDateTime = new Date(`${meetingsDate}T${endTime}:00`);
-        const enquiryData = { email: enquiry.email, startTime: startDateTime, endTime: endDateTime, date: new Date(meetingsDate), additionalNotes: enquiry.additionalNotes, serviceName: service.name };
-        console.log("enquiry data", enquiryData);
+        const enquiryData = {
+            email: enquiry.email,
+            startTime: startDateTime,
+            endTime: endDateTime,
+            date: new Date(meetingsDate),
+            additionalNotes: enquiry.additionalNotes,
+            serviceName: service.name,
+        };
+        console.log('enquiry data', enquiryData);
         const meeting = await this.schedule.scheduleMeeting(enquiryData, client.clientProfile.id, zoneManager.id, client_1.Role.ZONE_MANAGER, slot.id);
+        await enquiry.meetingsId === meeting.id;
         return {
             message: 'Enquiry submitted successfully',
             enquiry,
@@ -95,7 +103,7 @@ let EnquiryService = class EnquiryService {
             page,
             limit,
             orderBy: { createdAt: 'desc' },
-            where: { region: { zoneManager: { userId: userId } } }
+            where: { region: { zoneManager: { userId: userId } } },
         });
     }
     async getEnquiryById(id, userId) {
@@ -120,6 +128,7 @@ let EnquiryService = class EnquiryService {
                 slotId: true,
                 clientId: true,
                 serviceId: true,
+                meetingsId: true,
             },
         });
         if (!enquiry) {
@@ -146,7 +155,7 @@ let EnquiryService = class EnquiryService {
     async deleteAllEnquiryForms() {
         const result = await this.prisma.enquiryForm.deleteMany({});
         return {
-            message: "All enquiry forms deleted successfully",
+            message: 'All enquiry forms deleted successfully',
             deletedCount: result.count,
         };
     }

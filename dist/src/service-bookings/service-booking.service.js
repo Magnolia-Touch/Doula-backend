@@ -35,17 +35,17 @@ let ServiceBookingService = class ServiceBookingService {
                 DoulaProfile: {
                     include: {
                         user: true,
-                    }
+                    },
                 },
                 client: {
                     include: {
                         user: true,
-                    }
+                    },
                 },
                 service: {
                     include: {
                         service: true,
-                    }
+                    },
                 },
                 region: true,
                 slot: true,
