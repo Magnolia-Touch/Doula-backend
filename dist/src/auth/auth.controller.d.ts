@@ -8,10 +8,10 @@ export declare class AuthController {
     RegistrationAdmin(dto: RegistrationDto): Promise<{
         message: string;
         data: {
-            id: string;
             name: string;
             email: string;
             phone: string | null;
+            id: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -26,10 +26,10 @@ export declare class AuthController {
     }>;
     verifyOtp(dto: OtpVerifyDto): Promise<{
         user: {
-            id: string;
             name: string;
             email: string;
             phone: string | null;
+            id: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;

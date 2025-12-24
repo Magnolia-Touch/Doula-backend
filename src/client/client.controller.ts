@@ -100,7 +100,7 @@ export class ClientController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CLIENT)
-  @Post('profile/images')
+  @Patch('profile/images')
   @UseInterceptors(
     FileInterceptor('profile_image', {
       storage: multerStorage(),
