@@ -87,6 +87,7 @@ export declare class ClientsService {
         data: null;
     }>;
     bookedServices(userId: string): Promise<{
+        scheduleId: string;
         userId: string;
         name: string;
         email: string;
@@ -105,6 +106,7 @@ export declare class ClientsService {
         mainDoulaImage: string | null;
     }[]>;
     bookedServiceById(userId: string, serviceBookingId: string): Promise<{
+        scheduleId: string;
         userId: string;
         name: string;
         email: string;

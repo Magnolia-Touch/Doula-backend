@@ -118,6 +118,7 @@ let ClientsService = class ClientsService {
         return clientProfile.Schedules.map((schedule) => {
             const booking = schedule.serviceBooking;
             return {
+                scheduleId: schedule.id,
                 userId: clientProfile.user.id,
                 name: clientProfile.user.name,
                 email: clientProfile.user.email,
@@ -149,7 +150,7 @@ let ClientsService = class ClientsService {
         }
         const schedule = await this.prisma.schedules.findFirst({
             where: {
-                bookingId: serviceBookingId,
+                id: serviceBookingId,
                 clientId: clientProfile.id,
             },
             include: {
@@ -194,6 +195,7 @@ let ClientsService = class ClientsService {
         }
         const booking = schedule.serviceBooking;
         return {
+            scheduleId: schedule.id,
             userId: clientProfile.user.id,
             name: clientProfile.user.name,
             email: clientProfile.user.email,

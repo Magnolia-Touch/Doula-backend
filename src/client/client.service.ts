@@ -159,6 +159,7 @@ export class ClientsService {
 
       return {
         // User details
+        scheduleId: schedule.id,
         userId: clientProfile.user.id,
         name: clientProfile.user.name,
         email: clientProfile.user.email,
@@ -205,7 +206,7 @@ export class ClientsService {
     // 2. Fetch schedule linked to booking & validate ownership
     const schedule = await this.prisma.schedules.findFirst({
       where: {
-        bookingId: serviceBookingId,
+        id: serviceBookingId,
         clientId: clientProfile.id,
       },
       include: {
@@ -255,6 +256,7 @@ export class ClientsService {
     // 3. Response mapping (UNCHANGED SHAPE)
     return {
       // User details
+      scheduleId: schedule.id,
       userId: clientProfile.user.id,
       name: clientProfile.user.name,
       email: clientProfile.user.email,
