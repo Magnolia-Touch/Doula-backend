@@ -72,7 +72,7 @@ export class ClientController {
   }
 
   // PATCH: Cancel service booking
-  @Patch('schedules:id/cancel')
+  @Patch('schedules/:id/cancel')
   async cancelSchedules(@Req() req, @Param('id') id: string) {
     return this.clientService.cancelSchedules(req.user.id, id);
   }
