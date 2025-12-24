@@ -6,39 +6,7 @@ export declare class IntakeFormService {
     private readonly prisma;
     private readonly mail;
     constructor(prisma: PrismaService, mail: MailerService);
-    createIntakeForm(dto: IntakeFormDto): Promise<{
-        intake: {
-            id: string;
-            email: string | null;
-            phone: string | null;
-            name: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            address: string;
-            regionId: string;
-            doulaProfileId: string;
-            startDate: Date;
-            endDate: Date;
-            servicePricingId: string;
-            clientId: string;
-            location: string | null;
-        };
-        booking: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string;
-            doulaProfileId: string;
-            startDate: Date;
-            endDate: Date;
-            paymentDetails: Prisma.JsonValue | null;
-            status: import("@prisma/client").$Enums.BookingStatus;
-            cancelledAt: Date | null;
-            servicePricingId: string;
-            clientId: string;
-        };
-        schedulesCreated: number;
-    }>;
+    createIntakeForm(dto: IntakeFormDto): Promise<void>;
     getAllForms(page: number, limit: number): Promise<{
         data: {
             intakeFormId: string;
@@ -112,37 +80,5 @@ export declare class IntakeFormService {
         message: string;
         deletedCount: number;
     }>;
-    BookDoula(dto: BookDoulaDto, userId: string): Promise<{
-        intake: {
-            id: string;
-            email: string | null;
-            phone: string | null;
-            name: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            address: string;
-            regionId: string;
-            doulaProfileId: string;
-            startDate: Date;
-            endDate: Date;
-            servicePricingId: string;
-            clientId: string;
-            location: string | null;
-        };
-        booking: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string;
-            doulaProfileId: string;
-            startDate: Date;
-            endDate: Date;
-            paymentDetails: Prisma.JsonValue | null;
-            status: import("@prisma/client").$Enums.BookingStatus;
-            cancelledAt: Date | null;
-            servicePricingId: string;
-            clientId: string;
-        };
-        schedulesCreated: number;
-    }>;
+    BookDoula(dto: BookDoulaDto, userId: string): Promise<void>;
 }

@@ -22,6 +22,21 @@ export declare class DoulaController {
                     userId: string | null;
                     profile_image: string | null;
                 }[];
+                Region: {
+                    id: string;
+                    regionName: string;
+                    pincode: string;
+                    zoneManagerId: string | null;
+                }[];
+                ServicePricing: {
+                    id: string;
+                    service: {
+                        name: string;
+                        description: string | null;
+                    };
+                    price: import("@prisma/client/runtime/library").Decimal;
+                    serviceId: string;
+                }[];
                 DoulaGallery: {
                     id: string;
                     createdAt: Date;
@@ -36,29 +51,14 @@ export declare class DoulaController {
                     issuedBy: string;
                     year: string;
                 }[];
-                ServicePricing: {
-                    service: {
-                        name: string;
-                        description: string | null;
-                    };
-                    id: string;
-                    serviceId: string;
-                    price: import("@prisma/client/runtime/library").Decimal;
-                }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
-                }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
                 userId: string;
-                regionId: string | null;
                 profile_image: string | null;
+                regionId: string | null;
+                description: string | null;
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
@@ -194,10 +194,10 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            regionId: string | null;
             profile_image: string | null;
+            regionId: string | null;
+            description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -381,10 +381,10 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            regionId: string | null;
             profile_image: string | null;
+            regionId: string | null;
+            description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -443,10 +443,10 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            regionId: string | null;
             profile_image: string | null;
+            regionId: string | null;
+            description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;

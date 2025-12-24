@@ -19,7 +19,7 @@ import {
 } from 'src/common/utility/service-utils';
 import { paginate } from 'src/common/utility/pagination.util';
 import { format } from 'date-fns';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { MarkOffDaysDto } from './dto/off-days.dto';
 @Injectable()
 export class AvailableSlotsService {
@@ -520,44 +520,102 @@ export class AvailableSlotsService {
 
 
   async markOffDays(user: any, dto: MarkOffDaysDto) {
-    const { date, startTime, endTime } = dto
-    const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
-    const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
+    const { startDate, endDate, startTime, endTime } = dto;
+
+    const startTimeObj = new Date(`1970-01-01T${startTime}:00`);
+    const endTimeObj = new Date(`1970-01-01T${endTime}:00`);
+
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : null;
+
+    // Normalize dates
+    start.setHours(0, 0, 0, 0);
+    end?.setHours(0, 0, 0, 0);
 
     if (user.role === Role.DOULA) {
       const doula = await this.prisma.doulaProfile.findUnique({
-        where: { userId: user.id }
-      })
+        where: { userId: user.id },
+      });
+
       if (!doula) {
-        throw new NotFoundException("Doula Not Found")
+        throw new NotFoundException('Doula not found');
       }
-      const offdays = await this.prisma.offDays.create({
-        data: {
-          date: new Date(date),
-          startTime: startDateTime,
-          endTime: endDateTime,
-          doulaProfileId: doula.id
-        }
-      })
+
+      // SINGLE DAY
+      if (!end) {
+        return this.prisma.offDays.create({
+          data: {
+            date: start,
+            startTime: startTimeObj,
+            endTime: endTimeObj,
+            doulaProfileId: doula.id,
+          },
+        });
+      }
+
+      // MULTI-DAY RANGE
+      const offDaysData: Prisma.OffDaysCreateManyInput[] = [];
+      const current = new Date(start);
+
+      while (current <= end) {
+        offDaysData.push({
+          date: new Date(current),
+          startTime: startTimeObj,
+          endTime: endTimeObj,
+          doulaProfileId: doula.id,
+        });
+
+        current.setDate(current.getDate() + 1);
+      }
+
+      return this.prisma.offDays.createMany({
+        data: offDaysData,
+      });
     }
-    else if (user.role === Role.ZONE_MANAGER) {
+
+    // ZONE MANAGER
+    if (user.role === Role.ZONE_MANAGER) {
       const zm = await this.prisma.zoneManagerProfile.findUnique({
-        where: { userId: user.id }
-      })
-      console.log(user)
+        where: { userId: user.id },
+      });
+
       if (!zm) {
-        throw new NotFoundException("Zone Manager Not Found")
+        throw new NotFoundException('Zone Manager not found');
       }
-      const offdays = await this.prisma.offDays.create({
-        data: {
-          date: new Date(date),
-          startTime: startDateTime,
-          endTime: endDateTime,
-          zoneManagerProfileId: zm.id
-        }
-      })
+
+      // SINGLE DAY
+      if (!end) {
+        return this.prisma.offDays.create({
+          data: {
+            date: start,
+            startTime: startTimeObj,
+            endTime: endTimeObj,
+            doulaProfileId: zm.id,
+          },
+        });
+      }
+
+      // MULTI-DAY RANGE
+      const offDaysData: Prisma.OffDaysCreateManyInput[] = [];
+      const current = new Date(start);
+
+      while (current <= end) {
+        offDaysData.push({
+          date: new Date(current),
+          startTime: startTimeObj,
+          endTime: endTimeObj,
+          doulaProfileId: zm.id,
+        });
+
+        current.setDate(current.getDate() + 1);
+      }
+
+      return this.prisma.offDays.createMany({
+        data: offDaysData,
+      });
     }
   }
+
 
 
   //debug purpose only
@@ -616,6 +674,11 @@ export class AvailableSlotsService {
     })
     return { message: "Off days Deleted Successfully", data: offdays }
   }
+
+
+  // async ZmgetAvailablility(userId: string) {
+
+  // }
 
 
 }

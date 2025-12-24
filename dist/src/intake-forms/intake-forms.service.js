@@ -114,8 +114,8 @@ let IntakeFormService = class IntakeFormService {
         if (!schedulesToCreate.length) {
             throw new common_1.BadRequestException('No valid schedules available for the selected dates and time slot');
         }
-        const [intake, booking] = await this.prisma.$transaction([
-            this.prisma.intakeForm.create({
+        const result = await this.prisma.$transaction(async (tx) => {
+            const intake = await tx.intakeForm.create({
                 data: {
                     name,
                     email,
@@ -128,8 +128,8 @@ let IntakeFormService = class IntakeFormService {
                     doulaProfileId,
                     clientId: clientProfile.id,
                 },
-            }),
-            this.prisma.serviceBooking.create({
+            });
+            const booking = await tx.serviceBooking.create({
                 data: {
                     startDate,
                     endDate,
@@ -138,16 +138,15 @@ let IntakeFormService = class IntakeFormService {
                     doulaProfileId,
                     clientId: clientProfile.id,
                 },
-            }),
-            this.prisma.schedules.createMany({
-                data: schedulesToCreate,
-            }),
-        ]);
-        return {
-            intake,
-            booking,
-            schedulesCreated: schedulesToCreate.length,
-        };
+            });
+            await tx.schedules.createMany({
+                data: schedulesToCreate.map((schedule) => ({
+                    ...schedule,
+                    bookingId: booking.id,
+                })),
+            });
+            return { intake, booking };
+        });
     }
     async getAllForms(page, limit) {
         const result = await (0, pagination_util_1.paginate)({
@@ -380,14 +379,13 @@ let IntakeFormService = class IntakeFormService {
         if (!schedulesToCreate.length) {
             throw new common_1.BadRequestException('No valid schedules available for the selected dates and time slot');
         }
-        const [intake, booking] = await this.prisma.$transaction([
-            this.prisma.intakeForm.create({
+        const result = await this.prisma.$transaction(async (tx) => {
+            const intake = await tx.intakeForm.create({
                 data: {
                     name,
                     email,
                     phone,
                     address,
-                    location,
                     startDate,
                     endDate,
                     regionId: region.id,
@@ -395,8 +393,8 @@ let IntakeFormService = class IntakeFormService {
                     doulaProfileId,
                     clientId: clientProfile.id,
                 },
-            }),
-            this.prisma.serviceBooking.create({
+            });
+            const booking = await tx.serviceBooking.create({
                 data: {
                     startDate,
                     endDate,
@@ -405,16 +403,15 @@ let IntakeFormService = class IntakeFormService {
                     doulaProfileId,
                     clientId: clientProfile.id,
                 },
-            }),
-            this.prisma.schedules.createMany({
-                data: schedulesToCreate,
-            }),
-        ]);
-        return {
-            intake,
-            booking,
-            schedulesCreated: schedulesToCreate.length,
-        };
+            });
+            await tx.schedules.createMany({
+                data: schedulesToCreate.map((schedule) => ({
+                    ...schedule,
+                    bookingId: booking.id,
+                })),
+            });
+            return { intake, booking };
+        });
     }
 };
 exports.IntakeFormService = IntakeFormService;

@@ -73,7 +73,7 @@ function multerStorage() {
   version: '1',
 })
 export class ZoneManagerController {
-  constructor(private readonly service: ZoneManagerService) {}
+  constructor(private readonly service: ZoneManagerService) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
@@ -423,4 +423,14 @@ export class ZoneManagerController {
   async getMeetingById(@Req() req: any, @Param('id') id: string) {
     return this.service.getZoneManagerMeetingById(req.user.id, id);
   }
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Get('doulas/list')
+  async getDoulasUnderZm(@Req() req: any) {
+    return this.service.getDoulasUnderZm(req.user.id);
+  }
+
+
 }

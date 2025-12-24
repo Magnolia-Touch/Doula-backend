@@ -624,6 +624,7 @@ let ZoneManagerService = class ZoneManagerService {
             success: true,
             message: 'Schedule fetched successfully',
             data: {
+                scheduleId: schedule.id,
                 clientId: schedule.client.id,
                 clientName: schedule.client.user.name,
                 doulaId: schedule.DoulaProfile.id,
@@ -678,6 +679,7 @@ let ZoneManagerService = class ZoneManagerService {
             success: true,
             message: 'Booked service fetched successfully',
             data: {
+                serviceBookingId: booking.id,
                 clientId: booking.client.id,
                 clientName: booking.client.user.name,
                 doulaId: booking.DoulaProfile.id,
@@ -741,6 +743,7 @@ let ZoneManagerService = class ZoneManagerService {
             success: true,
             message: 'Meeting fetched successfully',
             data: {
+                meetingId: meeting.id,
                 clientId: meeting.bookedBy.id,
                 clientName: meeting.bookedBy.user.name,
                 doulaId: meeting.DoulaProfile?.id ?? null,
@@ -751,6 +754,50 @@ let ZoneManagerService = class ZoneManagerService {
                 endDate: meeting.endTime,
                 status: meeting.status,
             },
+        };
+    }
+    async getDoulasUnderZm(userId) {
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+        if (!zoneManager) {
+            throw new common_1.ForbiddenException('Zone manager profile not found');
+        }
+        const doulas = await this.prisma.doulaProfile.findMany({
+            where: { zoneManager: { some: { id: zoneManager.id } } },
+            select: {
+                id: true, yoe: true,
+                qualification: true,
+                languages: true,
+                specialities: true,
+                profile_image: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+            }
+        });
+        const formattedDoulas = doulas.map((doula) => ({
+            userId: doula.user.id,
+            profileid: doula.id,
+            name: doula.user.name,
+            email: doula.user.email,
+            phone: doula.user.phone,
+            yoe: doula.yoe,
+            qualification: doula.qualification,
+            languages: doula.languages,
+            specialities: doula.specialities,
+            profileImage: doula.profile_image,
+        }));
+        return {
+            status: 'success',
+            message: 'Doulas fetched successfully',
+            data: formattedDoulas,
         };
     }
 };

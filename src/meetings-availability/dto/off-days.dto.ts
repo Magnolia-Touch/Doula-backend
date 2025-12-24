@@ -4,7 +4,12 @@ import { IsOptional, IsString } from "class-validator";
 export class MarkOffDaysDto {
     @ApiProperty({ example: '09:00', description: 'Start time (HH:mm)' })
     @IsString()
-    date: string;
+    startDate: string;
+
+    @ApiProperty({ example: '09:00', description: 'Start time (HH:mm)' })
+    @IsString()
+    @IsOptional()
+    endDate: string;
 
     @ApiProperty({ example: '09:00', description: 'Start time (HH:mm)' })
     @IsString()

@@ -45,36 +45,36 @@ export declare class AvailableSlotsController {
         slot: {
             AvailableSlotsTimeForMeeting: {
                 id: string;
-                availabe: boolean;
                 createdAt: Date;
                 updatedAt: Date;
                 startTime: Date;
                 endTime: Date;
+                availabe: boolean;
                 isBooked: boolean;
                 dateId: string;
                 meetingsId: string | null;
             }[];
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            zoneManagerId: string | null;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             ownerRole: import("@prisma/client").$Enums.Role;
             doulaId: string | null;
             adminId: string | null;
-            zoneManagerId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     updateSlot(dto: UpdateSlotsForMeetingTimeDto, req: any): Promise<{
         message: string;
         data: {
             id: string;
-            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             meetingsId: string | null;
@@ -93,21 +93,30 @@ export declare class AvailableSlotsController {
     findall(req: any): Promise<({
         AvailableSlotsTimeForMeeting: {
             id: string;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
+            availabe: boolean;
             isBooked: boolean;
         }[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        zoneManagerId: string | null;
         weekday: import("@prisma/client").$Enums.WeekDays;
         availabe: boolean;
         ownerRole: import("@prisma/client").$Enums.Role;
         doulaId: string | null;
         adminId: string | null;
-        zoneManagerId: string | null;
+    })[]>;
+    markOffDays(req: any, dto: MarkOffDaysDto): Promise<import("@prisma/client").Prisma.BatchPayload | {
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-    })[]>;
-    markOffDays(req: any, dto: MarkOffDaysDto): Promise<void>;
+        doulaProfileId: string | null;
+        date: Date;
+        startTime: Date | null;
+        endTime: Date | null;
+        zoneManagerProfileId: string | null;
+    } | undefined>;
 }

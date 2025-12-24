@@ -216,6 +216,7 @@ export declare class ZoneManagerService {
         success: boolean;
         message: string;
         data: {
+            scheduleId: string;
             clientId: string;
             clientName: string;
             doulaId: string;
@@ -231,6 +232,7 @@ export declare class ZoneManagerService {
         success: boolean;
         message: string;
         data: {
+            serviceBookingId: string;
             clientId: string;
             clientName: string;
             doulaId: string;
@@ -246,6 +248,7 @@ export declare class ZoneManagerService {
         success: boolean;
         message: string;
         data: {
+            meetingId: string;
             clientId: string;
             clientName: string;
             doulaId: string | null;
@@ -256,5 +259,21 @@ export declare class ZoneManagerService {
             endDate: Date;
             status: import("@prisma/client").$Enums.MeetingStatus;
         };
+    }>;
+    getDoulasUnderZm(userId: string): Promise<{
+        status: string;
+        message: string;
+        data: {
+            userId: string;
+            profileid: string;
+            name: string;
+            email: string;
+            phone: string | null;
+            yoe: number | null;
+            qualification: string | null;
+            languages: Prisma.JsonValue;
+            specialities: Prisma.JsonValue;
+            profileImage: string | null;
+        }[];
     }>;
 }

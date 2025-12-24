@@ -110,6 +110,9 @@ let ZoneManagerController = class ZoneManagerController {
     async getMeetingById(req, id) {
         return this.service.getZoneManagerMeetingById(req.user.id, id);
     }
+    async getDoulasUnderZm(req) {
+        return this.service.getDoulasUnderZm(req.user.id);
+    }
 };
 exports.ZoneManagerController = ZoneManagerController;
 __decorate([
@@ -427,6 +430,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getMeetingById", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('doulas/list'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getDoulasUnderZm", null);
 exports.ZoneManagerController = ZoneManagerController = __decorate([
     (0, swagger_1.ApiTags)('Zone Managers'),
     (0, swagger_1.ApiBearerAuth)(),

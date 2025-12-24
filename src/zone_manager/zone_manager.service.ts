@@ -1056,4 +1056,53 @@ export class ZoneManagerService {
       },
     };
   }
+
+
+  async getDoulasUnderZm(userId: string) {
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!zoneManager) {
+      throw new ForbiddenException('Zone manager profile not found');
+    }
+    const doulas = await this.prisma.doulaProfile.findMany({
+      where: { zoneManager: { some: { id: zoneManager.id } } },
+      select: {
+        id: true, yoe: true,
+        qualification: true,
+        languages: true,
+        specialities: true,
+        profile_image: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      }
+    })
+    // 3. Shape response
+    const formattedDoulas = doulas.map((doula) => ({
+      userId: doula.user.id,
+      profileid: doula.id,
+      name: doula.user.name,
+      email: doula.user.email,
+      phone: doula.user.phone,
+      yoe: doula.yoe,
+      qualification: doula.qualification,
+      languages: doula.languages,
+      specialities: doula.specialities,
+      profileImage: doula.profile_image,
+    }));
+
+    return {
+      status: 'success',
+      message: 'Doulas fetched successfully',
+      data: formattedDoulas,
+    };
+  }
 }
