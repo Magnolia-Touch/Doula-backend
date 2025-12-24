@@ -50,7 +50,7 @@ export class IntakeFormService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailerService,
-  ) {}
+  ) { }
 
   async createIntakeForm(dto: IntakeFormDto) {
     const {
@@ -208,8 +208,8 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 9. Atomic write
      * -------------------------------------------------- */
-    const [intake, booking] = await this.prisma.$transaction([
-      this.prisma.intakeForm.create({
+    const result = await this.prisma.$transaction(async (tx) => {
+      const intake = await tx.intakeForm.create({
         data: {
           name,
           email,
@@ -222,9 +222,8 @@ export class IntakeFormService {
           doulaProfileId,
           clientId: clientProfile.id,
         },
-      }),
-
-      this.prisma.serviceBooking.create({
+      });
+      const booking = await tx.serviceBooking.create({
         data: {
           startDate,
           endDate,
@@ -233,18 +232,16 @@ export class IntakeFormService {
           doulaProfileId,
           clientId: clientProfile.id,
         },
-      }),
+      });
+      await tx.schedules.createMany({
+        data: schedulesToCreate.map((schedule) => ({
+          ...schedule,
+          bookingId: booking.id,
+        })),
+      });
 
-      this.prisma.schedules.createMany({
-        data: schedulesToCreate,
-      }),
-    ]);
-
-    return {
-      intake,
-      booking,
-      schedulesCreated: schedulesToCreate.length,
-    };
+      return { intake, booking };
+    });
   }
 
   async getAllForms(page: number, limit: number) {
@@ -577,14 +574,13 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 8. Atomic write
      * -------------------------------------------------- */
-    const [intake, booking] = await this.prisma.$transaction([
-      this.prisma.intakeForm.create({
+    const result = await this.prisma.$transaction(async (tx) => {
+      const intake = await tx.intakeForm.create({
         data: {
           name,
           email,
           phone,
           address,
-          location,
           startDate,
           endDate,
           regionId: region.id,
@@ -592,9 +588,8 @@ export class IntakeFormService {
           doulaProfileId,
           clientId: clientProfile.id,
         },
-      }),
-
-      this.prisma.serviceBooking.create({
+      });
+      const booking = await tx.serviceBooking.create({
         data: {
           startDate,
           endDate,
@@ -603,17 +598,15 @@ export class IntakeFormService {
           doulaProfileId,
           clientId: clientProfile.id,
         },
-      }),
+      });
+      await tx.schedules.createMany({
+        data: schedulesToCreate.map((schedule) => ({
+          ...schedule,
+          bookingId: booking.id,
+        })),
+      });
 
-      this.prisma.schedules.createMany({
-        data: schedulesToCreate,
-      }),
-    ]);
-
-    return {
-      intake,
-      booking,
-      schedulesCreated: schedulesToCreate.length,
-    };
+      return { intake, booking };
+    });
   }
 }
