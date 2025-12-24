@@ -23,7 +23,7 @@ import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 
 @Injectable()
 export class ZoneManagerService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Create new Zone Manager
   async create(dto: CreateZoneManagerDto, profileImageUrl?: string) {
@@ -67,21 +67,21 @@ export class ZoneManagerService {
       role: Role.ZONE_MANAGER,
       OR: search
         ? [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-            { phone: { contains: search, mode: 'insensitive' } },
-            {
-              zonemanagerprofile: {
-                managingRegion: {
-                  some: {
-                    regionName: {
-                      contains: search.toLowerCase(),
-                    },
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+          {
+            zonemanagerprofile: {
+              managingRegion: {
+                some: {
+                  regionName: {
+                    contains: search.toLowerCase(),
                   },
                 },
               },
             },
-          ]
+          },
+        ]
         : undefined,
     };
 
@@ -903,6 +903,7 @@ export class ZoneManagerService {
       success: true,
       message: 'Schedule fetched successfully',
       data: {
+        scheduleId: schedule.id,
         clientId: schedule.client.id,
         clientName: schedule.client.user.name,
 
@@ -965,6 +966,7 @@ export class ZoneManagerService {
       success: true,
       message: 'Booked service fetched successfully',
       data: {
+        serviceBookingId: booking.id,
         clientId: booking.client.id,
         clientName: booking.client.user.name,
 
@@ -1038,6 +1040,7 @@ export class ZoneManagerService {
       success: true,
       message: 'Meeting fetched successfully',
       data: {
+        meetingId: meeting.id,
         clientId: meeting.bookedBy.id,
         clientName: meeting.bookedBy.user.name,
 
