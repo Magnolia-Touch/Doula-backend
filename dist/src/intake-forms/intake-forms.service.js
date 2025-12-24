@@ -310,10 +310,12 @@ let IntakeFormService = class IntakeFormService {
     }
     async BookDoula(dto, userId) {
         const { name, email, phone, location, address, doulaProfileId, serviceId, serviceStartDate, servicEndDate, visitFrequency, timeSlots, } = dto;
-        const clientProfile = await this.prisma.clientProfile.update({
+        const clientProfile = await this.prisma.clientProfile.findUnique({
             where: { userId },
-            data: { address },
         });
+        if (!clientProfile) {
+            throw new common_1.NotFoundException("client not found");
+        }
         const region = await this.prisma.region.findFirst({
             where: { doula: { some: { id: doulaProfileId } } },
         });

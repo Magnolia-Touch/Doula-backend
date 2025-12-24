@@ -451,10 +451,12 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 1. Update client profile
      * -------------------------------------------------- */
-    const clientProfile = await this.prisma.clientProfile.update({
+    const clientProfile = await this.prisma.clientProfile.findUnique({
       where: { userId },
-      data: { address },
     });
+    if (!clientProfile) {
+      throw new NotFoundException("client not found")
+    }
 
     /* ----------------------------------------------------
      * 2. Validate region
