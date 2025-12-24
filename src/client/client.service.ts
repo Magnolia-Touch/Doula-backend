@@ -99,14 +99,117 @@ export class ClientsService {
 
     return { message: 'Client deleted successfully', data: null };
   }
-
   async bookedServices(userId: string) {
-    // 1. Fetch client profile with bookings
+    // 1. Fetch client profile with schedules
     const clientProfile = await this.prisma.clientProfile.findUnique({
       where: { userId },
       include: {
         user: true,
-        bookings: {
+        Schedules: {
+          include: {
+            serviceBooking: {
+              include: {
+                region: {
+                  select: {
+                    regionName: true,
+                  },
+                },
+                service: {
+                  include: {
+                    service: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+                DoulaProfile: {
+                  include: {
+                    user: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                    DoulaGallery: {
+                      select: {
+                        url: true,
+                      },
+                      take: 1,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!clientProfile) {
+      throw new Error('Client profile not found');
+    }
+
+    // 2. Transform response (UNCHANGED STRUCTURE)
+    return clientProfile.Schedules.map((schedule) => {
+      const booking = schedule.serviceBooking;
+
+      return {
+        // User details
+        userId: clientProfile.user.id,
+        name: clientProfile.user.name,
+        email: clientProfile.user.email,
+        phone: clientProfile.user.phone,
+        role: clientProfile.user.role,
+
+        // Client profile
+        profileId: clientProfile.id,
+
+        // Booking details
+        serviceBookingId: booking.id,
+        status: booking.status,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+
+        // Region
+        regionName: booking.region.regionName,
+
+        // Service details
+        serviceId: booking.service.service.id,
+        servicePricingId: booking.servicePricingId,
+        service: booking.service.service.name,
+
+        // Doula details
+        doulaName: booking.DoulaProfile.user.name,
+        mainDoulaImage: booking.DoulaProfile.profile_image,
+      };
+    });
+  }
+
+  async bookedServiceById(userId: string, serviceBookingId: string) {
+    // 1. Fetch client profile
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { userId },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!clientProfile) {
+      throw new Error('Client profile not found');
+    }
+
+    // 2. Fetch schedule linked to booking & validate ownership
+    const schedule = await this.prisma.schedules.findFirst({
+      where: {
+        bookingId: serviceBookingId,
+        clientId: clientProfile.id,
+      },
+      include: {
+        serviceBooking: {
           include: {
             region: {
               select: {
@@ -139,107 +242,17 @@ export class ClientsService {
               },
             },
           },
-          orderBy: {
-            createdAt: 'desc',
-          },
         },
       },
     });
 
-    if (!clientProfile) {
-      throw new Error('Client profile not found');
-    }
-
-    // 2. Transform response
-    return clientProfile.bookings.map((booking) => ({
-      // User details
-      userId: clientProfile.user.id,
-      name: clientProfile.user.name,
-      email: clientProfile.user.email,
-      phone: clientProfile.user.phone,
-      role: clientProfile.user.role,
-
-      // Client profile
-      profileId: clientProfile.id,
-
-      // Booking details
-      serviceBookingId: booking.id,
-      status: booking.status,
-      startDate: booking.startDate,
-      endDate: booking.endDate,
-
-      // Region
-      regionName: booking.region.regionName,
-
-      // Service details
-      serviceId: booking.service.service.id,
-      servicePricingId: booking.servicePricingId,
-      service: booking.service.service.name,
-
-      // Doula details
-      doulaName: booking.DoulaProfile.user.name,
-      mainDoulaImage: booking.DoulaProfile.profile_image
-    }));
-  }
-
-  async bookedServiceById(userId: string, serviceBookingId: string) {
-    // 1. Fetch client profile
-    const clientProfile = await this.prisma.clientProfile.findUnique({
-      where: { userId },
-      include: {
-        user: true,
-      },
-    });
-
-    if (!clientProfile) {
-      throw new Error('Client profile not found');
-    }
-
-    // 2. Fetch booking by ID and validate ownership
-    const booking = await this.prisma.serviceBooking.findFirst({
-      where: {
-        id: serviceBookingId,
-        clientId: clientProfile.id,
-      },
-      include: {
-        region: {
-          select: {
-            regionName: true,
-          },
-        },
-        service: {
-          include: {
-            service: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        DoulaProfile: {
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
-            DoulaGallery: {
-              select: {
-                url: true,
-              },
-              take: 1,
-            },
-          },
-        },
-      },
-    });
-
-    if (!booking) {
+    if (!schedule) {
       throw new Error('Service booking not found');
     }
 
-    // 3. Response mapping (same shape as list API)
+    const booking = schedule.serviceBooking;
+
+    // 3. Response mapping (UNCHANGED SHAPE)
     return {
       // User details
       userId: clientProfile.user.id,
@@ -267,10 +280,7 @@ export class ClientsService {
 
       // Doula details
       doulaName: booking.DoulaProfile.user.name,
-      mainDoulaImage:
-        booking.DoulaProfile.DoulaGallery.length > 0
-          ? booking.DoulaProfile.DoulaGallery[0].url
-          : null,
+      mainDoulaImage: booking.DoulaProfile.profile_image,
     };
   }
 

@@ -69,7 +69,91 @@ let ClientsService = class ClientsService {
             where: { userId },
             include: {
                 user: true,
-                bookings: {
+                Schedules: {
+                    include: {
+                        serviceBooking: {
+                            include: {
+                                region: {
+                                    select: {
+                                        regionName: true,
+                                    },
+                                },
+                                service: {
+                                    include: {
+                                        service: {
+                                            select: {
+                                                id: true,
+                                                name: true,
+                                            },
+                                        },
+                                    },
+                                },
+                                DoulaProfile: {
+                                    include: {
+                                        user: {
+                                            select: {
+                                                name: true,
+                                            },
+                                        },
+                                        DoulaGallery: {
+                                            select: {
+                                                url: true,
+                                            },
+                                            take: 1,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                },
+            },
+        });
+        if (!clientProfile) {
+            throw new Error('Client profile not found');
+        }
+        return clientProfile.Schedules.map((schedule) => {
+            const booking = schedule.serviceBooking;
+            return {
+                userId: clientProfile.user.id,
+                name: clientProfile.user.name,
+                email: clientProfile.user.email,
+                phone: clientProfile.user.phone,
+                role: clientProfile.user.role,
+                profileId: clientProfile.id,
+                serviceBookingId: booking.id,
+                status: booking.status,
+                startDate: booking.startDate,
+                endDate: booking.endDate,
+                regionName: booking.region.regionName,
+                serviceId: booking.service.service.id,
+                servicePricingId: booking.servicePricingId,
+                service: booking.service.service.name,
+                doulaName: booking.DoulaProfile.user.name,
+                mainDoulaImage: booking.DoulaProfile.profile_image,
+            };
+        });
+    }
+    async bookedServiceById(userId, serviceBookingId) {
+        const clientProfile = await this.prisma.clientProfile.findUnique({
+            where: { userId },
+            include: {
+                user: true,
+            },
+        });
+        if (!clientProfile) {
+            throw new Error('Client profile not found');
+        }
+        const schedule = await this.prisma.schedules.findFirst({
+            where: {
+                bookingId: serviceBookingId,
+                clientId: clientProfile.id,
+            },
+            include: {
+                serviceBooking: {
                     include: {
                         region: {
                             select: {
@@ -102,85 +186,13 @@ let ClientsService = class ClientsService {
                             },
                         },
                     },
-                    orderBy: {
-                        createdAt: 'desc',
-                    },
                 },
             },
         });
-        if (!clientProfile) {
-            throw new Error('Client profile not found');
-        }
-        return clientProfile.bookings.map((booking) => ({
-            userId: clientProfile.user.id,
-            name: clientProfile.user.name,
-            email: clientProfile.user.email,
-            phone: clientProfile.user.phone,
-            role: clientProfile.user.role,
-            profileId: clientProfile.id,
-            serviceBookingId: booking.id,
-            status: booking.status,
-            startDate: booking.startDate,
-            endDate: booking.endDate,
-            regionName: booking.region.regionName,
-            serviceId: booking.service.service.id,
-            servicePricingId: booking.servicePricingId,
-            service: booking.service.service.name,
-            doulaName: booking.DoulaProfile.user.name,
-            mainDoulaImage: booking.DoulaProfile.profile_image
-        }));
-    }
-    async bookedServiceById(userId, serviceBookingId) {
-        const clientProfile = await this.prisma.clientProfile.findUnique({
-            where: { userId },
-            include: {
-                user: true,
-            },
-        });
-        if (!clientProfile) {
-            throw new Error('Client profile not found');
-        }
-        const booking = await this.prisma.serviceBooking.findFirst({
-            where: {
-                id: serviceBookingId,
-                clientId: clientProfile.id,
-            },
-            include: {
-                region: {
-                    select: {
-                        regionName: true,
-                    },
-                },
-                service: {
-                    include: {
-                        service: {
-                            select: {
-                                id: true,
-                                name: true,
-                            },
-                        },
-                    },
-                },
-                DoulaProfile: {
-                    include: {
-                        user: {
-                            select: {
-                                name: true,
-                            },
-                        },
-                        DoulaGallery: {
-                            select: {
-                                url: true,
-                            },
-                            take: 1,
-                        },
-                    },
-                },
-            },
-        });
-        if (!booking) {
+        if (!schedule) {
             throw new Error('Service booking not found');
         }
+        const booking = schedule.serviceBooking;
         return {
             userId: clientProfile.user.id,
             name: clientProfile.user.name,
@@ -197,9 +209,7 @@ let ClientsService = class ClientsService {
             servicePricingId: booking.servicePricingId,
             service: booking.service.service.name,
             doulaName: booking.DoulaProfile.user.name,
-            mainDoulaImage: booking.DoulaProfile.DoulaGallery.length > 0
-                ? booking.DoulaProfile.DoulaGallery[0].url
-                : null,
+            mainDoulaImage: booking.DoulaProfile.profile_image,
         };
     }
     async cancelServiceBooking(userId, serviceBookingId) {
