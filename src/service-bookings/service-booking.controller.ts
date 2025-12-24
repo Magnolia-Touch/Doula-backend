@@ -1,7 +1,12 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
 import { ServiceBookingService } from './service-booking.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
+import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @ApiTags('Service Bookings')
 @Controller({
@@ -9,7 +14,7 @@ import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
   version: '1',
 })
 export class ServiceBookingController {
-  constructor(private readonly bookingService: ServiceBookingService) {}
+  constructor(private readonly bookingService: ServiceBookingService) { }
 
   @ApiOperation({ summary: 'Get all service bookings' })
   @ApiResponse({
@@ -78,4 +83,20 @@ export class ServiceBookingController {
   getBookingById(@Param('id') id: string) {
     return this.bookingService.findById(id);
   }
+
+  @Patch('schedules/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  async updateScheduleStatus(
+    @Req() req,
+    @Param('id') scheduleId: string,
+    @Body() dto: UpdateScheduleStatusDto,
+  ) {
+    return this.bookingService.updateScheduleStatus(
+      req.user.id,
+      scheduleId,
+      dto,
+    );
+  }
+
 }

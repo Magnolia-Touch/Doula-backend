@@ -13,27 +13,12 @@ export declare class DoulaService {
         message: string;
         data: ({
             doulaProfile: ({
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
-                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
                     userId: string | null;
                     profile_image: string | null;
-                }[];
-                ServicePricing: {
-                    id: string;
-                    serviceId: string;
-                    price: Prisma.Decimal;
-                    service: {
-                        name: string;
-                        description: string | null;
-                    };
                 }[];
                 DoulaGallery: {
                     id: string;
@@ -49,14 +34,29 @@ export declare class DoulaService {
                     issuedBy: string;
                     year: string;
                 }[];
+                ServicePricing: {
+                    service: {
+                        name: string;
+                        description: string | null;
+                    };
+                    id: string;
+                    serviceId: string;
+                    price: Prisma.Decimal;
+                }[];
+                Region: {
+                    id: string;
+                    regionName: string;
+                    pincode: string;
+                    zoneManagerId: string | null;
+                }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
-                profile_image: string | null;
-                regionId: string | null;
                 description: string | null;
+                userId: string;
+                regionId: string | null;
+                profile_image: string | null;
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
@@ -167,6 +167,13 @@ export declare class DoulaService {
     UpdateDoulaRegions(dto: UpdateDoulaRegionDto, userId: string): Promise<{
         message: string;
         data: {
+            zoneManager: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string | null;
+                profile_image: string | null;
+            }[];
             Region: {
                 id: string;
                 is_active: boolean;
@@ -181,21 +188,14 @@ export declare class DoulaService {
                 longitude: string;
                 zoneManagerId: string | null;
             }[];
-            zoneManager: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                userId: string | null;
-                profile_image: string | null;
-            }[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            regionId: string | null;
             description: string | null;
+            userId: string;
+            regionId: string | null;
+            profile_image: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -379,10 +379,10 @@ export declare class DoulaService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            regionId: string | null;
             description: string | null;
+            userId: string;
+            regionId: string | null;
+            profile_image: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -441,10 +441,10 @@ export declare class DoulaService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            regionId: string | null;
             description: string | null;
+            userId: string;
+            regionId: string | null;
+            profile_image: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;

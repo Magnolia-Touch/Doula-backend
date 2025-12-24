@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { paginate } from 'src/common/utility/pagination.util';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
+import { ServiceStatus } from '@prisma/client';
 
 @Injectable()
 export class ServiceBookingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll(query: { page?: number; limit?: number; status?: any }) {
     const page = query.page ? Number(query.page) : 1;
@@ -164,4 +166,48 @@ export class ServiceBookingService {
       data: transformed,
     };
   }
+
+
+  async updateScheduleStatus(
+    userId: string,
+    scheduleId: string,
+    dto: UpdateScheduleStatusDto,
+  ) {
+    const { status } = dto;
+
+    // 1. Fetch doula profile
+    const doulaProfile = await this.prisma.doulaProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!doulaProfile) {
+      throw new ForbiddenException('Doula profile not found');
+    }
+
+    // 2. Fetch schedule & verify ownership
+    const schedule = await this.prisma.schedules.findFirst({
+      where: {
+        id: scheduleId,
+        doulaProfileId: doulaProfile.id,
+      },
+    });
+
+    if (!schedule) {
+      throw new NotFoundException('Schedule not found');
+    }
+
+    // 4. Update status
+    const updatedSchedule = await this.prisma.schedules.update({
+      where: { id: scheduleId },
+      data: { status },
+    });
+
+    return {
+      message: 'Schedule status updated successfully',
+      scheduleId: updatedSchedule.id,
+      status: updatedSchedule.status,
+    };
+  }
+
 }

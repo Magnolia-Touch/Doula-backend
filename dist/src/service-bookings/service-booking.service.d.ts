@@ -1,4 +1,5 @@
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
 export declare class ServiceBookingService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -55,5 +56,10 @@ export declare class ServiceBookingService {
             status: import("@prisma/client").$Enums.BookingStatus;
             createdAt: Date;
         };
+    }>;
+    updateScheduleStatus(userId: string, scheduleId: string, dto: UpdateScheduleStatusDto): Promise<{
+        message: string;
+        scheduleId: string;
+        status: import("@prisma/client").$Enums.ServiceStatus;
     }>;
 }
