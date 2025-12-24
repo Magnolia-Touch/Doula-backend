@@ -7,6 +7,6 @@ export class CreateClientDto {
   @IsEmail()
   email: string;
 
-  @IsPhoneNumber()
+  @IsString()
   phone: string;
 }

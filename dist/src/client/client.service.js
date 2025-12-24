@@ -541,10 +541,98 @@ let ClientsService = class ClientsService {
             name: clientProfile.user.name,
             email: clientProfile.user.email,
             phone: clientProfile.user.phone,
+            profile_image: clientProfile.profile_image,
+            region: clientProfile.region,
             profileId: clientProfile.id,
             address: clientProfile.address,
             memberSince: clientProfile.createdAt,
         };
+    }
+    async updateProfile(userId, dto) {
+        const { name, address, region } = dto;
+        const clientProfile = await this.prisma.clientProfile.findUnique({
+            where: { userId },
+            include: {
+                user: true,
+            },
+        });
+        if (!clientProfile) {
+            throw new common_1.NotFoundException('Client profile not found');
+        }
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { name },
+        });
+        const updatedProfile = await this.prisma.clientProfile.update({
+            where: { userId },
+            data: {
+                address,
+                region,
+            },
+            include: {
+                user: true,
+            },
+        });
+        return {
+            userId: updatedProfile.user.id,
+            name: updatedProfile.user.name,
+            email: updatedProfile.user.email,
+            phone: updatedProfile.user.phone,
+            profileId: updatedProfile.id,
+            profile_image: updatedProfile.profile_image,
+            address: updatedProfile.address,
+            region: updatedProfile.region,
+            memberSince: updatedProfile.createdAt,
+        };
+    }
+    async addClientProfileImage(userId, profileImageUrl) {
+        const clientProfile = await this.prisma.clientProfile.findUnique({
+            where: { userId },
+        });
+        if (!clientProfile) {
+            throw new common_1.NotFoundException('Client profile not found');
+        }
+        await this.prisma.clientProfile.update({
+            where: { userId: userId },
+            data: { profile_image: profileImageUrl },
+        });
+        return {
+            message: 'Image uploaded successfully',
+            data: clientProfile,
+        };
+    }
+    async getClientProfileImages(userId) {
+        const clientProfile = await this.prisma.clientProfile.findUnique({
+            where: { userId },
+            select: { id: true, profile_image: true },
+        });
+        if (!clientProfile) {
+            throw new common_1.NotFoundException('Client profile not found');
+        }
+        const images = await this.prisma.clientProfile.findUnique({
+            where: {
+                userId: clientProfile.id,
+            },
+            select: { profile_image: true },
+        });
+        return {
+            status: 'success',
+            message: 'Client Profile Image fetched successfully',
+            data: clientProfile,
+        };
+    }
+    async deleteClientProfileImage(userId) {
+        const clientProfile = await this.prisma.clientProfile.findUnique({
+            where: { userId },
+        });
+        if (!clientProfile) {
+            throw new common_1.NotFoundException('Client profile not found');
+        }
+        const image = await this.prisma.clientProfile.update({
+            where: { userId: userId },
+            data: { profile_image: null },
+        });
+        return { message: 'Image deleted successfully' };
     }
 };
 exports.ClientsService = ClientsService;

@@ -1,7 +1,38 @@
-import { Controller, Get, Patch, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Req, UseGuards, Body, UseInterceptors, Post, BadRequestException, UploadedFile, Delete } from '@nestjs/common';
 import { ClientsService } from './client.service';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { UpdateClientDto } from './dto/update-client.dto';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Role } from '@prisma/client';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { ApiConsumes } from '@nestjs/swagger';
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+function multerStorage() {
+  return diskStorage({
+    destination: (req, file, cb) => {
+      // ensure this folder exists (create on app init or manually)
+      cb(null, './uploads/doulas');
+    },
+    filename: (req, file, cb) => {
+      const safeName =
+        Date.now() +
+        '-' +
+        Math.round(Math.random() * 1e9) +
+        extname(file.originalname);
+      cb(null, safeName);
+    },
+  });
+}
 @Controller({
   path: 'clients',
   version: '1',
@@ -61,4 +92,57 @@ export class ClientController {
   async getProfile(@Req() req) {
     return this.clientService.profile(req.user.id);
   }
+
+  @Patch('profile')
+  async updateProfile(@Req() req, @Body() dto: UpdateClientDto) {
+    return this.clientService.updateProfile(req.user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CLIENT)
+  @Post('profile/images')
+  @UseInterceptors(
+    FileInterceptor('profile_image', {
+      storage: multerStorage(),
+      limits: { fileSize: MAX_FILE_SIZE },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
+        else cb(new BadRequestException('Unsupported file type'), false);
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  async uploadDoulaImage(
+    @Req() req,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Profile image is required');
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      throw new BadRequestException(
+        'Profile image exceeds maximum size of 5 MB.',
+      );
+    }
+
+    const profileImageUrl = `uploads/client/${file.filename}`;
+
+    return this.clientService.addClientProfileImage(req.user.id, profileImageUrl);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CLIENT)
+  @Get('profile/images')
+  async getDoulaImages(@Req() req) {
+    return this.clientService.getClientProfileImages(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CLIENT)
+  @Delete('profile/images/')
+  async deleteDoulaImage(@Req() req) {
+    return this.clientService.deleteClientProfileImage(req.user.id);
+  }
+
 }

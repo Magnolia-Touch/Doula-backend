@@ -7,10 +7,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
 // import { UpdateclientsDto } from './dto/update-zone-manager.dto';
 import { BookingStatus, MeetingStatus, Role } from '@prisma/client';
+import { UpdateClientDto } from './dto/update-client.dto';
 
 @Injectable()
 export class ClientsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Create new Clients
   async create(dto: CreateClientDto) {
@@ -619,11 +620,11 @@ export class ClientsService {
     });
     type RecentActivity = {
       type:
-        | 'BOOKING_CREATED'
-        | 'BOOKING_COMPLETED'
-        | 'BOOKING_CANCELED'
-        | 'MEETING_SCHEDULED'
-        | 'MEETING_CANCELED';
+      | 'BOOKING_CREATED'
+      | 'BOOKING_COMPLETED'
+      | 'BOOKING_CANCELED'
+      | 'MEETING_SCHEDULED'
+      | 'MEETING_CANCELED';
       title: string;
       description: string;
       date: Date;
@@ -713,6 +714,8 @@ export class ClientsService {
       name: clientProfile.user.name,
       email: clientProfile.user.email,
       phone: clientProfile.user.phone,
+      profile_image: clientProfile.profile_image,
+      region: clientProfile.region,
 
       // Client profile details
       profileId: clientProfile.id,
@@ -721,5 +724,114 @@ export class ClientsService {
       // Member since (client creation date)
       memberSince: clientProfile.createdAt,
     };
+  }
+  async updateProfile(userId: string, dto: UpdateClientDto) {
+    const { name, address, region } = dto;
+
+    // 1. Fetch client profile WITH user relation
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { userId },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!clientProfile) {
+      throw new NotFoundException('Client profile not found');
+    }
+
+    // 2. Update user name (if provided)
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { name },
+    });
+
+    // 3. Update client profile
+    const updatedProfile = await this.prisma.clientProfile.update({
+      where: { userId },
+      data: {
+        address,
+        region,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    // 4. Response mapping (USE updatedProfile)
+    return {
+      // User details
+      userId: updatedProfile.user.id,
+      name: updatedProfile.user.name,
+      email: updatedProfile.user.email,
+      phone: updatedProfile.user.phone,
+
+      // Client profile details
+      profileId: updatedProfile.id,
+      profile_image: updatedProfile.profile_image,
+      address: updatedProfile.address,
+      region: updatedProfile.region,
+
+      // Metadata
+      memberSince: updatedProfile.createdAt,
+    };
+  }
+
+
+  async addClientProfileImage(userId: string, profileImageUrl?: string) {
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!clientProfile) {
+      throw new NotFoundException('Client profile not found');
+    }
+    await this.prisma.clientProfile.update({
+      where: { userId: userId },
+      data: { profile_image: profileImageUrl },
+    });
+
+    return {
+      message: 'Image uploaded successfully',
+      data: clientProfile,
+    };
+  }
+
+  async getClientProfileImages(userId: string) {
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { userId },
+      select: { id: true, profile_image: true },
+    });
+
+    if (!clientProfile) {
+      throw new NotFoundException('Client profile not found');
+    }
+
+    const images = await this.prisma.clientProfile.findUnique({
+      where: {
+        userId: clientProfile.id,
+      },
+      select: { profile_image: true },
+    });
+
+    return {
+      status: 'success',
+      message: 'Client Profile Image fetched successfully',
+      data: clientProfile,
+    };
+  }
+
+  async deleteClientProfileImage(userId: string) {
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { userId },
+    });
+    if (!clientProfile) {
+      throw new NotFoundException('Client profile not found');
+    }
+    const image = await this.prisma.clientProfile.update({
+      where: { userId: userId },
+      data: { profile_image: null },
+    });
+    return { message: 'Image deleted successfully' };
   }
 }

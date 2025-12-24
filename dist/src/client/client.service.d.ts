@@ -1,5 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
+import { UpdateClientDto } from './dto/update-client.dto';
 export declare class ClientsService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -10,17 +11,17 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
-                profile_image: string | null;
-                region: string | null;
                 is_verified: boolean;
+                region: string | null;
                 address: string | null;
+                profile_image: string | null;
+                userId: string;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -36,17 +37,17 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
-                profile_image: string | null;
-                region: string | null;
                 is_verified: boolean;
+                region: string | null;
                 address: string | null;
+                profile_image: string | null;
+                userId: string;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -62,17 +63,17 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
-                profile_image: string | null;
-                region: string | null;
                 is_verified: boolean;
+                region: string | null;
                 address: string | null;
+                profile_image: string | null;
+                userId: string;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -182,8 +183,45 @@ export declare class ClientsService {
         name: string;
         email: string;
         phone: string | null;
+        profile_image: string | null;
+        region: string | null;
         profileId: string;
         address: string | null;
         memberSince: Date;
+    }>;
+    updateProfile(userId: string, dto: UpdateClientDto): Promise<{
+        userId: string;
+        name: string;
+        email: string;
+        phone: string | null;
+        profileId: string;
+        profile_image: string | null;
+        address: string | null;
+        region: string | null;
+        memberSince: Date;
+    }>;
+    addClientProfileImage(userId: string, profileImageUrl?: string): Promise<{
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            is_verified: boolean;
+            region: string | null;
+            address: string | null;
+            profile_image: string | null;
+            userId: string;
+        };
+    }>;
+    getClientProfileImages(userId: string): Promise<{
+        status: string;
+        message: string;
+        data: {
+            id: string;
+            profile_image: string | null;
+        };
+    }>;
+    deleteClientProfileImage(userId: string): Promise<{
+        message: string;
     }>;
 }
