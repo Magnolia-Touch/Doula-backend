@@ -126,7 +126,7 @@ export class ClientController {
       );
     }
 
-    const profileImageUrl = `uploads/client/${file.filename}`;
+    const profileImageUrl = `uploads/clients/${file.filename}`;
 
     return this.clientService.addClientProfileImage(req.user.id, profileImageUrl);
   }
