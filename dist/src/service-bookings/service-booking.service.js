@@ -173,6 +173,34 @@ let ServiceBookingService = class ServiceBookingService {
             status: updatedSchedule.status,
         };
     }
+    async updateBookingStatus(userId, bookingId, dto) {
+        const { status } = dto;
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+        if (!doulaProfile) {
+            throw new common_1.ForbiddenException('Doula profile not found');
+        }
+        const schedule = await this.prisma.serviceBooking.findFirst({
+            where: {
+                id: bookingId,
+                doulaProfileId: doulaProfile.id,
+            },
+        });
+        if (!schedule) {
+            throw new common_1.NotFoundException('Schedule not found');
+        }
+        const updatedSchedule = await this.prisma.serviceBooking.update({
+            where: { id: bookingId },
+            data: { status },
+        });
+        return {
+            message: 'Booking status updated successfully',
+            scheduleId: updatedSchedule.id,
+            status: updatedSchedule.status,
+        };
+    }
 };
 exports.ServiceBookingService = ServiceBookingService;
 exports.ServiceBookingService = ServiceBookingService = __decorate([

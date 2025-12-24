@@ -1,5 +1,6 @@
 import { ServiceBookingService } from './service-booking.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 export declare class ServiceBookingController {
     private readonly bookingService;
     constructor(bookingService: ServiceBookingService);
@@ -61,5 +62,10 @@ export declare class ServiceBookingController {
         message: string;
         scheduleId: string;
         status: import("@prisma/client").$Enums.ServiceStatus;
+    }>;
+    updateBookingStatus(req: any, bookingId: string, dto: UpdateBookingStatusDto): Promise<{
+        message: string;
+        scheduleId: string;
+        status: import("@prisma/client").$Enums.BookingStatus;
     }>;
 }

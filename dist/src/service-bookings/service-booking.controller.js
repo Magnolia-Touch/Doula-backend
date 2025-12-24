@@ -22,6 +22,7 @@ const client_1 = require("@prisma/client");
 const update_schedule_status_dto_1 = require("./dto/update-schedule-status.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../common/guards/roles.guard");
+const update_booking_status_dto_1 = require("./dto/update-booking-status.dto");
 let ServiceBookingController = class ServiceBookingController {
     bookingService;
     constructor(bookingService) {
@@ -39,6 +40,9 @@ let ServiceBookingController = class ServiceBookingController {
     }
     async updateScheduleStatus(req, scheduleId, dto) {
         return this.bookingService.updateScheduleStatus(req.user.id, scheduleId, dto);
+    }
+    async updateBookingStatus(req, bookingId, dto) {
+        return this.bookingService.updateBookingStatus(req.user.id, bookingId, dto);
     }
 };
 exports.ServiceBookingController = ServiceBookingController;
@@ -119,6 +123,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, update_schedule_status_dto_1.UpdateScheduleStatusDto]),
     __metadata("design:returntype", Promise)
 ], ServiceBookingController.prototype, "updateScheduleStatus", null);
+__decorate([
+    (0, common_1.Patch)('bookings/:id/status'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, update_booking_status_dto_1.UpdateBookingStatusDto]),
+    __metadata("design:returntype", Promise)
+], ServiceBookingController.prototype, "updateBookingStatus", null);
 exports.ServiceBookingController = ServiceBookingController = __decorate([
     (0, swagger_1.ApiTags)('Service Bookings'),
     (0, common_1.Controller)({

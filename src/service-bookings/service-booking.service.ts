@@ -3,6 +3,7 @@ import { paginate } from 'src/common/utility/pagination.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
 import { ServiceStatus } from '@prisma/client';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 
 @Injectable()
 export class ServiceBookingService {
@@ -205,6 +206,51 @@ export class ServiceBookingService {
 
     return {
       message: 'Schedule status updated successfully',
+      scheduleId: updatedSchedule.id,
+      status: updatedSchedule.status,
+    };
+  }
+
+
+
+
+  async updateBookingStatus(
+    userId: string,
+    bookingId: string,
+    dto: UpdateBookingStatusDto,
+  ) {
+    const { status } = dto;
+
+    // 1. Fetch doula profile
+    const doulaProfile = await this.prisma.doulaProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!doulaProfile) {
+      throw new ForbiddenException('Doula profile not found');
+    }
+
+    // 2. Fetch schedule & verify ownership
+    const schedule = await this.prisma.serviceBooking.findFirst({
+      where: {
+        id: bookingId,
+        doulaProfileId: doulaProfile.id,
+      },
+    });
+
+    if (!schedule) {
+      throw new NotFoundException('Schedule not found');
+    }
+
+    // 4. Update status
+    const updatedSchedule = await this.prisma.serviceBooking.update({
+      where: { id: bookingId },
+      data: { status },
+    });
+
+    return {
+      message: 'Booking status updated successfully',
       scheduleId: updatedSchedule.id,
       status: updatedSchedule.status,
     };

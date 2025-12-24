@@ -7,6 +7,7 @@ import { Role } from '@prisma/client';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 
 @ApiTags('Service Bookings')
 @Controller({
@@ -95,6 +96,21 @@ export class ServiceBookingController {
     return this.bookingService.updateScheduleStatus(
       req.user.id,
       scheduleId,
+      dto,
+    );
+  }
+
+  @Patch('bookings/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  async updateBookingStatus(
+    @Req() req,
+    @Param('id') bookingId: string,
+    @Body() dto: UpdateBookingStatusDto,
+  ) {
+    return this.bookingService.updateBookingStatus(
+      req.user.id,
+      bookingId,
       dto,
     );
   }
