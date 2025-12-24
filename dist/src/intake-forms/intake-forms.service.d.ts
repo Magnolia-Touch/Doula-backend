@@ -6,6 +6,8 @@ export declare class IntakeFormService {
     private readonly prisma;
     private readonly mail;
     constructor(prisma: PrismaService, mail: MailerService);
+    private ensureHttpsUrl;
+    private getDefaultUrl;
     createIntakeForm(dto: IntakeFormDto): Promise<void>;
     getAllForms(page: number, limit: number): Promise<{
         data: {

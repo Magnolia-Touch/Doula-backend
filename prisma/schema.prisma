@@ -509,3 +509,42 @@ model OffDays {
   ZoneManagerProfile ZoneManagerProfile? @relation(fields: [zoneManagerProfileId], references: [id], onDelete: Cascade)
   DoulaProfile       DoulaProfile?       @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 }
+
+
+model Payment {
+  id                String   @id @default(uuid())
+  orderId           String
+  bookingId         String?
+  userId            String
+  serviceId         String
+
+  gatewayName       String
+  gatewayOrderId    String
+  gatewayPaymentId String?
+  gatewaySignature  String?
+
+  amount            Int
+  taxAmount         Int?
+  discountAmount    Int?
+  platformFee       Int?
+  netAmount         Int
+  currency          String   @default("USD")
+
+  paymentMethod     String
+  paymentSubMethod  String?
+  last4Digits       String?
+
+  status            PaymentStatus
+  failureReason     String?
+
+  refundAmount      Int?
+  refundId          String?
+  refundedAt        DateTime?
+
+  paidAt            DateTime?
+  settlementId      String?
+  settledAt         DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

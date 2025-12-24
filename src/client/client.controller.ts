@@ -21,7 +21,7 @@ function multerStorage() {
   return diskStorage({
     destination: (req, file, cb) => {
       // ensure this folder exists (create on app init or manually)
-      cb(null, './uploads/doulas');
+      cb(null, './uploads/clients');
     },
     filename: (req, file, cb) => {
       const safeName =

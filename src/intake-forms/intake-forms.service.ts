@@ -52,6 +52,23 @@ export class IntakeFormService {
     private readonly mail: MailerService,
   ) { }
 
+  private ensureHttpsUrl(url: string): string {
+    if (!url) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `https://${url}`;
+  }
+
+  private getDefaultUrl(path: string): string {
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (!frontendUrl) {
+      throw new Error('FRONTEND_URL environment variable is not set');
+    }
+    const baseUrl = this.ensureHttpsUrl(frontendUrl);
+    return `${baseUrl}${path}`;
+  }
+
   async createIntakeForm(dto: IntakeFormDto) {
     const {
       name,

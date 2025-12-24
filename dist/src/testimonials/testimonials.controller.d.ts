@@ -7,12 +7,12 @@ export declare class TestimonialsController {
     constructor(service: TestimonialsService);
     create(dto: CreateTestimonialDto, req: any): Promise<{
         id: string;
-        ratings: number;
-        reviews: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string;
         serviceId: string;
+        doulaProfileId: string;
+        ratings: number;
+        reviews: string;
         clientId: string;
     }>;
     findAll(query: FilterTestimonialsDto): Promise<{
@@ -45,33 +45,33 @@ export declare class TestimonialsController {
     }>;
     update(id: string, dto: UpdateTestimonialDto, req: any): Promise<{
         id: string;
-        ratings: number;
-        reviews: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string;
         serviceId: string;
+        doulaProfileId: string;
+        ratings: number;
+        reviews: string;
         clientId: string;
     }>;
     remove(id: string, req: any): Promise<{
         id: string;
-        ratings: number;
-        reviews: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string;
         serviceId: string;
+        doulaProfileId: string;
+        ratings: number;
+        reviews: string;
         clientId: string;
     }>;
-    getTestimonials(req: any, page?: number, limit?: number): Promise<{
+    getTestimonials(req: any, page?: number, limit?: number): Promise<never[] | {
         data: {
             id: string;
-            ratings: number;
-            reviews: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaProfileId: string;
             serviceId: string;
+            doulaProfileId: string;
+            ratings: number;
+            reviews: string;
             clientId: string;
         }[];
         meta: {
@@ -82,7 +82,7 @@ export declare class TestimonialsController {
             hasNextPage: boolean;
             hasPrevPage: boolean;
         };
-    } | never[]>;
+    }>;
     getAllzmTestimonial(req: any, page: number | undefined, limit: number | undefined, dto: GetZmTestimonialDto): Promise<{
         data: {
             clientUserId: string;

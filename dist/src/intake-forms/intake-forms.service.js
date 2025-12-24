@@ -23,6 +23,22 @@ let IntakeFormService = class IntakeFormService {
         this.prisma = prisma;
         this.mail = mail;
     }
+    ensureHttpsUrl(url) {
+        if (!url)
+            return url;
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        }
+        return `https://${url}`;
+    }
+    getDefaultUrl(path) {
+        const frontendUrl = process.env.FRONTEND_URL;
+        if (!frontendUrl) {
+            throw new Error('FRONTEND_URL environment variable is not set');
+        }
+        const baseUrl = this.ensureHttpsUrl(frontendUrl);
+        return `${baseUrl}${path}`;
+    }
     async createIntakeForm(dto) {
         const { name, email, phone, doulaProfileId, serviceId, address, buffer = 0, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeSlots, } = dto;
         const clientUser = await (0, service_utils_1.getOrcreateClent)(this.prisma, {
