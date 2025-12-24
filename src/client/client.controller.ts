@@ -60,6 +60,23 @@ export class ClientController {
     return this.clientService.cancelServiceBooking(req.user.id, id);
   }
 
+  @Get('schedules')
+  async bookedSchedules(@Req() req) {
+    return this.clientService.bookedSchedules(req.user.id);
+  }
+
+  // GET: Booked service by ID
+  @Get('schedules/:id')
+  async bookedSchedulesbyId(@Req() req, @Param('id') id: string) {
+    return this.clientService.bookedScheduleById(req.user.id, id);
+  }
+
+  // PATCH: Cancel service booking
+  @Patch('schedules:id/cancel')
+  async cancelSchedules(@Req() req, @Param('id') id: string) {
+    return this.clientService.cancelSchedules(req.user.id, id);
+  }
+
   // MEETINGS
   // GET: All meetings
   @Get('meetings')

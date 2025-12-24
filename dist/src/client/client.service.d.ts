@@ -87,7 +87,6 @@ export declare class ClientsService {
         data: null;
     }>;
     bookedServices(userId: string): Promise<{
-        scheduleId: string;
         userId: string;
         name: string;
         email: string;
@@ -106,7 +105,6 @@ export declare class ClientsService {
         mainDoulaImage: string | null;
     }[]>;
     bookedServiceById(userId: string, serviceBookingId: string): Promise<{
-        scheduleId: string;
         userId: string;
         name: string;
         email: string;
@@ -123,6 +121,49 @@ export declare class ClientsService {
         service: string;
         doulaName: string;
         mainDoulaImage: string | null;
+    }>;
+    bookedSchedules(userId: string): Promise<{
+        scheduleId: string;
+        userId: string;
+        name: string;
+        email: string;
+        phone: string | null;
+        role: import("@prisma/client").$Enums.Role;
+        profileId: string;
+        serviceBookingId: string;
+        status: import("@prisma/client").$Enums.ServiceStatus;
+        startDate: Date;
+        endDate: Date;
+        regionName: string;
+        serviceId: string;
+        servicePricingId: string;
+        service: string;
+        doulaName: string;
+        mainDoulaImage: string | null;
+    }[]>;
+    bookedScheduleById(userId: string, serviceBookingId: string): Promise<{
+        scheduleId: string;
+        userId: string;
+        name: string;
+        email: string;
+        phone: string | null;
+        role: import("@prisma/client").$Enums.Role;
+        profileId: string;
+        serviceBookingId: string;
+        status: import("@prisma/client").$Enums.ServiceStatus;
+        startDate: Date;
+        endDate: Date;
+        regionName: string;
+        serviceId: string;
+        servicePricingId: string;
+        service: string;
+        doulaName: string;
+        mainDoulaImage: string | null;
+    }>;
+    cancelSchedules(userId: string, scheduleId: string): Promise<{
+        message: string;
+        serviceBookingId: string;
+        status: import("@prisma/client").$Enums.BookingStatus;
     }>;
     cancelServiceBooking(userId: string, serviceBookingId: string): Promise<{
         message: string;
