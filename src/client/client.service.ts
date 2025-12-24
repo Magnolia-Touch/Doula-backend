@@ -178,10 +178,7 @@ export class ClientsService {
 
       // Doula details
       doulaName: booking.DoulaProfile.user.name,
-      mainDoulaImage:
-        booking.DoulaProfile.DoulaGallery.length > 0
-          ? booking.DoulaProfile.DoulaGallery[0].url
-          : null,
+      mainDoulaImage: booking.DoulaProfile.profile_image
     }));
   }
 
