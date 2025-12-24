@@ -20,6 +20,7 @@ import {
   findZoneManagerOrThrowWithId,
 } from 'src/common/utility/service-utils';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
+import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 
 @Injectable()
 export class ZoneManagerService {
@@ -1105,4 +1106,190 @@ export class ZoneManagerService {
       data: formattedDoulas,
     };
   }
+
+
+
+  async addDoulaGalleryImages(
+    doulaId: string,
+    files: Express.Multer.File[],
+    userId: string,
+  ) {
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!zoneManager) {
+      throw new ForbiddenException('Zone manager profile not found');
+    }
+    if (!files || files.length === 0) {
+      throw new BadRequestException('At least one image is required');
+    }
+
+    const doulaProfile = await this.prisma.doulaProfile.findUnique({
+      where: { userId: doulaId, zoneManager: { some: { id: zoneManager.id } } },
+    });
+
+    if (!doulaProfile) {
+      throw new NotFoundException('Doula profile not found');
+    }
+
+    const galleryData = files.map((file) => ({
+      doulaProfileId: doulaProfile.id,
+      url: `uploads/doulas/${file.filename}`,
+    }));
+
+    await this.prisma.doulaGallery.createMany({
+      data: galleryData,
+    });
+
+    const images = await this.prisma.doulaGallery.findMany({
+      where: {
+        doulaProfileId: doulaProfile.id,
+        url: {
+          in: galleryData.map((g) => g.url),
+        },
+      },
+      select: {
+        id: true,
+        url: true,
+        altText: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      message: 'Gallery images uploaded successfully',
+      data: images,
+    };
+  }
+
+  async getDoulaGalleryImages(doulaId: string, userId: string) {
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!zoneManager) {
+      throw new ForbiddenException('Zone manager profile not found');
+    }
+    const doulaProfile = await this.prisma.doulaProfile.findUnique({
+      where: { userId: doulaId, zoneManager: { some: { id: zoneManager.id } } },
+      select: { id: true },
+    });
+
+    if (!doulaProfile) {
+      throw new NotFoundException('Doula profile not found');
+    }
+
+    const images = await this.prisma.doulaGallery.findMany({
+      where: {
+        doulaProfileId: doulaProfile.id,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    return {
+      status: 'success',
+      message: 'Doula gallery images fetched successfully',
+      data: images,
+    };
+  }
+
+  async deleteDoulaGalleryImage(doulaId: string, imageId: string, userId: string) {
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!zoneManager) {
+      throw new ForbiddenException('Zone manager profile not found');
+    }
+    const doulaProfile = await this.prisma.doulaProfile.findUnique({
+      where: { userId: doulaId, zoneManager: { some: { id: zoneManager.id } } },
+      select: { id: true },
+    });
+
+    if (!doulaProfile) {
+      throw new NotFoundException('Doula profile not found');
+    }
+
+    const image = await this.prisma.doulaGallery.findUnique({
+      where: { id: imageId },
+    });
+
+    if (!image || image.doulaProfileId !== doulaProfile.id) {
+      throw new NotFoundException('Image not found');
+    }
+
+    await this.prisma.doulaGallery.delete({
+      where: { id: imageId },
+    });
+
+    return {
+      message: 'Gallery image deleted successfully',
+    };
+  }
+
+  async updateDoulaProfile(doulaId: string, dto: UpdateDoulaProfileDto, userId: string) {
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!zoneManager) {
+      throw new ForbiddenException('Zone manager profile not found');
+    }
+    const doulaProfile = await this.prisma.doulaProfile.findUnique({
+      where: { userId: doulaId, zoneManager: { some: { id: zoneManager.id } } },
+      select: { id: true },
+    });
+
+    if (!doulaProfile) {
+      throw new NotFoundException('Doula profile not found');
+    }
+
+    const {
+      name,
+      is_active,
+      description,
+      achievements,
+      qualification,
+      yoe,
+      languages,
+      specialities,
+    } = dto;
+
+    const data = await this.prisma.$transaction([
+      // Update User table
+      this.prisma.user.update({
+        where: { id: doulaId },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(is_active !== undefined && { is_active }),
+        },
+      }),
+
+      // Update DoulaProfile table
+      this.prisma.doulaProfile.update({
+        where: { userId: doulaId },
+        data: {
+          ...(description !== undefined && { description }),
+          ...(achievements !== undefined && { achievements }),
+          ...(qualification !== undefined && { qualification }),
+          ...(yoe !== undefined && { yoe }),
+          ...(languages !== undefined && { languages }),
+          ...(specialities !== undefined && { specialities }),
+        },
+      }),
+    ]);
+
+    return {
+      message: 'Doula profile updated successfully',
+      data: data,
+    };
+  }
+
 }

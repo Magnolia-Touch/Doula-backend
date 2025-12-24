@@ -34,6 +34,7 @@ import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { MarkOffDaysDto } from './dto/off-days.dto';
+import { GetAvailabilityDto } from './dto/get-availability.dto';
 
 @ApiTags('Meeting Slots')
 @ApiBearerAuth('bearer')
@@ -316,4 +317,12 @@ export class AvailableSlotsController {
     return this.service.markOffDays(req.user, dto);
   }
 
+
+  // Get SLOT (filtered)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Get('meetings/availability')
+  async ZmgetAvailablility(@Req() req, @Query() dto: GetAvailabilityDto) {
+    return this.service.ZmgetAvailablility(req.user.id, dto);
+  }
 }

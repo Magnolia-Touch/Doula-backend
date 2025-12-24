@@ -1,19 +1,19 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { FilterTestimonialsDto } from './dto/filter-testimonials.dto';
+import { FilterTestimonialsDto, GetZmTestimonialDto } from './dto/filter-testimonials.dto';
 export declare class TestimonialsService {
     private prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateTestimonialDto, user: any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serviceId: string;
-        doulaProfileId: string;
-        clientId: string;
         ratings: number;
         reviews: string;
+        createdAt: Date;
+        updatedAt: Date;
+        doulaProfileId: string;
+        serviceId: string;
+        clientId: string;
     }>;
     findAll(query: FilterTestimonialsDto): Promise<{
         data: {
@@ -45,34 +45,34 @@ export declare class TestimonialsService {
     }>;
     update(id: string, dto: UpdateTestimonialDto, userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serviceId: string;
-        doulaProfileId: string;
-        clientId: string;
         ratings: number;
         reviews: string;
+        createdAt: Date;
+        updatedAt: Date;
+        doulaProfileId: string;
+        serviceId: string;
+        clientId: string;
     }>;
     remove(id: string, userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serviceId: string;
-        doulaProfileId: string;
-        clientId: string;
         ratings: number;
         reviews: string;
+        createdAt: Date;
+        updatedAt: Date;
+        doulaProfileId: string;
+        serviceId: string;
+        clientId: string;
     }>;
-    getZoneManagerTestimonials(zoneManagerId: string, page?: number, limit?: number): Promise<never[] | {
+    getZoneManagerTestimonials(userId: string, page?: number, limit?: number): Promise<{
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            serviceId: string;
-            doulaProfileId: string;
-            clientId: string;
             ratings: number;
             reviews: string;
+            createdAt: Date;
+            updatedAt: Date;
+            doulaProfileId: string;
+            serviceId: string;
+            clientId: string;
         }[];
         meta: {
             total: number;
@@ -82,5 +82,35 @@ export declare class TestimonialsService {
             hasNextPage: boolean;
             hasPrevPage: boolean;
         };
+    } | never[]>;
+    getAllzmTestimonial(userId: string, dto: GetZmTestimonialDto, page?: number, limit?: number): Promise<{
+        data: {
+            clientUserId: string;
+            clientProfileId: string;
+            clientName: string;
+            doulaUserId: string;
+            doulaProfileId: string;
+            doulaName: string;
+            ratings: number;
+            reviews: string;
+            testimonialCreatedAt: Date;
+            serviceId: string;
+            servicePricingId: string;
+            serviceName: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getZmTestimonialSummary(userId: string): Promise<{
+        totalTestimonials: number;
+        averageRating: number;
+        fiveStarReviews: number;
+        thisMonth: number;
     }>;
 }

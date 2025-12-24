@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FilterTestimonialsDto = void 0;
+exports.GetZmTestimonialDto = exports.FilterTestimonialsDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class FilterTestimonialsDto {
@@ -55,4 +55,31 @@ __decorate([
     (0, class_validator_1.IsNumberString)(),
     __metadata("design:type", String)
 ], FilterTestimonialsDto.prototype, "limit", void 0);
+class GetZmTestimonialDto {
+    serviceName;
+    ratings;
+    startDate;
+    endDate;
+}
+exports.GetZmTestimonialDto = GetZmTestimonialDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], GetZmTestimonialDto.prototype, "serviceName", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], GetZmTestimonialDto.prototype, "ratings", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], GetZmTestimonialDto.prototype, "startDate", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], GetZmTestimonialDto.prototype, "endDate", void 0);
 //# sourceMappingURL=filter-testimonials.dto.js.map

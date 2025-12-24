@@ -44,8 +44,15 @@ let TestimonialsController = class TestimonialsController {
         return this.service.remove(id, req.user.id);
     }
     async getTestimonials(req, page = 1, limit = 10) {
+        return this.service.getZoneManagerTestimonials(req.user.id, Number(page), Number(limit));
+    }
+    async getAllzmTestimonial(req, page = 1, limit = 10, dto) {
         const zoneManagerId = req.user.id;
-        return this.service.getZoneManagerTestimonials(zoneManagerId, Number(page), Number(limit));
+        return this.service.getAllzmTestimonial(req.user.id, dto, Number(page), Number(limit));
+    }
+    async getZmTestimonialSummary(req) {
+        const zoneManagerId = req.user.id;
+        return this.service.getZmTestimonialSummary(req.user.id);
     }
 };
 exports.TestimonialsController = TestimonialsController;
@@ -127,6 +134,28 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], TestimonialsController.prototype, "getTestimonials", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('all/testimonials'),
+    (0, swagger_1.ApiOperation)({ summary: 'Recent testimonial' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __param(3, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object, filter_testimonials_dto_1.GetZmTestimonialDto]),
+    __metadata("design:returntype", Promise)
+], TestimonialsController.prototype, "getAllzmTestimonial", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('all/summary'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TestimonialsController.prototype, "getZmTestimonialSummary", null);
 exports.TestimonialsController = TestimonialsController = __decorate([
     (0, swagger_1.ApiTags)('Testimonials'),
     (0, swagger_1.ApiBearerAuth)(),

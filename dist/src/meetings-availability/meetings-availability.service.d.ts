@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { AvailableSlotsForMeetingDto, UpdateSlotsForMeetingTimeDto } from './dto/meeting-avail.dto';
 import { Prisma } from '@prisma/client';
 import { MarkOffDaysDto } from './dto/off-days.dto';
+import { GetAvailabilityDto } from './dto/get-availability.dto';
 export declare class AvailableSlotsService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -175,4 +176,15 @@ export declare class AvailableSlotsService {
             zoneManagerProfileId: string | null;
         };
     }>;
+    private getWeekdayEnum;
+    private isOverlapping;
+    private formatTimeOnly;
+    ZmgetAvailablility(userId: string, dto: GetAvailabilityDto): Promise<{
+        date: Date;
+        weekday: import("@prisma/client").$Enums.WeekDays;
+        timeslots: {
+            startTime: string;
+            endTime: string;
+        }[];
+    }[]>;
 }

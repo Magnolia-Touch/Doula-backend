@@ -34,3 +34,22 @@ export class FilterTestimonialsDto {
   @IsNumberString()
   limit?: string;
 }
+
+
+export class GetZmTestimonialDto {
+  @IsString()
+  @IsOptional()
+  serviceName: string;
+
+  @IsString()
+  @IsOptional()
+  ratings: number;
+
+  @IsString()
+  @IsOptional()
+  startDate: string; // YYYY-MM-DD
+
+  @IsString()
+  @IsOptional()
+  endDate: string;   // YYYY-MM-DD
+} 

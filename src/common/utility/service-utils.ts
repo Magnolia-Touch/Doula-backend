@@ -190,8 +190,8 @@ export async function getSlotOrCreateSlot(
       : userRole === Role.ADMIN
         ? { adminId_weekday: { adminId: profileId, weekday: week } }
         : {
-            zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
-          };
+          zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
+        };
   console.log('unique where', uniqueWhere);
   const ownerField =
     userRole === Role.DOULA
@@ -434,3 +434,4 @@ export async function generateVisitDates(
 
   return dates;
 }
+

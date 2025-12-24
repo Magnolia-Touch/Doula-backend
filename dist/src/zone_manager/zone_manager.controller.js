@@ -25,6 +25,7 @@ const update_zone_manager_dto_1 = require("./dto/update-zone-manager.dto");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
 const path_1 = require("path");
+const update_doula_dto_1 = require("../doula/dto/update-doula.dto");
 const ALLOWED_IMAGE_TYPES = [
     'image/jpeg',
     'image/png',
@@ -36,6 +37,20 @@ function multerStorage() {
     return (0, multer_1.diskStorage)({
         destination: (req, file, cb) => {
             cb(null, './uploads/manager');
+        },
+        filename: (req, file, cb) => {
+            const safeName = Date.now() +
+                '-' +
+                Math.round(Math.random() * 1e9) +
+                (0, path_1.extname)(file.originalname);
+            cb(null, safeName);
+        },
+    });
+}
+function multerStoragedoula() {
+    return (0, multer_1.diskStorage)({
+        destination: (req, file, cb) => {
+            cb(null, './uploads/doulas');
         },
         filename: (req, file, cb) => {
             const safeName = Date.now() +
@@ -112,6 +127,18 @@ let ZoneManagerController = class ZoneManagerController {
     }
     async getDoulasUnderZm(req) {
         return this.service.getDoulasUnderZm(req.user.id);
+    }
+    async addGalleryImages(req, files, doulaId) {
+        return this.service.addDoulaGalleryImages(doulaId, files, req.user.id);
+    }
+    async getGalleryImages(req, doulaId) {
+        return this.service.getDoulaGalleryImages(doulaId, req.user.id);
+    }
+    async deleteGalleryImage(req, imageId, doulaId) {
+        return this.service.deleteDoulaGalleryImage(doulaId, imageId, req.user.id);
+    }
+    async updateDoulaProfile(req, dto, doulaId) {
+        return this.service.updateDoulaProfile(doulaId, dto, req.user.id);
     }
 };
 exports.ZoneManagerController = ZoneManagerController;
@@ -439,6 +466,62 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getDoulasUnderZm", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Post)('doulas/gallery/images'),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 10, {
+        storage: multerStoragedoula(),
+        limits: { fileSize: MAX_FILE_SIZE },
+        fileFilter: (req, file, cb) => {
+            if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+                cb(null, true);
+            }
+            else {
+                cb(new common_1.BadRequestException('Unsupported file type'), false);
+            }
+        },
+    })),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.UploadedFiles)()),
+    __param(2, (0, common_1.Query)('doulaId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Array, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "addGalleryImages", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('doulas/gallery/images/'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('doulaId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "getGalleryImages", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Delete)('doulas/gallery/images/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Query)('doulaId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "deleteGalleryImage", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Patch)('doulas/profile'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Query)('doulaId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_doula_dto_1.UpdateDoulaProfileDto, String]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "updateDoulaProfile", null);
 exports.ZoneManagerController = ZoneManagerController = __decorate([
     (0, swagger_1.ApiTags)('Zone Managers'),
     (0, swagger_1.ApiBearerAuth)(),

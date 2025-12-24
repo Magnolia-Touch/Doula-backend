@@ -4,3 +4,9 @@ export declare class FilterTestimonialsDto {
     page?: string;
     limit?: string;
 }
+export declare class GetZmTestimonialDto {
+    serviceName: string;
+    ratings: number;
+    startDate: string;
+    endDate: string;
+}

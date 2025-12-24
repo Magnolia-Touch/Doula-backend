@@ -23,6 +23,7 @@ const swagger_response_dto_1 = require("../common/dto/swagger-response.dto");
 const roles_guard_1 = require("../common/guards/roles.guard");
 const client_1 = require("@prisma/client");
 const off_days_dto_1 = require("./dto/off-days.dto");
+const get_availability_dto_1 = require("./dto/get-availability.dto");
 let AvailableSlotsController = class AvailableSlotsController {
     service;
     constructor(service) {
@@ -57,6 +58,9 @@ let AvailableSlotsController = class AvailableSlotsController {
     }
     async markOffDays(req, dto) {
         return this.service.markOffDays(req.user, dto);
+    }
+    async ZmgetAvailablility(req, dto) {
+        return this.service.ZmgetAvailablility(req.user.id, dto);
     }
 };
 exports.AvailableSlotsController = AvailableSlotsController;
@@ -330,6 +334,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, off_days_dto_1.MarkOffDaysDto]),
     __metadata("design:returntype", Promise)
 ], AvailableSlotsController.prototype, "markOffDays", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('meetings/availability'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, get_availability_dto_1.GetAvailabilityDto]),
+    __metadata("design:returntype", Promise)
+], AvailableSlotsController.prototype, "ZmgetAvailablility", null);
 exports.AvailableSlotsController = AvailableSlotsController = __decorate([
     (0, swagger_1.ApiTags)('Meeting Slots'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

@@ -7,9 +7,9 @@ export declare class ServicePricingController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     findAll(req: any): Promise<{
         message: string;
@@ -40,26 +40,26 @@ export declare class ServicePricingController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
     getServiceWithPricing(query: any): Promise<{
         data: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            price: import("@prisma/client/runtime/library").Decimal;
             serviceId: string;
             doulaProfileId: string;
+            price: import("@prisma/client/runtime/library").Decimal;
         }[];
         meta: {
             total: number;
@@ -74,8 +74,8 @@ export declare class ServicePricingController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        price: import("@prisma/client/runtime/library").Decimal;
         serviceId: string;
         doulaProfileId: string;
+        price: import("@prisma/client/runtime/library").Decimal;
     }>;
 }

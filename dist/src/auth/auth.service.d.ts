@@ -20,10 +20,10 @@ export declare class AuthService {
     RegisterAdmin(dto: RegistrationDto): Promise<{
         message: string;
         data: {
-            name: string;
+            id: string;
             email: string;
             phone: string | null;
-            id: string;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -38,10 +38,10 @@ export declare class AuthService {
     }>;
     verifyOtp(dto: OtpVerifyDto): Promise<{
         user: {
-            name: string;
+            id: string;
             email: string;
             phone: string | null;
-            id: string;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -71,8 +71,8 @@ export declare class AuthService {
                 createdAt: Date;
                 updatedAt: Date;
                 zoneManagerId: string | null;
-                adminId: string | null;
                 remarks: string;
+                adminId: string | null;
             }[];
             managingRegions?: undefined;
             doulas?: undefined;
@@ -136,8 +136,8 @@ export declare class AuthService {
                 createdAt: Date;
                 updatedAt: Date;
                 zoneManagerId: string | null;
-                adminId: string | null;
                 remarks: string;
+                adminId: string | null;
             }[];
             description?: undefined;
             qualification?: undefined;

@@ -510,6 +510,123 @@ let AvailableSlotsService = class AvailableSlotsService {
         });
         return { message: "Off days Deleted Successfully", data: offdays };
     }
+    getWeekdayEnum(date) {
+        const map = [
+            client_1.WeekDays.SUNDAY,
+            client_1.WeekDays.MONDAY,
+            client_1.WeekDays.TUESDAY,
+            client_1.WeekDays.WEDNESDAY,
+            client_1.WeekDays.THURSDAY,
+            client_1.WeekDays.FRIDAY,
+            client_1.WeekDays.SATURDAY,
+        ];
+        return map[date.getDay()];
+    }
+    isOverlapping(startA, endA, startB, endB) {
+        if (!startB || !endB)
+            return true;
+        return startA < endB && endA > startB;
+    }
+    formatTimeOnly(date) {
+        return date.toISOString().substring(11, 19);
+    }
+    async ZmgetAvailablility(userId, dto) {
+        const { date1, date2, weekday } = dto;
+        if (!date1) {
+            throw new common_1.BadRequestException('date1 is required');
+        }
+        if (weekday && !date2) {
+            throw new common_1.BadRequestException('date2 is required when weekday filter is used');
+        }
+        const startDate = new Date(date1);
+        const endDate = date2 ? new Date(date2) : startDate;
+        if (startDate > endDate) {
+            throw new common_1.BadRequestException('date1 cannot be after date2');
+        }
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId },
+            select: { id: true },
+        });
+        if (!zoneManager) {
+            throw new common_1.ForbiddenException('Zone manager profile not found');
+        }
+        const dates = [];
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            dates.push(new Date(d));
+        }
+        const filteredDates = weekday
+            ? dates.filter((d) => this.getWeekdayEnum(d) === weekday)
+            : dates;
+        const weekdays = [
+            ...new Set(filteredDates.map((d) => this.getWeekdayEnum(d))),
+        ];
+        const weeklySlots = await this.prisma.availableSlotsForMeeting.findMany({
+            where: {
+                zoneManagerId: zoneManager.id,
+                weekday: { in: weekdays },
+                availabe: true,
+            },
+            include: {
+                AvailableSlotsTimeForMeeting: {
+                    where: {
+                        availabe: true,
+                        isBooked: false,
+                    },
+                },
+            },
+        });
+        const meetings = await this.prisma.meetings.findMany({
+            where: {
+                zoneManagerProfileId: zoneManager.id,
+                date: {
+                    in: filteredDates,
+                },
+            },
+        });
+        const offDays = await this.prisma.offDays.findMany({
+            where: {
+                zoneManagerProfileId: zoneManager.id,
+                date: {
+                    in: filteredDates,
+                },
+            },
+        });
+        const response = filteredDates.map((date) => {
+            const weekdayEnum = this.getWeekdayEnum(date);
+            const weeklySlot = weeklySlots.find((s) => s.weekday === weekdayEnum);
+            if (!weeklySlot) {
+                return {
+                    date,
+                    weekday: weekdayEnum,
+                    timeslots: [],
+                };
+            }
+            let slots = weeklySlot.AvailableSlotsTimeForMeeting.map((t) => ({
+                startTime: t.startTime,
+                endTime: t.endTime,
+            }));
+            const dayMeetings = meetings.filter((m) => m.date.toDateString() === date.toDateString());
+            slots = slots.filter((slot) => !dayMeetings.some((m) => this.isOverlapping(slot.startTime, slot.endTime, m.startTime, m.endTime)));
+            const dayOff = offDays.find((o) => o.date.toDateString() === date.toDateString());
+            if (dayOff) {
+                if (!dayOff.startTime && !dayOff.endTime) {
+                    slots = [];
+                }
+                else {
+                    slots = slots.filter((slot) => !this.isOverlapping(slot.startTime, slot.endTime, dayOff.startTime ?? undefined, dayOff.endTime ?? undefined));
+                }
+            }
+            return {
+                date,
+                weekday: weekdayEnum,
+                timeslots: slots.map((slot) => ({
+                    startTime: this.formatTimeOnly(slot.startTime),
+                    endTime: this.formatTimeOnly(slot.endTime),
+                }))
+            };
+        });
+        return response;
+    }
 };
 exports.AvailableSlotsService = AvailableSlotsService;
 exports.AvailableSlotsService = AvailableSlotsService = __decorate([

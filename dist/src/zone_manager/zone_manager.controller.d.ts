@@ -2,6 +2,7 @@ import { ZoneManagerService } from './zone_manager.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
 import { BookingStatus, MeetingStatus, ServiceStatus } from '@prisma/client';
 import { RegionAssignmentCheckDto, UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
+import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 export declare class ZoneManagerController {
     private readonly service;
     constructor(service: ZoneManagerService);
@@ -14,14 +15,14 @@ export declare class ZoneManagerController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string | null;
                 profile_image: string | null;
+                userId: string | null;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -104,9 +105,9 @@ export declare class ZoneManagerController {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -268,5 +269,56 @@ export declare class ZoneManagerController {
             specialities: import("@prisma/client/runtime/library").JsonValue;
             profileImage: string | null;
         }[];
+    }>;
+    addGalleryImages(req: any, files: Express.Multer.File[], doulaId: string): Promise<{
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            url: string;
+            altText: string | null;
+        }[];
+    }>;
+    getGalleryImages(req: any, doulaId: string): Promise<{
+        status: string;
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            doulaProfileId: string;
+            url: string;
+            altText: string | null;
+        }[];
+    }>;
+    deleteGalleryImage(req: any, imageId: string, doulaId: string): Promise<{
+        message: string;
+    }>;
+    updateDoulaProfile(req: any, dto: UpdateDoulaProfileDto, doulaId: string): Promise<{
+        message: string;
+        data: [{
+            id: string;
+            name: string;
+            email: string;
+            phone: string | null;
+            otp: string | null;
+            otpExpiresAt: Date | null;
+            role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        }, {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+            regionId: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: import("@prisma/client/runtime/library").JsonValue | null;
+            specialities: import("@prisma/client/runtime/library").JsonValue | null;
+        }];
     }>;
 }

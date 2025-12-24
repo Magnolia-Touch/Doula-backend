@@ -13,7 +13,7 @@ import {
 import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { FilterTestimonialsDto } from './dto/filter-testimonials.dto';
+import { FilterTestimonialsDto, GetZmTestimonialDto } from './dto/filter-testimonials.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -34,7 +34,7 @@ import {
   version: '1',
 })
 export class TestimonialsController {
-  constructor(private readonly service: TestimonialsService) {}
+  constructor(private readonly service: TestimonialsService) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CLIENT)
@@ -101,11 +101,41 @@ export class TestimonialsController {
     @Query('page') page = 1,
     @Query('limit') limit = 10,
   ) {
-    const zoneManagerId = req.user.id; // authenticated user ID
     return this.service.getZoneManagerTestimonials(
-      zoneManagerId,
+      req.user.id,
       Number(page),
       Number(limit),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Get('all/testimonials')
+  @ApiOperation({ summary: 'Recent testimonial' })
+  async getAllzmTestimonial(
+    @Req() req,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Query() dto: GetZmTestimonialDto
+  ) {
+    const zoneManagerId = req.user.id; // authenticated user ID
+    return this.service.getAllzmTestimonial(
+      req.user.id,
+      dto,
+      Number(page),
+      Number(limit),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Get('all/summary')
+  async getZmTestimonialSummary(
+    @Req() req,
+  ) {
+    const zoneManagerId = req.user.id; // authenticated user ID
+    return this.service.getZmTestimonialSummary(
+      req.user.id,
     );
   }
 }

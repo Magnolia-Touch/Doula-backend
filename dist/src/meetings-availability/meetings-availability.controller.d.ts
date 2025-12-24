@@ -2,6 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { AvailableSlotsService } from './meetings-availability.service';
 import { AvailableSlotsForMeetingDto, UpdateSlotsForMeetingTimeDto } from './dto/meeting-avail.dto';
 import { MarkOffDaysDto } from './dto/off-days.dto';
+import { GetAvailabilityDto } from './dto/get-availability.dto';
 export declare class AvailableSlotsController {
     private readonly service;
     constructor(service: AvailableSlotsService);
@@ -119,4 +120,12 @@ export declare class AvailableSlotsController {
         endTime: Date | null;
         zoneManagerProfileId: string | null;
     } | undefined>;
+    ZmgetAvailablility(req: any, dto: GetAvailabilityDto): Promise<{
+        date: Date;
+        weekday: import("@prisma/client").$Enums.WeekDays;
+        timeslots: {
+            startTime: string;
+            endTime: string;
+        }[];
+    }[]>;
 }

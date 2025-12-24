@@ -15,6 +15,12 @@ export declare class DoulaController {
         message: string;
         data: ({
             doulaProfile: ({
+                Region: {
+                    id: string;
+                    regionName: string;
+                    pincode: string;
+                    zoneManagerId: string | null;
+                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
@@ -22,20 +28,14 @@ export declare class DoulaController {
                     userId: string | null;
                     profile_image: string | null;
                 }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
-                }[];
                 ServicePricing: {
                     id: string;
+                    serviceId: string;
+                    price: import("@prisma/client/runtime/library").Decimal;
                     service: {
                         name: string;
                         description: string | null;
                     };
-                    price: import("@prisma/client/runtime/library").Decimal;
-                    serviceId: string;
                 }[];
                 DoulaGallery: {
                     id: string;
@@ -169,13 +169,6 @@ export declare class DoulaController {
     updateRegions(dto: UpdateDoulaRegionDto, req: any): Promise<{
         message: string;
         data: {
-            zoneManager: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                userId: string | null;
-                profile_image: string | null;
-            }[];
             Region: {
                 id: string;
                 is_active: boolean;
@@ -189,6 +182,13 @@ export declare class DoulaController {
                 latitude: string;
                 longitude: string;
                 zoneManagerId: string | null;
+            }[];
+            zoneManager: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string | null;
+                profile_image: string | null;
             }[];
         } & {
             id: string;

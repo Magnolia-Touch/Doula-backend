@@ -157,8 +157,8 @@ export declare class MeetingsController {
             updatedAt: Date;
             userId: string;
             profile_image: string | null;
-            region: string | null;
             is_verified: boolean;
+            region: string | null;
             address: string | null;
         };
         AvailableSlotsForMeeting: {

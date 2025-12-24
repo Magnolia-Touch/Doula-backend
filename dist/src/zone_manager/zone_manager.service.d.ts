@@ -2,6 +2,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
 import { BookingStatus, MeetingStatus, Prisma, ServiceStatus } from '@prisma/client';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
+import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 export declare class ZoneManagerService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -275,5 +276,56 @@ export declare class ZoneManagerService {
             specialities: Prisma.JsonValue;
             profileImage: string | null;
         }[];
+    }>;
+    addDoulaGalleryImages(doulaId: string, files: Express.Multer.File[], userId: string): Promise<{
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            url: string;
+            altText: string | null;
+        }[];
+    }>;
+    getDoulaGalleryImages(doulaId: string, userId: string): Promise<{
+        status: string;
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            doulaProfileId: string;
+            url: string;
+            altText: string | null;
+        }[];
+    }>;
+    deleteDoulaGalleryImage(doulaId: string, imageId: string, userId: string): Promise<{
+        message: string;
+    }>;
+    updateDoulaProfile(doulaId: string, dto: UpdateDoulaProfileDto, userId: string): Promise<{
+        message: string;
+        data: [{
+            id: string;
+            email: string;
+            phone: string | null;
+            name: string;
+            otp: string | null;
+            otpExpiresAt: Date | null;
+            role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        }, {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            profile_image: string | null;
+            regionId: string | null;
+            description: string | null;
+            achievements: string | null;
+            qualification: string | null;
+            yoe: number | null;
+            languages: Prisma.JsonValue | null;
+            specialities: Prisma.JsonValue | null;
+        }];
     }>;
 }

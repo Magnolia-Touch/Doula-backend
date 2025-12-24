@@ -8,20 +8,20 @@ export declare class ClientsService {
         message: string;
         data: {
             clientProfile: {
-                region: string | null;
-                address: string | null;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                is_verified: boolean;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
+                is_verified: boolean;
+                region: string | null;
+                address: string | null;
             } | null;
         } & {
-            name: string;
+            id: string;
             email: string;
             phone: string | null;
-            id: string;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -34,20 +34,20 @@ export declare class ClientsService {
         message: string;
         data: ({
             clientProfile: {
-                region: string | null;
-                address: string | null;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                is_verified: boolean;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
+                is_verified: boolean;
+                region: string | null;
+                address: string | null;
             } | null;
         } & {
-            name: string;
+            id: string;
             email: string;
             phone: string | null;
-            id: string;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -60,20 +60,20 @@ export declare class ClientsService {
         message: string;
         data: {
             clientProfile: {
-                region: string | null;
-                address: string | null;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                is_verified: boolean;
-                profile_image: string | null;
                 userId: string;
+                profile_image: string | null;
+                is_verified: boolean;
+                region: string | null;
+                address: string | null;
             } | null;
         } & {
-            name: string;
+            id: string;
             email: string;
             phone: string | null;
-            id: string;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -203,14 +203,14 @@ export declare class ClientsService {
     addClientProfileImage(userId: string, profileImageUrl?: string): Promise<{
         message: string;
         data: {
-            region: string | null;
-            address: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            is_verified: boolean;
-            profile_image: string | null;
             userId: string;
+            profile_image: string | null;
+            is_verified: boolean;
+            region: string | null;
+            address: string | null;
         };
     }>;
     getClientProfileImages(userId: string): Promise<{

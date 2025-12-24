@@ -38,9 +38,10 @@ import {
   RegionAssignmentCheckDto,
   UpdateZoneManagerRegionDto,
 } from './dto/update-zone-manager.dto';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
@@ -54,6 +55,24 @@ function multerStorage() {
     destination: (req, file, cb) => {
       // ensure this folder exists (create on app init or manually)
       cb(null, './uploads/manager');
+    },
+    filename: (req, file, cb) => {
+      const safeName =
+        Date.now() +
+        '-' +
+        Math.round(Math.random() * 1e9) +
+        extname(file.originalname);
+      cb(null, safeName);
+    },
+  });
+}
+
+
+function multerStoragedoula() {
+  return diskStorage({
+    destination: (req, file, cb) => {
+      // ensure this folder exists (create on app init or manually)
+      cb(null, './uploads/doulas');
     },
     filename: (req, file, cb) => {
       const safeName =
@@ -430,6 +449,63 @@ export class ZoneManagerController {
   @Get('doulas/list')
   async getDoulasUnderZm(@Req() req: any) {
     return this.service.getDoulasUnderZm(req.user.id);
+  }
+
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Post('doulas/gallery/images')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: multerStoragedoula(),
+      limits: { fileSize: MAX_FILE_SIZE },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Unsupported file type'), false);
+        }
+      },
+    }),
+  )
+  async addGalleryImages(
+    @Req() req,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Query('doulaId') doulaId: string,
+  ) {
+    return this.service.addDoulaGalleryImages(doulaId, files, req.user.id);
+  }
+
+  // =========================
+  // GET GALLERY IMAGES
+  // =========================
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Get('doulas/gallery/images/')
+  async getGalleryImages(@Req() req, @Query('doulaId') doulaId: string,) {
+    return this.service.getDoulaGalleryImages(doulaId, req.user.id);
+  }
+
+  // =========================
+  // DELETE GALLERY IMAGE
+  // =========================
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Delete('doulas/gallery/images/:id')
+  async deleteGalleryImage(@Req() req, @Param('id') imageId: string, @Query('doulaId') doulaId: string) {
+    return this.service.deleteDoulaGalleryImage(doulaId, imageId, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Patch('doulas/profile')
+  async updateDoulaProfile(
+    @Req() req,
+    @Body() dto: UpdateDoulaProfileDto,
+    @Query('doulaId') doulaId: string) {
+    return this.service.updateDoulaProfile(doulaId, dto, req.user.id);
   }
 
 
