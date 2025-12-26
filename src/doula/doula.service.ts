@@ -346,6 +346,8 @@ export class DoulaService {
             ServicePricing: { include: { service: true } },
             Testimonials: true,
             DoulaGallery: true,
+            Certificates: true
+
           },
         },
       },
@@ -477,10 +479,17 @@ export class DoulaService {
               url: img.url,
               isPrimary: img.isPrimary ?? false,
             })) ?? [],
+
+          certificates:
+            profile.Certificates?.map((cert) => ({
+              id: cert.id,
+              name: cert.name,
+              issuedBy: cert.issuedBy,
+              year: cert.year
+            })) ?? [],
         };
       })
       .filter(Boolean);
-
     return {
       message: 'Doulas fetched successfully',
       ...result,
@@ -515,6 +524,7 @@ export class DoulaService {
               },
             },
             DoulaGallery: true,
+            Certificates: true
           },
         },
       },
@@ -585,7 +595,7 @@ export class DoulaService {
       specialities: profile?.specialities,
 
       description: profile?.description ?? null,
-      achievements: profile?.achievements ?? null,
+      // achievements: profile?.achievements ?? null,
       qualification: profile?.qualification ?? null,
       profileImage: profile?.profile_image ?? null,
 
@@ -603,6 +613,14 @@ export class DoulaService {
           id: img.id,
           url: img.url,
           createdAt: img.createdAt,
+        })) ?? [],
+
+      certificates:
+        profile?.Certificates?.map((cert) => ({
+          id: cert.id,
+          name: cert.name,
+          issuedBy: cert.issuedBy,
+          year: cert.year
         })) ?? [],
 
       testimonials: testimonials.map((t) => ({

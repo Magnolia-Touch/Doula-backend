@@ -240,6 +240,7 @@ let DoulaService = class DoulaService {
                         ServicePricing: { include: { service: true } },
                         Testimonials: true,
                         DoulaGallery: true,
+                        Certificates: true
                     },
                 },
             },
@@ -336,6 +337,12 @@ let DoulaService = class DoulaService {
                     url: img.url,
                     isPrimary: img.isPrimary ?? false,
                 })) ?? [],
+                certificates: profile.Certificates?.map((cert) => ({
+                    id: cert.id,
+                    name: cert.name,
+                    issuedBy: cert.issuedBy,
+                    year: cert.year
+                })) ?? [],
             };
         })
             .filter(Boolean);
@@ -371,6 +378,7 @@ let DoulaService = class DoulaService {
                             },
                         },
                         DoulaGallery: true,
+                        Certificates: true
                     },
                 },
             },
@@ -415,7 +423,6 @@ let DoulaService = class DoulaService {
             yoe: profile?.yoe ?? null,
             specialities: profile?.specialities,
             description: profile?.description ?? null,
-            achievements: profile?.achievements ?? null,
             qualification: profile?.qualification ?? null,
             profileImage: profile?.profile_image ?? null,
             serviceNames: services,
@@ -427,6 +434,12 @@ let DoulaService = class DoulaService {
                 id: img.id,
                 url: img.url,
                 createdAt: img.createdAt,
+            })) ?? [],
+            certificates: profile?.Certificates?.map((cert) => ({
+                id: cert.id,
+                name: cert.name,
+                issuedBy: cert.issuedBy,
+                year: cert.year
             })) ?? [],
             testimonials: testimonials.map((t) => ({
                 id: t.id,

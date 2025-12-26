@@ -44,7 +44,7 @@ let AuthService = class AuthService {
             where: { email: dto.email },
         });
         if (user) {
-            throw new Error('User with this email already exists');
+            throw new common_1.NotFoundException('User with this email already exists');
         }
         console.log(user);
         const created = await this.prisma.user.create({
@@ -62,7 +62,7 @@ let AuthService = class AuthService {
         const otp = (0, utils_1.generate6DigitOtp)();
         const user = await this.prisma.user.findUnique({ where: { email: email } });
         if (!user) {
-            throw new Error('No User Found');
+            throw new common_1.NotFoundException('No User Found');
         }
         if (user.role == client_1.Role.DOULA ||
             user.role == client_1.Role.ADMIN ||

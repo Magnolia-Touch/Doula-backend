@@ -2,6 +2,9 @@ import {
   Injectable,
   UnauthorizedException,
   ForbiddenException,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,20 +26,20 @@ export class UserService {
     private readonly doula: DoulaService,
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
-  ) {}
+  ) { }
 
   //make this to just a create admin funtion without otp
   async RegisterUser(dto: UserRegistrationDto) {
     const otp = generate6DigitOtp();
     const { name, email, phone } = dto;
-    console.log(dto.email);
+
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
     if (user) {
-      throw new Error('User with this email already exists');
+      throw new ConflictException('User with this email already exists');
     }
-    console.log(user);
+
     const created = await this.prisma.user.create({
       data: {
         name: name,

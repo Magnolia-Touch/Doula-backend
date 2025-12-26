@@ -378,10 +378,13 @@ let ClientsService = class ClientsService {
         if (!schedules) {
             throw new Error('schedules booking not found');
         }
-        if (schedules.status === 'COMPLETED') {
+        if (schedules.status === client_1.ServiceStatus.CANCELED) {
+            throw new Error('Service schedules is already canceled');
+        }
+        if (schedules.status === client_1.ServiceStatus.COMPLETED) {
             throw new Error('Completed schedules cannot be canceled');
         }
-        const canceledBooking = await this.prisma.serviceBooking.update({
+        const canncelschedules = await this.prisma.schedules.update({
             where: { id: schedules.id },
             data: {
                 status: client_1.BookingStatus.CANCELED,
@@ -389,9 +392,9 @@ let ClientsService = class ClientsService {
             },
         });
         return {
-            message: 'Service booking canceled successfully',
-            serviceBookingId: canceledBooking.id,
-            status: canceledBooking.status,
+            message: 'schedulescanceled successfully',
+            serviceBookingId: canncelschedules.id,
+            status: canncelschedules.status,
         };
     }
     async cancelServiceBooking(userId, serviceBookingId) {

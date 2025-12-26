@@ -94,6 +94,7 @@ export declare class DoulaController {
             isAvailable: boolean | null;
             nextImmediateAvailabilityDate: Date | null;
             images: any;
+            certificates: any;
         } | null)[];
         meta: {
             total: number;
@@ -115,7 +116,6 @@ export declare class DoulaController {
             yoe: number | null;
             specialities: import("@prisma/client/runtime/library").JsonValue | undefined;
             description: string | null;
-            achievements: string | null;
             qualification: string | null;
             profileImage: string | null;
             serviceNames: ({
@@ -135,6 +135,12 @@ export declare class DoulaController {
                 id: string;
                 url: string;
                 createdAt: Date;
+            }[];
+            certificates: {
+                id: string;
+                name: string;
+                issuedBy: string;
+                year: string;
             }[];
             testimonials: {
                 id: string;

@@ -92,6 +92,7 @@ export declare class DoulaService {
             isAvailable: boolean | null;
             nextImmediateAvailabilityDate: Date | null;
             images: any;
+            certificates: any;
         } | null)[];
         meta: {
             total: number;
@@ -113,7 +114,6 @@ export declare class DoulaService {
             yoe: number | null;
             specialities: Prisma.JsonValue | undefined;
             description: string | null;
-            achievements: string | null;
             qualification: string | null;
             profileImage: string | null;
             serviceNames: ({
@@ -133,6 +133,12 @@ export declare class DoulaService {
                 id: string;
                 url: string;
                 createdAt: Date;
+            }[];
+            certificates: {
+                id: string;
+                name: string;
+                issuedBy: string;
+                year: string;
             }[];
             testimonials: {
                 id: string;

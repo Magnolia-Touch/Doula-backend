@@ -57,20 +57,20 @@ export declare class IntakeFormService {
             updatedAt: Date;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
-            isBooked: boolean;
             doulaId: string;
+            isBooked: boolean;
         }[];
         slotTimes: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
-            isBooked: boolean;
             startTime: Date;
             endTime: Date;
-            formId: string | null;
             bookingId: string | null;
+            availabe: boolean;
+            isBooked: boolean;
             dateId: string;
+            formId: string | null;
         }[];
         createdAt: Date;
         updatedAt: Date;
