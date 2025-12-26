@@ -20,7 +20,7 @@ export declare class IntakeFormService {
             clientPhone: string | null;
             regionName: string;
             serviceName: string;
-            servicePrice: Prisma.Decimal;
+            servicePrice: Prisma.JsonValue;
             clientId: string;
             clientProfileId: string;
             userId: string;
@@ -46,30 +46,30 @@ export declare class IntakeFormService {
         clientPhone: string | null;
         regionName: string;
         serviceName: string;
-        servicePrice: Prisma.Decimal;
+        servicePrice: Prisma.JsonValue;
         clientId: string;
         clientProfileId: string;
         userId: string;
         doulaProfileId: string;
         slots: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             doulaId: string;
-            createdAt: Date;
-            updatedAt: Date;
             isBooked: boolean;
         }[];
         slotTimes: {
             id: string;
-            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
             startTime: Date;
             endTime: Date;
+            bookingId: string | null;
+            availabe: boolean;
             isBooked: boolean;
             dateId: string;
-            bookingId: string | null;
             formId: string | null;
         }[];
         createdAt: Date;

@@ -14,9 +14,10 @@ function toMinutes(time: string): number {
     return h * 60 + m;
 }
 
-function dateToMinutes(date: Date): number {
-    return date.getUTCHours() * 60 + date.getUTCMinutes();
+function dateToMinutes(date: Date) {
+    return date.getHours() * 60 + date.getMinutes();
 }
+
 
 function toHHMM(minutes: number): string {
     const h = Math.floor(minutes / 60).toString().padStart(2, '0');

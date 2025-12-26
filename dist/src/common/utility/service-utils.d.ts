@@ -6,28 +6,28 @@ export declare function findSlotOrThrow(prisma: PrismaService, params: {
     weekday: WeekDays;
 }): Promise<{
     id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    zoneManagerId: string | null;
     weekday: import("@prisma/client").$Enums.WeekDays;
     availabe: boolean;
     ownerRole: import("@prisma/client").$Enums.Role;
     doulaId: string | null;
     adminId: string | null;
-    zoneManagerId: string | null;
-    createdAt: Date;
-    updatedAt: Date;
 }>;
 export declare function findRegionOrThrow(prisma: PrismaService, regionId: string): Promise<{
     id: string;
-    zoneManagerId: string | null;
+    is_active: boolean;
     createdAt: Date;
     updatedAt: Date;
-    pincode: string;
     regionName: string;
+    pincode: string;
     district: string;
     state: string;
     country: string;
     latitude: string;
     longitude: string;
-    is_active: boolean;
+    zoneManagerId: string | null;
 }>;
 export declare function findZoneManagerOrThrowWithId(prisma: PrismaService, zoneManagerId: string): Promise<{
     id: string;
@@ -53,43 +53,43 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
 export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;
 export declare function findUserOrThrowwithId(prisma: PrismaService, userId: string): Promise<{
     id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    name: string;
-    is_active: boolean;
     email: string;
     phone: string | null;
+    name: string;
     otp: string | null;
     otpExpiresAt: Date | null;
     role: import("@prisma/client").$Enums.Role;
+    is_active: boolean;
+    createdAt: Date;
+    updatedAt: Date;
 }>;
 export declare function findServiceOrThrowwithId(prisma: PrismaService, serviceId: string): Promise<{
     id: string;
+    name: string;
     createdAt: Date;
     updatedAt: Date;
-    name: string;
     description: string | null;
 }>;
 export declare function findUserRoleById(prisma: PrismaService, userId: string): Promise<import("@prisma/client").$Enums.Role>;
 export declare function findUserProfileId(prisma: PrismaService, userId: string): Promise<any>;
 export declare function getSlotOrCreateSlot(prisma: PrismaService, week: WeekDays, userRole: Role, profileId: string): Promise<{
     id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    zoneManagerId: string | null;
     weekday: import("@prisma/client").$Enums.WeekDays;
     availabe: boolean;
     ownerRole: import("@prisma/client").$Enums.Role;
     doulaId: string | null;
     adminId: string | null;
-    zoneManagerId: string | null;
-    createdAt: Date;
-    updatedAt: Date;
 }>;
 export declare function createTimeForSlot(prisma: PrismaService, slotId: string, startTime: Date, endTime: Date): Promise<{
     id: string;
-    availabe: boolean;
     createdAt: Date;
     updatedAt: Date;
     startTime: Date;
     endTime: Date;
+    availabe: boolean;
     isBooked: boolean;
     dateId: string;
     meetingsId: string | null;
@@ -99,11 +99,11 @@ export declare function getOrcreateClent(prisma: PrismaService, data: any): Prom
 export declare function getWeekdayFromDate(date: string | Date): WeekDays;
 export declare function getServiceSlotOrCreateSlot(prisma: PrismaService, weekday: WeekDays, profileId: string): Promise<{
     id: string;
+    createdAt: Date;
+    updatedAt: Date;
     weekday: import("@prisma/client").$Enums.WeekDays;
     availabe: boolean;
     doulaId: string;
-    createdAt: Date;
-    updatedAt: Date;
     isBooked: boolean;
 }>;
 export declare function parseTimeSlot(timeSlot: string): {

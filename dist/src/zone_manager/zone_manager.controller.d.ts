@@ -20,15 +20,15 @@ export declare class ZoneManagerController {
             } | null;
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            is_active: boolean;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     getZoneManagers(page?: number, limit?: number, search?: string): Promise<{
@@ -105,15 +105,15 @@ export declare class ZoneManagerController {
         message: string;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            is_active: boolean;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     assignRegionToManager(dto: UpdateZoneManagerRegionDto): Promise<{
@@ -125,13 +125,13 @@ export declare class ZoneManagerController {
         unassignedCount: number;
         assigned: {
             id: string;
-            zoneManagerId: string | null;
             regionName: string;
+            zoneManagerId: string | null;
         }[];
         unassigned: {
             id: string;
-            zoneManagerId: string | null;
             regionName: string;
+            zoneManagerId: string | null;
         }[];
     }>;
     getSchedules(req: any, page?: string, limit?: string, status?: ServiceStatus, serviceName?: string, date?: string): Promise<{
@@ -297,15 +297,15 @@ export declare class ZoneManagerController {
         message: string;
         data: [{
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            is_active: boolean;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         }, {
             id: string;
             createdAt: Date;

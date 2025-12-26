@@ -126,15 +126,6 @@ let DoulaService = class DoulaService {
             if (!createdUser) {
                 throw new common_1.BadRequestException('Unauthorized role');
             }
-            if (dto.services) {
-                await Promise.all(Object.entries(dto.services).map(([serviceId, price]) => tx.servicePricing.create({
-                    data: {
-                        doulaProfileId: createdUser.doulaProfile.id,
-                        serviceId,
-                        price,
-                    },
-                })));
-            }
             const certificates = dto.parsedCertificates;
             if (certificates.length) {
                 await tx.certificates.createMany({
@@ -151,14 +142,6 @@ let DoulaService = class DoulaService {
                 include: {
                     doulaProfile: {
                         include: {
-                            ServicePricing: {
-                                select: {
-                                    id: true,
-                                    serviceId: true,
-                                    price: true,
-                                    service: { select: { name: true, description: true } },
-                                },
-                            },
                             Region: {
                                 select: {
                                     id: true,

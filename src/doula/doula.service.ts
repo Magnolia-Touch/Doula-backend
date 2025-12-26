@@ -175,23 +175,6 @@ export class DoulaService {
       }
 
       // =====================================================
-      // SERVICE PRICING CREATION
-      // dto.services = { serviceId: price }
-      // =====================================================
-      if (dto.services) {
-        await Promise.all(
-          Object.entries(dto.services).map(([serviceId, price]) =>
-            tx.servicePricing.create({
-              data: {
-                doulaProfileId: createdUser.doulaProfile!.id,
-                serviceId,
-                price,
-              },
-            }),
-          ),
-        );
-      }
-      // =====================================================
       // CERTIFICATES CREATION
       // =====================================================
 
@@ -216,14 +199,6 @@ export class DoulaService {
         include: {
           doulaProfile: {
             include: {
-              ServicePricing: {
-                select: {
-                  id: true,
-                  serviceId: true,
-                  price: true,
-                  service: { select: { name: true, description: true } },
-                },
-              },
               Region: {
                 select: {
                   id: true,

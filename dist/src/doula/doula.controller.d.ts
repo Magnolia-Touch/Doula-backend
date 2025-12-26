@@ -15,27 +15,18 @@ export declare class DoulaController {
         message: string;
         data: ({
             doulaProfile: ({
+                Region: {
+                    id: string;
+                    regionName: string;
+                    pincode: string;
+                    zoneManagerId: string | null;
+                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
                     userId: string | null;
                     profile_image: string | null;
-                }[];
-                Region: {
-                    id: string;
-                    zoneManagerId: string | null;
-                    pincode: string;
-                    regionName: string;
-                }[];
-                ServicePricing: {
-                    id: string;
-                    service: {
-                        name: string;
-                        description: string | null;
-                    };
-                    serviceId: string;
-                    price: import("@prisma/client/runtime/library").Decimal;
                 }[];
                 DoulaGallery: {
                     id: string;
@@ -67,15 +58,15 @@ export declare class DoulaController {
             }) | null;
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            is_active: boolean;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         }) | null;
     }>;
     get(page?: number, limit?: number, search?: string, serviceId?: string, isAvailable?: boolean, isActive?: boolean, regionName?: string, minExperience?: number, serviceName?: string, startDate?: string, endDate?: string): Promise<{
@@ -122,7 +113,7 @@ export declare class DoulaController {
                 servicePricingId: string;
                 serviceId: string;
                 serviceName: string;
-                price: import("@prisma/client/runtime/library").Decimal;
+                price: import("@prisma/client/runtime/library").JsonValue;
             } | null)[];
             regionNames: {
                 id: string;
@@ -161,40 +152,40 @@ export declare class DoulaController {
         message: string;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            is_active: boolean;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     updateRegions(dto: UpdateDoulaRegionDto, req: any): Promise<{
         message: string;
         data: {
+            Region: {
+                id: string;
+                is_active: boolean;
+                createdAt: Date;
+                updatedAt: Date;
+                regionName: string;
+                pincode: string;
+                district: string;
+                state: string;
+                country: string;
+                latitude: string;
+                longitude: string;
+                zoneManagerId: string | null;
+            }[];
             zoneManager: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 userId: string | null;
                 profile_image: string | null;
-            }[];
-            Region: {
-                id: string;
-                zoneManagerId: string | null;
-                createdAt: Date;
-                updatedAt: Date;
-                pincode: string;
-                regionName: string;
-                district: string;
-                state: string;
-                country: string;
-                latitude: string;
-                longitude: string;
-                is_active: boolean;
             }[];
         } & {
             id: string;
@@ -280,7 +271,7 @@ export declare class DoulaController {
                 servicePricingId: string;
                 serviceId: string;
                 serviceName: string;
-                price: import("@prisma/client/runtime/library").Decimal;
+                price: import("@prisma/client/runtime/library").JsonValue;
             };
             client: {
                 clientId: string;
@@ -436,15 +427,15 @@ export declare class DoulaController {
         message: string;
         data: [{
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            is_active: boolean;
             email: string;
             phone: string | null;
+            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         }, {
             id: string;
             createdAt: Date;
@@ -524,7 +515,7 @@ export declare class DoulaController {
             servicePricingId: string;
             serviceId: string;
             serviceName: string;
-            price: import("@prisma/client/runtime/library").Decimal;
+            price: import("@prisma/client/runtime/library").JsonValue;
         };
         schedules: {
             id: string;

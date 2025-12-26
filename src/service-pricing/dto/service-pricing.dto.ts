@@ -1,28 +1,56 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsPositive } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsPositive,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class PriceBreakdownDto {
+  @ApiProperty({ example: 1000 })
+  @IsNumber()
+  @IsPositive()
+  morning: number;
+
+  @ApiProperty({ example: 2000 })
+  @IsNumber()
+  @IsPositive()
+  night: number;
+
+  @ApiProperty({ example: 3000 })
+  @IsNumber()
+  @IsPositive()
+  fullday: number;
+}
 
 export class CreateServicePricingDto {
   @ApiProperty({
     example: '6b117e03-d8cd-4c7a-b0fa-2a9300b8a812',
-    description: 'UUID of the service',
   })
   @IsString()
   serviceId: string;
 
-  @ApiProperty({ example: 4999, description: 'Price of the service' })
-  @IsNumber()
-  @IsPositive()
-  price: number;
+  @ApiProperty({
+    type: PriceBreakdownDto,
+  })
+  @ValidateNested()
+  @Type(() => PriceBreakdownDto)
+  price: PriceBreakdownDto;
 
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  doulaId: string;
+  doulaId?: string;
 }
 
 export class UpdateServicePricingDto {
-  @ApiPropertyOptional({ example: 5999 })
-  @IsNumber()
-  @IsPositive()
+  @ApiPropertyOptional({
+    type: PriceBreakdownDto,
+  })
   @IsOptional()
-  price: number;
+  @ValidateNested()
+  @Type(() => PriceBreakdownDto)
+  price?: PriceBreakdownDto;
 }

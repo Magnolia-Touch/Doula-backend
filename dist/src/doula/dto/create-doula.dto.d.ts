@@ -9,7 +9,6 @@ export declare class CreateDoulaDto {
     qualification: string;
     yoe: number;
     languages: string[];
-    services: Record<string, number>;
     specialities: string;
     certificates?: string;
     get parsedCertificates(): CreateCertificateDto[];

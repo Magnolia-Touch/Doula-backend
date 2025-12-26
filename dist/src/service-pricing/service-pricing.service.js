@@ -18,18 +18,25 @@ let ServicePricingService = class ServicePricingService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    toJsonPrice(price) {
+        return {
+            morning: price.morning,
+            night: price.night,
+            fullday: price.fullday,
+        };
+    }
     async create(dto, userId) {
         const user = await this.prisma.doulaProfile.findUnique({
-            where: { userId: userId },
+            where: { userId },
         });
         if (!user) {
-            throw new common_1.NotFoundException('User Not found Exception');
+            throw new common_1.NotFoundException('User not found');
         }
         return this.prisma.servicePricing.create({
             data: {
                 serviceId: dto.serviceId,
                 doulaProfileId: user.id,
-                price: dto.price,
+                price: this.toJsonPrice(dto.price),
             },
         });
     }
@@ -110,8 +117,10 @@ let ServicePricingService = class ServicePricingService {
     async update(id, dto) {
         await this.findOne(id);
         return this.prisma.servicePricing.update({
-            where: { id: id },
-            data: dto,
+            where: { id },
+            data: {
+                price: dto.price ? this.toJsonPrice(dto.price) : undefined,
+            },
         });
     }
     async remove(id) {
@@ -142,21 +151,6 @@ let ServicePricingService = class ServicePricingService {
             include: {
                 DoulaProfile: true,
                 service: true,
-            },
-        });
-    }
-    async createPricing(dto) {
-        const user = await this.prisma.doulaProfile.findUnique({
-            where: { id: dto.doulaId },
-        });
-        if (!user) {
-            throw new common_1.NotFoundException('User Not found Exception');
-        }
-        return this.prisma.servicePricing.create({
-            data: {
-                serviceId: dto.serviceId,
-                doulaProfileId: dto.doulaId,
-                price: dto.price,
             },
         });
     }

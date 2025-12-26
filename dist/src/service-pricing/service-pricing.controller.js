@@ -46,9 +46,6 @@ let ServicePricingController = class ServicePricingController {
     getServiceWithPricing(query) {
         return this.servicesService.listServices(query);
     }
-    createPricing(dto) {
-        return this.servicesService.createPricing(dto);
-    }
 };
 exports.ServicePricingController = ServicePricingController;
 __decorate([
@@ -193,29 +190,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ServicePricingController.prototype, "getServiceWithPricing", null);
-__decorate([
-    (0, common_1.Post)('manager'),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a service pricing entry' }),
-    (0, swagger_1.ApiResponse)({
-        status: 201,
-        description: 'Service pricing created successfully',
-        schema: {
-            example: {
-                message: 'Created successfully',
-                data: {
-                    id: 'uuid',
-                    serviceId: 'uuid',
-                    price: 4999,
-                    createdAt: '2025-01-12T10:12:00.123Z',
-                },
-            },
-        },
-    }),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [service_pricing_dto_1.CreateServicePricingDto]),
-    __metadata("design:returntype", void 0)
-], ServicePricingController.prototype, "createPricing", null);
 exports.ServicePricingController = ServicePricingController = __decorate([
     (0, swagger_1.ApiTags)('Service Pricing'),
     (0, swagger_1.ApiBearerAuth)(),

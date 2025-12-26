@@ -9,9 +9,34 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateServicePricingDto = exports.CreateServicePricingDto = void 0;
+exports.UpdateServicePricingDto = exports.CreateServicePricingDto = exports.PriceBreakdownDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
+class PriceBreakdownDto {
+    morning;
+    night;
+    fullday;
+}
+exports.PriceBreakdownDto = PriceBreakdownDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 1000 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)(),
+    __metadata("design:type", Number)
+], PriceBreakdownDto.prototype, "morning", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 2000 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)(),
+    __metadata("design:type", Number)
+], PriceBreakdownDto.prototype, "night", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 3000 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)(),
+    __metadata("design:type", Number)
+], PriceBreakdownDto.prototype, "fullday", void 0);
 class CreateServicePricingDto {
     serviceId;
     price;
@@ -21,18 +46,20 @@ exports.CreateServicePricingDto = CreateServicePricingDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: '6b117e03-d8cd-4c7a-b0fa-2a9300b8a812',
-        description: 'UUID of the service',
     }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateServicePricingDto.prototype, "serviceId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 4999, description: 'Price of the service' }),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsPositive)(),
-    __metadata("design:type", Number)
+    (0, swagger_1.ApiProperty)({
+        type: PriceBreakdownDto,
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => PriceBreakdownDto),
+    __metadata("design:type", PriceBreakdownDto)
 ], CreateServicePricingDto.prototype, "price", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -42,10 +69,12 @@ class UpdateServicePricingDto {
 }
 exports.UpdateServicePricingDto = UpdateServicePricingDto;
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ example: 5999 }),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsPositive)(),
+    (0, swagger_1.ApiPropertyOptional)({
+        type: PriceBreakdownDto,
+    }),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => PriceBreakdownDto),
+    __metadata("design:type", PriceBreakdownDto)
 ], UpdateServicePricingDto.prototype, "price", void 0);
 //# sourceMappingURL=service-pricing.dto.js.map
