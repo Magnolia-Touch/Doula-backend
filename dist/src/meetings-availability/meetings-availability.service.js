@@ -400,10 +400,12 @@ let AvailableSlotsService = class AvailableSlotsService {
         if (user.role === client_1.Role.DOULA) {
             const doula = await this.prisma.doulaProfile.findUnique({
                 where: { userId: user.id },
+                select: { id: true }
             });
             if (!doula) {
                 throw new common_1.NotFoundException('Doula not found');
             }
+            console.log(doula.id, "doulaid");
             if (!end) {
                 return this.prisma.offDays.create({
                     data: {
@@ -442,7 +444,7 @@ let AvailableSlotsService = class AvailableSlotsService {
                         date: start,
                         startTime: startTimeObj,
                         endTime: endTimeObj,
-                        doulaProfileId: zm.id,
+                        zoneManagerProfileId: zm.id,
                     },
                 });
             }
@@ -453,7 +455,7 @@ let AvailableSlotsService = class AvailableSlotsService {
                     date: new Date(current),
                     startTime: startTimeObj,
                     endTime: endTimeObj,
-                    doulaProfileId: zm.id,
+                    zoneManagerProfileId: zm.id,
                 });
                 current.setDate(current.getDate() + 1);
             }

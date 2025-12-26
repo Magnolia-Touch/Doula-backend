@@ -312,7 +312,7 @@ export class AvailableSlotsController {
   // Get SLOT (filtered)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER, Role.DOULA)
-  @Get('mark/offdays')
+  @Post('mark/offdays')
   async markOffDays(@Req() req, @Body() dto: MarkOffDaysDto) {
     return this.service.markOffDays(req.user, dto);
   }

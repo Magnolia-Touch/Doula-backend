@@ -327,7 +327,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
-    (0, common_1.Get)('mark/offdays'),
+    (0, common_1.Post)('mark/offdays'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
