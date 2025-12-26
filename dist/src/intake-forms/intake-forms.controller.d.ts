@@ -48,23 +48,23 @@ export declare class IntakeFormController {
         doulaProfileId: string;
         slots: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
             doulaId: string;
+            createdAt: Date;
+            updatedAt: Date;
             isBooked: boolean;
         }[];
         slotTimes: {
             id: string;
+            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
             startTime: Date;
             endTime: Date;
-            bookingId: string | null;
-            availabe: boolean;
             isBooked: boolean;
             dateId: string;
+            bookingId: string | null;
             formId: string | null;
         }[];
         createdAt: Date;

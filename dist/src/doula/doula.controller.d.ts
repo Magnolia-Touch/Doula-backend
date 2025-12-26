@@ -22,6 +22,21 @@ export declare class DoulaController {
                     userId: string | null;
                     profile_image: string | null;
                 }[];
+                Region: {
+                    id: string;
+                    zoneManagerId: string | null;
+                    pincode: string;
+                    regionName: string;
+                }[];
+                ServicePricing: {
+                    id: string;
+                    service: {
+                        name: string;
+                        description: string | null;
+                    };
+                    serviceId: string;
+                    price: import("@prisma/client/runtime/library").Decimal;
+                }[];
                 DoulaGallery: {
                     id: string;
                     createdAt: Date;
@@ -36,29 +51,14 @@ export declare class DoulaController {
                     issuedBy: string;
                     year: string;
                 }[];
-                ServicePricing: {
-                    service: {
-                        name: string;
-                        description: string | null;
-                    };
-                    id: string;
-                    serviceId: string;
-                    price: import("@prisma/client/runtime/library").Decimal;
-                }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
-                }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
                 userId: string;
-                regionId: string | null;
                 profile_image: string | null;
+                regionId: string | null;
+                description: string | null;
                 achievements: string | null;
                 qualification: string | null;
                 yoe: number | null;
@@ -67,15 +67,15 @@ export declare class DoulaController {
             }) | null;
         } & {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         }) | null;
     }>;
     get(page?: number, limit?: number, search?: string, serviceId?: string, isAvailable?: boolean, isActive?: boolean, regionName?: string, minExperience?: number, serviceName?: string, startDate?: string, endDate?: string): Promise<{
@@ -161,15 +161,15 @@ export declare class DoulaController {
         message: string;
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     updateRegions(dto: UpdateDoulaRegionDto, req: any): Promise<{
@@ -184,26 +184,26 @@ export declare class DoulaController {
             }[];
             Region: {
                 id: string;
-                is_active: boolean;
+                zoneManagerId: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                regionName: string;
                 pincode: string;
+                regionName: string;
                 district: string;
                 state: string;
                 country: string;
                 latitude: string;
                 longitude: string;
-                zoneManagerId: string | null;
+                is_active: boolean;
             }[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            regionId: string | null;
             profile_image: string | null;
+            regionId: string | null;
+            description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -387,10 +387,10 @@ export declare class DoulaController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            regionId: string | null;
             profile_image: string | null;
+            regionId: string | null;
+            description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;
@@ -436,23 +436,23 @@ export declare class DoulaController {
         message: string;
         data: [{
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         }, {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            regionId: string | null;
             profile_image: string | null;
+            regionId: string | null;
+            description: string | null;
             achievements: string | null;
             qualification: string | null;
             yoe: number | null;

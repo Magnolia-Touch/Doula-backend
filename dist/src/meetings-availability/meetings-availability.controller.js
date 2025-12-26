@@ -59,6 +59,15 @@ let AvailableSlotsController = class AvailableSlotsController {
     async markOffDays(req, dto) {
         return this.service.markOffDays(req.user, dto);
     }
+    async fetchOffDays(req) {
+        return this.service.fetchOffdays(req.user);
+    }
+    async fetchOffdaysbyid(req, id) {
+        return this.service.fetchOffdaysbyid(req.user, id);
+    }
+    async DeleteOffdaysbyid(req, id) {
+        return this.service.DeleteOffdaysbyid(req.user, id);
+    }
     async ZmgetAvailablility(req, dto) {
         return this.service.ZmgetAvailablility(req.user.id, dto);
     }
@@ -334,6 +343,35 @@ __decorate([
     __metadata("design:paramtypes", [Object, off_days_dto_1.MarkOffDaysDto]),
     __metadata("design:returntype", Promise)
 ], AvailableSlotsController.prototype, "markOffDays", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('mark/offdays'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AvailableSlotsController.prototype, "fetchOffDays", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
+    (0, common_1.Get)('mark/offdays/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], AvailableSlotsController.prototype, "fetchOffdaysbyid", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
+    (0, common_1.Delete)('mark/offdays/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], AvailableSlotsController.prototype, "DeleteOffdaysbyid", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),

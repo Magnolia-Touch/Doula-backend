@@ -15,6 +15,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const service_utils_1 = require("../common/utility/service-utils");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const client_1 = require("@prisma/client");
+const availability_time_resolver_util_1 = require("./availability-time-resolver.util");
 let AvailableSlotsService = class AvailableSlotsService {
     prisma;
     constructor(prisma) {
@@ -42,33 +43,37 @@ let AvailableSlotsService = class AvailableSlotsService {
                 throw new common_1.ForbiddenException('Invalid user role');
         }
         const { weekday, startTime, endTime } = dto;
-        const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
-        const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
-        if (startDateTime >= endDateTime) {
-            throw new common_1.BadRequestException('Start time must be before end time.');
-        }
-        const dateslot = await (0, service_utils_1.getSlotOrCreateSlot)(this.prisma, weekday, user.role, profile.id);
-        const timings = await this.prisma.availableSlotsTimeForMeeting.create({
-            data: {
-                dateId: dateslot.id,
-                startTime: startDateTime,
-                endTime: endDateTime,
+        const dateSlot = await (0, service_utils_1.getSlotOrCreateSlot)(this.prisma, weekday, user.role, profile.id);
+        const existingSlots = await this.prisma.availableSlotsTimeForMeeting.findMany({
+            where: {
+                dateId: dateSlot.id,
                 availabe: true,
                 isBooked: false,
             },
+            select: {
+                startTime: true,
+                endTime: true,
+            },
         });
-        console.log(dateslot);
+        console.log("inputs", startTime, endTime, "\n existing slot", existingSlots);
+        const result = (0, availability_time_resolver_util_1.resolveAvailabilityOverlap)({ startTime, endTime }, existingSlots);
+        console.log("result", result);
+        if (result === 0) {
+            throw new common_1.BadRequestException('Availability fully overlaps an existing slot');
+        }
+        if (result === 1) {
+            throw new common_1.BadRequestException('Availability partially overlaps an existing slot');
+        }
+        const startDateTime = new Date(`1970-01-01T${result.startTime}:00`);
+        const endDateTime = new Date(`1970-01-01T${result.endTime}:00`);
+        if (startDateTime >= endDateTime) {
+            throw new common_1.BadRequestException('Invalid availability after adjustment');
+        }
         return {
             message: 'Slots created successfully',
             data: {
-                weekday: dateslot.weekday,
+                weekday: dateSlot.weekday,
                 ownerRole: user.role,
-                timeslot: {
-                    startTime: timings.startTime,
-                    endTime: timings.endTime,
-                    available: timings.availabe,
-                    is_booked: timings.isBooked,
-                },
             },
         };
     }

@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 import { Prisma, Role, WeekDays } from '@prisma/client';
 import { MarkOffDaysDto } from './dto/off-days.dto';
 import { GetAvailabilityDto } from './dto/get-availability.dto';
+import { resolveAvailabilityOverlap } from './availability-time-resolver.util';
 @Injectable()
 export class AvailableSlotsService {
   constructor(private prisma: PrismaService) { }
@@ -47,56 +48,87 @@ export class AvailableSlotsService {
           where: { userId: user.id },
         });
         break;
+
       default:
         throw new ForbiddenException('Invalid user role');
     }
-    // const user = findUserOrThrowwithId(this.prisma, userId)
+
     const { weekday, startTime, endTime } = dto;
 
-    // const slotDate = new Date(date)
-    // const weekday = format(slotDate, "EEEE");
-    // console.log(weekday)
-
-    const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
-    const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
-
-    if (startDateTime >= endDateTime) {
-      throw new BadRequestException('Start time must be before end time.');
-    }
-    //create AvailableSlotsForMeeting instance first:
-    const dateslot = await getSlotOrCreateSlot(
+    // Fetch or create weekday slot
+    const dateSlot = await getSlotOrCreateSlot(
       this.prisma,
       weekday,
       user.role,
       profile.id,
     );
 
-    //create AvailableSlotsTimeForMeeting for AvailableSlotsForMeeting.
-    const timings = await this.prisma.availableSlotsTimeForMeeting.create({
-      data: {
-        dateId: dateslot.id,
-        startTime: startDateTime,
-        endTime: endDateTime,
-        availabe: true,
-        isBooked: false,
-      },
-    });
-    console.log(dateslot);
+    // Fetch existing time slots for the same weekday
+    const existingSlots =
+      await this.prisma.availableSlotsTimeForMeeting.findMany({
+        where: {
+          dateId: dateSlot.id,
+          availabe: true,
+          isBooked: false,
+        },
+        select: {
+          startTime: true,
+          endTime: true,
+        },
+      });
+    console.log("inputs", startTime, endTime, "\n existing slot", existingSlots)
+    // Resolve overlap
+    const result = resolveAvailabilityOverlap(
+      { startTime, endTime },
+      existingSlots,
+    );
+
+    console.log("result", result)
+    if (result === 0) {
+      throw new BadRequestException(
+        'Availability fully overlaps an existing slot',
+      );
+    }
+
+    if (result === 1) {
+      throw new BadRequestException(
+        'Availability partially overlaps an existing slot',
+      );
+    }
+
+    const startDateTime = new Date(`1970-01-01T${result.startTime}:00`);
+    const endDateTime = new Date(`1970-01-01T${result.endTime}:00`);
+
+    if (startDateTime >= endDateTime) {
+      throw new BadRequestException('Invalid availability after adjustment');
+    }
+
+    // const timings =
+    //   await this.prisma.availableSlotsTimeForMeeting.create({
+    //     data: {
+    //       dateId: dateSlot.id,
+    //       startTime: startDateTime,
+    //       endTime: endDateTime,
+    //       availabe: true,
+    //       isBooked: false,
+    //     },
+    //   });
 
     return {
       message: 'Slots created successfully',
       data: {
-        weekday: dateslot.weekday,
+        weekday: dateSlot.weekday,
         ownerRole: user.role,
-        timeslot: {
-          startTime: timings.startTime,
-          endTime: timings.endTime,
-          available: timings.availabe,
-          is_booked: timings.isBooked,
-        },
+        // timeslot: {
+        //   startTime: timings.startTime,
+        //   endTime: timings.endTime,
+        //   available: timings.availabe,
+        //   is_booked: timings.isBooked,
+        // },
       },
     };
   }
+
 
   async getMyAvailabilities(userId: string) {
     // 1. Fetch user role

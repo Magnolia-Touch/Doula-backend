@@ -12,12 +12,6 @@ export declare class AvailableSlotsService {
         data: {
             weekday: import("@prisma/client").$Enums.WeekDays;
             ownerRole: any;
-            timeslot: {
-                startTime: Date;
-                endTime: Date;
-                available: boolean;
-                is_booked: boolean;
-            };
         };
     }>;
     getMyAvailabilities(userId: string): Promise<({

@@ -321,6 +321,33 @@ export class AvailableSlotsController {
   // Get SLOT (filtered)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
+  @Get('mark/offdays')
+  async fetchOffDays(@Req() req) {
+    return this.service.fetchOffdays(req.user);
+  }
+
+
+  // Get SLOT (filtered)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER, Role.DOULA)
+  @Get('mark/offdays/:id')
+  async fetchOffdaysbyid(@Req() req, @Param('id') id: string) {
+    return this.service.fetchOffdaysbyid(req.user, id);
+  }
+
+
+  // Get SLOT (filtered)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER, Role.DOULA)
+  @Delete('mark/offdays/:id')
+  async DeleteOffdaysbyid(@Req() req, @Param('id') id: string) {
+    return this.service.DeleteOffdaysbyid(req.user, id);
+  }
+
+
+  // Get SLOT (filtered)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
   @Get('meetings/availability')
   async ZmgetAvailablility(@Req() req, @Query() dto: GetAvailabilityDto) {
     return this.service.ZmgetAvailablility(req.user.id, dto);
