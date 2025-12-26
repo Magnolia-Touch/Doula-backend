@@ -60,13 +60,13 @@ let AvailableSlotsController = class AvailableSlotsController {
         return this.service.markOffDays(req.user, dto);
     }
     async fetchOffDays(req) {
-        return this.service.fetchOffdays(req.user);
+        return this.service.fetchOffdays(req.user.id);
     }
     async fetchOffdaysbyid(req, id) {
-        return this.service.fetchOffdaysbyid(req.user, id);
+        return this.service.fetchOffdaysbyid(req.user.id, id);
     }
     async DeleteOffdaysbyid(req, id) {
-        return this.service.DeleteOffdaysbyid(req.user, id);
+        return this.service.DeleteOffdaysbyid(req.user.id, id);
     }
     async ZmgetAvailablility(req, dto) {
         return this.service.ZmgetAvailablility(req.user.id, dto);
@@ -345,7 +345,7 @@ __decorate([
 ], AvailableSlotsController.prototype, "markOffDays", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
     (0, common_1.Get)('mark/offdays'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),

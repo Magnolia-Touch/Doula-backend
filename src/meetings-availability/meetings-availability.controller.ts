@@ -320,10 +320,10 @@ export class AvailableSlotsController {
 
   // Get SLOT (filtered)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ZONE_MANAGER)
+  @Roles(Role.ZONE_MANAGER, Role.DOULA)
   @Get('mark/offdays')
   async fetchOffDays(@Req() req) {
-    return this.service.fetchOffdays(req.user);
+    return this.service.fetchOffdays(req.user.id);
   }
 
 
@@ -332,7 +332,7 @@ export class AvailableSlotsController {
   @Roles(Role.ZONE_MANAGER, Role.DOULA)
   @Get('mark/offdays/:id')
   async fetchOffdaysbyid(@Req() req, @Param('id') id: string) {
-    return this.service.fetchOffdaysbyid(req.user, id);
+    return this.service.fetchOffdaysbyid(req.user.id, id);
   }
 
 
@@ -341,7 +341,7 @@ export class AvailableSlotsController {
   @Roles(Role.ZONE_MANAGER, Role.DOULA)
   @Delete('mark/offdays/:id')
   async DeleteOffdaysbyid(@Req() req, @Param('id') id: string) {
-    return this.service.DeleteOffdaysbyid(req.user, id);
+    return this.service.DeleteOffdaysbyid(req.user.id, id);
   }
 
 
