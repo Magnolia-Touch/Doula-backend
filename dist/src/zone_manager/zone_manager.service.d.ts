@@ -17,14 +17,14 @@ export declare class ZoneManagerService {
                 userId: string | null;
             } | null;
         } & {
-            name: string;
-            is_active: boolean;
             id: string;
+            name: string;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -102,14 +102,14 @@ export declare class ZoneManagerService {
     updateStatus(id: string, isActive: boolean): Promise<{
         message: string;
         data: {
-            name: string;
-            is_active: boolean;
             id: string;
+            name: string;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -123,13 +123,13 @@ export declare class ZoneManagerService {
         unassignedCount: number;
         assigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
         unassigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
     }>;
     getZoneManagerSchedules(userId: string, page?: number, limit?: number, filters?: {
@@ -146,9 +146,7 @@ export declare class ZoneManagerService {
             doulaId: string;
             doulaName: string;
             serviceName: string;
-            startDate: Date;
-            endDate: Date;
-            duration: string;
+            startDate: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.ServiceStatus;
         }[];
         meta: {
@@ -223,9 +221,7 @@ export declare class ZoneManagerService {
             doulaId: string;
             doulaName: string;
             serviceName: string;
-            startDate: Date;
-            endDate: Date;
-            duration: string;
+            startDate: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.ServiceStatus;
         };
     }>;

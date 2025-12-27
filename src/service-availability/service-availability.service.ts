@@ -3,288 +3,491 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
-  HttpStatus,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateDoulaServiceAvailability } from './dto/service-availability.dto';
-import { UpdateDoulaServiceAvailabilityDTO } from './dto/service-availability.dto';
-import { paginate } from 'src/common/utility/pagination.util';
+import { CreateDoulaServiceAvailabilityDto, ServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
 import { Prisma, Role } from '@prisma/client';
-import { format } from 'date-fns';
-import {
-  findDoulaOrThrowWithId,
-  findRegionOrThrow,
-  findUserRoleById,
-  getServiceSlotOrCreateSlot,
-} from 'src/common/utility/service-utils';
+import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
 
 @Injectable()
 export class DoulaServiceAvailabilityService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
-  async createAvailability(dto: CreateDoulaServiceAvailability, user: any) {
-    let profile: any;
-    //take doula profile from useid.
-    profile = await this.prisma.doulaProfile.findUnique({
+  private async getDoulaProfile(userId: string) {
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!doula) {
+      throw new ForbiddenException('Doula profile not found');
+    }
+
+    return doula;
+  }
+
+  async createAvailability(
+    dto: CreateDoulaServiceAvailabilityDto,
+    user: any,
+  ) {
+    // 1. Fetch doula profile
+    const doula = await this.prisma.doulaProfile.findUnique({
       where: { userId: user.id },
     });
-    // const user = findUserOrThrowwithId(this.prisma, userId)
-    const { weekday, startTime, endTime } = dto;
-    //created time setup withdate.
-    const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
-    const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
 
-    if (startDateTime >= endDateTime) {
-      throw new BadRequestException('Start time must be before end time.');
+    if (!doula) {
+      throw new ForbiddenException('Doula profile not found');
     }
-    //create AvailableSlotsForMeeting instance first:
-    const dateslot = await getServiceSlotOrCreateSlot(
-      this.prisma,
-      dto.weekday,
-      profile.id,
-    );
 
-    //create AvailableSlotsTimeForMeeting for AvailableSlotsForMeeting.
-    const timings = await this.prisma.availableSlotsTimeForService.create({
-      data: {
-        dateId: dateslot.id,
-        startTime: startDateTime,
-        endTime: endDateTime,
-        availabe: true,
-      },
+    const { date1, date2, availability } = dto;
+
+    /**
+     * Convert availability to Prisma JSON
+     */
+    const toJsonAvailability = (): Prisma.InputJsonObject => ({
+      MORNING: availability.MORNING,
+      NIGHT: availability.NIGHT,
+      FULLDAY: availability.FULLDAY,
     });
-    console.log(dateslot);
+
+    /**
+     * Normalize date to YYYY-MM-DD (UTC)
+     */
+    const normalizeDate = (date: string): Date =>
+      new Date(`${date}T00:00:00.000Z`);
+
+    const startDate = normalizeDate(date1);
+    const endDate = date2 ? normalizeDate(date2) : startDate;
+
+    if (startDate > endDate) {
+      throw new BadRequestException('date1 cannot be after date2');
+    }
+
+    /**
+     * Generate date range (inclusive)
+     */
+    const dates: Date[] = [];
+    let current = new Date(startDate);
+
+    while (current <= endDate) {
+      dates.push(new Date(current));
+      current.setUTCDate(current.getUTCDate() + 1);
+    }
+
+    /**
+     * Prepare records
+     */
+    const records = dates.map((date) => ({
+      date,
+      availability: toJsonAvailability(),
+      doulaId: doula.id,
+    }));
+
+    /**
+     * Create records (skip duplicates)
+     * Requires unique constraint on (doulaId, date)
+     */
+    await this.prisma.availableSlotsForService.createMany({
+      data: records,
+      skipDuplicates: true,
+    });
 
     return {
-      message: 'Service Slots created successfully',
+      message: 'Service availability saved successfully',
       data: {
-        date: dateslot.weekday,
-        ownerRole: user.role,
-        timeslot: {
-          startTime: timings.startTime,
-          endTime: timings.endTime,
-          available: timings.availabe,
-        },
+        from: startDate,
+        to: endDate,
+        totalDays: records.length,
       },
     };
   }
+
+
 
   //continue from here. booked or unbooked filter not needed on slots.
   //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
-  async getMyAvailabilities(userId: string) {
-    // 1. Fetch user role
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // 2. Resolve profileId based on role
-    const whereClause: any = {};
-
-    if (user.role === Role.DOULA) {
-      const doulaProfile = await this.prisma.doulaProfile.findUnique({
-        where: { userId },
-        select: { id: true },
-      });
-
-      if (!doulaProfile) {
-        throw new NotFoundException('Doula profile not found');
-      }
-
-      whereClause.doulaId = doulaProfile.id;
-    } else if (user.role === Role.ZONE_MANAGER) {
-      const zoneManagerProfile =
-        await this.prisma.zoneManagerProfile.findUnique({
-          where: { userId },
-          select: { id: true },
-        });
-
-      if (!zoneManagerProfile) {
-        throw new NotFoundException('Zone Manager profile not found');
-      }
-
-      whereClause.zoneManagerId = zoneManagerProfile.id;
-    } else {
-      throw new ForbiddenException('This role has no availability');
-    }
-
-    // 3. Fetch availability with time slots
-    const availabilities = await this.prisma.availableSlotsForService.findMany({
-      where: whereClause,
-      orderBy: { weekday: 'asc' },
-      include: {
-        AvailableSlotsTimeForService: {
-          orderBy: { startTime: 'asc' },
-          select: {
-            id: true,
-            startTime: true,
-            endTime: true,
-            availabe: true,
-            isBooked: true,
-          },
-        },
-      },
-    });
-
-    return availabilities;
-  }
-
-  async getAllSlots(
-    doulaId: string,
-    startDate: string,
-    endDate: string,
-    filter: 'all' | 'booked' | 'unbooked' = 'all',
-    page: number = 1,
-    limit: number = 10,
+  async findAll(
+    user: any,
+    query?: { fromDate?: string; toDate?: string },
   ) {
-    const skip = (page - 1) * limit;
+    const doula = await this.getDoulaProfile(user.id);
 
-    const firstDate = new Date(startDate);
-    const secondDate = new Date(endDate);
-    secondDate.setDate(secondDate.getDate() + 1);
-
-    // Validate region
-    const doula = await findDoulaOrThrowWithId(this.prisma, doulaId);
-
-    // Base date filter
     const where: any = {
       doulaId: doula.id,
-      date: {
-        gte: firstDate,
-        lt: secondDate,
-      },
     };
 
-    // Build time filter inside include
-    const timeFilter: any = {};
-    if (filter === 'booked') timeFilter.isBooked = true;
-    if (filter === 'unbooked') timeFilter.isBooked = false;
+    if (query?.fromDate || query?.toDate) {
+      where.date = {
+        ...(query.fromDate && {
+          gte: new Date(`${query.fromDate}T00:00:00.000Z`),
+        }),
+        ...(query.toDate && {
+          lte: new Date(`${query.toDate}T00:00:00.000Z`),
+        }),
+      };
+    }
 
-    return paginate({
-      prismaModel: this.prisma.availableSlotsForService,
-      page,
-      limit,
+    const slots = await this.prisma.availableSlotsForService.findMany({
       where,
-      include: {
-        AvailableSlotsTimeForService: {
-          where: filter === 'all' ? undefined : timeFilter,
-          orderBy: { startTime: 'asc' },
-        },
-      },
       orderBy: { date: 'asc' },
     });
+
+    return {
+      message: 'Service availability fetched successfully',
+      data: slots,
+    };
   }
 
-  async getSlotById(id: string) {
-    const slot = await this.prisma.availableSlotsForService.findUnique({
-      where: { id },
-      include: {
-        AvailableSlotsTimeForService: {
-          orderBy: { startTime: 'asc' },
-        },
+
+  async findOne(id: string, user: any) {
+    const doula = await this.getDoulaProfile(user.id);
+
+    const slot = await this.prisma.availableSlotsForService.findFirst({
+      where: {
+        id,
+        doulaId: doula.id,
       },
     });
 
     if (!slot) {
-      throw new NotFoundException('Slot not found');
+      throw new NotFoundException('Service availability not found');
     }
 
     return {
-      message: 'Slot retrieved successfully',
-      slot,
+      message: 'Service availability fetched successfully',
+      data: slot,
     };
   }
 
-  async updateSlotTimeById(
-    dto: UpdateDoulaServiceAvailabilityDTO,
-    timeSlotId: string,
-    userId: string,
+
+  async update(
+    id: string,
+    dto: UpdateDoulaServiceAvailabilityDto,
+    user: any,
   ) {
-    // Get the timeslot first
-    const timeSlot = await this.prisma.availableSlotsTimeForService.findUnique({
-      where: { id: timeSlotId, date: { doula: { userId: userId } } },
-      include: {
-        date: true, // to access the parent slot details
+    const doula = await this.getDoulaProfile(user.id);
+
+    const slot = await this.prisma.availableSlotsForService.findFirst({
+      where: {
+        id,
+        doulaId: doula.id,
       },
     });
 
-    if (!timeSlot) throw new NotFoundException('Time slot not found');
+    if (!slot) {
+      throw new NotFoundException('Service availability not found');
+    }
 
-    const parentSlot = timeSlot.date; // AvailableSlotsForMeeting record
-    // ⏰ Build new date-time values
-    const startDateTime = new Date(`${'1970-01-01'}T${dto.startTime}:00`);
-    const endDateTime = new Date(`${'1970-01-01'}T${dto.endTime}:00`);
+    const updatedAvailability = {
+      ...(slot.availability as Record<string, boolean>),
+      ...(dto.availability ?? {}),
+    };
 
-    // 🚀 Update time slot
-    const updatedTimeSlot =
-      await this.prisma.availableSlotsTimeForService.update({
-        where: { id: timeSlotId },
-        data: {
-          startTime: startDateTime,
-          endTime: endDateTime,
+    const updated = await this.prisma.availableSlotsForService.update({
+      where: { id },
+      data: {
+        availability: updatedAvailability,
+      },
+    });
+
+    return {
+      message: 'Service availability updated successfully',
+      data: updated,
+    };
+  }
+
+
+  async remove(id: string, user: any) {
+    const doula = await this.getDoulaProfile(user.id);
+
+    const slot = await this.prisma.availableSlotsForService.findFirst({
+      where: {
+        id,
+        doulaId: doula.id,
+      },
+    });
+
+    if (!slot) {
+      throw new NotFoundException('Service availability not found');
+    }
+
+    await this.prisma.availableSlotsForService.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Service availability deleted successfully',
+    };
+  }
+
+
+  async createOffDays(
+    dto: CreateDoulaOffDaysDto,
+    user: any,
+  ) {
+    console.log(user)
+    // 1. Fetch doula profile
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!doula) {
+      throw new ForbiddenException('Doula profile not found');
+    }
+
+    const { date1, date2, offtime } = dto;
+
+    const startDate = new Date(`${date1}T00:00:00.000Z`);
+    const endDate = date2
+      ? new Date(`${date2}T00:00:00.000Z`)
+      : new Date(`${date1}T00:00:00.000Z`);
+
+    if (startDate > endDate) {
+      throw new BadRequestException('date1 must be before or equal to date2');
+    }
+
+    /**
+     * Generate date range (inclusive)
+     */
+    const dates: Date[] = [];
+    const cursor = new Date(startDate);
+
+    while (cursor <= endDate) {
+      dates.push(new Date(cursor));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    /**
+     * 2. Fetch service availability for these dates
+     */
+    const availabilities =
+      await this.prisma.availableSlotsForService.findMany({
+        where: {
+          doulaId: doula.id,
+          date: { in: dates },
+        },
+        select: {
+          date: true,
+          availability: true,
         },
       });
-    return {
-      message: 'Time slot updated successfully',
-      data: updatedTimeSlot,
-    };
-  }
 
-  async deleteSlots(timeSlotId: string, userId: string) {
-    const timeSlot = await this.prisma.availableSlotsTimeForService.findUnique({
-      where: { id: timeSlotId, date: { doula: { userId: userId } } },
-      include: {
-        date: true, // to access the parent slot details
-      },
-    });
-    if (!timeSlot) throw new NotFoundException('Time slot not found');
+    /**
+     * Build lookup map: date → availability
+     */
+    const availabilityMap = new Map<string, any>();
+    for (const a of availabilities) {
+      availabilityMap.set(a.date.toISOString(), a.availability);
+    }
 
-    // Delete time slot
-    const deletedTimeSlot =
-      await this.prisma.availableSlotsTimeForService.delete({
-        where: { id: timeSlotId },
+    /**
+     * 3. Validate availability exists + overlaps
+     */
+    const invalidDates: string[] = [];
+
+    for (const date of dates) {
+      const availability = availabilityMap.get(date.toISOString());
+
+      if (!availability) {
+        invalidDates.push(date.toISOString().split('T')[0]);
+        continue;
+      }
+
+      // OPTIONAL: slot-level validation
+      const hasOverlap =
+        (offtime.MORNING && availability.MORNING) ||
+        (offtime.NIGHT && availability.NIGHT) ||
+        (offtime.FULLDAY && availability.FULLDAY);
+
+      if (!hasOverlap) {
+        invalidDates.push(date.toISOString().split('T')[0]);
+      }
+    }
+
+    if (invalidDates.length) {
+      throw new BadRequestException({
+        message:
+          'Off days can only be marked on dates with active service availability',
+        invalidDates,
       });
+    }
+
+    /**
+     * 4. Remove already-existing off-days
+     */
+    const existing = await this.prisma.doulaOffDays.findMany({
+      where: {
+        doulaProfileId: doula.id,
+        date: { in: dates },
+      },
+      select: { date: true },
+    });
+
+    const existingSet = new Set(
+      existing.map((d) => d.date.toISOString()),
+    );
+
+    /**
+     * 5. Prepare records
+     */
+    const offtimeJson: Prisma.InputJsonValue = {
+      MORNING: offtime.MORNING,
+      NIGHT: offtime.NIGHT,
+      FULLDAY: offtime.FULLDAY,
+    };
+
+    const recordsToCreate: Prisma.DoulaOffDaysCreateManyInput[] =
+      dates
+        .filter((d) => !existingSet.has(d.toISOString()))
+        .map((date) => ({
+          date,
+          offtime: offtimeJson,
+          doulaProfileId: doula.id,
+        }));
+
+    if (!recordsToCreate.length) {
+      throw new BadRequestException(
+        'Off days already exist for the selected date(s)',
+      );
+    }
+
+    /**
+     * 6. Create off-days
+     */
+    await this.prisma.doulaOffDays.createMany({
+      data: recordsToCreate,
+    });
 
     return {
-      message: 'Time slot Deleted successfully',
-      data: deletedTimeSlot,
+      message: 'Off days created successfully',
+      data: {
+        totalCreated: recordsToCreate.length,
+        from: startDate,
+        to: endDate,
+        offtime,
+      },
     };
   }
 
-  //maark a single days availability
-  async updateSlotTimeByDate(timeSlotId: string) {
-    // Get the timeslot first
-    const timeSlot = await this.prisma.availableSlotsForService.findUnique({
-      where: { id: timeSlotId },
+
+  async getOffDays(user: any) {
+    // 1. Fetch doula profile
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { userId: user.id },
     });
 
-    if (!timeSlot) throw new NotFoundException('Time slot not found');
-    // 🚀 Update time slot
-    const updatedslot = await this.prisma.availableSlotsForService.update({
-      where: { id: timeSlotId },
-      data: {
-        availabe: true,
-        isBooked: false,
-      },
+    if (!doula) {
+      throw new ForbiddenException('Doula profile not found');
+    }
+
+    // 2. Fetch off-days
+    const offDays = await this.prisma.doulaOffDays.findMany({
+      where: { doulaProfileId: doula.id },
+      orderBy: { date: 'asc' },
     });
-    await this.prisma.availableSlotsTimeForService.updateMany({
-      where: { id: timeSlotId },
-      data: {
-        availabe: true,
-      },
-    });
+
     return {
-      message: 'Slot updated successfully',
-      data: updatedslot,
+      message: 'Off days fetched successfully',
+      data: offDays,
     };
   }
 
-  //function to take a date range and mark off days.
+  /* ------------------------- GET BY ID ------------------------- */
 
-  //take date range and make the availableSlotForMeeting's available to false.
-  //make sure getSlot never take the one which is not available. add one availabillity filter also in get.
+  async getOffdaysbyId(id: string, user: any) {
+    const doula = await this.getDoulaProfile(user.id);
+
+    const offDay = await this.prisma.doulaOffDays.findFirst({
+      where: {
+        id,
+        doulaProfileId: doula.id,
+      },
+    });
+
+    if (!offDay) {
+      throw new NotFoundException('Off day not found');
+    }
+
+    return {
+      message: 'Off day fetched successfully',
+      data: offDay,
+    };
+  }
+
+  /* ------------------------- PATCH ------------------------- */
+
+  async updateOffdays(
+    id: string,
+    dto: UpdateDoulaOffDaysDto,
+    user: any,
+  ) {
+    const doula = await this.getDoulaProfile(user.id);
+
+    const existing = await this.prisma.doulaOffDays.findFirst({
+      where: {
+        id,
+        doulaProfileId: doula.id,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Off day not found');
+    }
+
+    // Normalize date if provided
+    let updatedDate: Date | undefined;
+    if (dto.date) {
+      updatedDate = new Date(dto.date);
+      updatedDate.setUTCHours(0, 0, 0, 0);
+    }
+
+    // Merge JSON safely
+    const updatedOfftime: Prisma.InputJsonValue | undefined =
+      dto.offtime
+        ? {
+          ...(existing.offtime as object),
+          ...dto.offtime,
+        }
+        : undefined;
+
+    const updated = await this.prisma.doulaOffDays.update({
+      where: { id },
+      data: {
+        ...(updatedDate && { date: updatedDate }),
+        ...(updatedOfftime && { offtime: updatedOfftime }),
+      },
+    });
+
+    return {
+      message: 'Off day updated successfully',
+      data: updated,
+    };
+  }
+
+  /* ------------------------- DELETE ------------------------- */
+
+  async removeOffdays(id: string, user: any) {
+    const doula = await this.getDoulaProfile(user.id);
+
+    const existing = await this.prisma.doulaOffDays.findFirst({
+      where: {
+        id,
+        doulaProfileId: doula.id,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Off day not found');
+    }
+
+    await this.prisma.doulaOffDays.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Off day deleted successfully',
+    };
+  }
+
+
 }
+

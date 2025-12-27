@@ -48,9 +48,9 @@ export declare class AvailableSlotsController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
-                availabe: boolean;
                 isBooked: boolean;
                 dateId: string;
                 meetingsId: string | null;
@@ -59,12 +59,12 @@ export declare class AvailableSlotsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            zoneManagerId: string | null;
+            ownerRole: import("@prisma/client").$Enums.Role;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
-            ownerRole: import("@prisma/client").$Enums.Role;
             doulaId: string | null;
             adminId: string | null;
+            zoneManagerId: string | null;
         };
     }>;
     updateSlot(dto: UpdateSlotsForMeetingTimeDto, req: any): Promise<{
@@ -73,9 +73,9 @@ export declare class AvailableSlotsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            availabe: boolean;
             startTime: Date;
             endTime: Date;
-            availabe: boolean;
             isBooked: boolean;
             dateId: string;
             meetingsId: string | null;
@@ -94,51 +94,51 @@ export declare class AvailableSlotsController {
     findall(req: any): Promise<({
         AvailableSlotsTimeForMeeting: {
             id: string;
+            availabe: boolean;
             startTime: Date;
             endTime: Date;
-            availabe: boolean;
             isBooked: boolean;
         }[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        zoneManagerId: string | null;
+        ownerRole: import("@prisma/client").$Enums.Role;
         weekday: import("@prisma/client").$Enums.WeekDays;
         availabe: boolean;
-        ownerRole: import("@prisma/client").$Enums.Role;
         doulaId: string | null;
         adminId: string | null;
+        zoneManagerId: string | null;
     })[]>;
     markOffDays(req: any, dto: MarkOffDaysDto): Promise<import("@prisma/client").Prisma.BatchPayload | {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string | null;
-        date: Date;
         startTime: Date | null;
         endTime: Date | null;
+        date: Date;
         zoneManagerProfileId: string | null;
+        doulaProfileId: string | null;
     }>;
     fetchOffDays(req: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string | null;
-        date: Date;
         startTime: Date | null;
         endTime: Date | null;
+        date: Date;
         zoneManagerProfileId: string | null;
+        doulaProfileId: string | null;
     }[]>;
     fetchOffdaysbyid(req: any, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string | null;
-        date: Date;
         startTime: Date | null;
         endTime: Date | null;
+        date: Date;
         zoneManagerProfileId: string | null;
+        doulaProfileId: string | null;
     } | null>;
     DeleteOffdaysbyid(req: any, id: string): Promise<{
         message: string;
@@ -146,11 +146,11 @@ export declare class AvailableSlotsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaProfileId: string | null;
-            date: Date;
             startTime: Date | null;
             endTime: Date | null;
+            date: Date;
             zoneManagerProfileId: string | null;
+            doulaProfileId: string | null;
         };
     }>;
     ZmgetAvailablility(req: any, dto: GetAvailabilityDto): Promise<{

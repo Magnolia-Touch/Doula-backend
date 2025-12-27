@@ -171,40 +171,29 @@ export class IntakeFormService {
     for (const visitDate of visitDates) {
       const weekday = DAY_TO_WEEKDAY[visitDate.getDay()];
 
-      const daySlot = await this.prisma.availableSlotsForService.findUnique({
-        where: {
-          doulaId_weekday: {
-            doulaId: doulaProfileId,
-            weekday,
-          },
-        },
-        include: {
-          AvailableSlotsTimeForService: {
-            where: { availabe: true },
-          },
-        },
-      });
+      // const daySlot = await this.prisma.availableSlotsForService.findUnique({
+      //   where: {
+      //     doulaId_weekday: {
+      //       doulaId: doulaProfileId,
+      //       weekday,
+      //     },
+      //   },
+      // });
 
-      if (!daySlot || !daySlot.availabe) continue;
 
-      const hasTimeSlot = daySlot.AvailableSlotsTimeForService.some((ts) =>
-        isOverlapping(slotStartTime, slotEndTime, ts.startTime, ts.endTime),
-      );
 
-      if (!hasTimeSlot) continue;
+      // const conflict = await this.prisma.schedules.findFirst({
+      //   where: {
+      //     doulaProfileId,
+      //     date: visitDate,
+      //     AND: [
+      //       { startTime: { lt: slotEndTime } },
+      //       { endTime: { gt: slotStartTime } },
+      //     ],
+      //   },
+      // });
 
-      const conflict = await this.prisma.schedules.findFirst({
-        where: {
-          doulaProfileId,
-          date: visitDate,
-          AND: [
-            { startTime: { lt: slotEndTime } },
-            { endTime: { gt: slotStartTime } },
-          ],
-        },
-      });
-
-      if (conflict) continue;
+      // if (conflict) continue;
 
       schedulesToCreate.push({
         date: visitDate,
@@ -369,7 +358,6 @@ export class IntakeFormService {
           },
         },
         slot: true,
-        slotTime: true,
       },
     });
 
@@ -400,7 +388,6 @@ export class IntakeFormService {
       doulaProfileId: form.DoulaProfile.id,
 
       slots: form.slot,
-      slotTimes: form.slotTime,
 
       createdAt: form.createdAt,
       updatedAt: form.updatedAt,
@@ -534,44 +521,39 @@ export class IntakeFormService {
     for (const visitDate of visitDates) {
       const weekday = DAY_TO_WEEKDAY[visitDate.getDay()];
 
-      /* Fetch weekday availability */
-      const daySlot = await this.prisma.availableSlotsForService.findUnique({
-        where: {
-          doulaId_weekday: {
-            doulaId: doulaProfileId,
-            weekday,
-          },
-        },
-        include: {
-          AvailableSlotsTimeForService: {
-            where: { availabe: true },
-          },
-        },
-      });
+      // /* Fetch weekday availability */
+      // const daySlot = await this.prisma.availableSlotsForService.findUnique({
+      //   where: {
+      //     doulaId_weekday: {
+      //       doulaId: doulaProfileId,
+      //       weekday,
+      //     },
+      //   },
+      // });
 
-      if (!daySlot || !daySlot.availabe) continue;
 
-      /* Check time-slot availability */
-      const hasTimeAvailability = daySlot.AvailableSlotsTimeForService.some(
-        (ts) =>
-          isOverlapping(slotStartTime, slotEndTime, ts.startTime, ts.endTime),
-      );
 
-      if (!hasTimeAvailability) continue;
+      // /* Check time-slot availability */
+      // const hasTimeAvailability = daySlot.AvailableSlotsTimeForService.some(
+      //   (ts) =>
+      //     isOverlapping(slotStartTime, slotEndTime, ts.startTime, ts.endTime),
+      // );
+
+      // if (!hasTimeAvailability) continue;
 
       /* Check schedule conflicts */
-      const conflict = await this.prisma.schedules.findFirst({
-        where: {
-          doulaProfileId,
-          date: visitDate,
-          AND: [
-            { startTime: { lt: slotEndTime } },
-            { endTime: { gt: slotStartTime } },
-          ],
-        },
-      });
+      // const conflict = await this.prisma.schedules.findFirst({
+      //   where: {
+      //     doulaProfileId,
+      //     date: visitDate,
+      //     AND: [
+      //       { startTime: { lt: slotEndTime } },
+      //       { endTime: { gt: slotStartTime } },
+      //     ],
+      //   },
+      // });
 
-      if (conflict) continue;
+      // if (conflict) continue;
 
       /* Schedule is valid */
       schedulesToCreate.push({

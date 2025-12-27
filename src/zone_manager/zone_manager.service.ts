@@ -469,11 +469,11 @@ export class ZoneManagerService {
       success: true,
       message: 'Schedules fetched successfully',
       data: schedules.map((schedule) => {
-        const durationMs =
-          schedule.endTime.getTime() - schedule.startTime.getTime();
+        // const durationMs =
+        //   schedule.endTime.getTime() - schedule.startTime.getTime();
 
-        const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-        const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
+        // const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+        // const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
 
         return {
           scheduleId: schedule.id,
@@ -485,10 +485,9 @@ export class ZoneManagerService {
 
           serviceName: schedule.ServicePricing.service.name,
 
-          startDate: schedule.startTime,
-          endDate: schedule.endTime,
+          startDate: schedule.timeshift,
 
-          duration: `${durationHours}h ${durationMinutes}m`, // dummy / derived
+          // duration: `${durationHours}h ${durationMinutes}m`, // dummy / derived
           status: schedule.status,
         };
       }),
@@ -894,11 +893,11 @@ export class ZoneManagerService {
       throw new NotFoundException('Schedule not found');
     }
 
-    const durationMs =
-      schedule.endTime.getTime() - schedule.startTime.getTime();
+    // const durationMs =
+    //   schedule.endTime.getTime() - schedule.startTime.getTime();
 
-    const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-    const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
+    // const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+    // const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
 
     return {
       success: true,
@@ -913,9 +912,7 @@ export class ZoneManagerService {
 
         serviceName: schedule.ServicePricing.service.name,
 
-        startDate: schedule.startTime,
-        endDate: schedule.endTime,
-        duration: `${durationHours}h ${durationMinutes}m`,
+        startDate: schedule.timeshift,
         status: schedule.status,
       },
     };

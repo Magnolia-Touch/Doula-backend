@@ -6,11 +6,11 @@ export declare class ServicePricingService {
     private toJsonPrice;
     create(dto: CreateServicePricingDto, userId: string): Promise<{
         id: string;
-        price: import("@prisma/client/runtime/library").JsonValue;
         createdAt: Date;
         updatedAt: Date;
-        serviceId: string;
         doulaProfileId: string;
+        serviceId: string;
+        price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     findAll(userId: string): Promise<{
         message: string;
@@ -39,19 +39,19 @@ export declare class ServicePricingService {
     }>;
     update(id: string, dto: UpdateServicePricingDto): Promise<{
         id: string;
-        price: import("@prisma/client/runtime/library").JsonValue;
         createdAt: Date;
         updatedAt: Date;
-        serviceId: string;
         doulaProfileId: string;
+        serviceId: string;
+        price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     remove(id: string): Promise<{
         id: string;
-        price: import("@prisma/client/runtime/library").JsonValue;
         createdAt: Date;
         updatedAt: Date;
-        serviceId: string;
         doulaProfileId: string;
+        serviceId: string;
+        price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     listServices(query: any): Promise<{
         data: {

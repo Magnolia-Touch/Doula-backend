@@ -7,6 +7,7 @@ import { UpdateCertificateDto } from './dto/certificate.dto';
 export declare class DoulaService {
     private prisma;
     constructor(prisma: PrismaService);
+    private buildDoulaProfileResponse;
     create(dto: CreateDoulaDto, userId: string, images?: {
         url: string;
     }[], profileImageUrl?: string): Promise<{
@@ -17,8 +18,14 @@ export declare class DoulaService {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    userId: string | null;
                     profile_image: string | null;
+                    userId: string | null;
+                }[];
+                Region: {
+                    id: string;
+                    zoneManagerId: string | null;
+                    pincode: string;
+                    regionName: string;
                 }[];
                 DoulaGallery: {
                     id: string;
@@ -34,19 +41,13 @@ export declare class DoulaService {
                     issuedBy: string;
                     year: string;
                 }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
-                }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                profile_image: string | null;
                 userId: string;
                 regionId: string | null;
-                profile_image: string | null;
                 description: string | null;
                 achievements: string | null;
                 qualification: string | null;
@@ -56,9 +57,9 @@ export declare class DoulaService {
             }) | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -150,9 +151,9 @@ export declare class DoulaService {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -168,30 +169,30 @@ export declare class DoulaService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string | null;
                 profile_image: string | null;
+                userId: string | null;
             }[];
             Region: {
                 id: string;
                 is_active: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                regionName: string;
+                zoneManagerId: string | null;
                 pincode: string;
+                regionName: string;
                 district: string;
                 state: string;
                 country: string;
                 latitude: string;
                 longitude: string;
-                zoneManagerId: string | null;
             }[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            profile_image: string | null;
             userId: string;
             regionId: string | null;
-            profile_image: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
@@ -241,8 +242,7 @@ export declare class DoulaService {
         data: {
             scheduleId: string;
             date: Date;
-            startTime: Date;
-            endTime: Date;
+            timeshift: import("@prisma/client").$Enums.TimeShift;
             serviceName: string;
             clientName: string;
             status: import("@prisma/client").$Enums.ServiceStatus;
@@ -262,8 +262,7 @@ export declare class DoulaService {
         data: {
             scheduleId: string;
             date: Date;
-            startTime: Date;
-            endTime: Date;
+            timeshift: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.ServiceStatus;
             service: {
                 servicePricingId: string;
@@ -381,9 +380,9 @@ export declare class DoulaService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            profile_image: string | null;
             userId: string;
             regionId: string | null;
-            profile_image: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
@@ -427,7 +426,40 @@ export declare class DoulaService {
         message: string;
     }>;
     updateDoulaProfile(userId: string, dto: UpdateDoulaProfileDto): Promise<{
+        success: boolean;
         message: string;
+        data: {
+            id: string;
+            name: string;
+            title: string;
+            averageRating: number;
+            totalReviews: number;
+            births: number;
+            experience: number;
+            satisfaction: number;
+            contact: {
+                email: string;
+                phone: string | null;
+                location: string;
+            };
+            about: string | null;
+            servicePricing: {
+                servicePricingid: string;
+                servicename: string;
+                price: Prisma.JsonValue;
+            }[];
+            certificates: {
+                id: string;
+                name: string;
+                issuedBy: string;
+                year: string;
+            }[];
+            gallery: {
+                id: string;
+                url: string;
+                altText: string | null;
+            }[];
+        };
     }>;
     private getDoulaProfile;
     getCertificates(userId: string): Promise<{
@@ -499,8 +531,7 @@ export declare class DoulaService {
         schedules: {
             id: string;
             date: Date;
-            startTime: Date;
-            endTime: Date;
+            timeshift: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.ServiceStatus;
         }[];
     }>;

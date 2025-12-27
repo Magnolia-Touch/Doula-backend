@@ -107,7 +107,6 @@ let ServiceBookingService = class ServiceBookingService {
                     },
                 },
                 region: true,
-                slot: true,
                 AvailableSlotsForService: true,
             },
         });
@@ -119,11 +118,6 @@ let ServiceBookingService = class ServiceBookingService {
         const serviceName = booking.service?.service?.name ?? null;
         const startDate = booking.startDate;
         const endDate = booking.endDate;
-        const timeSlots = booking.slot?.map((s) => ({
-            id: s.id,
-            startTime: s.startTime,
-            endTime: s.endTime,
-        })) ?? [];
         const transformed = {
             bookingId: booking.id,
             clientUserId: clientUser?.id ?? null,
@@ -136,7 +130,6 @@ let ServiceBookingService = class ServiceBookingService {
             serviceName,
             start_date: startDate,
             end_date: endDate,
-            timeSlots,
             status: booking.status,
             createdAt: booking.createdAt,
         };

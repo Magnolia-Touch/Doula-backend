@@ -1,44 +1,55 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WeekDays } from '@prisma/client';
-import { IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsBoolean, IsEnum, ValidateNested, IsDateString } from 'class-validator';
 
-export class CreateDoulaServiceAvailability {
-  @ApiProperty({
-    enum: WeekDays,
-    example: WeekDays.MONDAY,
-    description: 'Day of the week',
-  })
-  @IsEnum(WeekDays, {
-    message:
-      'weekday must be one of MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY',
-  })
-  weekday: WeekDays;
+export class ServiceAvailabilityDto {
+  @IsBoolean()
+  MORNING: boolean;
 
-  @ApiProperty({ example: '09:00' })
-  @IsString()
-  startTime: string;
+  @IsBoolean()
+  NIGHT: boolean;
 
-  @ApiProperty({ example: '11:00' })
-  @IsString()
-  endTime: string;
+  @IsBoolean()
+  FULLDAY: boolean;
 }
 
-export class UpdateDoulaServiceAvailabilityDTO {
-  @ApiProperty({ example: '09:00' })
-  @IsString()
-  startTime: string;
+export class CreateDoulaServiceAvailabilityDto {
+  @ApiProperty({
+    example: '2025-10-30',
+    description: 'Start date (required)',
+  })
+  @IsDateString()
+  date1: string;
 
-  @ApiProperty({ example: '11:00' })
-  @IsString()
-  endTime: string;
-
-  @ApiPropertyOptional({ example: true })
+  @ApiPropertyOptional({
+    example: '2025-11-02',
+    description: 'End date (optional)',
+  })
   @IsOptional()
-  @IsBoolean()
-  availabe?: boolean;
+  @IsDateString()
+  date2?: string;
 
-  @ApiPropertyOptional({ example: false })
+  @ApiProperty({
+    type: ServiceAvailabilityDto,
+  })
+  @ValidateNested()
+  @Type(() => ServiceAvailabilityDto)
+  availability: ServiceAvailabilityDto;
+}
+
+
+export class UpdateDoulaServiceAvailabilityDto {
+  @ApiPropertyOptional({
+    description: 'Partial update of service availability',
+    example: {
+      MORNING: false,
+      NIGHT: true,
+      FULLDAY: false,
+    },
+  })
   @IsOptional()
-  @IsBoolean()
-  isBooked?: boolean;
+  @ValidateNested()
+  @Type(() => ServiceAvailabilityDto)
+  availability?: Partial<ServiceAvailabilityDto>;
 }

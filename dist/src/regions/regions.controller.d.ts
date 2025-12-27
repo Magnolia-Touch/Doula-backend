@@ -8,14 +8,14 @@ export declare class RegionController {
         is_active: boolean;
         createdAt: Date;
         updatedAt: Date;
-        regionName: string;
+        zoneManagerId: string | null;
         pincode: string;
+        regionName: string;
         district: string;
         state: string;
         country: string;
         latitude: string;
         longitude: string;
-        zoneManagerId: string | null;
     }>;
     findAll(page?: number, limit?: number, search?: string): Promise<{
         message: string;
@@ -59,27 +59,27 @@ export declare class RegionController {
         is_active: boolean;
         createdAt: Date;
         updatedAt: Date;
-        regionName: string;
+        zoneManagerId: string | null;
         pincode: string;
+        regionName: string;
         district: string;
         state: string;
         country: string;
         latitude: string;
         longitude: string;
-        zoneManagerId: string | null;
     }>;
     remove(id: string): Promise<{
         id: string;
         is_active: boolean;
         createdAt: Date;
         updatedAt: Date;
-        regionName: string;
+        zoneManagerId: string | null;
         pincode: string;
+        regionName: string;
         district: string;
         state: string;
         country: string;
         latitude: string;
         longitude: string;
-        zoneManagerId: string | null;
     }>;
 }

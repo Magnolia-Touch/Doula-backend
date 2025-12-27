@@ -6,13 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "prisma": {
-    "seed": "ts-node prisma/seed.ts",
-    "seed:client": "ts-node prisma/seed.client.ts",
-    "seed:doula": "ts-node prisma/seed.doula.ts",
-    "seed:missing": "ts-node prisma/seed.missing.ts",
-    "seed:calender": "ts-node prisma/seed.cal-summary.ts",
-    "seed:manager": "ts-node prisma/seed-zone-manager-test-data.ts",
-    "seed:testimonials": "ts-node prisma/seed-testimonials.ts"
+    "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
     "build": "nest build",
@@ -29,14 +23,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "tree": "tree -I node_modules",
     "create:admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts",
-    "seed": "prisma db seed",
-    "seed:client": "ts-node prisma/seed.client.ts",
-    "seed:doula": "ts-node prisma/seed.doula.ts",
-    "seed:missing": "ts-node prisma/seed.missing.ts",
-    "seed:calender": "ts-node prisma/seed.cal-summary.ts",
-    "seed:manager": "ts-node prisma/seed-zone-manager-test-data.ts",
-    "seed:testimonials": "ts-node prisma/seed-testimonials.ts",
-    "seed:all": "npm run seed && npm run seed:client && npm run seed:doula"
+    "seed": "prisma db seed"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

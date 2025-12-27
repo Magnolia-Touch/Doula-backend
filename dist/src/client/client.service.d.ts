@@ -11,17 +11,17 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 profile_image: string | null;
-                is_verified: boolean;
                 region: string | null;
+                userId: string;
+                is_verified: boolean;
                 address: string | null;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -37,17 +37,17 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 profile_image: string | null;
-                is_verified: boolean;
                 region: string | null;
+                userId: string;
+                is_verified: boolean;
                 address: string | null;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -63,17 +63,17 @@ export declare class ClientsService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string;
                 profile_image: string | null;
-                is_verified: boolean;
                 region: string | null;
+                userId: string;
+                is_verified: boolean;
                 address: string | null;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -249,10 +249,10 @@ export declare class ClientsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             profile_image: string | null;
-            is_verified: boolean;
             region: string | null;
+            userId: string;
+            is_verified: boolean;
             address: string | null;
         };
     }>;

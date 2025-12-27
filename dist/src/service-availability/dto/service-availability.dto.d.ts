@@ -1,12 +1,13 @@
-import { WeekDays } from '@prisma/client';
-export declare class CreateDoulaServiceAvailability {
-    weekday: WeekDays;
-    startTime: string;
-    endTime: string;
+export declare class ServiceAvailabilityDto {
+    MORNING: boolean;
+    NIGHT: boolean;
+    FULLDAY: boolean;
 }
-export declare class UpdateDoulaServiceAvailabilityDTO {
-    startTime: string;
-    endTime: string;
-    availabe?: boolean;
-    isBooked?: boolean;
+export declare class CreateDoulaServiceAvailabilityDto {
+    date1: string;
+    date2?: string;
+    availability: ServiceAvailabilityDto;
+}
+export declare class UpdateDoulaServiceAvailabilityDto {
+    availability?: Partial<ServiceAvailabilityDto>;
 }

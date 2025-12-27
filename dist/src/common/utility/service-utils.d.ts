@@ -8,40 +8,40 @@ export declare function findSlotOrThrow(prisma: PrismaService, params: {
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    zoneManagerId: string | null;
+    ownerRole: import("@prisma/client").$Enums.Role;
     weekday: import("@prisma/client").$Enums.WeekDays;
     availabe: boolean;
-    ownerRole: import("@prisma/client").$Enums.Role;
     doulaId: string | null;
     adminId: string | null;
+    zoneManagerId: string | null;
 }>;
 export declare function findRegionOrThrow(prisma: PrismaService, regionId: string): Promise<{
     id: string;
     is_active: boolean;
     createdAt: Date;
     updatedAt: Date;
-    regionName: string;
+    zoneManagerId: string | null;
     pincode: string;
+    regionName: string;
     district: string;
     state: string;
     country: string;
     latitude: string;
     longitude: string;
-    zoneManagerId: string | null;
 }>;
 export declare function findZoneManagerOrThrowWithId(prisma: PrismaService, zoneManagerId: string): Promise<{
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    userId: string | null;
     profile_image: string | null;
+    userId: string | null;
 }>;
 export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId: string): Promise<{
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    userId: string;
     profile_image: string | null;
+    userId: string;
     regionId: string | null;
     description: string | null;
     achievements: string | null;
@@ -53,9 +53,9 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
 export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;
 export declare function findUserOrThrowwithId(prisma: PrismaService, userId: string): Promise<{
     id: string;
+    name: string;
     email: string;
     phone: string | null;
-    name: string;
     otp: string | null;
     otpExpiresAt: Date | null;
     role: import("@prisma/client").$Enums.Role;
@@ -76,20 +76,20 @@ export declare function getSlotOrCreateSlot(prisma: PrismaService, week: WeekDay
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    zoneManagerId: string | null;
+    ownerRole: import("@prisma/client").$Enums.Role;
     weekday: import("@prisma/client").$Enums.WeekDays;
     availabe: boolean;
-    ownerRole: import("@prisma/client").$Enums.Role;
     doulaId: string | null;
     adminId: string | null;
+    zoneManagerId: string | null;
 }>;
 export declare function createTimeForSlot(prisma: PrismaService, slotId: string, startTime: Date, endTime: Date): Promise<{
     id: string;
     createdAt: Date;
     updatedAt: Date;
+    availabe: boolean;
     startTime: Date;
     endTime: Date;
-    availabe: boolean;
     isBooked: boolean;
     dateId: string;
     meetingsId: string | null;
@@ -97,15 +97,6 @@ export declare function createTimeForSlot(prisma: PrismaService, slotId: string,
 export declare function toUTCDate(dateString: string): Date;
 export declare function getOrcreateClent(prisma: PrismaService, data: any): Promise<any>;
 export declare function getWeekdayFromDate(date: string | Date): WeekDays;
-export declare function getServiceSlotOrCreateSlot(prisma: PrismaService, weekday: WeekDays, profileId: string): Promise<{
-    id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    weekday: import("@prisma/client").$Enums.WeekDays;
-    availabe: boolean;
-    doulaId: string;
-    isBooked: boolean;
-}>;
 export declare function parseTimeSlot(timeSlot: string): {
     startTime: Date;
     endTime: Date;
