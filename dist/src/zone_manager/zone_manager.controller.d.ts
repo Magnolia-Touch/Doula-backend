@@ -15,14 +15,14 @@ export declare class ZoneManagerController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string | null;
                 profile_image: string | null;
+                userId: string | null;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -105,9 +105,9 @@ export declare class ZoneManagerController {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -295,30 +295,5 @@ export declare class ZoneManagerController {
     }>;
     updateDoulaProfile(req: any, dto: UpdateDoulaProfileDto, doulaId: string): Promise<{
         message: string;
-        data: [{
-            id: string;
-            email: string;
-            phone: string | null;
-            name: string;
-            otp: string | null;
-            otpExpiresAt: Date | null;
-            role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
-        }, {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            profile_image: string | null;
-            regionId: string | null;
-            description: string | null;
-            achievements: string | null;
-            qualification: string | null;
-            yoe: number | null;
-            languages: import("@prisma/client/runtime/library").JsonValue | null;
-            specialities: import("@prisma/client/runtime/library").JsonValue | null;
-        }];
     }>;
 }

@@ -1654,10 +1654,13 @@ export class DoulaService {
       yoe,
       languages,
       specialities,
+      certificates
     } = dto;
 
-    const data = await this.prisma.$transaction([
-      // Update User table
+    const operations: any[] = [];
+
+    // 1. Update User
+    operations.push(
       this.prisma.user.update({
         where: { id: userId },
         data: {
@@ -1665,10 +1668,12 @@ export class DoulaService {
           ...(is_active !== undefined && { is_active }),
         },
       }),
+    );
 
-      // Update DoulaProfile table
+    // 2. Update Doula Profile
+    operations.push(
       this.prisma.doulaProfile.update({
-        where: { userId },
+        where: { userId: userId },
         data: {
           ...(description !== undefined && { description }),
           ...(achievements !== undefined && { achievements }),
@@ -1678,11 +1683,33 @@ export class DoulaService {
           ...(specialities !== undefined && { specialities }),
         },
       }),
-    ]);
+    );
+
+    // 3. Update Certificates (EDIT ONLY)
+    if (certificates?.length) {
+      for (const cert of certificates) {
+        operations.push(
+          this.prisma.certificates.updateMany({
+            where: {
+              id: cert.certificateId,
+              doulaProfileId: doulaProfile.id, // ownership safety
+            },
+            data: {
+              ...(cert.data.name !== undefined && { name: cert.data.name }),
+              ...(cert.data.issuedBy !== undefined && {
+                issuedBy: cert.data.issuedBy,
+              }),
+              ...(cert.data.year !== undefined && { year: cert.data.year }),
+            },
+          }),
+        );
+      }
+    }
+    await this.prisma.$transaction(operations);
+
 
     return {
       message: 'Doula profile updated successfully',
-      data: data,
     };
   }
 

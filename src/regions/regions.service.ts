@@ -5,7 +5,7 @@ import { CreateRegionDto, UpdateRegionDto } from './dto/regions.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 @Injectable()
 export class RegionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateRegionDto) {
     return this.prisma.region.create({
@@ -16,13 +16,13 @@ export class RegionService {
   async findAll(page: number = 1, limit: number = 10, search?: string) {
     const where = search
       ? {
-          OR: [
-            { regionName: { contains: search, mode: 'insensitive' } },
-            { district: { contains: search, mode: 'insensitive' } },
-            { state: { contains: search, mode: 'insensitive' } },
-            { country: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+        OR: [
+          { regionName: { contains: search.toLowerCase() } },
+          { district: { contains: search.toLowerCase() } },
+          { state: { contains: search.toLowerCase() } },
+          { country: { contains: search.toLowerCase() } },
+        ],
+      }
       : undefined;
 
     const result = await paginate({
@@ -30,6 +30,7 @@ export class RegionService {
       page,
       limit,
       where,
+      include: { zoneManager: true },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -108,9 +109,9 @@ export class RegionService {
     });
   }
 
-  async asignRegionToZoneManager() {}
+  async asignRegionToZoneManager() { }
 
-  async updateRegionOfZoneManager() {}
+  async updateRegionOfZoneManager() { }
 
-  async removeRegionFromZoneManager() {}
+  async removeRegionFromZoneManager() { }
 }

@@ -1221,30 +1221,46 @@ let DoulaService = class DoulaService {
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, } = dto;
-        const data = await this.prisma.$transaction([
-            this.prisma.user.update({
-                where: { id: userId },
-                data: {
-                    ...(name !== undefined && { name }),
-                    ...(is_active !== undefined && { is_active }),
-                },
-            }),
-            this.prisma.doulaProfile.update({
-                where: { userId },
-                data: {
-                    ...(description !== undefined && { description }),
-                    ...(achievements !== undefined && { achievements }),
-                    ...(qualification !== undefined && { qualification }),
-                    ...(yoe !== undefined && { yoe }),
-                    ...(languages !== undefined && { languages }),
-                    ...(specialities !== undefined && { specialities }),
-                },
-            }),
-        ]);
+        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, certificates } = dto;
+        const operations = [];
+        operations.push(this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                ...(name !== undefined && { name }),
+                ...(is_active !== undefined && { is_active }),
+            },
+        }));
+        operations.push(this.prisma.doulaProfile.update({
+            where: { userId: userId },
+            data: {
+                ...(description !== undefined && { description }),
+                ...(achievements !== undefined && { achievements }),
+                ...(qualification !== undefined && { qualification }),
+                ...(yoe !== undefined && { yoe }),
+                ...(languages !== undefined && { languages }),
+                ...(specialities !== undefined && { specialities }),
+            },
+        }));
+        if (certificates?.length) {
+            for (const cert of certificates) {
+                operations.push(this.prisma.certificates.updateMany({
+                    where: {
+                        id: cert.certificateId,
+                        doulaProfileId: doulaProfile.id,
+                    },
+                    data: {
+                        ...(cert.data.name !== undefined && { name: cert.data.name }),
+                        ...(cert.data.issuedBy !== undefined && {
+                            issuedBy: cert.data.issuedBy,
+                        }),
+                        ...(cert.data.year !== undefined && { year: cert.data.year }),
+                    },
+                }));
+            }
+        }
+        await this.prisma.$transaction(operations);
         return {
             message: 'Doula profile updated successfully',
-            data: data,
         };
     }
     async getDoulaProfile(userId) {

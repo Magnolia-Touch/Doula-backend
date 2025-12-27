@@ -27,10 +27,10 @@ let RegionService = class RegionService {
         const where = search
             ? {
                 OR: [
-                    { regionName: { contains: search, mode: 'insensitive' } },
-                    { district: { contains: search, mode: 'insensitive' } },
-                    { state: { contains: search, mode: 'insensitive' } },
-                    { country: { contains: search, mode: 'insensitive' } },
+                    { regionName: { contains: search.toLowerCase() } },
+                    { district: { contains: search.toLowerCase() } },
+                    { state: { contains: search.toLowerCase() } },
+                    { country: { contains: search.toLowerCase() } },
                 ],
             }
             : undefined;
@@ -39,6 +39,7 @@ let RegionService = class RegionService {
             page,
             limit,
             where,
+            include: { zoneManager: true },
             orderBy: { createdAt: 'desc' },
         });
         const data = result.data.map((region) => ({

@@ -1,3 +1,8 @@
+import { UpdateCertificateDto } from './certificate.dto';
+declare class UpdateCertificateItemDto {
+    certificateId: string;
+    data: UpdateCertificateDto;
+}
 export declare class UpdateDoulaProfileDto {
     name?: string;
     is_active?: boolean;
@@ -7,4 +12,6 @@ export declare class UpdateDoulaProfileDto {
     yoe?: number;
     languages?: any;
     specialities?: any;
+    certificates?: UpdateCertificateItemDto[];
 }
+export {};

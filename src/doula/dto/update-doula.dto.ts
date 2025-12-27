@@ -1,5 +1,15 @@
-import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsBoolean, IsArray, ValidateNested } from 'class-validator';
+import { UpdateCertificateDto } from './certificate.dto';
+
+class UpdateCertificateItemDto {
+  @IsString()
+  certificateId: string;
+
+  @ValidateNested()
+  @Type(() => UpdateCertificateDto)
+  data: UpdateCertificateDto;
+}
 
 export class UpdateDoulaProfileDto {
   // User table
@@ -25,9 +35,6 @@ export class UpdateDoulaProfileDto {
   qualification?: string;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
   yoe?: number;
 
   @IsOptional()
@@ -35,4 +42,11 @@ export class UpdateDoulaProfileDto {
 
   @IsOptional()
   specialities?: any;
+
+  // ✅ Certificate edits
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateCertificateItemDto)
+  certificates?: UpdateCertificateItemDto[];
 }
