@@ -851,4 +851,113 @@ export class DoulaController {
       Number(visitFrequency),
     );
   }
+
+  @Post('calculate-price')
+  @ApiOperation({
+    summary: 'Calculate service price for a doula',
+    description:
+      'Calculates the total price for a doula service based on service type, dates, and availability. For postpartum services, requires visit frequency and time shift. For birth doula services, calculates based on total days.',
+  })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      examples: {
+        postpartumAvailable: {
+          summary: 'Postpartum service - Available',
+          value: {
+            success: true,
+            message: 'Price calculated successfully',
+            available: true,
+            data: {
+              doulaProfileId: '7de77403-ca72-452b-abfa-296c26df8116',
+              servicePricingId: '00880c8d-abbc-42df-b6d7-c24ab4044ed0',
+              serviceName: 'Postpartum Care',
+              serviceType: 'postpartum',
+              startDate: '2025-01-01',
+              endDate: '2025-01-31',
+              visitFrequency: 7,
+              timeShift: 'MORNING',
+              visitDates: [
+                '2025-01-01',
+                '2025-01-08',
+                '2025-01-15',
+                '2025-01-22',
+                '2025-01-29',
+              ],
+              numberOfVisits: 5,
+              pricePerVisit: 10,
+              totalPrice: 50,
+              currency: 'USD',
+            },
+          },
+        },
+        doulaNotAvailable: {
+          summary: 'Doula not available',
+          value: {
+            success: false,
+            message: 'Doula not available for the selected dates and shift',
+            available: false,
+          },
+        },
+        birthAvailable: {
+          summary: 'Birth doula service - Available',
+          value: {
+            success: true,
+            message: 'Price calculated successfully',
+            available: true,
+            data: {
+              doulaProfileId: '7de77403-ca72-452b-abfa-296c26df8116',
+              servicePricingId: '00880c8d-abbc-42df-b6d7-c24ab4044ed0',
+              serviceName: 'Birth Support',
+              serviceType: 'birth',
+              startDate: '2025-01-01',
+              endDate: '2025-01-05',
+              numberOfVisits: 5,
+              pricePerVisit: 30,
+              totalPrice: 150,
+              currency: 'USD',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiBody({
+    description: 'Service price calculation request',
+    examples: {
+      postpartum: {
+        summary: 'Postpartum service',
+        value: {
+          doulaProfileId: '7de77403-ca72-452b-abfa-296c26df8116',
+          servicePricingId: '00880c8d-abbc-42df-b6d7-c24ab4044ed0',
+          startDate: '2025-01-01',
+          endDate: '2025-01-31',
+          serviceType: 'postpartum',
+          visitFrequency: 7,
+          timeShift: 'MORNING',
+        },
+      },
+      birth: {
+        summary: 'Birth doula service',
+        value: {
+          doulaProfileId: '7de77403-ca72-452b-abfa-296c26df8116',
+          servicePricingId: '00880c8d-abbc-42df-b6d7-c24ab4044ed0',
+          startDate: '2025-01-01',
+          endDate: '2025-01-05',
+          serviceType: 'birth',
+        },
+      },
+    },
+  })
+  async calculateServicePrice(@Body() dto: any) {
+    return this.service.calculateServicePrice(
+      dto.doulaProfileId,
+      dto.servicePricingId,
+      dto.startDate,
+      dto.endDate,
+      dto.serviceType,
+      dto.visitFrequency,
+      dto.timeShift,
+    );
+  }
 }

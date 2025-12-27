@@ -2067,6 +2067,230 @@ export class DoulaService {
     };
   }
 
+  async calculateServicePrice(
+    doulaProfileId: string,
+    servicePricingId: string,
+    startDate: string,
+    endDate: string,
+    serviceType: string,
+    visitFrequency?: number,
+    timeShift?: string,
+  ) {
+    // Validate doula exists
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { id: doulaProfileId },
+      select: { id: true },
+    });
+
+    if (!doula) {
+      throw new NotFoundException('Doula not found');
+    }
+
+    // Fetch service pricing
+    const servicePricing = await this.prisma.servicePricing.findFirst({
+      where: {
+        id: servicePricingId,
+        doulaProfileId: doulaProfileId,
+      },
+      include: {
+        service: true,
+      },
+    });
+
+    if (!servicePricing) {
+      throw new NotFoundException(
+        'Service pricing not found for this doula',
+      );
+    }
+
+    // Parse dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    // Validate date range
+    if (start > end) {
+      throw new BadRequestException('Start date must be before end date');
+    }
+
+    const pricing = servicePricing.price as any;
+    let totalPrice = 0;
+    let visitDates: Date[] = [];
+    let numberOfVisits = 0;
+    let pricePerVisit = 0;
+
+    // Calculate based on service type
+    if (serviceType === 'postpartum') {
+      // Postpartum requires visit frequency and time shift
+      if (!visitFrequency || !timeShift) {
+        throw new BadRequestException(
+          'Visit frequency and time shift are required for postpartum service',
+        );
+      }
+
+      // Calculate visit dates
+      const currentDate = new Date(start);
+      while (currentDate <= end) {
+        visitDates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + visitFrequency);
+      }
+
+      numberOfVisits = visitDates.length;
+
+      // Check availability for all visit dates
+      const schedules = await this.prisma.schedules.findMany({
+        where: {
+          doulaProfileId: doulaProfileId,
+          date: { in: visitDates },
+        },
+        select: {
+          date: true,
+          timeshift: true,
+        },
+      });
+
+      const offDays = await this.prisma.doulaOffDays.findMany({
+        where: {
+          doulaProfileId: doulaProfileId,
+          date: { in: visitDates },
+        },
+        select: {
+          date: true,
+          offtime: true,
+        },
+      });
+
+      // Check if doula is available on all visit dates for the selected shift
+      const bookedShifts = new Map<string, Set<string>>();
+      schedules.forEach((schedule) => {
+        const dateKey = schedule.date.toISOString().split('T')[0];
+        if (!bookedShifts.has(dateKey)) {
+          bookedShifts.set(dateKey, new Set());
+        }
+        bookedShifts.get(dateKey)!.add(schedule.timeshift);
+      });
+
+      const offDaysMap = new Map<string, any>();
+      offDays.forEach((offDay) => {
+        const dateKey = offDay.date.toISOString().split('T')[0];
+        offDaysMap.set(dateKey, offDay.offtime);
+      });
+
+      // Check availability for requested shift
+      for (const visitDate of visitDates) {
+        const dateKey = visitDate.toISOString().split('T')[0];
+        const bookedOnDate = bookedShifts.get(dateKey) || new Set();
+        const offTimeOnDate = offDaysMap.get(dateKey);
+
+        // Check if the requested shift is unavailable
+        if (timeShift === 'MORNING') {
+          if (
+            bookedOnDate.has('MORNING') ||
+            bookedOnDate.has('FULLDAY') ||
+            (offTimeOnDate && offTimeOnDate.morning === false)
+          ) {
+            return {
+              success: false,
+              message: 'Doula not available for the selected dates and shift',
+              available: false,
+            };
+          }
+        } else if (timeShift === 'NIGHT') {
+          if (
+            bookedOnDate.has('NIGHT') ||
+            bookedOnDate.has('FULLDAY') ||
+            (offTimeOnDate && offTimeOnDate.night === false)
+          ) {
+            return {
+              success: false,
+              message: 'Doula not available for the selected dates and shift',
+              available: false,
+            };
+          }
+        } else if (timeShift === 'FULLDAY') {
+          if (
+            bookedOnDate.has('FULLDAY') ||
+            bookedOnDate.has('MORNING') ||
+            bookedOnDate.has('NIGHT') ||
+            (offTimeOnDate &&
+              (offTimeOnDate.fullday === false ||
+                offTimeOnDate.morning === false ||
+                offTimeOnDate.night === false))
+          ) {
+            return {
+              success: false,
+              message: 'Doula not available for the selected dates and shift',
+              available: false,
+            };
+          }
+        }
+      }
+
+      // Calculate price based on shift
+      const shiftKey = timeShift.toLowerCase();
+      pricePerVisit = pricing[shiftKey] || 0;
+      totalPrice = pricePerVisit * numberOfVisits;
+    } else if (serviceType === 'birth') {
+      // Birth doula - calculate total days and use fullday price
+      const totalDays =
+        Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
+        1;
+
+      // Check if doula is available for the entire date range
+      const schedules = await this.prisma.schedules.findMany({
+        where: {
+          doulaProfileId: doulaProfileId,
+          date: {
+            gte: start,
+            lte: end,
+          },
+        },
+        select: {
+          date: true,
+        },
+      });
+
+      if (schedules.length > 0) {
+        return {
+          success: false,
+          message:
+            'Doula not available for the selected date range (already booked)',
+          available: false,
+        };
+      }
+
+      pricePerVisit = pricing.fullday || 0;
+      numberOfVisits = totalDays;
+      totalPrice = pricePerVisit * totalDays;
+    } else {
+      throw new BadRequestException('Invalid service type');
+    }
+
+    return {
+      success: true,
+      message: 'Price calculated successfully',
+      available: true,
+      data: {
+        doulaProfileId,
+        servicePricingId,
+        serviceName: servicePricing.service.name,
+        serviceType,
+        startDate,
+        endDate,
+        ...(serviceType === 'postpartum' && {
+          visitFrequency,
+          timeShift,
+          visitDates: visitDates.map((d) => d.toISOString().split('T')[0]),
+        }),
+        numberOfVisits,
+        pricePerVisit,
+        totalPrice,
+        currency: 'USD', // You can make this configurable
+      },
+    };
+  }
+
   async getAvailableShifts(
     doulaId: string,
     startDate: string,
