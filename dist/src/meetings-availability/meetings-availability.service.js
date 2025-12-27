@@ -21,6 +21,28 @@ let AvailableSlotsService = class AvailableSlotsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    toMinutesinUtc(date) {
+        return date.getUTCHours() * 60 + date.getUTCMinutes();
+    }
+    fromMinutes(baseDate, minutes) {
+        const d = new Date(baseDate);
+        d.setUTCHours(0, 0, 0, 0);
+        d.setUTCMinutes(minutes);
+        return d;
+    }
+    splitInto30MinSlots(slot, baseDate) {
+        const slots = [];
+        let start = this.toMinutesinUtc(slot.startTime);
+        const end = this.toMinutesinUtc(slot.endTime);
+        while (start + 30 <= end) {
+            slots.push({
+                startTime: this.fromMinutes(baseDate, start),
+                endTime: this.fromMinutes(baseDate, start + 30),
+            });
+            start += 30;
+        }
+        return slots;
+    }
     toMinutes(time) {
         const [hours, minutes] = time.split(':').map(Number);
         return hours * 60 + minutes;
@@ -77,8 +99,8 @@ let AvailableSlotsService = class AvailableSlotsService {
         if (result === 1) {
             throw new common_1.BadRequestException('Availability partially overlaps an existing slot');
         }
-        const startDateTime = new Date(`1970-01-01T${result.startTime}:00`);
-        const endDateTime = new Date(`1970-01-01T${result.endTime}:00`);
+        const startDateTime = new Date(`1970-01-01T${result.startTime}:00Z`);
+        const endDateTime = new Date(`1970-01-01T${result.endTime}:00Z`);
         if (startDateTime >= endDateTime) {
             throw new common_1.BadRequestException('Invalid availability after adjustment');
         }
@@ -599,7 +621,7 @@ let AvailableSlotsService = class AvailableSlotsService {
         d.setHours(time.getHours(), time.getMinutes(), 0, 0);
         return d;
     }
-    async ZmgetAvailablility(userId, dto) {
+    async ZmgetAvailablility(regionId, dto) {
         const { date1, date2, weekday } = dto;
         if (!date1) {
             throw new common_1.BadRequestException('date1 is required');
@@ -614,8 +636,18 @@ let AvailableSlotsService = class AvailableSlotsService {
         if (startDate > endDate) {
             throw new common_1.BadRequestException('date1 cannot be after date2');
         }
+        const region = await this.prisma.region.findUnique({
+            where: { id: regionId },
+            select: { id: true, zoneManagerId: true },
+        });
+        if (!region) {
+            throw new common_1.ForbiddenException('Region not found');
+        }
+        if (!region.zoneManagerId) {
+            throw new common_1.BadRequestException("Region Not Assigned to zone manager");
+        }
         const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
-            where: { userId },
+            where: { id: region.zoneManagerId },
             select: { id: true },
         });
         if (!zoneManager) {
@@ -708,6 +740,30 @@ let AvailableSlotsService = class AvailableSlotsService {
             };
         });
         return response;
+    }
+    async splitTimeslots(regionId, dto) {
+        const baseResponse = await this.ZmgetAvailablility(regionId, dto);
+        const response = baseResponse.map((day) => {
+            const baseDate = new Date(day.date);
+            const splitSlots = day.timeslots.flatMap((slot) => {
+                const start = new Date(`${day.date.toISOString().split('T')[0]}T${slot.startTime}Z`);
+                const end = new Date(`${day.date.toISOString().split('T')[0]}T${slot.endTime}Z`);
+                return this.splitInto30MinSlots({ startTime: start, endTime: end }, baseDate);
+            });
+            return {
+                date: day.date,
+                weekday: day.weekday,
+                timeslots: splitSlots.map((s) => ({
+                    startTime: this.formatTimeOnly(s.startTime),
+                    endTime: this.formatTimeOnly(s.endTime),
+                })),
+            };
+        });
+        return {
+            status: 'success',
+            message: 'Request successful',
+            data: response,
+        };
     }
 };
 exports.AvailableSlotsService = AvailableSlotsService;
