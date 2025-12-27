@@ -17,12 +17,122 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { UpdateCertificateDto } from './dto/certificate.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
+import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
 
 const MAX_GALLERY_IMAGES = 5;
 
 @Injectable()
 export class DoulaService {
   constructor(private prisma: PrismaService) { }
+
+
+  private async buildDoulaProfileResponse(userId: string) {
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        Region: {
+          select: {
+            regionName: true,
+          },
+        },
+        Testimonials: {
+          select: {
+            ratings: true,
+          },
+        },
+        DoulaGallery: {
+          select: {
+            id: true,
+            url: true,
+            altText: true,
+          },
+        },
+        Certificates: {
+          select: { id: true, issuedBy: true, name: true, year: true },
+        },
+        ServicePricing: {
+          include: { service: true },
+        },
+      },
+    });
+
+    if (!doula) {
+      throw new NotFoundException('Doula profile not found');
+    }
+
+    /** -----------------------
+     * Rating calculations
+     * ---------------------- */
+    const totalReviews = doula.Testimonials.length;
+    const ratingSum = doula.Testimonials.reduce(
+      (sum, r) => sum + r.ratings,
+      0,
+    );
+
+    const averageRating =
+      totalReviews > 0
+        ? Number((ratingSum / totalReviews).toFixed(1))
+        : 0;
+
+    const satisfaction =
+      totalReviews > 0
+        ? Math.round((ratingSum / (totalReviews * 5)) * 100)
+        : 0;
+
+    /** -----------------------
+     * Final response shape
+     * ---------------------- */
+    return {
+      id: doula.id,
+
+      // Header
+      name: doula.user.name,
+      title: 'Certified Birth Doula',
+      averageRating,
+      totalReviews,
+
+      // Stats
+      births: 0,
+      experience: doula.yoe ?? 0,
+      satisfaction,
+
+      // Contact
+      contact: {
+        email: doula.user.email,
+        phone: doula.user.phone,
+        location: doula.Region?.[0]?.regionName ?? null,
+      },
+
+      // About
+      about: doula.description,
+
+      servicePricing: doula.ServicePricing.map((pricing) => ({
+        servicePricingid: pricing.id,
+        servicename: pricing.service.name,
+        price: pricing.price,
+      })),
+
+      certificates: doula.Certificates.map((cert) => ({
+        id: cert.id,
+        name: cert.name,
+        issuedBy: cert.issuedBy,
+        year: cert.year,
+      })),
+
+      gallery: doula.DoulaGallery.map((img) => ({
+        id: img.id,
+        url: img.url,
+        altText: img.altText,
+      })),
+    };
+  }
 
   // Create new Doula
   //if admin is creating doula, zone manager of regions are added to doulas profile.
@@ -175,23 +285,6 @@ export class DoulaService {
       }
 
       // =====================================================
-      // SERVICE PRICING CREATION
-      // dto.services = { serviceId: price }
-      // =====================================================
-      if (dto.services) {
-        await Promise.all(
-          Object.entries(dto.services).map(([serviceId, price]) =>
-            tx.servicePricing.create({
-              data: {
-                doulaProfileId: createdUser.doulaProfile!.id,
-                serviceId,
-                price,
-              },
-            }),
-          ),
-        );
-      }
-      // =====================================================
       // CERTIFICATES CREATION
       // =====================================================
 
@@ -216,14 +309,6 @@ export class DoulaService {
         include: {
           doulaProfile: {
             include: {
-              ServicePricing: {
-                select: {
-                  id: true,
-                  serviceId: true,
-                  price: true,
-                  service: { select: { name: true, description: true } },
-                },
-              },
               Region: {
                 select: {
                   id: true,
@@ -508,12 +593,7 @@ export class DoulaService {
             ServicePricing: {
               include: { service: true },
             },
-            AvailableSlotsForService: {
-              where: {
-                availabe: true,
-                isBooked: false,
-              },
-            },
+            AvailableSlotsForService: true,
             Testimonials: {
               include: {
                 client: {
@@ -1000,8 +1080,7 @@ export class DoulaService {
       data: schedules.map((schedule) => ({
         scheduleId: schedule.id,
         date: schedule.date,
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
+        timeshift: schedule.timeshift,
         serviceName: schedule.ServicePricing.service.name,
         clientName: schedule.client.user.name,
         status: schedule.status,
@@ -1065,8 +1144,7 @@ export class DoulaService {
       data: {
         scheduleId: schedule.id,
         date: schedule.date,
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
+        timeshift: schedule.timeshift,
         status: schedule.status,
 
         service: {
@@ -1410,52 +1488,8 @@ export class DoulaService {
       throw new ForbiddenException('Access denied');
     }
 
-    const doula = await this.prisma.doulaProfile.findUnique({
-      where: { userId: user.id },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-        Region: {
-          select: {
-            regionName: true,
-          },
-        },
-        Testimonials: {
-          select: {
-            ratings: true,
-          },
-        },
-        DoulaGallery: {
-          select: {
-            id: true,
-            url: true,
-            altText: true,
-          },
-        },
-        Certificates: { select: { id: true, issuedBy: true, name: true, year: true } }
-      },
-    });
+    const data = await this.buildDoulaProfileResponse(user.id);
 
-    if (!doula) {
-      throw new NotFoundException('Doula profile not found');
-    }
-
-    /** -----------------------
-     * Rating calculations
-     * ---------------------- */
-    const totalReviews = doula.Testimonials.length;
-    const ratingSum = doula.Testimonials.reduce((sum, r) => sum + r.ratings, 0);
-
-    const averageRating =
-      totalReviews > 0 ? Number((ratingSum / totalReviews).toFixed(1)) : 0;
-
-    const satisfaction =
-      totalReviews > 0 ? Math.round((ratingSum / (totalReviews * 5)) * 100) : 0;
 
     /** -----------------------
      * Response
@@ -1463,44 +1497,7 @@ export class DoulaService {
     return {
       success: true,
       message: 'Doula profile fetched successfully',
-      data: {
-        id: doula.id,
-
-        // Header
-        name: doula.user.name,
-        title: 'Certified Birth Doula',
-        averageRating,
-        totalReviews,
-
-        // Stats
-        births: 0, // optional: derive from ServiceBooking
-        experience: doula.yoe ?? 0,
-        satisfaction,
-
-        // Contact
-        contact: {
-          email: doula.user.email,
-          phone: doula.user.phone,
-          location: doula.Region?.[0]?.regionName ?? null,
-        },
-
-        // About
-        about: doula.description,
-
-        certificates: doula.Certificates.map((cert) => ({
-          id: cert.id,
-          name: cert.name,
-          issuedBy: cert.issuedBy,
-          year: cert.year
-        })),
-
-        // Gallery
-        gallery: doula.DoulaGallery.map((img) => ({
-          id: img.id,
-          url: img.url,
-          altText: img.altText,
-        })),
-      },
+      data: data
     };
   }
 
@@ -1679,19 +1676,56 @@ export class DoulaService {
       yoe,
       languages,
       specialities,
+      certificates,
+      servicePricings,
     } = dto;
 
-    const data = await this.prisma.$transaction([
-      // Update User table
-      this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          ...(name !== undefined && { name }),
-          ...(is_active !== undefined && { is_active }),
-        },
-      }),
+    const operations: any[] = [];
 
-      // Update DoulaProfile table
+    /**
+     * 1. Update User
+     */
+    if (name !== undefined || is_active !== undefined) {
+      operations.push(
+        this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            ...(name !== undefined && { name }),
+            ...(is_active !== undefined && { is_active }),
+          },
+        }),
+      );
+    }
+
+    /**
+     * 2. Update Service Pricing
+     */
+    const toJsonPrice = (price: PriceBreakdownDto): Prisma.InputJsonObject => ({
+      morning: price.morning,
+      night: price.night,
+      fullday: price.fullday,
+    });
+
+    if (servicePricings?.length) {
+      for (const pricing of servicePricings) {
+        operations.push(
+          this.prisma.servicePricing.updateMany({
+            where: {
+              id: pricing.servicePricingId,
+              doulaProfileId: doulaProfile.id,
+            },
+            data: {
+              price: toJsonPrice(pricing.price),
+            },
+          }),
+        );
+      }
+    }
+
+    /**
+     * 3. Update Doula Profile
+     */
+    operations.push(
       this.prisma.doulaProfile.update({
         where: { userId },
         data: {
@@ -1703,13 +1737,53 @@ export class DoulaService {
           ...(specialities !== undefined && { specialities }),
         },
       }),
-    ]);
+    );
+
+    /**
+     * 4. Update Certificates
+     */
+    if (certificates?.length) {
+      for (const cert of certificates) {
+        operations.push(
+          this.prisma.certificates.updateMany({
+            where: {
+              id: cert.certificateId,
+              doulaProfileId: doulaProfile.id,
+            },
+            data: {
+              ...(cert.data.name !== undefined && {
+                name: cert.data.name,
+              }),
+              ...(cert.data.issuedBy !== undefined && {
+                issuedBy: cert.data.issuedBy,
+              }),
+              ...(cert.data.year !== undefined && {
+                year: cert.data.year,
+              }),
+            },
+          }),
+        );
+      }
+    }
+
+    /**
+     * 5. Atomic commit
+     */
+    await this.prisma.$transaction(operations);
+
+    /**
+     * 6. Return SAME response as GET profile
+     */
+    const data = await this.buildDoulaProfileResponse(userId);
 
     return {
+      success: true,
       message: 'Doula profile updated successfully',
-      data: data,
+      data,
     };
   }
+
+
 
   // Helper: get doula profile
   private async getDoulaProfile(userId: string) {
@@ -1987,8 +2061,7 @@ export class DoulaService {
       schedules: booking.schedules.map((schedule) => ({
         id: schedule.id,
         date: schedule.date,
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
+        timeshift: schedule.timeshift,
         status: schedule.status,
       })),
     };

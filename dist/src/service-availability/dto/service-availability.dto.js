@@ -9,64 +9,75 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateDoulaServiceAvailabilityDTO = exports.CreateDoulaServiceAvailability = void 0;
+exports.UpdateDoulaServiceAvailabilityDto = exports.CreateDoulaServiceAvailabilityDto = exports.ServiceAvailabilityDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
-const client_1 = require("@prisma/client");
+const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-class CreateDoulaServiceAvailability {
-    weekday;
-    startTime;
-    endTime;
+class ServiceAvailabilityDto {
+    MORNING;
+    NIGHT;
+    FULLDAY;
 }
-exports.CreateDoulaServiceAvailability = CreateDoulaServiceAvailability;
+exports.ServiceAvailabilityDto = ServiceAvailabilityDto;
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], ServiceAvailabilityDto.prototype, "MORNING", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], ServiceAvailabilityDto.prototype, "NIGHT", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], ServiceAvailabilityDto.prototype, "FULLDAY", void 0);
+class CreateDoulaServiceAvailabilityDto {
+    date1;
+    date2;
+    availability;
+}
+exports.CreateDoulaServiceAvailabilityDto = CreateDoulaServiceAvailabilityDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        enum: client_1.WeekDays,
-        example: client_1.WeekDays.MONDAY,
-        description: 'Day of the week',
+        example: '2025-10-30',
+        description: 'Start date (required)',
     }),
-    (0, class_validator_1.IsEnum)(client_1.WeekDays, {
-        message: 'weekday must be one of MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY',
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateDoulaServiceAvailabilityDto.prototype, "date1", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: '2025-11-02',
+        description: 'End date (optional)',
     }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
-], CreateDoulaServiceAvailability.prototype, "weekday", void 0);
+], CreateDoulaServiceAvailabilityDto.prototype, "date2", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '09:00' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateDoulaServiceAvailability.prototype, "startTime", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '11:00' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateDoulaServiceAvailability.prototype, "endTime", void 0);
-class UpdateDoulaServiceAvailabilityDTO {
-    startTime;
-    endTime;
-    availabe;
-    isBooked;
+    (0, swagger_1.ApiProperty)({
+        type: ServiceAvailabilityDto,
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => ServiceAvailabilityDto),
+    __metadata("design:type", ServiceAvailabilityDto)
+], CreateDoulaServiceAvailabilityDto.prototype, "availability", void 0);
+class UpdateDoulaServiceAvailabilityDto {
+    availability;
 }
-exports.UpdateDoulaServiceAvailabilityDTO = UpdateDoulaServiceAvailabilityDTO;
+exports.UpdateDoulaServiceAvailabilityDto = UpdateDoulaServiceAvailabilityDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '09:00' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateDoulaServiceAvailabilityDTO.prototype, "startTime", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '11:00' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateDoulaServiceAvailabilityDTO.prototype, "endTime", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ example: true }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Partial update of service availability',
+        example: {
+            MORNING: false,
+            NIGHT: true,
+            FULLDAY: false,
+        },
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], UpdateDoulaServiceAvailabilityDTO.prototype, "availabe", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ example: false }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], UpdateDoulaServiceAvailabilityDTO.prototype, "isBooked", void 0);
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => ServiceAvailabilityDto),
+    __metadata("design:type", Object)
+], UpdateDoulaServiceAvailabilityDto.prototype, "availability", void 0);
 //# sourceMappingURL=service-availability.dto.js.map

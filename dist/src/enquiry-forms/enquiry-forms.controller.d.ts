@@ -7,46 +7,46 @@ export declare class EnquiryController {
         message: string;
         enquiry: {
             id: string;
+            name: string;
             email: string;
             phone: string;
-            name: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
+            meetingsId: string | null;
+            serviceName: string;
             serviceId: string;
             clientId: string;
-            serviceName: string;
-            meetingsId: string | null;
-            additionalNotes: string | null;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date | null;
             serviceEndDate: Date | null;
-            VisitFrequency: number | null;
             serviceTimeSlots: string | null;
+            additionalNotes: string | null;
+            VisitFrequency: number | null;
             slotId: string;
         };
     }>;
     getAllEnquiries(page: string | undefined, limit: string | undefined, req: any): Promise<{
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string;
-            name: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
+            meetingsId: string | null;
+            serviceName: string;
             serviceId: string;
             clientId: string;
-            serviceName: string;
-            meetingsId: string | null;
-            additionalNotes: string | null;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date | null;
             serviceEndDate: Date | null;
-            VisitFrequency: number | null;
             serviceTimeSlots: string | null;
+            additionalNotes: string | null;
+            VisitFrequency: number | null;
             slotId: string;
         }[];
         meta: {
@@ -60,23 +60,23 @@ export declare class EnquiryController {
     }>;
     getEnquiryById(id: string, req: any): Promise<{
         id: string;
+        name: string;
         email: string;
         phone: string;
-        name: string;
         createdAt: Date;
         updatedAt: Date;
         regionId: string;
+        meetingsId: string | null;
+        serviceName: string;
         serviceId: string;
         clientId: string;
-        serviceName: string;
-        meetingsId: string | null;
-        additionalNotes: string | null;
         meetingsDate: Date;
         meetingsTimeSlots: string;
         seviceStartDate: Date | null;
         serviceEndDate: Date | null;
-        VisitFrequency: number | null;
         serviceTimeSlots: string | null;
+        additionalNotes: string | null;
+        VisitFrequency: number | null;
         slotId: string;
     }>;
     deleteEnquiry(id: string): Promise<{

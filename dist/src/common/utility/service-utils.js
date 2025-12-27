@@ -14,7 +14,6 @@ exports.createTimeForSlot = createTimeForSlot;
 exports.toUTCDate = toUTCDate;
 exports.getOrcreateClent = getOrcreateClent;
 exports.getWeekdayFromDate = getWeekdayFromDate;
-exports.getServiceSlotOrCreateSlot = getServiceSlotOrCreateSlot;
 exports.parseTimeSlot = parseTimeSlot;
 exports.isMeetingExists = isMeetingExists;
 exports.isOverlapping = isOverlapping;
@@ -221,26 +220,6 @@ function getWeekdayFromDate(date) {
         client_1.WeekDays.SATURDAY,
     ];
     return map[d.getDay()];
-}
-async function getServiceSlotOrCreateSlot(prisma, weekday, profileId) {
-    let slot = await prisma.availableSlotsForService.findUnique({
-        where: {
-            doulaId_weekday: {
-                doulaId: profileId,
-                weekday: weekday,
-            },
-        },
-    });
-    if (slot)
-        return slot;
-    slot = await prisma.availableSlotsForService.create({
-        data: {
-            weekday: weekday,
-            availabe: true,
-            doulaId: profileId,
-        },
-    });
-    return slot;
 }
 function parseTimeSlot(timeSlot) {
     const match = timeSlot.match(/^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$/);

@@ -15,10 +15,15 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const service_utils_1 = require("../common/utility/service-utils");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const client_1 = require("@prisma/client");
+const availability_time_resolver_util_1 = require("./availability-time-resolver.util");
 let AvailableSlotsService = class AvailableSlotsService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
+    }
+    toMinutes(time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        return hours * 60 + minutes;
     }
     async createAvailability(dto, user) {
         let profile;
@@ -42,26 +47,54 @@ let AvailableSlotsService = class AvailableSlotsService {
                 throw new common_1.ForbiddenException('Invalid user role');
         }
         const { weekday, startTime, endTime } = dto;
-        const startDateTime = new Date(`${'1970-01-01'}T${startTime}:00`);
-        const endDateTime = new Date(`${'1970-01-01'}T${endTime}:00`);
-        if (startDateTime >= endDateTime) {
-            throw new common_1.BadRequestException('Start time must be before end time.');
+        const startMinutes = this.toMinutes(startTime);
+        const endMinutes = this.toMinutes(endTime);
+        if (endMinutes <= startMinutes) {
+            throw new common_1.BadRequestException('End time must be greater than start time');
         }
-        const dateslot = await (0, service_utils_1.getSlotOrCreateSlot)(this.prisma, weekday, user.role, profile.id);
+        const duration = endMinutes - startMinutes;
+        if (duration % 30 !== 0) {
+            throw new common_1.BadRequestException('Availability duration must be divisible by 30 minutes');
+        }
+        const dateSlot = await (0, service_utils_1.getSlotOrCreateSlot)(this.prisma, weekday, user.role, profile.id);
+        const existingSlots = await this.prisma.availableSlotsTimeForMeeting.findMany({
+            where: {
+                dateId: dateSlot.id,
+                availabe: true,
+                isBooked: false,
+            },
+            select: {
+                startTime: true,
+                endTime: true,
+            },
+        });
+        console.log("inputs", startTime, endTime, "\n existing slot", existingSlots);
+        const result = (0, availability_time_resolver_util_1.resolveAvailabilityOverlap)({ startTime, endTime }, existingSlots);
+        console.log("result", result);
+        if (result === 0) {
+            throw new common_1.BadRequestException('Availability fully overlaps an existing slot');
+        }
+        if (result === 1) {
+            throw new common_1.BadRequestException('Availability partially overlaps an existing slot');
+        }
+        const startDateTime = new Date(`1970-01-01T${result.startTime}:00`);
+        const endDateTime = new Date(`1970-01-01T${result.endTime}:00`);
+        if (startDateTime >= endDateTime) {
+            throw new common_1.BadRequestException('Invalid availability after adjustment');
+        }
         const timings = await this.prisma.availableSlotsTimeForMeeting.create({
             data: {
-                dateId: dateslot.id,
+                dateId: dateSlot.id,
                 startTime: startDateTime,
                 endTime: endDateTime,
                 availabe: true,
                 isBooked: false,
             },
         });
-        console.log(dateslot);
         return {
             message: 'Slots created successfully',
             data: {
-                weekday: dateslot.weekday,
+                weekday: dateSlot.weekday,
                 ownerRole: user.role,
                 timeslot: {
                     startTime: timings.startTime,
@@ -390,77 +423,78 @@ let AvailableSlotsService = class AvailableSlotsService {
         };
     }
     async markOffDays(user, dto) {
+        const FULL_DAY_START = new Date('1970-01-01T00:00:00');
+        const FULL_DAY_END = new Date('1970-01-01T23:59:59');
         const { startDate, endDate, startTime, endTime } = dto;
-        const startTimeObj = new Date(`1970-01-01T${startTime}:00`);
-        const endTimeObj = new Date(`1970-01-01T${endTime}:00`);
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : null;
-        start.setHours(0, 0, 0, 0);
-        end?.setHours(0, 0, 0, 0);
-        if (user.role === client_1.Role.DOULA) {
-            const doula = await this.prisma.doulaProfile.findUnique({
-                where: { userId: user.id },
-            });
-            if (!doula) {
-                throw new common_1.NotFoundException('Doula not found');
-            }
+        start.setUTCHours(0, 0, 0, 0);
+        end?.setUTCHours(0, 0, 0, 0);
+        const zm = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId: user.id },
+        });
+        if (!zm) {
+            throw new common_1.NotFoundException('Zone Manager not found');
+        }
+        if (!startTime && !endTime) {
             if (!end) {
                 return this.prisma.offDays.create({
                     data: {
                         date: start,
-                        startTime: startTimeObj,
-                        endTime: endTimeObj,
-                        doulaProfileId: doula.id,
+                        startTime: null,
+                        endTime: null,
+                        zoneManagerProfileId: zm.id,
                     },
                 });
             }
-            const offDaysData = [];
+            const offDays = [];
             const current = new Date(start);
             while (current <= end) {
-                offDaysData.push({
+                offDays.push({
                     date: new Date(current),
-                    startTime: startTimeObj,
-                    endTime: endTimeObj,
-                    doulaProfileId: doula.id,
+                    startTime: null,
+                    endTime: null,
+                    zoneManagerProfileId: zm.id,
                 });
                 current.setDate(current.getDate() + 1);
             }
-            return this.prisma.offDays.createMany({
-                data: offDaysData,
-            });
+            return this.prisma.offDays.createMany({ data: offDays });
         }
-        if (user.role === client_1.Role.ZONE_MANAGER) {
-            const zm = await this.prisma.zoneManagerProfile.findUnique({
-                where: { userId: user.id },
-            });
-            if (!zm) {
-                throw new common_1.NotFoundException('Zone Manager not found');
-            }
-            if (!end) {
-                return this.prisma.offDays.create({
-                    data: {
-                        date: start,
-                        startTime: startTimeObj,
-                        endTime: endTimeObj,
-                        doulaProfileId: zm.id,
-                    },
-                });
-            }
-            const offDaysData = [];
-            const current = new Date(start);
-            while (current <= end) {
-                offDaysData.push({
-                    date: new Date(current),
+        if (!startTime || !endTime) {
+            throw new common_1.BadRequestException('Both startTime and endTime are required for partial off days');
+        }
+        const startMinutes = this.toMinutes(startTime);
+        const endMinutes = this.toMinutes(endTime);
+        if (endMinutes <= startMinutes) {
+            throw new common_1.BadRequestException('End time must be greater than start time');
+        }
+        if ((endMinutes - startMinutes) % 30 !== 0) {
+            throw new common_1.BadRequestException('Duration must be divisible by 30 minutes');
+        }
+        const startTimeObj = new Date(`1970-01-01T${startTime}:00`);
+        const endTimeObj = new Date(`1970-01-01T${endTime}:00`);
+        if (!end) {
+            return this.prisma.offDays.create({
+                data: {
+                    date: start,
                     startTime: startTimeObj,
                     endTime: endTimeObj,
-                    doulaProfileId: zm.id,
-                });
-                current.setDate(current.getDate() + 1);
-            }
-            return this.prisma.offDays.createMany({
-                data: offDaysData,
+                    zoneManagerProfileId: zm.id,
+                },
             });
         }
+        const offDays = [];
+        const current = new Date(start);
+        while (current <= end) {
+            offDays.push({
+                date: new Date(current),
+                startTime: startTimeObj,
+                endTime: endTimeObj,
+                zoneManagerProfileId: zm.id,
+            });
+            current.setDate(current.getDate() + 1);
+        }
+        return this.prisma.offDays.createMany({ data: offDays });
     }
     async fetchOffdays(userId) {
         const today = new Date();
@@ -511,7 +545,8 @@ let AvailableSlotsService = class AvailableSlotsService {
         return { message: "Off days Deleted Successfully", data: offdays };
     }
     getWeekdayEnum(date) {
-        const map = [
+        const day = date.getUTCDay();
+        return [
             client_1.WeekDays.SUNDAY,
             client_1.WeekDays.MONDAY,
             client_1.WeekDays.TUESDAY,
@@ -519,8 +554,7 @@ let AvailableSlotsService = class AvailableSlotsService {
             client_1.WeekDays.THURSDAY,
             client_1.WeekDays.FRIDAY,
             client_1.WeekDays.SATURDAY,
-        ];
-        return map[date.getDay()];
+        ][day];
     }
     isOverlapping(startA, endA, startB, endB) {
         if (!startB || !endB)
@@ -529,6 +563,41 @@ let AvailableSlotsService = class AvailableSlotsService {
     }
     formatTimeOnly(date) {
         return date.toISOString().substring(11, 19);
+    }
+    subtractIntervals(baseSlots, blockers) {
+        let result = [...baseSlots];
+        for (const block of blockers) {
+            const temp = [];
+            for (const slot of result) {
+                if (block.endTime <= slot.startTime ||
+                    block.startTime >= slot.endTime) {
+                    temp.push(slot);
+                    continue;
+                }
+                if (block.startTime > slot.startTime) {
+                    temp.push({
+                        startTime: slot.startTime,
+                        endTime: block.startTime,
+                    });
+                }
+                if (block.endTime < slot.endTime) {
+                    temp.push({
+                        startTime: block.endTime,
+                        endTime: slot.endTime,
+                    });
+                }
+            }
+            result = temp;
+        }
+        return result;
+    }
+    toDateKey(d) {
+        return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    }
+    normalizeToBaseDate(time, baseDate) {
+        const d = new Date(baseDate);
+        d.setHours(time.getHours(), time.getMinutes(), 0, 0);
+        return d;
     }
     async ZmgetAvailablility(userId, dto) {
         const { date1, date2, weekday } = dto;
@@ -539,7 +608,9 @@ let AvailableSlotsService = class AvailableSlotsService {
             throw new common_1.BadRequestException('date2 is required when weekday filter is used');
         }
         const startDate = new Date(date1);
-        const endDate = date2 ? new Date(date2) : startDate;
+        startDate.setUTCHours(0, 0, 0, 0);
+        const endDate = date2 ? new Date(date2) : new Date(startDate);
+        endDate.setUTCHours(0, 0, 0, 0);
         if (startDate > endDate) {
             throw new common_1.BadRequestException('date1 cannot be after date2');
         }
@@ -551,8 +622,10 @@ let AvailableSlotsService = class AvailableSlotsService {
             throw new common_1.ForbiddenException('Zone manager profile not found');
         }
         const dates = [];
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            dates.push(new Date(d));
+        let cursor = new Date(startDate);
+        while (cursor.getTime() <= endDate.getTime()) {
+            dates.push(new Date(cursor));
+            cursor.setUTCDate(cursor.getUTCDate() + 1);
         }
         const filteredDates = weekday
             ? dates.filter((d) => this.getWeekdayEnum(d) === weekday)
@@ -602,27 +675,36 @@ let AvailableSlotsService = class AvailableSlotsService {
                 };
             }
             let slots = weeklySlot.AvailableSlotsTimeForMeeting.map((t) => ({
-                startTime: t.startTime,
-                endTime: t.endTime,
+                startTime: this.normalizeToBaseDate(t.startTime, date),
+                endTime: this.normalizeToBaseDate(t.endTime, date),
             }));
-            const dayMeetings = meetings.filter((m) => m.date.toDateString() === date.toDateString());
-            slots = slots.filter((slot) => !dayMeetings.some((m) => this.isOverlapping(slot.startTime, slot.endTime, m.startTime, m.endTime)));
-            const dayOff = offDays.find((o) => o.date.toDateString() === date.toDateString());
-            if (dayOff) {
-                if (!dayOff.startTime && !dayOff.endTime) {
+            const dayMeetings = meetings
+                .filter((m) => this.toDateKey(m.date) === this.toDateKey(date))
+                .map((m) => ({
+                startTime: this.normalizeToBaseDate(m.startTime, date),
+                endTime: this.normalizeToBaseDate(m.endTime, date),
+            }));
+            slots = this.subtractIntervals(slots, dayMeetings);
+            const dayOffs = offDays.filter((o) => this.toDateKey(o.date) === this.toDateKey(date));
+            for (const off of dayOffs) {
+                if (!off.startTime && !off.endTime) {
                     slots = [];
+                    break;
                 }
-                else {
-                    slots = slots.filter((slot) => !this.isOverlapping(slot.startTime, slot.endTime, dayOff.startTime ?? undefined, dayOff.endTime ?? undefined));
-                }
+                slots = this.subtractIntervals(slots, [
+                    {
+                        startTime: this.normalizeToBaseDate(off.startTime, date),
+                        endTime: this.normalizeToBaseDate(off.endTime, date),
+                    },
+                ]);
             }
             return {
                 date,
                 weekday: weekdayEnum,
-                timeslots: slots.map((slot) => ({
-                    startTime: this.formatTimeOnly(slot.startTime),
-                    endTime: this.formatTimeOnly(slot.endTime),
-                }))
+                timeslots: slots.map((s) => ({
+                    startTime: this.formatTimeOnly(s.startTime),
+                    endTime: this.formatTimeOnly(s.endTime),
+                })),
             };
         });
         return response;

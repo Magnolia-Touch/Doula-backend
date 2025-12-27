@@ -44,6 +44,12 @@ enum WeekDays {
   SATURDAY
 }
 
+enum TimeShift {
+  MORNING
+  NIGHT
+  FULLDAY
+}
+
 //User Model
 model User {
   id           String    @id @default(uuid())
@@ -112,6 +118,7 @@ model DoulaProfile {
   DoulaGallery             DoulaGallery[]
   Certificates             Certificates[]
   OffDays                  OffDays[]
+  DoulaOffDays             DoulaOffDays[]
 }
 
 // Client Profile
@@ -292,39 +299,17 @@ model Meetings {
 }
 
 model AvailableSlotsForService {
-  id        String   @id @default(uuid())
-  weekday   WeekDays
-  availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
-  isBooked  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  doulaId   String
+  id           String   @id @default(uuid())
+  date         DateTime @db.Date
+  availability Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  doula                        DoulaProfile                   @relation(fields: [doulaId], references: [id], onDelete: Cascade)
-  IntakeForm                   IntakeForm[]
-  AvailableSlotsTimeForService AvailableSlotsTimeForService[]
-  ServiceBooking               ServiceBooking[]
+  doulaId String
 
-  // Prevent duplicates for the same owner for same day/time
-  @@unique([doulaId, weekday]) //creates a compostie unique constraint
-}
-
-model AvailableSlotsTimeForService {
-  id        String   @id @default(uuid())
-  startTime DateTime @db.Time(0)
-  endTime   DateTime @db.Time(0)
-  availabe  Boolean  @default(true) //can be marked false if on leave or when locked.
-  isBooked  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  formId    String?
-  bookingId String?
-  dateId    String
-
-  date           AvailableSlotsForService @relation(fields: [dateId], references: [id], onDelete: Cascade)
-  IntakeForm     IntakeForm?              @relation(fields: [formId], references: [id])
-  ServiceBooking ServiceBooking?          @relation(fields: [bookingId], references: [id])
+  doula          DoulaProfile     @relation(fields: [doulaId], references: [id], onDelete: Cascade)
+  IntakeForm     IntakeForm[]
+  ServiceBooking ServiceBooking[]
 }
 
 // Intake Form
@@ -348,12 +333,12 @@ model IntakeForm {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  service       ServicePricing                 @relation(fields: [servicePricingId], references: [id])
-  clientProfile ClientProfile                  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  region        Region                         @relation(fields: [regionId], references: [id], onDelete: Cascade)
-  DoulaProfile  DoulaProfile                   @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
-  slotTime      AvailableSlotsTimeForService[]
-  slot          AvailableSlotsForService[]
+  service       ServicePricing @relation(fields: [servicePricingId], references: [id])
+  clientProfile ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  region        Region         @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  DoulaProfile  DoulaProfile   @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+
+  slot AvailableSlotsForService[]
 }
 
 // Service Booking
@@ -361,6 +346,7 @@ model ServiceBooking {
   id             String        @id @default(uuid())
   startDate      DateTime      @default(now())
   endDate        DateTime      @default(now())
+  timeshift      TimeShift     @default(FULLDAY)
   paymentDetails Json?
   status         BookingStatus @default(ACTIVE)
 
@@ -373,11 +359,11 @@ model ServiceBooking {
   updatedAt   DateTime  @updatedAt
   cancelledAt DateTime?
 
-  DoulaProfile             DoulaProfile                   @relation(fields: [doulaProfileId], references: [id])
-  service                  ServicePricing                 @relation(fields: [servicePricingId], references: [id])
-  client                   ClientProfile                  @relation(fields: [clientId], references: [id])
-  region                   Region                         @relation(fields: [regionId], references: [id])
-  slot                     AvailableSlotsTimeForService[]
+  DoulaProfile DoulaProfile   @relation(fields: [doulaProfileId], references: [id])
+  service      ServicePricing @relation(fields: [servicePricingId], references: [id])
+  client       ClientProfile  @relation(fields: [clientId], references: [id])
+  region       Region         @relation(fields: [regionId], references: [id])
+
   AvailableSlotsForService AvailableSlotsForService[]
   schedules                Schedules[]
 }
@@ -396,10 +382,12 @@ model Service {
 }
 
 model ServicePricing {
-  id             String  @id @default(uuid())
+  id             String @id @default(uuid())
   serviceId      String
   doulaProfileId String
-  price          Decimal @default(0) @db.Decimal(10, 2)
+  // JSON structure:
+  // { morning: number, night: number, fullday: number }
+  price          Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -432,8 +420,7 @@ model Testimonials {
 model Schedules {
   id        String        @id @default(uuid())
   date      DateTime      @db.Date
-  startTime DateTime
-  endTime   DateTime
+  timeshift TimeShift     @default(FULLDAY)
   status    ServiceStatus @default(PENDING)
 
   doulaProfileId String
@@ -498,7 +485,7 @@ model Certificates {
 
 model OffDays {
   id        String    @id @default(uuid())
-  date      DateTime
+  date      DateTime  @db.Date
   startTime DateTime? @db.Time(0)
   endTime   DateTime? @db.Time(0)
 
@@ -506,8 +493,21 @@ model OffDays {
   updatedAt DateTime @updatedAt
 
   zoneManagerProfileId String?
-  doulaProfileId       String?
 
   ZoneManagerProfile ZoneManagerProfile? @relation(fields: [zoneManagerProfileId], references: [id], onDelete: Cascade)
-  DoulaProfile       DoulaProfile?       @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+  DoulaProfile       DoulaProfile?       @relation(fields: [doulaProfileId], references: [id])
+  doulaProfileId     String?
+}
+
+model DoulaOffDays {
+  id      String   @id @default(uuid())
+  date    DateTime @db.Date
+  offtime Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doulaProfileId String
+
+  DoulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
 }

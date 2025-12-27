@@ -9,9 +9,38 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateDoulaProfileDto = void 0;
-const class_validator_1 = require("class-validator");
+exports.UpdateDoulaProfileDto = exports.UpdateDoulaServicePricingDto = void 0;
 const class_transformer_1 = require("class-transformer");
+const class_validator_1 = require("class-validator");
+const certificate_dto_1 = require("./certificate.dto");
+const service_pricing_dto_1 = require("../../service-pricing/dto/service-pricing.dto");
+class UpdateCertificateItemDto {
+    certificateId;
+    data;
+}
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateCertificateItemDto.prototype, "certificateId", void 0);
+__decorate([
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => certificate_dto_1.UpdateCertificateDto),
+    __metadata("design:type", certificate_dto_1.UpdateCertificateDto)
+], UpdateCertificateItemDto.prototype, "data", void 0);
+class UpdateDoulaServicePricingDto {
+    servicePricingId;
+    price;
+}
+exports.UpdateDoulaServicePricingDto = UpdateDoulaServicePricingDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateDoulaServicePricingDto.prototype, "servicePricingId", void 0);
+__decorate([
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => service_pricing_dto_1.PriceBreakdownDto),
+    __metadata("design:type", service_pricing_dto_1.PriceBreakdownDto)
+], UpdateDoulaServicePricingDto.prototype, "price", void 0);
 class UpdateDoulaProfileDto {
     name;
     is_active;
@@ -21,6 +50,8 @@ class UpdateDoulaProfileDto {
     yoe;
     languages;
     specialities;
+    certificates;
+    servicePricings;
 }
 exports.UpdateDoulaProfileDto = UpdateDoulaProfileDto;
 __decorate([
@@ -50,9 +81,6 @@ __decorate([
 ], UpdateDoulaProfileDto.prototype, "qualification", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_transformer_1.Type)(() => Number),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], UpdateDoulaProfileDto.prototype, "yoe", void 0);
 __decorate([
@@ -63,4 +91,18 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Object)
 ], UpdateDoulaProfileDto.prototype, "specialities", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => UpdateCertificateItemDto),
+    __metadata("design:type", Array)
+], UpdateDoulaProfileDto.prototype, "certificates", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => UpdateDoulaServicePricingDto),
+    __metadata("design:type", Array)
+], UpdateDoulaProfileDto.prototype, "servicePricings", void 0);
 //# sourceMappingURL=update-doula.dto.js.map

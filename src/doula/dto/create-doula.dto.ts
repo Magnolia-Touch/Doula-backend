@@ -68,28 +68,6 @@ export class CreateDoulaDto {
   @IsString({ each: true })
   languages: string[];
 
-  @ApiProperty({
-    type: 'object',
-    additionalProperties: { type: 'number' },
-    example: {
-      '86ee0ee2-11fb-4f15-b403-9a94a3cfe868': 1000,
-      'a9943bf1-3678-4981-a7f8-96d260c9bb55': 1500,
-    },
-  })
-  @Transform(({ value }) => {
-    if (!value) return {};
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value); // <-- parses the JSON string from form-data
-      } catch {
-        return {}; // or throw if you prefer
-      }
-    }
-    return value;
-  })
-  @IsObject()
-  services: Record<string, number>;
-
   // languages also from string → convert to array
   @Transform(({ value }) => {
     if (!value) return [];
@@ -130,4 +108,5 @@ export class CreateDoulaDto {
       Object.assign(new CreateCertificateDto(), item),
     );
   }
+
 }

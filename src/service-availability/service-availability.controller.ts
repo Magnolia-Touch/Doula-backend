@@ -10,13 +10,11 @@ import {
   Req,
   UseGuards,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { DoulaServiceAvailabilityService } from './service-availability.service';
-import {
-  CreateDoulaServiceAvailability,
-  UpdateDoulaServiceAvailabilityDTO,
-} from './dto/service-availability.dto';
+
 import {
   ApiBearerAuth,
   ApiBody,
@@ -30,6 +28,8 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
+import { CreateDoulaServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
+import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
 
 @ApiTags('Doula Service Availability')
 @ApiBearerAuth('bearer')
@@ -38,167 +38,95 @@ import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
   version: '1',
 })
 export class DoulaServiceAvailabilityController {
-  constructor(private readonly service: DoulaServiceAvailabilityService) {}
+  constructor(private readonly service: DoulaServiceAvailabilityService) { }
 
   // CREATE SLOTS
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
-  @ApiOperation({ summary: 'Create doula service availability slots' })
-  @ApiBody({ type: CreateDoulaServiceAvailability, isArray: true })
-  @ApiResponse({
-    status: 201,
-    type: SwaggerResponseDto,
-    schema: {
-      example: {
-        success: true,
-        message: 'Availability created',
-        data: [
-          {
-            id: 'date-avail-1',
-            date: '2025-11-21',
-            times: [
-              {
-                id: 't1',
-                startTime: '09:00',
-                endTime: '09:30',
-                isBooked: false,
-              },
-            ],
-            doulaId: 'doula-1',
-          },
-        ],
-      },
-    },
-  })
   @Post()
-  async createSlots(@Body() dto: CreateDoulaServiceAvailability, @Req() req) {
+  async createAvailability(@Body() dto: CreateDoulaServiceAvailabilityDto, @Req() req) {
     return this.service.createAvailability(dto, req.user);
   }
 
-  // Get SLOT
-  @ApiOperation({ summary: 'Get availability for a doula between dates' })
-  @ApiQuery({ name: 'doulaId', required: true })
-  @ApiQuery({ name: 'startDate', required: true })
-  @ApiQuery({ name: 'endDate', required: true })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    description: 'all | booked | unbooked',
-  })
-  @ApiResponse({
-    status: 200,
-    type: SwaggerResponseDto,
-    schema: {
-      example: {
-        success: true,
-        message: 'Availability fetched',
-        data: {
-          items: [
-            {
-              id: 'date-avail-1',
-              date: '2025-11-21',
-              times: [
-                {
-                  id: 't1',
-                  startTime: '09:00',
-                  endTime: '09:30',
-                  isBooked: false,
-                },
-              ],
-            },
-          ],
-          total: 1,
-          page: 1,
-          limit: 10,
-        },
-      },
-    },
-  })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
   @Get()
-  async getMyAvailabilities(@Req() req) {
-    return this.service.getMyAvailabilities(req.user.id);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get availability by date id' })
-  @ApiParam({ name: 'id', description: 'Date availability id' })
-  @ApiResponse({
-    status: 200,
-    type: SwaggerResponseDto,
-    schema: {
-      example: {
-        success: true,
-        message: 'Availability fetched',
-        data: {
-          id: 'date-avail-1',
-          date: '2025-11-21',
-          times: [{ id: 't1', startTime: '09:00' }],
-        },
-      },
-    },
-  })
-  async getSlotById(@Param('id') id: string) {
-    return this.service.getSlotById(id);
+  async findAll(@Req() req) {
+    return this.service.findAll(req.user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a specific availability time' })
-  @ApiBody({ type: UpdateDoulaServiceAvailabilityDTO })
-  @ApiResponse({
-    status: 200,
-    type: SwaggerResponseDto,
-    schema: {
-      example: {
-        success: true,
-        message: 'Availability updated',
-        data: { id: 'date-avail-1', timeId: 't1' },
-      },
-    },
-  })
-  async updateSlot(
-    @Body() dto: UpdateDoulaServiceAvailabilityDTO,
-    @Param('id') id: string,
+  @Get(":id")
+  async findOne(@Param("id") id: string, @Req() req) {
+    return this.service.findOne(id, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Patch(":id")
+  async update(@Param("id") id: string, @Req() req, @Body() dto: UpdateDoulaServiceAvailabilityDto) {
+    return this.service.update(id, dto, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Delete(":id")
+  async remove(@Param("id") id: string, @Req() req) {
+    return this.service.remove(id, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Post("doula/off-days")
+  async createOffDays(
+    @Body() dto: CreateDoulaOffDaysDto,
     @Req() req,
   ) {
-    return this.service.updateSlotTimeById(dto, id, req.user.id);
+    return this.service.createOffDays(dto, req.user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete availability (by id) for the doula' })
-  @ApiResponse({
-    status: 200,
-    type: SwaggerResponseDto,
-    schema: {
-      example: { success: true, message: 'Availability deleted', data: null },
-    },
-  })
-  async deleteSlot(@Param('id') id: string, @Req() req) {
-    return this.service.deleteSlots(id, req.user.id);
+  @Get("doula/off-days")
+  async getOffDays(
+    @Req() req,
+  ) {
+    console.log(11)
+    return this.service.getOffDays(req.user);
+  }
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Get('doula/off-days/:id')
+  async getOffdaysbyId(
+    @Param("id") id: string,
+    @Req() req,
+  ) {
+    return this.service.getOffdaysbyId(id, req.user);
+  }
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Patch('doula/off-days/:id')
+  async updateOffdays(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateDoulaOffDaysDto,
+    @Req() req,
+  ) {
+    return this.service.updateOffdays(id, dto, req.user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
-  @Patch('/date/:id')
-  @ApiOperation({
-    summary: 'Update all time entries for a date availability (helper)',
-  })
-  @ApiResponse({
-    status: 200,
-    type: SwaggerResponseDto,
-    schema: {
-      example: {
-        success: true,
-        message: 'Availability times updated',
-        data: null,
-      },
-    },
-  })
-  async updateSlotTimeByDate(@Param('id') id: string) {
-    return this.service.updateSlotTimeByDate(id);
+  @Delete('doula/off-days/:id')
+  async removeOffdays(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req,
+  ) {
+    return this.service.removeOffdays(id, req.user);
   }
+
 }

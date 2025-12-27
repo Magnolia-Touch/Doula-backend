@@ -3,19 +3,20 @@ import { CreateServicePricingDto, UpdateServicePricingDto } from './dto/service-
 export declare class ServicePricingService {
     private prisma;
     constructor(prisma: PrismaService);
+    private toJsonPrice;
     create(dto: CreateServicePricingDto, userId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
+        price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     findAll(userId: string): Promise<{
         message: string;
         data: {
             servicePricingId: string;
-            price: import("@prisma/client/runtime/library").Decimal;
+            price: import("@prisma/client/runtime/library").JsonValue;
             doulaProfileId: string;
             doulaName: string;
             doulaEmail: string;
@@ -27,7 +28,7 @@ export declare class ServicePricingService {
     }>;
     findOne(id: string): Promise<{
         servicePricingId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        price: import("@prisma/client/runtime/library").JsonValue;
         doulaProfileId: string;
         doulaName: string;
         doulaEmail: string;
@@ -40,26 +41,27 @@ export declare class ServicePricingService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
+        price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        serviceId: string;
         doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        serviceId: string;
+        price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     listServices(query: any): Promise<{
         data: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            serviceId: string;
-            doulaProfileId: string;
-            price: import("@prisma/client/runtime/library").Decimal;
+            email: any;
+            userId: any;
+            profileId: any;
+            servicePricingId: any;
+            serviceId: any;
+            serviceName: any;
+            price: any;
         }[];
         meta: {
             total: number;
@@ -69,13 +71,5 @@ export declare class ServicePricingService {
             hasNextPage: boolean;
             hasPrevPage: boolean;
         };
-    }>;
-    createPricing(dto: CreateServicePricingDto): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serviceId: string;
-        doulaProfileId: string;
-        price: import("@prisma/client/runtime/library").Decimal;
     }>;
 }

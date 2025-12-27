@@ -70,9 +70,9 @@ export declare class AuthService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                remarks: string;
-                zoneManagerId: string | null;
                 adminId: string | null;
+                zoneManagerId: string | null;
+                remarks: string;
             }[];
             managingRegions?: undefined;
             doulas?: undefined;
@@ -135,9 +135,9 @@ export declare class AuthService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                remarks: string;
-                zoneManagerId: string | null;
                 adminId: string | null;
+                zoneManagerId: string | null;
+                remarks: string;
             }[];
             description?: undefined;
             qualification?: undefined;

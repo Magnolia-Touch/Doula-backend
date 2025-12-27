@@ -1,102 +1,96 @@
 import { DoulaServiceAvailabilityService } from './service-availability.service';
-import { CreateDoulaServiceAvailability, UpdateDoulaServiceAvailabilityDTO } from './dto/service-availability.dto';
+import { CreateDoulaServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
+import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
 export declare class DoulaServiceAvailabilityController {
     private readonly service;
     constructor(service: DoulaServiceAvailabilityService);
-    createSlots(dto: CreateDoulaServiceAvailability, req: any): Promise<{
+    createAvailability(dto: CreateDoulaServiceAvailabilityDto, req: any): Promise<{
         message: string;
         data: {
-            date: import("@prisma/client").$Enums.WeekDays;
-            ownerRole: any;
-            timeslot: {
-                startTime: Date;
-                endTime: Date;
-                available: boolean;
-            };
+            from: Date;
+            to: Date;
+            totalDays: number;
         };
     }>;
-    getMyAvailabilities(req: any): Promise<({
-        AvailableSlotsTimeForService: {
+    findAll(req: any): Promise<{
+        message: string;
+        data: {
             id: string;
-            startTime: Date;
-            endTime: Date;
-            availabe: boolean;
-            isBooked: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            date: Date;
+            availability: import("@prisma/client/runtime/library").JsonValue;
+            doulaId: string;
         }[];
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        weekday: import("@prisma/client").$Enums.WeekDays;
-        availabe: boolean;
-        doulaId: string;
-        isBooked: boolean;
-    })[]>;
-    getSlotById(id: string): Promise<{
+    }>;
+    findOne(id: string, req: any): Promise<{
         message: string;
-        slot: {
-            AvailableSlotsTimeForService: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                startTime: Date;
-                endTime: Date;
-                bookingId: string | null;
-                availabe: boolean;
-                isBooked: boolean;
-                dateId: string;
-                formId: string | null;
-            }[];
-        } & {
+        data: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            weekday: import("@prisma/client").$Enums.WeekDays;
-            availabe: boolean;
+            date: Date;
+            availability: import("@prisma/client/runtime/library").JsonValue;
             doulaId: string;
-            isBooked: boolean;
         };
     }>;
-    updateSlot(dto: UpdateDoulaServiceAvailabilityDTO, id: string, req: any): Promise<{
+    update(id: string, req: any, dto: UpdateDoulaServiceAvailabilityDto): Promise<{
         message: string;
         data: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            startTime: Date;
-            endTime: Date;
-            bookingId: string | null;
-            availabe: boolean;
-            isBooked: boolean;
-            dateId: string;
-            formId: string | null;
-        };
-    }>;
-    deleteSlot(id: string, req: any): Promise<{
-        message: string;
-        data: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            startTime: Date;
-            endTime: Date;
-            bookingId: string | null;
-            availabe: boolean;
-            isBooked: boolean;
-            dateId: string;
-            formId: string | null;
-        };
-    }>;
-    updateSlotTimeByDate(id: string): Promise<{
-        message: string;
-        data: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            weekday: import("@prisma/client").$Enums.WeekDays;
-            availabe: boolean;
+            date: Date;
+            availability: import("@prisma/client/runtime/library").JsonValue;
             doulaId: string;
-            isBooked: boolean;
         };
+    }>;
+    remove(id: string, req: any): Promise<{
+        message: string;
+    }>;
+    createOffDays(dto: CreateDoulaOffDaysDto, req: any): Promise<{
+        message: string;
+        data: {
+            totalCreated: number;
+            from: Date;
+            to: Date;
+            offtime: import("./dto/off-days.dto").OffTimeDto;
+        };
+    }>;
+    getOffDays(req: any): Promise<{
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            date: Date;
+            offtime: import("@prisma/client/runtime/library").JsonValue;
+            doulaProfileId: string;
+        }[];
+    }>;
+    getOffdaysbyId(id: string, req: any): Promise<{
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            date: Date;
+            offtime: import("@prisma/client/runtime/library").JsonValue;
+            doulaProfileId: string;
+        };
+    }>;
+    updateOffdays(id: string, dto: UpdateDoulaOffDaysDto, req: any): Promise<{
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            date: Date;
+            offtime: import("@prisma/client/runtime/library").JsonValue;
+            doulaProfileId: string;
+        };
+    }>;
+    removeOffdays(id: string, req: any): Promise<{
+        message: string;
     }>;
 }

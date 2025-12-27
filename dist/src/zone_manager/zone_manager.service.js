@@ -341,9 +341,6 @@ let ZoneManagerService = class ZoneManagerService {
             success: true,
             message: 'Schedules fetched successfully',
             data: schedules.map((schedule) => {
-                const durationMs = schedule.endTime.getTime() - schedule.startTime.getTime();
-                const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-                const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
                 return {
                     scheduleId: schedule.id,
                     clientId: schedule.client.id,
@@ -351,9 +348,7 @@ let ZoneManagerService = class ZoneManagerService {
                     doulaId: schedule.DoulaProfile.id,
                     doulaName: schedule.DoulaProfile.user.name,
                     serviceName: schedule.ServicePricing.service.name,
-                    startDate: schedule.startTime,
-                    endDate: schedule.endTime,
-                    duration: `${durationHours}h ${durationMinutes}m`,
+                    startDate: schedule.timeshift,
                     status: schedule.status,
                 };
             }),
@@ -617,9 +612,6 @@ let ZoneManagerService = class ZoneManagerService {
         if (!schedule) {
             throw new common_1.NotFoundException('Schedule not found');
         }
-        const durationMs = schedule.endTime.getTime() - schedule.startTime.getTime();
-        const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-        const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
         return {
             success: true,
             message: 'Schedule fetched successfully',
@@ -630,9 +622,7 @@ let ZoneManagerService = class ZoneManagerService {
                 doulaId: schedule.DoulaProfile.id,
                 doulaName: schedule.DoulaProfile.user.name,
                 serviceName: schedule.ServicePricing.service.name,
-                startDate: schedule.startTime,
-                endDate: schedule.endTime,
-                duration: `${durationHours}h ${durationMinutes}m`,
+                startDate: schedule.timeshift,
                 status: schedule.status,
             },
         };
@@ -915,30 +905,46 @@ let ZoneManagerService = class ZoneManagerService {
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, } = dto;
-        const data = await this.prisma.$transaction([
-            this.prisma.user.update({
-                where: { id: doulaId },
-                data: {
-                    ...(name !== undefined && { name }),
-                    ...(is_active !== undefined && { is_active }),
-                },
-            }),
-            this.prisma.doulaProfile.update({
-                where: { userId: doulaId },
-                data: {
-                    ...(description !== undefined && { description }),
-                    ...(achievements !== undefined && { achievements }),
-                    ...(qualification !== undefined && { qualification }),
-                    ...(yoe !== undefined && { yoe }),
-                    ...(languages !== undefined && { languages }),
-                    ...(specialities !== undefined && { specialities }),
-                },
-            }),
-        ]);
+        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, certificates } = dto;
+        const operations = [];
+        operations.push(this.prisma.user.update({
+            where: { id: doulaId },
+            data: {
+                ...(name !== undefined && { name }),
+                ...(is_active !== undefined && { is_active }),
+            },
+        }));
+        operations.push(this.prisma.doulaProfile.update({
+            where: { userId: doulaId },
+            data: {
+                ...(description !== undefined && { description }),
+                ...(achievements !== undefined && { achievements }),
+                ...(qualification !== undefined && { qualification }),
+                ...(yoe !== undefined && { yoe }),
+                ...(languages !== undefined && { languages }),
+                ...(specialities !== undefined && { specialities }),
+            },
+        }));
+        if (certificates?.length) {
+            for (const cert of certificates) {
+                operations.push(this.prisma.certificates.updateMany({
+                    where: {
+                        id: cert.certificateId,
+                        doulaProfileId: doulaProfile.id,
+                    },
+                    data: {
+                        ...(cert.data.name !== undefined && { name: cert.data.name }),
+                        ...(cert.data.issuedBy !== undefined && {
+                            issuedBy: cert.data.issuedBy,
+                        }),
+                        ...(cert.data.year !== undefined && { year: cert.data.year }),
+                    },
+                }));
+            }
+        }
+        await this.prisma.$transaction(operations);
         return {
             message: 'Doula profile updated successfully',
-            data: data,
         };
     }
 };

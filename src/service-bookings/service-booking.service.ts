@@ -117,7 +117,6 @@ export class ServiceBookingService {
           },
         },
         region: true,
-        slot: true, // AvailableSlotsTimeForService[]
         AvailableSlotsForService: true,
       },
     });
@@ -133,13 +132,6 @@ export class ServiceBookingService {
 
     const startDate = booking.startDate;
     const endDate = booking.endDate;
-
-    const timeSlots =
-      booking.slot?.map((s: any) => ({
-        id: s.id,
-        startTime: s.startTime,
-        endTime: s.endTime,
-      })) ?? [];
 
     const transformed = {
       bookingId: booking.id,
@@ -157,7 +149,6 @@ export class ServiceBookingService {
       serviceName,
       start_date: startDate,
       end_date: endDate,
-      timeSlots,
       status: booking.status,
       createdAt: booking.createdAt,
     };

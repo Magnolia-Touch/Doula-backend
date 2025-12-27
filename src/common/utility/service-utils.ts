@@ -292,39 +292,39 @@ export function getWeekdayFromDate(date: string | Date): WeekDays {
   return map[d.getDay()];
 }
 
-export async function getServiceSlotOrCreateSlot(
-  prisma: PrismaService,
-  weekday: WeekDays,
-  profileId: string,
-) {
-  // FORCE UTC MIDNIGHT MATCH FOR MYSQL @db.Date
-  // const formatted = dateString.split("T")[0];
-  // const slotDate = new Date(formatted + "T00:00:00.000Z");
+// export async function getServiceSlotOrCreateSlot(
+//   prisma: PrismaService,
+//   weekday: WeekDays,
+//   profileId: string,
+// ) {
+//   // FORCE UTC MIDNIGHT MATCH FOR MYSQL @db.Date
+//   // const formatted = dateString.split("T")[0];
+//   // const slotDate = new Date(formatted + "T00:00:00.000Z");
 
-  // const weekday = slotDate.toLocaleDateString("en-US", { weekday: "long" });
-  // 1. Try existing slot
-  let slot = await prisma.availableSlotsForService.findUnique({
-    where: {
-      doulaId_weekday: {
-        doulaId: profileId,
-        weekday: weekday,
-      },
-    },
-  });
+//   // const weekday = slotDate.toLocaleDateString("en-US", { weekday: "long" });
+//   // 1. Try existing slot
+//   let slot = await prisma.availableSlotsForService.findUnique({
+//     where: {
+//       doulaId_weekday: {
+//         doulaId: profileId,
+//         weekday: weekday,
+//       },
+//     },
+//   });
 
-  if (slot) return slot;
+//   if (slot) return slot;
 
-  // 2. Create new slot
-  slot = await prisma.availableSlotsForService.create({
-    data: {
-      weekday: weekday,
-      availabe: true,
-      doulaId: profileId,
-    },
-  });
+//   // 2. Create new slot
+//   slot = await prisma.availableSlotsForService.create({
+//     data: {
+//       weekday: weekday,
+//       // availabe: true,
+//       doulaId: profileId,
+//     },
+//   });
 
-  return slot;
-}
+//   return slot;
+// }
 
 export function parseTimeSlot(timeSlot: string): {
   startTime: Date;
@@ -434,4 +434,6 @@ export async function generateVisitDates(
 
   return dates;
 }
+
+
 

@@ -49,11 +49,6 @@ export declare class ServiceBookingController {
             serviceName: string;
             start_date: Date;
             end_date: Date;
-            timeSlots: {
-                id: any;
-                startTime: any;
-                endTime: any;
-            }[];
             status: import("@prisma/client").$Enums.BookingStatus;
             createdAt: Date;
         };

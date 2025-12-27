@@ -3,28 +3,40 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateServicePricingDto,
   UpdateServicePricingDto,
+  PriceBreakdownDto
 } from './dto/service-pricing.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 
 @Injectable()
 export class ServicePricingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
-  // Create a service Pricing
+  private toJsonPrice(price: PriceBreakdownDto) {
+    return {
+      morning: price.morning,
+      night: price.night,
+      fullday: price.fullday,
+    };
+  }
+
+
   async create(dto: CreateServicePricingDto, userId: string) {
     const user = await this.prisma.doulaProfile.findUnique({
-      where: { userId: userId },
+      where: { userId },
     });
+
     if (!user) {
-      throw new NotFoundException('User Not found Exception');
+      throw new NotFoundException('User not found');
     }
+
     return this.prisma.servicePricing.create({
       data: {
         serviceId: dto.serviceId,
         doulaProfileId: user.id,
-        price: dto.price,
+        price: this.toJsonPrice(dto.price), // ✅ FIX
       },
     });
+
   }
 
   async findAll(userId: string) {
@@ -57,7 +69,7 @@ export class ServicePricingService {
 
     const data = pricingList.map((pricing) => ({
       servicePricingId: pricing.id,
-      price: pricing.price,
+      price: pricing.price, // { morning, night, fullday }
 
       doulaProfileId: pricing.doulaProfileId,
       doulaName: pricing.DoulaProfile.user.name,
@@ -69,11 +81,13 @@ export class ServicePricingService {
       serviceDescription: pricing.service.description,
     }));
 
+
     return {
       message: 'Service pricing fetched successfully',
       data,
     };
   }
+
 
   async findOne(id: string) {
     const pricing = await this.prisma.servicePricing.findUnique({
@@ -111,15 +125,17 @@ export class ServicePricingService {
       serviceName: pricing.service.name,
       serviceDescription: pricing.service.description,
     };
+
   }
 
-  // Update a service Pricing
   async update(id: string, dto: UpdateServicePricingDto) {
-    await this.findOne(id); // ensures exists
+    await this.findOne(id);
 
     return this.prisma.servicePricing.update({
-      where: { id: id },
-      data: dto,
+      where: { id },
+      data: {
+        price: dto.price ? this.toJsonPrice(dto.price) : undefined, // ✅ FIX
+      },
     });
   }
 
@@ -131,47 +147,64 @@ export class ServicePricingService {
       where: { id },
     });
   }
-
   async listServices(query: any) {
     const { name, doulaId, page = 1, limit = 10 } = query;
+
     const where: any = {};
+
     if (name) {
       where.service = {
         name: {
-          contains: name.toLowerCase(),
+          contains: name,
+          mode: 'insensitive',
         },
       };
     }
+
     if (doulaId) {
       where.doulaProfileId = doulaId;
     }
-    return paginate({
+
+    const result = await paginate({
       prismaModel: this.prisma.servicePricing,
       page: Number(page),
       limit: Number(limit),
       where,
       orderBy: { createdAt: 'desc' },
       include: {
-        DoulaProfile: true,
-        service: true,
+        service: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        DoulaProfile: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
+
+    return {
+      ...result,
+      data: result.data.map((item: any) => ({
+        email: item.DoulaProfile.user.email,
+        userId: item.DoulaProfile.user.id,
+        profileId: item.DoulaProfile.id,
+        servicePricingId: item.id,
+        serviceId: item.service.id,
+        serviceName: item.service.name,
+        price: item.price,
+
+      })),
+    };
   }
 
-  // Create a service Pricing
-  async createPricing(dto: CreateServicePricingDto) {
-    const user = await this.prisma.doulaProfile.findUnique({
-      where: { id: dto.doulaId },
-    });
-    if (!user) {
-      throw new NotFoundException('User Not found Exception');
-    }
-    return this.prisma.servicePricing.create({
-      data: {
-        serviceId: dto.serviceId,
-        doulaProfileId: dto.doulaId,
-        price: dto.price,
-      },
-    });
-  }
 }

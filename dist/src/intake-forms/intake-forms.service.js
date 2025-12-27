@@ -88,36 +88,6 @@ let IntakeFormService = class IntakeFormService {
         const schedulesToCreate = [];
         for (const visitDate of visitDates) {
             const weekday = DAY_TO_WEEKDAY[visitDate.getDay()];
-            const daySlot = await this.prisma.availableSlotsForService.findUnique({
-                where: {
-                    doulaId_weekday: {
-                        doulaId: doulaProfileId,
-                        weekday,
-                    },
-                },
-                include: {
-                    AvailableSlotsTimeForService: {
-                        where: { availabe: true },
-                    },
-                },
-            });
-            if (!daySlot || !daySlot.availabe)
-                continue;
-            const hasTimeSlot = daySlot.AvailableSlotsTimeForService.some((ts) => (0, service_utils_1.isOverlapping)(slotStartTime, slotEndTime, ts.startTime, ts.endTime));
-            if (!hasTimeSlot)
-                continue;
-            const conflict = await this.prisma.schedules.findFirst({
-                where: {
-                    doulaProfileId,
-                    date: visitDate,
-                    AND: [
-                        { startTime: { lt: slotEndTime } },
-                        { endTime: { gt: slotStartTime } },
-                    ],
-                },
-            });
-            if (conflict)
-                continue;
             schedulesToCreate.push({
                 date: visitDate,
                 startTime: slotStartTime,
@@ -263,7 +233,6 @@ let IntakeFormService = class IntakeFormService {
                     },
                 },
                 slot: true,
-                slotTime: true,
             },
         });
         if (!form) {
@@ -286,7 +255,6 @@ let IntakeFormService = class IntakeFormService {
             userId: form.DoulaProfile.user.id,
             doulaProfileId: form.DoulaProfile.id,
             slots: form.slot,
-            slotTimes: form.slotTime,
             createdAt: form.createdAt,
             updatedAt: form.updatedAt,
         };
@@ -355,36 +323,6 @@ let IntakeFormService = class IntakeFormService {
         };
         for (const visitDate of visitDates) {
             const weekday = DAY_TO_WEEKDAY[visitDate.getDay()];
-            const daySlot = await this.prisma.availableSlotsForService.findUnique({
-                where: {
-                    doulaId_weekday: {
-                        doulaId: doulaProfileId,
-                        weekday,
-                    },
-                },
-                include: {
-                    AvailableSlotsTimeForService: {
-                        where: { availabe: true },
-                    },
-                },
-            });
-            if (!daySlot || !daySlot.availabe)
-                continue;
-            const hasTimeAvailability = daySlot.AvailableSlotsTimeForService.some((ts) => (0, service_utils_1.isOverlapping)(slotStartTime, slotEndTime, ts.startTime, ts.endTime));
-            if (!hasTimeAvailability)
-                continue;
-            const conflict = await this.prisma.schedules.findFirst({
-                where: {
-                    doulaProfileId,
-                    date: visitDate,
-                    AND: [
-                        { startTime: { lt: slotEndTime } },
-                        { endTime: { gt: slotStartTime } },
-                    ],
-                },
-            });
-            if (conflict)
-                continue;
             schedulesToCreate.push({
                 date: visitDate,
                 startTime: slotStartTime,
