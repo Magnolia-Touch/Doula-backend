@@ -535,4 +535,20 @@ export declare class DoulaController {
             status: import("@prisma/client").$Enums.ServiceStatus;
         }[];
     }>;
+    getAvailableShifts(doulaId: string, startDate: string, endDate: string, visitFrequency: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            doulaId: string;
+            startDate: string;
+            endDate: string;
+            visitFrequency: number;
+            visitDates: string[];
+            availability: {
+                morning: boolean;
+                night: boolean;
+                fullday: boolean;
+            };
+        };
+    }>;
 }
