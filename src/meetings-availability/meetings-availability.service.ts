@@ -34,6 +34,37 @@ type TimeSlot = {
 export class AvailableSlotsService {
   constructor(private prisma: PrismaService) { }
 
+  private toMinutesinUtc(date: Date): number {
+    return date.getUTCHours() * 60 + date.getUTCMinutes();
+  }
+
+  private fromMinutes(baseDate: Date, minutes: number): Date {
+    const d = new Date(baseDate);
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCMinutes(minutes);
+    return d;
+  }
+
+  private splitInto30MinSlots(
+    slot: { startTime: Date; endTime: Date },
+    baseDate: Date,
+  ): { startTime: Date; endTime: Date }[] {
+    const slots: { startTime: Date; endTime: Date }[] = [];
+
+    let start = this.toMinutesinUtc(slot.startTime);
+    const end = this.toMinutesinUtc(slot.endTime);
+
+    while (start + 30 <= end) {
+      slots.push({
+        startTime: this.fromMinutes(baseDate, start),
+        endTime: this.fromMinutes(baseDate, start + 30),
+      });
+      start += 30;
+    }
+
+    return slots;
+  }
+
 
   private toMinutes(time: string): number {
     const [hours, minutes] = time.split(':').map(Number);
@@ -124,8 +155,8 @@ export class AvailableSlotsService {
       );
     }
 
-    const startDateTime = new Date(`1970-01-01T${result.startTime}:00`);
-    const endDateTime = new Date(`1970-01-01T${result.endTime}:00`);
+    const startDateTime = new Date(`1970-01-01T${result.startTime}:00Z`);
+    const endDateTime = new Date(`1970-01-01T${result.endTime}:00Z`);
 
     if (startDateTime >= endDateTime) {
       throw new BadRequestException('Invalid availability after adjustment');
@@ -845,7 +876,7 @@ export class AvailableSlotsService {
 
 
   async ZmgetAvailablility(
-    userId: string,
+    regionId: string,
     dto: GetAvailabilityDto
   ) {
     const { date1, date2, weekday } = dto;
@@ -873,9 +904,20 @@ export class AvailableSlotsService {
     }
 
     /* ---------------- FETCH ZONE MANAGER ---------------- */
+    const region = await this.prisma.region.findUnique({
+      where: { id: regionId },
+      select: { id: true, zoneManagerId: true },
+    });
+
+    if (!region) {
+      throw new ForbiddenException('Region not found');
+    }
+    if (!region.zoneManagerId) {
+      throw new BadRequestException("Region Not Assigned to zone manager")
+    }
 
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
-      where: { userId },
+      where: { id: region.zoneManagerId },
       select: { id: true },
     });
 
@@ -1012,6 +1054,49 @@ export class AvailableSlotsService {
 
     return response;
 
+  }
+
+
+
+
+  async splitTimeslots(
+    regionId: string,
+    dto: GetAvailabilityDto,
+  ) {
+    const baseResponse = await this.ZmgetAvailablility(regionId, dto);
+
+    const response = baseResponse.map((day) => {
+      const baseDate = new Date(day.date);
+
+      const splitSlots = day.timeslots.flatMap((slot) => {
+        const start = new Date(
+          `${day.date.toISOString().split('T')[0]}T${slot.startTime}Z`,
+        );
+        const end = new Date(
+          `${day.date.toISOString().split('T')[0]}T${slot.endTime}Z`,
+        );
+
+        return this.splitInto30MinSlots(
+          { startTime: start, endTime: end },
+          baseDate,
+        );
+      });
+
+      return {
+        date: day.date,
+        weekday: day.weekday,
+        timeslots: splitSlots.map((s) => ({
+          startTime: this.formatTimeOnly(s.startTime),
+          endTime: this.formatTimeOnly(s.endTime),
+        })),
+      };
+    });
+
+    return {
+      status: 'success',
+      message: 'Request successful',
+      data: response,
+    };
   }
 
 }

@@ -346,10 +346,14 @@ export class AvailableSlotsController {
 
 
   // Get SLOT (filtered)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ZONE_MANAGER)
+
   @Get('meetings/availability')
-  async ZmgetAvailablility(@Req() req, @Query() dto: GetAvailabilityDto) {
-    return this.service.ZmgetAvailablility(req.user.id, dto);
+  async ZmgetAvailablility(@Query('regionId') regionId: string, @Query() dto: GetAvailabilityDto) {
+    return this.service.ZmgetAvailablility(regionId, dto);
+  }
+
+  @Get('meetings/timeslots')
+  async splitTimeslots(@Query('regionId') regionId: string, @Query() dto: GetAvailabilityDto) {
+    return this.service.splitTimeslots(regionId, dto);
   }
 }
