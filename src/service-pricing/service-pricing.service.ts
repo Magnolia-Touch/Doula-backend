@@ -147,30 +147,64 @@ export class ServicePricingService {
       where: { id },
     });
   }
-
   async listServices(query: any) {
     const { name, doulaId, page = 1, limit = 10 } = query;
+
     const where: any = {};
+
     if (name) {
       where.service = {
         name: {
-          contains: name.toLowerCase(),
+          contains: name,
+          mode: 'insensitive',
         },
       };
     }
+
     if (doulaId) {
       where.doulaProfileId = doulaId;
     }
-    return paginate({
+
+    const result = await paginate({
       prismaModel: this.prisma.servicePricing,
       page: Number(page),
       limit: Number(limit),
       where,
       orderBy: { createdAt: 'desc' },
       include: {
-        DoulaProfile: true,
-        service: true,
+        service: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        DoulaProfile: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
+
+    return {
+      ...result,
+      data: result.data.map((item: any) => ({
+        email: item.DoulaProfile.user.email,
+        userId: item.DoulaProfile.user.id,
+        profileId: item.DoulaProfile.id,
+        servicePricingId: item.id,
+        serviceId: item.service.id,
+        serviceName: item.service.name,
+        price: item.price,
+
+      })),
+    };
   }
+
 }

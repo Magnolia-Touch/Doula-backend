@@ -357,6 +357,11 @@ export declare class DoulaService {
                 location: string;
             };
             about: string | null;
+            servicePricing: {
+                servicePricingid: string;
+                servicename: string;
+                price: Prisma.JsonValue;
+            }[];
             certificates: {
                 id: string;
                 name: string;

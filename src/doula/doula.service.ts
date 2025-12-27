@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { UpdateCertificateDto } from './dto/certificate.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
+import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
 
 const MAX_GALLERY_IMAGES = 5;
 
@@ -1412,7 +1413,8 @@ export class DoulaService {
             altText: true,
           },
         },
-        Certificates: { select: { id: true, issuedBy: true, name: true, year: true } }
+        Certificates: { select: { id: true, issuedBy: true, name: true, year: true } },
+        ServicePricing: { include: { service: true } }
       },
     });
 
@@ -1461,6 +1463,11 @@ export class DoulaService {
 
         // About
         about: doula.description,
+        servicePricing: doula.ServicePricing.map((pricing) => ({
+          servicePricingid: pricing.id,
+          servicename: pricing.service.name,
+          price: pricing.price
+        })),
 
         certificates: doula.Certificates.map((cert) => ({
           id: cert.id,
@@ -1654,26 +1661,59 @@ export class DoulaService {
       yoe,
       languages,
       specialities,
-      certificates
+      certificates,
+      servicePricings,
     } = dto;
 
     const operations: any[] = [];
 
-    // 1. Update User
-    operations.push(
-      this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          ...(name !== undefined && { name }),
-          ...(is_active !== undefined && { is_active }),
-        },
-      }),
-    );
+    /**
+     * 1. Update User
+     */
+    if (name !== undefined || is_active !== undefined) {
+      operations.push(
+        this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            ...(name !== undefined && { name }),
+            ...(is_active !== undefined && { is_active }),
+          },
+        }),
+      );
+    }
 
-    // 2. Update Doula Profile
+    /**
+     * 2. Update Service Pricing (JSON)
+     */
+    const toJsonPrice = (price: PriceBreakdownDto): Prisma.InputJsonObject => ({
+      morning: price.morning,
+      night: price.night,
+      fullday: price.fullday,
+    });
+
+    if (servicePricings?.length) {
+      for (const pricing of servicePricings) {
+        operations.push(
+          this.prisma.servicePricing.updateMany({
+            where: {
+              id: pricing.servicePricingId,
+              doulaProfileId: doulaProfile.id, // ownership safety
+            },
+            data: {
+              price: toJsonPrice(pricing.price),
+
+            },
+          }),
+        );
+      }
+    }
+
+    /**
+     * 3. Update Doula Profile
+     */
     operations.push(
       this.prisma.doulaProfile.update({
-        where: { userId: userId },
+        where: { userId },
         data: {
           ...(description !== undefined && { description }),
           ...(achievements !== undefined && { achievements }),
@@ -1685,14 +1725,16 @@ export class DoulaService {
       }),
     );
 
-    // 3. Update Certificates (EDIT ONLY)
+    /**
+     * 4. Update Certificates (EDIT ONLY)
+     */
     if (certificates?.length) {
       for (const cert of certificates) {
         operations.push(
           this.prisma.certificates.updateMany({
             where: {
               id: cert.certificateId,
-              doulaProfileId: doulaProfile.id, // ownership safety
+              doulaProfileId: doulaProfile.id,
             },
             data: {
               ...(cert.data.name !== undefined && { name: cert.data.name }),
@@ -1705,13 +1747,17 @@ export class DoulaService {
         );
       }
     }
-    await this.prisma.$transaction(operations);
 
+    /**
+     * 5. Atomic commit
+     */
+    await this.prisma.$transaction(operations);
 
     return {
       message: 'Doula profile updated successfully',
     };
   }
+
 
   // Helper: get doula profile
   private async getDoulaProfile(userId: string) {

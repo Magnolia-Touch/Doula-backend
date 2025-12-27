@@ -1044,7 +1044,8 @@ let DoulaService = class DoulaService {
                         altText: true,
                     },
                 },
-                Certificates: { select: { id: true, issuedBy: true, name: true, year: true } }
+                Certificates: { select: { id: true, issuedBy: true, name: true, year: true } },
+                ServicePricing: { include: { service: true } }
             },
         });
         if (!doula) {
@@ -1072,6 +1073,11 @@ let DoulaService = class DoulaService {
                     location: doula.Region?.[0]?.regionName ?? null,
                 },
                 about: doula.description,
+                servicePricing: doula.ServicePricing.map((pricing) => ({
+                    servicePricingid: pricing.id,
+                    servicename: pricing.service.name,
+                    price: pricing.price
+                })),
                 certificates: doula.Certificates.map((cert) => ({
                     id: cert.id,
                     name: cert.name,
@@ -1221,17 +1227,37 @@ let DoulaService = class DoulaService {
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, certificates } = dto;
+        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, certificates, servicePricings, } = dto;
         const operations = [];
-        operations.push(this.prisma.user.update({
-            where: { id: userId },
-            data: {
-                ...(name !== undefined && { name }),
-                ...(is_active !== undefined && { is_active }),
-            },
-        }));
+        if (name !== undefined || is_active !== undefined) {
+            operations.push(this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    ...(name !== undefined && { name }),
+                    ...(is_active !== undefined && { is_active }),
+                },
+            }));
+        }
+        const toJsonPrice = (price) => ({
+            morning: price.morning,
+            night: price.night,
+            fullday: price.fullday,
+        });
+        if (servicePricings?.length) {
+            for (const pricing of servicePricings) {
+                operations.push(this.prisma.servicePricing.updateMany({
+                    where: {
+                        id: pricing.servicePricingId,
+                        doulaProfileId: doulaProfile.id,
+                    },
+                    data: {
+                        price: toJsonPrice(pricing.price),
+                    },
+                }));
+            }
+        }
         operations.push(this.prisma.doulaProfile.update({
-            where: { userId: userId },
+            where: { userId },
             data: {
                 ...(description !== undefined && { description }),
                 ...(achievements !== undefined && { achievements }),

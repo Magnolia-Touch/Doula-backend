@@ -359,6 +359,11 @@ export declare class DoulaController {
                 location: string;
             };
             about: string | null;
+            servicePricing: {
+                servicePricingid: string;
+                servicename: string;
+                price: import("@prisma/client/runtime/library").JsonValue;
+            }[];
             certificates: {
                 id: string;
                 name: string;

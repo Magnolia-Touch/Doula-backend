@@ -135,24 +135,52 @@ let ServicePricingService = class ServicePricingService {
         if (name) {
             where.service = {
                 name: {
-                    contains: name.toLowerCase(),
+                    contains: name,
+                    mode: 'insensitive',
                 },
             };
         }
         if (doulaId) {
             where.doulaProfileId = doulaId;
         }
-        return (0, pagination_util_1.paginate)({
+        const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.servicePricing,
             page: Number(page),
             limit: Number(limit),
             where,
             orderBy: { createdAt: 'desc' },
             include: {
-                DoulaProfile: true,
-                service: true,
+                service: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                DoulaProfile: {
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                id: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
             },
         });
+        return {
+            ...result,
+            data: result.data.map((item) => ({
+                email: item.DoulaProfile.user.email,
+                userId: item.DoulaProfile.user.id,
+                profileId: item.DoulaProfile.id,
+                servicePricingId: item.id,
+                serviceId: item.service.id,
+                serviceName: item.service.name,
+                price: item.price,
+            })),
+        };
     }
 };
 exports.ServicePricingService = ServicePricingService;
