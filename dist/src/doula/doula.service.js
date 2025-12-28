@@ -1264,10 +1264,10 @@ let DoulaService = class DoulaService {
         operations.push(this.prisma.doulaProfile.update({
             where: { userId },
             data: {
-                ...(about !== undefined && { about }),
+                ...(about !== undefined && { description: about }),
                 ...(achievements !== undefined && { achievements }),
                 ...(qualification !== undefined && { qualification }),
-                ...(experience !== undefined && { experience }),
+                ...(experience !== undefined && { yoe: experience }),
                 ...(languages !== undefined && { languages }),
                 ...(specialities !== undefined && { specialities }),
             },
