@@ -6,6 +6,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { VersioningType } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'fs';
+import * as bodyParser from 'body-parser';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -18,6 +20,13 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.use(
+    bodyParser.json({
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
   // Optional: set a global prefix (nice for staging/prod)
   app.setGlobalPrefix('backend');
   app.enableVersioning({
@@ -62,8 +71,8 @@ async function bootstrap() {
   );
   console.log(
     '📚 Swagger docs: http://localhost:' +
-      (process.env.PORT ?? 3000) +
-      '/api/docs',
+    (process.env.PORT ?? 3000) +
+    '/api/docs',
   );
 }
 bootstrap();

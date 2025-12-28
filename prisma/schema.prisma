@@ -50,6 +50,28 @@ enum TimeShift {
   FULLDAY
 }
 
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+  NET_BANKING
+  WALLET
+  CASH
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  STRIPE
+  PAYPAL
+  MANUAL
+}
+
 //User Model
 model User {
   id           String    @id @default(uuid())
@@ -140,6 +162,7 @@ model ClientProfile {
   Meetings     Meetings[]
   Testimonials Testimonials[]
   Schedules    Schedules[]
+  Payment      Payment[]
 }
 
 // Admin Profile
@@ -349,6 +372,7 @@ model ServiceBooking {
   timeshift      TimeShift     @default(FULLDAY)
   paymentDetails Json?
   status         BookingStatus @default(ACTIVE)
+  isPaid         Boolean       @default(false)
 
   regionId         String
   servicePricingId String
@@ -366,6 +390,7 @@ model ServiceBooking {
 
   AvailableSlotsForService AvailableSlotsForService[]
   schedules                Schedules[]
+  Payment                  Payment[]
 }
 
 // Service Model
@@ -510,4 +535,47 @@ model DoulaOffDays {
   doulaProfileId String
 
   DoulaProfile DoulaProfile @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  // Relations
+  bookingId String
+  clientId  String
+
+  ServiceBooking ServiceBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  ClientProfile  ClientProfile  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Amounts
+  amount         Decimal @db.Decimal(10, 2)
+  amountRefunded Decimal @default(0) @db.Decimal(10, 2)
+  currency       String  @default("INR")
+
+  // Status & provider
+  status   PaymentStatus
+  method   PaymentMethod?
+  provider PaymentProvider @default(STRIPE)
+
+  // Stripe / gateway references
+  checkoutSessionId String? @unique
+  paymentIntentId   String?
+  providerOrderId   String?
+  providerPaymentId String?
+  receipt           String?
+
+  // Failure handling
+  failureReason String?
+
+  // Audit
+  metadata   Json?
+  paidAt     DateTime?
+  refundedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([clientId])
+  @@index([status])
 }

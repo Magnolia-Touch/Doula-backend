@@ -21,6 +21,8 @@ exports.generateVisitDatesforBirthDoula = generateVisitDatesforBirthDoula;
 exports.generateVisitDatesforPostPartumDoula = generateVisitDatesforPostPartumDoula;
 exports.isDoulaAvailableForShift = isDoulaAvailableForShift;
 exports.isDoulaOffOnShift = isDoulaOffOnShift;
+exports.generateOrderId = generateOrderId;
+exports.getPriceForShift = getPriceForShift;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 async function findSlotOrThrow(prisma, params) {
@@ -349,5 +351,35 @@ async function isDoulaOffOnShift(doulaProfileId, date, timeShift) {
         return true;
     }
     return offtime[timeShift] === true;
+}
+function generateOrderId() {
+    const now = new Date();
+    const pad = (n, width) => {
+        return n.toString().padStart(width, '0');
+    };
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1, 2);
+    const day = pad(now.getDate(), 2);
+    const hour = pad(now.getHours(), 2);
+    const minute = pad(now.getMinutes(), 2);
+    const second = pad(now.getSeconds(), 2);
+    const timestamp = `${year}${month}${day}${hour}${minute}${second}`;
+    return `DOULAS${timestamp}`;
+}
+function getPriceForShift(price, shift) {
+    if (!price || typeof price !== 'object') {
+        throw new common_1.BadRequestException('Invalid price configuration');
+    }
+    const p = price;
+    switch (shift) {
+        case client_1.TimeShift.MORNING:
+            return p.morning;
+        case client_1.TimeShift.NIGHT:
+            return p.night;
+        case client_1.TimeShift.FULLDAY:
+            return p.fullday;
+        default:
+            throw new common_1.BadRequestException('Invalid time shift');
+    }
 }
 //# sourceMappingURL=service-utils.js.map

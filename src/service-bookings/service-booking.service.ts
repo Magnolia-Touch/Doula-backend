@@ -247,4 +247,33 @@ export class ServiceBookingService {
     };
   }
 
+
+  async updateOrderStatus(
+    bookingId: string,
+    dto: UpdateBookingStatusDto,
+  ) {
+    const booking = await this.prisma.serviceBooking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    return this.prisma.serviceBooking.update({
+      where: { id: bookingId },
+      data: {
+        status: dto.status,
+        isPaid: dto.isPaid ?? booking.isPaid,
+        paymentDetails: dto.paymentDetails
+          ? {
+            ...(booking.paymentDetails as object ?? {}),
+            ...dto.paymentDetails,
+            notes: dto.notes,
+            updatedAt: new Date(),
+          }
+          : booking.paymentDetails,
+      },
+    });
+  }
 }

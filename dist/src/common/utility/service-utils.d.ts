@@ -111,3 +111,5 @@ export declare function generateVisitDatesforBirthDoula(start: Date, end: Date, 
 export declare function generateVisitDatesforPostPartumDoula(startDate: Date, endDate: Date, interval: number): Promise<Date[]>;
 export declare function isDoulaAvailableForShift(doulaId: string, date: Date, timeShift: TimeShift): Promise<boolean>;
 export declare function isDoulaOffOnShift(doulaProfileId: string, date: Date, timeShift: TimeShift): Promise<boolean>;
+export declare function generateOrderId(): string;
+export declare function getPriceForShift(price: unknown, shift: TimeShift): number;

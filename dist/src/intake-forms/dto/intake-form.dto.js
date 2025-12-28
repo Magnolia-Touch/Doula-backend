@@ -128,6 +128,8 @@ class BookDoulaDto {
     visitFrequency = 1;
     serviceTimeShift;
     buffer;
+    successUrl;
+    cancelUrl;
 }
 exports.BookDoulaDto = BookDoulaDto;
 __decorate([
@@ -227,4 +229,14 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], BookDoulaDto.prototype, "buffer", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BookDoulaDto.prototype, "successUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BookDoulaDto.prototype, "cancelUrl", void 0);
 //# sourceMappingURL=intake-form.dto.js.map

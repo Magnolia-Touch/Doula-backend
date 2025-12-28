@@ -125,13 +125,13 @@ export declare class ZoneManagerController {
         unassignedCount: number;
         assigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
         unassigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
     }>;
     getSchedules(req: any, page?: string, limit?: string, status?: ServiceStatus, serviceName?: string, date?: string): Promise<{

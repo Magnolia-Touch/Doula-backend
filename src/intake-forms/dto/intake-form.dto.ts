@@ -178,4 +178,12 @@ export class BookDoulaDto {
   @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
   @IsNumber()
   buffer: number;
+
+  @IsOptional()
+  @IsString()
+  successUrl: string;
+
+  @IsOptional()
+  @IsString()
+  cancelUrl: string;
 }

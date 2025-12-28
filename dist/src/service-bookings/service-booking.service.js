@@ -194,6 +194,29 @@ let ServiceBookingService = class ServiceBookingService {
             status: updatedSchedule.status,
         };
     }
+    async updateOrderStatus(bookingId, dto) {
+        const booking = await this.prisma.serviceBooking.findUnique({
+            where: { id: bookingId },
+        });
+        if (!booking) {
+            throw new common_1.NotFoundException('Booking not found');
+        }
+        return this.prisma.serviceBooking.update({
+            where: { id: bookingId },
+            data: {
+                status: dto.status,
+                isPaid: dto.isPaid ?? booking.isPaid,
+                paymentDetails: dto.paymentDetails
+                    ? {
+                        ...(booking.paymentDetails ?? {}),
+                        ...dto.paymentDetails,
+                        notes: dto.notes,
+                        updatedAt: new Date(),
+                    }
+                    : booking.paymentDetails,
+            },
+        });
+    }
 };
 exports.ServiceBookingService = ServiceBookingService;
 exports.ServiceBookingService = ServiceBookingService = __decorate([

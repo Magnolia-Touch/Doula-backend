@@ -2,10 +2,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Prisma } from '@prisma/client';
+import { StripeService } from 'src/stripe/stripe.service';
 export declare class IntakeFormService {
     private readonly prisma;
     private readonly mail;
-    constructor(prisma: PrismaService, mail: MailerService);
+    private stripeService;
+    constructor(prisma: PrismaService, mail: MailerService, stripeService: StripeService);
     private ensureHttpsUrl;
     private getDefaultUrl;
     private toUtcMidnight;
@@ -70,5 +72,12 @@ export declare class IntakeFormService {
         message: string;
         deletedCount: number;
     }>;
-    BookDoula(dto: BookDoulaDto, userId: string): Promise<void>;
+    BookDoula(dto: BookDoulaDto, userId: string): Promise<{
+        message: string;
+        bookingId: string;
+        paymentId: string;
+        amount: number;
+        currency: string;
+        checkout_url: string | null;
+    }>;
 }

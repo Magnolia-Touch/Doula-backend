@@ -18,6 +18,7 @@ exports.ServiceBookingModule = ServiceBookingModule = __decorate([
     (0, common_1.Module)({
         controllers: [service_booking_controller_1.ServiceBookingController],
         providers: [service_booking_service_1.ServiceBookingService, prisma_service_1.PrismaService],
+        exports: [service_booking_service_1.ServiceBookingService]
     })
 ], ServiceBookingModule);
 //# sourceMappingURL=service-booking.module.js.map

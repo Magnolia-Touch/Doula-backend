@@ -25,4 +25,6 @@ export declare class BookDoulaDto {
     visitFrequency: number;
     serviceTimeShift: TimeShift;
     buffer: number;
+    successUrl: string;
+    cancelUrl: string;
 }

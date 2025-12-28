@@ -553,3 +553,48 @@ export async function isDoulaOffOnShift(
 
   return offtime[timeShift] === true;
 }
+
+
+
+export function generateOrderId(): string {
+  const now = new Date();
+  const pad = (n: number, width: number) => {
+    return n.toString().padStart(width, '0');
+  };
+  const year = now.getFullYear();
+  const month = pad(now.getMonth() + 1, 2);
+  const day = pad(now.getDate(), 2);
+  const hour = pad(now.getHours(), 2);
+  const minute = pad(now.getMinutes(), 2);
+  const second = pad(now.getSeconds(), 2);
+  const timestamp = `${year}${month}${day}${hour}${minute}${second}`;
+  return `DOULAS${timestamp}`;
+}
+
+type ServicePrice = {
+  morning: number;
+  night: number;
+  fullday: number;
+};
+
+export function getPriceForShift(
+  price: unknown,
+  shift: TimeShift,
+): number {
+  if (!price || typeof price !== 'object') {
+    throw new BadRequestException('Invalid price configuration');
+  }
+
+  const p = price as ServicePrice;
+
+  switch (shift) {
+    case TimeShift.MORNING:
+      return p.morning;
+    case TimeShift.NIGHT:
+      return p.night;
+    case TimeShift.FULLDAY:
+      return p.fullday;
+    default:
+      throw new BadRequestException('Invalid time shift');
+  }
+}

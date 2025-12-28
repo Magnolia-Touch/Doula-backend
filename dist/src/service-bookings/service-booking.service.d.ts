@@ -63,4 +63,20 @@ export declare class ServiceBookingService {
         scheduleId: string;
         status: import("@prisma/client").$Enums.BookingStatus;
     }>;
+    updateOrderStatus(bookingId: string, dto: UpdateBookingStatusDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        regionId: string;
+        status: import("@prisma/client").$Enums.BookingStatus;
+        cancelledAt: Date | null;
+        doulaProfileId: string;
+        servicePricingId: string;
+        timeshift: import("@prisma/client").$Enums.TimeShift;
+        clientId: string;
+        startDate: Date;
+        endDate: Date;
+        paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
+        isPaid: boolean;
+    }>;
 }

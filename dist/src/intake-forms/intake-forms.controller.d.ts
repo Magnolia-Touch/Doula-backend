@@ -64,5 +64,12 @@ export declare class IntakeFormController {
         message: string;
         deletedCount: number;
     }>;
-    BookDoula(dto: BookDoulaDto, req: any): Promise<void>;
+    BookDoula(dto: BookDoulaDto, req: any): Promise<{
+        message: string;
+        bookingId: string;
+        paymentId: string;
+        amount: number;
+        currency: string;
+        checkout_url: string | null;
+    }>;
 }

@@ -32,6 +32,7 @@ const serve_static_1 = require("@nestjs/serve-static");
 const contact_form_module_1 = require("./contact-form/contact-form.module");
 const device_token_module_1 = require("./token/device-token.module");
 const users_module_1 = require("./users/users.module");
+const config_1 = require("@nestjs/config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -59,6 +60,9 @@ exports.AppModule = AppModule = __decorate([
             contact_form_module_1.ContactFormModule,
             service_booking_module_1.ServiceBookingModule,
             users_module_1.UserModule,
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+            }),
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(process.cwd(), 'uploads'),
                 serveRoot: '/uploads',

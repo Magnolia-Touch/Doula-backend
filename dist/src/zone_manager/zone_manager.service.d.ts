@@ -123,13 +123,13 @@ export declare class ZoneManagerService {
         unassignedCount: number;
         assigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
         unassigned: {
             id: string;
-            regionName: string;
             zoneManagerId: string | null;
+            regionName: string;
         }[];
     }>;
     getZoneManagerSchedules(userId: string, page?: number, limit?: number, filters?: {

@@ -26,6 +26,7 @@ import { ContactFormModule } from './contact-form/contact-form.module';
 // import { NotificationModule } from './notifications/notifications.module';
 import { DeviceTokenModule } from './token/device-token.module';
 import { UserModule } from './users/users.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -52,6 +53,9 @@ import { UserModule } from './users/users.module';
     ContactFormModule,
     ServiceBookingModule,
     UserModule,
+    ConfigModule.forRoot({
+      isGlobal: true, // ✅ VERY IMPORTANT
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
@@ -85,4 +89,4 @@ import { UserModule } from './users/users.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
