@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookDoulaDto = exports.IntakeFormDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const client_1 = require("@prisma/client");
 class IntakeFormDto {
     name;
     email;
@@ -23,7 +24,7 @@ class IntakeFormDto {
     seviceStartDate;
     serviceEndDate;
     visitFrequency = 1;
-    serviceTimeSlots;
+    serviceTimeShift;
 }
 exports.IntakeFormDto = IntakeFormDto;
 __decorate([
@@ -75,7 +76,7 @@ __decorate([
     __metadata("design:type", String)
 ], IntakeFormDto.prototype, "address", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 60, description: 'Buffer time in minutes' }),
+    (0, swagger_1.ApiProperty)({ example: 2, description: 'Buffer time in minutes' }),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], IntakeFormDto.prototype, "buffer", void 0);
@@ -105,12 +106,15 @@ __decorate([
 ], IntakeFormDto.prototype, "visitFrequency", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: '09:00-11:00',
-        description: 'Time slot for the service',
+        example: client_1.TimeShift.MORNING,
+        enum: client_1.TimeShift,
+        description: 'Time shift for the service',
     }),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEnum)(client_1.TimeShift, {
+        message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
+    }),
     __metadata("design:type", String)
-], IntakeFormDto.prototype, "serviceTimeSlots", void 0);
+], IntakeFormDto.prototype, "serviceTimeShift", void 0);
 class BookDoulaDto {
     name;
     email;
@@ -122,7 +126,7 @@ class BookDoulaDto {
     serviceStartDate;
     servicEndDate;
     visitFrequency = 1;
-    timeSlots;
+    serviceTimeShift;
     buffer;
 }
 exports.BookDoulaDto = BookDoulaDto;
@@ -209,12 +213,15 @@ __decorate([
 ], BookDoulaDto.prototype, "visitFrequency", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        example: '09:00-11:00',
-        description: 'Time slot for the service',
+        example: client_1.TimeShift.MORNING,
+        enum: client_1.TimeShift,
+        description: 'Time shift for the service',
     }),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEnum)(client_1.TimeShift, {
+        message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
+    }),
     __metadata("design:type", String)
-], BookDoulaDto.prototype, "timeSlots", void 0);
+], BookDoulaDto.prototype, "serviceTimeShift", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 60, description: 'Buffer time in minutes' }),
     (0, class_validator_1.IsNumber)(),

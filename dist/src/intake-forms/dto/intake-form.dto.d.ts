@@ -1,3 +1,4 @@
+import { TimeShift } from '@prisma/client';
 export declare class IntakeFormDto {
     name: string;
     email: string;
@@ -9,7 +10,7 @@ export declare class IntakeFormDto {
     seviceStartDate: string;
     serviceEndDate: string;
     visitFrequency: number;
-    serviceTimeSlots: string;
+    serviceTimeShift: TimeShift;
 }
 export declare class BookDoulaDto {
     name: string;
@@ -22,6 +23,6 @@ export declare class BookDoulaDto {
     serviceStartDate: string;
     servicEndDate: string;
     visitFrequency: number;
-    timeSlots: string;
+    serviceTimeShift: TimeShift;
     buffer: number;
 }

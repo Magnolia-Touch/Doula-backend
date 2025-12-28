@@ -17,7 +17,10 @@ exports.getWeekdayFromDate = getWeekdayFromDate;
 exports.parseTimeSlot = parseTimeSlot;
 exports.isMeetingExists = isMeetingExists;
 exports.isOverlapping = isOverlapping;
-exports.generateVisitDates = generateVisitDates;
+exports.generateVisitDatesforBirthDoula = generateVisitDatesforBirthDoula;
+exports.generateVisitDatesforPostPartumDoula = generateVisitDatesforPostPartumDoula;
+exports.isDoulaAvailableForShift = isDoulaAvailableForShift;
+exports.isDoulaOffOnShift = isDoulaOffOnShift;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 async function findSlotOrThrow(prisma, params) {
@@ -273,18 +276,78 @@ async function isMeetingExists(prisma, meetingDate, timeSlot, options) {
 async function isOverlapping(aStart, aEnd, bStart, bEnd) {
     return aStart < bEnd && bStart < aEnd;
 }
-async function generateVisitDates(start, end, frequency, buffer = 0) {
+function generateVisitDatesforBirthDoula(start, end, buffer = 0) {
+    if (buffer < 0) {
+        throw new Error('Buffer cannot be negative');
+    }
     const dates = [];
-    const cursor = new Date(start);
-    cursor.setDate(cursor.getDate() - buffer);
-    const final = new Date(end);
-    final.setDate(final.getDate() + buffer);
-    while (cursor <= final) {
-        const d = new Date(cursor);
-        d.setHours(0, 0, 0, 0);
-        dates.push(d);
-        cursor.setDate(cursor.getDate() + frequency);
+    const cursor = new Date(start.getTime());
+    cursor.setUTCDate(cursor.getUTCDate() - buffer);
+    const final = new Date(end.getTime());
+    final.setUTCDate(final.getUTCDate() + buffer);
+    let guard = 0;
+    while (cursor.getTime() <= final.getTime()) {
+        dates.push(new Date(cursor.getTime()));
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        if (++guard > 400) {
+            throw new Error('Infinite loop protection triggered in generateVisitDatesforBirthDoula');
+        }
     }
     return dates;
+}
+async function generateVisitDatesforPostPartumDoula(startDate, endDate, interval) {
+    if (interval <= 0) {
+        throw new common_1.BadRequestException('Interval must be greater than 0');
+    }
+    const dates = [];
+    let current = new Date(startDate.getTime());
+    while (current.getTime() <= endDate.getTime()) {
+        dates.push(new Date(current.getTime()));
+        current.setUTCDate(current.getUTCDate() + interval);
+    }
+    return dates;
+}
+const client_2 = require("@prisma/client");
+const prisma = new client_2.PrismaClient();
+async function isDoulaAvailableForShift(doulaId, date, timeShift) {
+    const normalizedDate = new Date(date);
+    const availabilityRecord = await prisma.availableSlotsForService.findFirst({
+        where: {
+            doulaId,
+            date: normalizedDate,
+        },
+        select: {
+            availability: true,
+        },
+    });
+    if (!availabilityRecord) {
+        return false;
+    }
+    const availability = availabilityRecord.availability;
+    if (availability.FULLDAY === true) {
+        return true;
+    }
+    return availability[timeShift] === true;
+}
+async function isDoulaOffOnShift(doulaProfileId, date, timeShift) {
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    const offDayRecord = await prisma.doulaOffDays.findFirst({
+        where: {
+            doulaProfileId,
+            date: normalizedDate,
+        },
+        select: {
+            offtime: true,
+        },
+    });
+    if (!offDayRecord) {
+        return false;
+    }
+    const offtime = offDayRecord.offtime;
+    if (offtime.FULLDAY === true) {
+        return true;
+    }
+    return offtime[timeShift] === true;
 }
 //# sourceMappingURL=service-utils.js.map

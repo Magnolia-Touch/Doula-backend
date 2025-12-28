@@ -1,11 +1,13 @@
 import {
   IsDateString,
+  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { TimeShift } from '@prisma/client';
 
 export class IntakeFormDto {
   @ApiProperty({
@@ -50,7 +52,7 @@ export class IntakeFormDto {
   @IsString()
   address: string;
 
-  @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
+  @ApiProperty({ example: 2, description: 'Buffer time in minutes' })
   @IsNumber()
   buffer: number;
 
@@ -78,12 +80,17 @@ export class IntakeFormDto {
   visitFrequency: number = 1;
 
   @ApiProperty({
-    example: '09:00-11:00',
-    description: 'Time slot for the service',
+    example: TimeShift.MORNING,
+    enum: TimeShift,
+    description: 'Time shift for the service',
   })
-  @IsString()
-  serviceTimeSlots: string;
+  @IsEnum(TimeShift, {
+    message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
+  })
+  serviceTimeShift: TimeShift;
 }
+
+
 
 export class BookDoulaDto {
   @ApiProperty({
@@ -159,11 +166,14 @@ export class BookDoulaDto {
   visitFrequency: number = 1;
 
   @ApiProperty({
-    example: '09:00-11:00',
-    description: 'Time slot for the service',
+    example: TimeShift.MORNING,
+    enum: TimeShift,
+    description: 'Time shift for the service',
   })
-  @IsString()
-  timeSlots: string;
+  @IsEnum(TimeShift, {
+    message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
+  })
+  serviceTimeShift: TimeShift;
 
   @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
   @IsNumber()

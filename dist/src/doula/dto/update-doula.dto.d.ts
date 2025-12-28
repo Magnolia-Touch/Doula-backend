@@ -11,10 +11,10 @@ export declare class UpdateDoulaServicePricingDto {
 export declare class UpdateDoulaProfileDto {
     name?: string;
     is_active?: boolean;
-    description?: string;
+    about?: string;
     achievements?: string;
     qualification?: string;
-    yoe?: number;
+    experience?: number;
     languages?: any;
     specialities?: any;
     certificates?: UpdateCertificateItemDto[];

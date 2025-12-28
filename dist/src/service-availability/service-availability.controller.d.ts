@@ -18,9 +18,9 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            doulaId: string;
             date: Date;
             availability: import("@prisma/client/runtime/library").JsonValue;
-            doulaId: string;
         }[];
     }>;
     findOne(id: string, req: any): Promise<{
@@ -29,9 +29,9 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            doulaId: string;
             date: Date;
             availability: import("@prisma/client/runtime/library").JsonValue;
-            doulaId: string;
         };
     }>;
     update(id: string, req: any, dto: UpdateDoulaServiceAvailabilityDto): Promise<{
@@ -40,9 +40,9 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            doulaId: string;
             date: Date;
             availability: import("@prisma/client/runtime/library").JsonValue;
-            doulaId: string;
         };
     }>;
     remove(id: string, req: any): Promise<{
@@ -64,8 +64,8 @@ export declare class DoulaServiceAvailabilityController {
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            offtime: import("@prisma/client/runtime/library").JsonValue;
             doulaProfileId: string;
+            offtime: import("@prisma/client/runtime/library").JsonValue;
         }[];
     }>;
     getOffdaysbyId(id: string, req: any): Promise<{
@@ -75,8 +75,8 @@ export declare class DoulaServiceAvailabilityController {
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            offtime: import("@prisma/client/runtime/library").JsonValue;
             doulaProfileId: string;
+            offtime: import("@prisma/client/runtime/library").JsonValue;
         };
     }>;
     updateOffdays(id: string, dto: UpdateDoulaOffDaysDto, req: any): Promise<{
@@ -86,8 +86,8 @@ export declare class DoulaServiceAvailabilityController {
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            offtime: import("@prisma/client/runtime/library").JsonValue;
             doulaProfileId: string;
+            offtime: import("@prisma/client/runtime/library").JsonValue;
         };
     }>;
     removeOffdays(id: string, req: any): Promise<{

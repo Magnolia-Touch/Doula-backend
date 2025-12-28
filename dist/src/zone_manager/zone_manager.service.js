@@ -905,7 +905,7 @@ let ZoneManagerService = class ZoneManagerService {
         if (!doulaProfile) {
             throw new common_1.NotFoundException('Doula profile not found');
         }
-        const { name, is_active, description, achievements, qualification, yoe, languages, specialities, certificates } = dto;
+        const { name, is_active, about, achievements, qualification, experience, languages, specialities, certificates } = dto;
         const operations = [];
         operations.push(this.prisma.user.update({
             where: { id: doulaId },
@@ -917,10 +917,10 @@ let ZoneManagerService = class ZoneManagerService {
         operations.push(this.prisma.doulaProfile.update({
             where: { userId: doulaId },
             data: {
-                ...(description !== undefined && { description }),
+                ...(about !== undefined && { about }),
                 ...(achievements !== undefined && { achievements }),
                 ...(qualification !== undefined && { qualification }),
-                ...(yoe !== undefined && { yoe }),
+                ...(experience !== undefined && { experience }),
                 ...(languages !== undefined && { languages }),
                 ...(specialities !== undefined && { specialities }),
             },

@@ -1,4 +1,4 @@
-import { Role, WeekDays } from '@prisma/client';
+import { Role, TimeShift, WeekDays } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 export declare function findSlotOrThrow(prisma: PrismaService, params: {
     ownerRole: Role;
@@ -107,4 +107,7 @@ export declare function isMeetingExists(prisma: PrismaService, meetingDate: Date
     adminProfileId?: string;
 }): Promise<boolean>;
 export declare function isOverlapping(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): Promise<boolean>;
-export declare function generateVisitDates(start: Date, end: Date, frequency: number, buffer?: number): Promise<Date[]>;
+export declare function generateVisitDatesforBirthDoula(start: Date, end: Date, buffer?: number): Date[];
+export declare function generateVisitDatesforPostPartumDoula(startDate: Date, endDate: Date, interval: number): Promise<Date[]>;
+export declare function isDoulaAvailableForShift(doulaId: string, date: Date, timeShift: TimeShift): Promise<boolean>;
+export declare function isDoulaOffOnShift(doulaProfileId: string, date: Date, timeShift: TimeShift): Promise<boolean>;

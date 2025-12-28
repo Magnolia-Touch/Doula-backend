@@ -782,4 +782,73 @@ export class DoulaController {
       serviceBookingId,
     );
   }
+
+  @Get(':id/available-shifts')
+  @ApiOperation({
+    summary: 'Get available shifts for a doula',
+    description:
+      'Returns availability status for morning, night, and fullday shifts based on visit dates calculated from start date, end date, and visit frequency',
+  })
+  @ApiParam({ name: 'id', description: 'Doula Profile ID' })
+  @ApiQuery({
+    name: 'startDate',
+    required: true,
+    type: String,
+    example: '2025-01-01',
+    description: 'Start date (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: true,
+    type: String,
+    example: '2025-01-31',
+    description: 'End date (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'visitFrequency',
+    required: true,
+    type: Number,
+    example: 7,
+    description: 'Number of days between each visit',
+  })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        success: true,
+        message: 'Available shifts fetched successfully',
+        data: {
+          doulaId: 'doula-uuid',
+          startDate: '2025-01-01',
+          endDate: '2025-01-31',
+          visitFrequency: 7,
+          visitDates: [
+            '2025-01-01',
+            '2025-01-08',
+            '2025-01-15',
+            '2025-01-22',
+            '2025-01-29',
+          ],
+          availability: {
+            morning: true,
+            night: false,
+            fullday: false,
+          },
+        },
+      },
+    },
+  })
+  async getAvailableShifts(
+    @Param('id') doulaId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('visitFrequency') visitFrequency: string,
+  ) {
+    return this.service.getAvailableShifts(
+      doulaId,
+      startDate,
+      endDate,
+      Number(visitFrequency),
+    );
+  }
 }

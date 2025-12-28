@@ -44,10 +44,10 @@ __decorate([
 class UpdateDoulaProfileDto {
     name;
     is_active;
-    description;
+    about;
     achievements;
     qualification;
-    yoe;
+    experience;
     languages;
     specialities;
     certificates;
@@ -68,7 +68,7 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateDoulaProfileDto.prototype, "description", void 0);
+], UpdateDoulaProfileDto.prototype, "about", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -82,7 +82,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
-], UpdateDoulaProfileDto.prototype, "yoe", void 0);
+], UpdateDoulaProfileDto.prototype, "experience", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Object)

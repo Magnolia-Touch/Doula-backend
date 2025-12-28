@@ -8,6 +8,7 @@ export declare class IntakeFormService {
     constructor(prisma: PrismaService, mail: MailerService);
     private ensureHttpsUrl;
     private getDefaultUrl;
+    private toUtcMidnight;
     createIntakeForm(dto: IntakeFormDto): Promise<void>;
     getAllForms(page: number, limit: number): Promise<{
         data: {

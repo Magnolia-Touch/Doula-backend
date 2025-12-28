@@ -414,7 +414,6 @@ export class DoulaServiceAvailabilityService {
   }
 
   /* ------------------------- PATCH ------------------------- */
-
   async updateOffdays(
     id: string,
     dto: UpdateDoulaOffDaysDto,

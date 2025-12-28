@@ -363,7 +363,7 @@ export declare class DoulaController {
                 price: import("@prisma/client/runtime/library").JsonValue;
             }[];
             certificates: {
-                id: string;
+                certificateId: string;
                 name: string;
                 issuedBy: string;
                 year: string;
@@ -450,7 +450,7 @@ export declare class DoulaController {
                 price: import("@prisma/client/runtime/library").JsonValue;
             }[];
             certificates: {
-                id: string;
+                certificateId: string;
                 name: string;
                 issuedBy: string;
                 year: string;
@@ -534,5 +534,21 @@ export declare class DoulaController {
             timeshift: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.ServiceStatus;
         }[];
+    }>;
+    getAvailableShifts(doulaId: string, startDate: string, endDate: string, visitFrequency: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            doulaId: string;
+            startDate: string;
+            endDate: string;
+            visitFrequency: number;
+            visitDates: string[];
+            availability: {
+                morning: boolean;
+                night: boolean;
+                fullday: boolean;
+            };
+        };
     }>;
 }

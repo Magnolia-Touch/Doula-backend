@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { MeetingStatus, Role, WeekDays } from '@prisma/client';
+import { MeetingStatus, Role, TimeShift, WeekDays } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 // utils/meeting.util.ts
 
@@ -411,25 +411,36 @@ export async function isOverlapping(
 ) {
   return aStart < bEnd && bStart < aEnd;
 }
-
-export async function generateVisitDates(
+export function generateVisitDatesforBirthDoula(
   start: Date,
   end: Date,
-  frequency: number,
   buffer = 0,
-): Promise<Date[]> {
+): Date[] {
+  if (buffer < 0) {
+    throw new Error('Buffer cannot be negative');
+  }
+
   const dates: Date[] = [];
-  const cursor = new Date(start);
-  cursor.setDate(cursor.getDate() - buffer);
 
-  const final = new Date(end);
-  final.setDate(final.getDate() + buffer);
+  // Clone and expand range (UTC-safe)
+  const cursor = new Date(start.getTime());
+  cursor.setUTCDate(cursor.getUTCDate() - buffer);
 
-  while (cursor <= final) {
-    const d = new Date(cursor);
-    d.setHours(0, 0, 0, 0);
-    dates.push(d);
-    cursor.setDate(cursor.getDate() + frequency);
+  const final = new Date(end.getTime());
+  final.setUTCDate(final.getUTCDate() + buffer);
+
+  // Safety guard (prevents future infinite loops)
+  let guard = 0;
+
+  while (cursor.getTime() <= final.getTime()) {
+    dates.push(new Date(cursor.getTime()));
+
+    // ✅ CRITICAL: move cursor forward by 1 day
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+
+    if (++guard > 400) {
+      throw new Error('Infinite loop protection triggered in generateVisitDatesforBirthDoula');
+    }
   }
 
   return dates;
@@ -437,3 +448,108 @@ export async function generateVisitDates(
 
 
 
+
+export async function generateVisitDatesforPostPartumDoula(
+  startDate: Date,
+  endDate: Date,
+  interval: number,
+): Promise<Date[]> {
+  if (interval <= 0) {
+    throw new BadRequestException('Interval must be greater than 0');
+  }
+
+  const dates: Date[] = [];
+
+  let current = new Date(startDate.getTime());
+
+  while (current.getTime() <= endDate.getTime()) {
+    dates.push(new Date(current.getTime()));
+
+    // ✅ ALWAYS use UTC when dates are UTC-normalized
+    current.setUTCDate(current.getUTCDate() + interval);
+  }
+
+  return dates;
+}
+
+
+
+
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+/**
+ * Checks if a doula is available for a given date and time shift
+ */
+export async function isDoulaAvailableForShift(
+  doulaId: string,
+  date: Date,
+  timeShift: TimeShift,
+): Promise<boolean> {
+  // Normalize date to avoid time issues
+  const normalizedDate = new Date(date);
+  // normalizedDate.setHours(0, 0, 0, 0);
+
+  const availabilityRecord =
+    await prisma.availableSlotsForService.findFirst({
+      where: {
+        doulaId,
+        date: normalizedDate,
+      },
+      select: {
+        availability: true,
+      },
+    });
+
+  if (!availabilityRecord) {
+    return false;
+  }
+
+  const availability = availabilityRecord.availability as Record<
+    TimeShift,
+    boolean
+  >;
+
+  // FULLDAY overrides all
+  if (availability.FULLDAY === true) {
+    return true;
+  }
+
+  return availability[timeShift] === true;
+}
+/**
+ * Returns TRUE if doula is OFF on the given date & time shift
+ */
+export async function isDoulaOffOnShift(
+  doulaProfileId: string,
+  date: Date,
+  timeShift: TimeShift,
+): Promise<boolean> {
+  // Normalize date
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
+
+  const offDayRecord = await prisma.doulaOffDays.findFirst({
+    where: {
+      doulaProfileId,
+      date: normalizedDate,
+    },
+    select: {
+      offtime: true,
+    },
+  });
+
+  if (!offDayRecord) {
+    return false;
+  }
+
+  const offtime = offDayRecord.offtime as Record<TimeShift, boolean>;
+
+  // FULLDAY blocks everything
+  if (offtime.FULLDAY === true) {
+    return true;
+  }
+
+  return offtime[timeShift] === true;
+}

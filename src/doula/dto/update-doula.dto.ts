@@ -35,7 +35,7 @@ export class UpdateDoulaProfileDto {
   // DoulaProfile table
   @IsOptional()
   @IsString()
-  description?: string;
+  about?: string;
 
   @IsOptional()
   @IsString()
@@ -46,7 +46,7 @@ export class UpdateDoulaProfileDto {
   qualification?: string;
 
   @IsOptional()
-  yoe?: number;
+  experience?: number;
 
   @IsOptional()
   languages?: any;

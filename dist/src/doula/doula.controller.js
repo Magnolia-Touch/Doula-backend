@@ -167,6 +167,9 @@ let DoulaController = class DoulaController {
         console.log(serviceBookingId);
         return this.service.getServiceBookingsinDetail(req.user.id, serviceBookingId);
     }
+    async getAvailableShifts(doulaId, startDate, endDate, visitFrequency) {
+        return this.service.getAvailableShifts(doulaId, startDate, endDate, Number(visitFrequency));
+    }
 };
 exports.DoulaController = DoulaController;
 __decorate([
@@ -787,6 +790,69 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "getServiceBookingsinDetail", null);
+__decorate([
+    (0, common_1.Get)(':id/available-shifts'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get available shifts for a doula',
+        description: 'Returns availability status for morning, night, and fullday shifts based on visit dates calculated from start date, end date, and visit frequency',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Doula Profile ID' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'startDate',
+        required: true,
+        type: String,
+        example: '2025-01-01',
+        description: 'Start date (YYYY-MM-DD)',
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'endDate',
+        required: true,
+        type: String,
+        example: '2025-01-31',
+        description: 'End date (YYYY-MM-DD)',
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'visitFrequency',
+        required: true,
+        type: Number,
+        example: 7,
+        description: 'Number of days between each visit',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Available shifts fetched successfully',
+                data: {
+                    doulaId: 'doula-uuid',
+                    startDate: '2025-01-01',
+                    endDate: '2025-01-31',
+                    visitFrequency: 7,
+                    visitDates: [
+                        '2025-01-01',
+                        '2025-01-08',
+                        '2025-01-15',
+                        '2025-01-22',
+                        '2025-01-29',
+                    ],
+                    availability: {
+                        morning: true,
+                        night: false,
+                        fullday: false,
+                    },
+                },
+            },
+        },
+    }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Query)('startDate')),
+    __param(2, (0, common_1.Query)('endDate')),
+    __param(3, (0, common_1.Query)('visitFrequency')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getAvailableShifts", null);
 exports.DoulaController = DoulaController = __decorate([
     (0, swagger_1.ApiTags)('Doula'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

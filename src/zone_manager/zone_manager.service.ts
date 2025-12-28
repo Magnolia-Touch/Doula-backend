@@ -1251,10 +1251,10 @@ export class ZoneManagerService {
     const {
       name,
       is_active,
-      description,
+      about,
       achievements,
       qualification,
-      yoe,
+      experience,
       languages,
       specialities,
       certificates
@@ -1278,10 +1278,10 @@ export class ZoneManagerService {
       this.prisma.doulaProfile.update({
         where: { userId: doulaId },
         data: {
-          ...(description !== undefined && { description }),
+          ...(about !== undefined && { about }),
           ...(achievements !== undefined && { achievements }),
           ...(qualification !== undefined && { qualification }),
-          ...(yoe !== undefined && { yoe }),
+          ...(experience !== undefined && { experience }),
           ...(languages !== undefined && { languages }),
           ...(specialities !== undefined && { specialities }),
         },
