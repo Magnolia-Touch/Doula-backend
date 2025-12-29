@@ -18,8 +18,14 @@ export declare class DoulaService {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    userId: string | null;
                     profile_image: string | null;
+                    userId: string | null;
+                }[];
+                Region: {
+                    id: string;
+                    zoneManagerId: string | null;
+                    pincode: string;
+                    regionName: string;
                 }[];
                 DoulaGallery: {
                     id: string;
@@ -35,19 +41,13 @@ export declare class DoulaService {
                     issuedBy: string;
                     year: string;
                 }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
-                }[];
             } & {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                profile_image: string | null;
                 userId: string;
                 regionId: string | null;
-                profile_image: string | null;
                 description: string | null;
                 achievements: string | null;
                 qualification: string | null;
@@ -57,9 +57,9 @@ export declare class DoulaService {
             }) | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -151,9 +151,9 @@ export declare class DoulaService {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -169,30 +169,30 @@ export declare class DoulaService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string | null;
                 profile_image: string | null;
+                userId: string | null;
             }[];
             Region: {
                 id: string;
                 is_active: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                regionName: string;
+                zoneManagerId: string | null;
                 pincode: string;
+                regionName: string;
                 district: string;
                 state: string;
                 country: string;
                 latitude: string;
                 longitude: string;
-                zoneManagerId: string | null;
             }[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            profile_image: string | null;
             userId: string;
             regionId: string | null;
-            profile_image: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
@@ -380,9 +380,9 @@ export declare class DoulaService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            profile_image: string | null;
             userId: string;
             regionId: string | null;
-            profile_image: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
@@ -548,6 +548,51 @@ export declare class DoulaService {
                 morning: boolean;
                 night: boolean;
                 fullday: boolean;
+            };
+        };
+    }>;
+    getShiftsByDoula(doulaId: string, page?: number, limit?: number): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            shiftId: string;
+            date: Date;
+            timeshift: import("@prisma/client").$Enums.TimeShift;
+            status: import("@prisma/client").$Enums.ServiceStatus;
+            serviceName: string;
+            clientName: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    }>;
+    getShiftById(shiftId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            shiftId: string;
+            date: Date;
+            timeshift: import("@prisma/client").$Enums.TimeShift;
+            status: import("@prisma/client").$Enums.ServiceStatus;
+            doula: {
+                doulaId: string;
+                name: string;
+            };
+            client: {
+                clientId: string;
+                name: string;
+                email: string;
+            } | null;
+            service: {
+                servicePricingId: string;
+                serviceId: string;
+                serviceName: string;
+                price: Prisma.JsonValue;
             };
         };
     }>;

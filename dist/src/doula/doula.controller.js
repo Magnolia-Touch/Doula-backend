@@ -170,6 +170,12 @@ let DoulaController = class DoulaController {
     async getAvailableShifts(doulaId, startDate, endDate, visitFrequency) {
         return this.service.getAvailableShifts(doulaId, startDate, endDate, Number(visitFrequency));
     }
+    async getShiftsByDoula(doulaId, page = '1', limit = '10') {
+        return this.service.getShiftsByDoula(doulaId, Number(page), Number(limit));
+    }
+    async getShiftById(shiftId) {
+        return this.service.getShiftById(shiftId);
+    }
 };
 exports.DoulaController = DoulaController;
 __decorate([
@@ -853,6 +859,98 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "getAvailableShifts", null);
+__decorate([
+    (0, common_1.Get)('doula/:doulaId/shifts'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get all shifts for a specific doula',
+        description: 'Returns all scheduled shifts for the given doula',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'doulaId', description: 'Doula Profile ID' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'page',
+        required: false,
+        type: Number,
+        example: 1,
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'limit',
+        required: false,
+        type: Number,
+        example: 10,
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Shifts fetched successfully',
+                data: [
+                    {
+                        shiftId: 'shift-uuid',
+                        date: '2025-01-15',
+                        timeshift: 'MORNING',
+                        status: 'SCHEDULED',
+                        serviceName: 'Postnatal Care',
+                        clientName: 'Jane Doe',
+                    },
+                ],
+                meta: {
+                    total: 10,
+                    page: 1,
+                    limit: 10,
+                    totalPages: 1,
+                },
+            },
+        },
+    }),
+    __param(0, (0, common_1.Param)('doulaId')),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getShiftsByDoula", null);
+__decorate([
+    (0, common_1.Get)('shifts/:shiftId'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get shift details by ID',
+        description: 'Returns detailed information about a specific shift',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'shiftId', description: 'Shift ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        schema: {
+            example: {
+                success: true,
+                message: 'Shift details fetched successfully',
+                data: {
+                    shiftId: 'shift-uuid',
+                    date: '2025-01-15',
+                    timeshift: 'MORNING',
+                    status: 'SCHEDULED',
+                    doula: {
+                        doulaId: 'doula-uuid',
+                        name: 'Sarah Johnson',
+                    },
+                    client: {
+                        clientId: 'client-uuid',
+                        name: 'Jane Doe',
+                        email: 'jane@example.com',
+                    },
+                    service: {
+                        servicePricingId: 'pricing-uuid',
+                        serviceName: 'Postnatal Care',
+                        price: 150,
+                    },
+                },
+            },
+        },
+    }),
+    __param(0, (0, common_1.Param)('shiftId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "getShiftById", null);
 exports.DoulaController = DoulaController = __decorate([
     (0, swagger_1.ApiTags)('Doula'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

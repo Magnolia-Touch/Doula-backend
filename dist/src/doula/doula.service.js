@@ -1623,6 +1623,124 @@ let DoulaService = class DoulaService {
             },
         };
     }
+    async getShiftsByDoula(doulaId, page = 1, limit = 10) {
+        const doula = await this.prisma.doulaProfile.findUnique({
+            where: { id: doulaId },
+            select: { id: true },
+        });
+        if (!doula) {
+            throw new common_1.NotFoundException('Doula not found');
+        }
+        const result = await (0, pagination_util_1.paginate)({
+            prismaModel: this.prisma.schedules,
+            page,
+            limit,
+            where: {
+                doulaProfileId: doulaId,
+            },
+            include: {
+                ServicePricing: {
+                    include: {
+                        service: {
+                            select: { name: true },
+                        },
+                    },
+                },
+                client: {
+                    include: {
+                        user: {
+                            select: { name: true },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                date: 'desc',
+            },
+        });
+        const shifts = result.data;
+        return {
+            success: true,
+            message: 'Shifts fetched successfully',
+            data: shifts.map((shift) => ({
+                shiftId: shift.id,
+                date: shift.date,
+                timeshift: shift.timeshift,
+                status: shift.status,
+                serviceName: shift.ServicePricing.service.name,
+                clientName: shift.client.user.name,
+            })),
+            meta: result.meta,
+        };
+    }
+    async getShiftById(shiftId) {
+        const shift = await this.prisma.schedules.findUnique({
+            where: { id: shiftId },
+            include: {
+                DoulaProfile: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                ServicePricing: {
+                    include: {
+                        service: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+                client: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!shift) {
+            throw new common_1.NotFoundException('Shift not found');
+        }
+        return {
+            success: true,
+            message: 'Shift details fetched successfully',
+            data: {
+                shiftId: shift.id,
+                date: shift.date,
+                timeshift: shift.timeshift,
+                status: shift.status,
+                doula: {
+                    doulaId: shift.DoulaProfile.id,
+                    name: shift.DoulaProfile.user.name,
+                },
+                client: shift.client?.user
+                    ? {
+                        clientId: shift.client.user.id,
+                        name: shift.client.user.name,
+                        email: shift.client.user.email,
+                    }
+                    : null,
+                service: {
+                    servicePricingId: shift.ServicePricing.id,
+                    serviceId: shift.ServicePricing.service.id,
+                    serviceName: shift.ServicePricing.service.name,
+                    price: shift.ServicePricing.price,
+                },
+            },
+        };
+    }
 };
 exports.DoulaService = DoulaService;
 exports.DoulaService = DoulaService = __decorate([

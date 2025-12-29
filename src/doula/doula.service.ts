@@ -2287,7 +2287,7 @@ export class DoulaService {
     const shift = await this.prisma.schedules.findUnique({
       where: { id: shiftId },
       include: {
-        doulaProfile: {
+        DoulaProfile: {
           include: {
             user: {
               select: {
@@ -2334,8 +2334,8 @@ export class DoulaService {
         timeshift: shift.timeshift,
         status: shift.status,
         doula: {
-          doulaId: shift.doulaProfile.id,
-          name: shift.doulaProfile.user.name,
+          doulaId: shift.DoulaProfile.id,
+          name: shift.DoulaProfile.user.name,
         },
         client: shift.client?.user
           ? {
