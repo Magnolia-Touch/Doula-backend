@@ -15,6 +15,8 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const paginate_with_relations_util_1 = require("../common/utility/paginate-with-relations.util");
+const service_utils_1 = require("../common/utility/service-utils");
+const client_2 = require("@prisma/client");
 const MAX_GALLERY_IMAGES = 5;
 let DoulaService = class DoulaService {
     prisma;
@@ -1738,6 +1740,102 @@ let DoulaService = class DoulaService {
                     serviceName: shift.ServicePricing.service.name,
                     price: shift.ServicePricing.price,
                 },
+            },
+        };
+    }
+    toUtcMidnight(date) {
+        const d = new Date(date);
+        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+    }
+    async calculatePricing(dto) {
+        const { doulaProfileId, servicePricingId, startDate, endDate, visitFrequency, timeShift, buffer = 0, } = dto;
+        const doulaProfile = await this.prisma.doulaProfile.findUnique({
+            where: { id: doulaProfileId },
+            select: { id: true },
+        });
+        if (!doulaProfile) {
+            throw new common_1.NotFoundException('Doula profile not found');
+        }
+        const servicePricing = await this.prisma.servicePricing.findUnique({
+            where: { id: servicePricingId },
+            include: {
+                service: {
+                    select: { id: true, name: true },
+                },
+            },
+        });
+        if (!servicePricing) {
+            throw new common_1.NotFoundException('Service pricing not found');
+        }
+        if (servicePricing.doulaProfileId !== doulaProfileId) {
+            throw new common_1.BadRequestException('Service pricing does not belong to the specified doula');
+        }
+        const normalizedStartDate = this.toUtcMidnight(startDate);
+        const normalizedEndDate = this.toUtcMidnight(endDate);
+        if (normalizedStartDate > normalizedEndDate) {
+            throw new common_1.BadRequestException('Start date must be before end date');
+        }
+        const serviceName = servicePricing.service.name;
+        let visitDates = [];
+        let totalAmount = 0;
+        let unavailableDates = [];
+        if (serviceName === 'Birth Doula') {
+            visitDates = (0, service_utils_1.generateVisitDatesforBirthDoula)(normalizedStartDate, normalizedEndDate, buffer);
+            totalAmount = (0, service_utils_1.getPriceForShift)(servicePricing.price, client_2.TimeShift.FULLDAY);
+        }
+        else if (serviceName === 'Post Partum Doula') {
+            if (!visitFrequency || !timeShift) {
+                throw new common_1.BadRequestException('Visit frequency and time shift are required for Post Partum Doula service');
+            }
+            visitDates = await (0, service_utils_1.generateVisitDatesforPostPartumDoula)(normalizedStartDate, normalizedEndDate, visitFrequency);
+            const perDayPrice = (0, service_utils_1.getPriceForShift)(servicePricing.price, timeShift);
+            totalAmount = perDayPrice * visitDates.length;
+        }
+        else {
+            throw new common_1.BadRequestException('Service type must be either "Birth Doula" or "Post Partum Doula"');
+        }
+        const effectiveTimeShift = serviceName === 'Birth Doula' ? client_2.TimeShift.FULLDAY : timeShift;
+        for (const visitDate of visitDates) {
+            const isOff = await (0, service_utils_1.isDoulaOffOnShift)(doulaProfileId, visitDate, effectiveTimeShift);
+            if (isOff) {
+                unavailableDates.push(visitDate.toISOString().split('T')[0]);
+                continue;
+            }
+            const isAvailable = await (0, service_utils_1.isDoulaAvailableForShift)(doulaProfileId, visitDate, effectiveTimeShift);
+            if (!isAvailable) {
+                unavailableDates.push(visitDate.toISOString().split('T')[0]);
+            }
+        }
+        if (unavailableDates.length > 0) {
+            return {
+                success: false,
+                message: 'Doula is not available for selected dates',
+                data: {
+                    available: false,
+                    unavailableDates,
+                    reason: `Doula is not available on ${unavailableDates.length} date(s)`,
+                },
+            };
+        }
+        return {
+            success: true,
+            message: 'Pricing calculated successfully',
+            data: {
+                available: true,
+                doulaProfileId,
+                servicePricingId,
+                serviceName,
+                startDate: normalizedStartDate.toISOString().split('T')[0],
+                endDate: normalizedEndDate.toISOString().split('T')[0],
+                visitDates: visitDates.map((date) => date.toISOString().split('T')[0]),
+                numberOfVisits: visitDates.length,
+                timeShift: effectiveTimeShift,
+                pricePerVisit: serviceName === 'Birth Doula'
+                    ? totalAmount
+                    : (0, service_utils_1.getPriceForShift)(servicePricing.price, effectiveTimeShift),
+                totalAmount,
+                currency: 'INR',
+                priceBreakdown: servicePricing.price,
             },
         };
     }

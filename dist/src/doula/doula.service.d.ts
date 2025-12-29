@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
 import { UpdateCertificateDto } from './dto/certificate.dto';
+import { CalculatePricingDto } from './dto/calculate-pricing.dto';
 export declare class DoulaService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -594,6 +595,48 @@ export declare class DoulaService {
                 serviceName: string;
                 price: Prisma.JsonValue;
             };
+        };
+    }>;
+    private toUtcMidnight;
+    calculatePricing(dto: CalculatePricingDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            available: boolean;
+            unavailableDates: string[];
+            reason: string;
+            doulaProfileId?: undefined;
+            servicePricingId?: undefined;
+            serviceName?: undefined;
+            startDate?: undefined;
+            endDate?: undefined;
+            visitDates?: undefined;
+            numberOfVisits?: undefined;
+            timeShift?: undefined;
+            pricePerVisit?: undefined;
+            totalAmount?: undefined;
+            currency?: undefined;
+            priceBreakdown?: undefined;
+        };
+    } | {
+        success: boolean;
+        message: string;
+        data: {
+            available: boolean;
+            doulaProfileId: string;
+            servicePricingId: string;
+            serviceName: string;
+            startDate: string;
+            endDate: string;
+            visitDates: string[];
+            numberOfVisits: number;
+            timeShift: import("@prisma/client").$Enums.TimeShift;
+            pricePerVisit: number;
+            totalAmount: number;
+            currency: string;
+            priceBreakdown: Prisma.JsonValue;
+            unavailableDates?: undefined;
+            reason?: undefined;
         };
     }>;
 }

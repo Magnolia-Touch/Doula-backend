@@ -47,6 +47,7 @@ import { Role } from '@prisma/client';
 import { AddDoulaImageDto } from './dto/add-doula-image.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
 import { UpdateCertificateDto } from './dto/certificate.dto';
+import { CalculatePricingDto } from './dto/calculate-pricing.dto';
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
@@ -944,5 +945,97 @@ export class DoulaController {
   })
   async getShiftById(@Param('shiftId') shiftId: string) {
     return this.service.getShiftById(shiftId);
+  }
+
+  @Post('calculate-pricing')
+  @ApiOperation({
+    summary: 'Calculate pricing for doula service',
+    description:
+      'Calculates the total price for a doula service based on service type, dates, and availability. Returns pricing if doula is available, otherwise returns unavailable dates.',
+  })
+  @ApiBody({ type: CalculatePricingDto })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      oneOf: [
+        {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'Pricing calculated successfully',
+            },
+            data: {
+              type: 'object',
+              properties: {
+                available: { type: 'boolean', example: true },
+                doulaProfileId: {
+                  type: 'string',
+                  example: '7de77403-ca72-452b-abfa-296c26df8116',
+                },
+                servicePricingId: {
+                  type: 'string',
+                  example: '00880c8d-abbc-42df-b6d7-c24ab4044ed0',
+                },
+                serviceName: { type: 'string', example: 'Post Partum Doula' },
+                startDate: { type: 'string', example: '2025-01-01' },
+                endDate: { type: 'string', example: '2025-01-31' },
+                visitDates: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  example: ['2025-01-01', '2025-01-08', '2025-01-15'],
+                },
+                numberOfVisits: { type: 'number', example: 5 },
+                timeShift: { type: 'string', example: 'MORNING' },
+                pricePerVisit: { type: 'number', example: 10 },
+                totalAmount: { type: 'number', example: 50 },
+                currency: { type: 'string', example: 'INR' },
+                priceBreakdown: {
+                  type: 'object',
+                  example: { morning: 10, night: 20, fullday: 30 },
+                },
+              },
+            },
+          },
+        },
+        {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: false },
+            message: {
+              type: 'string',
+              example: 'Doula is not available for selected dates',
+            },
+            data: {
+              type: 'object',
+              properties: {
+                available: { type: 'boolean', example: false },
+                unavailableDates: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  example: ['2025-01-08', '2025-01-15'],
+                },
+                reason: {
+                  type: 'string',
+                  example: 'Doula is not available on 2 date(s)',
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - invalid parameters or validation errors',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Doula profile or service pricing not found',
+  })
+  async calculatePricing(@Body() dto: CalculatePricingDto) {
+    return this.service.calculatePricing(dto);
   }
 }

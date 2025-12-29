@@ -4,6 +4,7 @@ import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
 import { UpdateDoulaStatusDto } from './dto/update-doula-status.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
 import { UpdateCertificateDto } from './dto/certificate.dto';
+import { CalculatePricingDto } from './dto/calculate-pricing.dto';
 export declare class DoulaController {
     private readonly service;
     constructor(service: DoulaService);
@@ -594,6 +595,47 @@ export declare class DoulaController {
                 serviceName: string;
                 price: import("@prisma/client/runtime/library").JsonValue;
             };
+        };
+    }>;
+    calculatePricing(dto: CalculatePricingDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            available: boolean;
+            unavailableDates: string[];
+            reason: string;
+            doulaProfileId?: undefined;
+            servicePricingId?: undefined;
+            serviceName?: undefined;
+            startDate?: undefined;
+            endDate?: undefined;
+            visitDates?: undefined;
+            numberOfVisits?: undefined;
+            timeShift?: undefined;
+            pricePerVisit?: undefined;
+            totalAmount?: undefined;
+            currency?: undefined;
+            priceBreakdown?: undefined;
+        };
+    } | {
+        success: boolean;
+        message: string;
+        data: {
+            available: boolean;
+            doulaProfileId: string;
+            servicePricingId: string;
+            serviceName: string;
+            startDate: string;
+            endDate: string;
+            visitDates: string[];
+            numberOfVisits: number;
+            timeShift: import("@prisma/client").$Enums.TimeShift;
+            pricePerVisit: number;
+            totalAmount: number;
+            currency: string;
+            priceBreakdown: import("@prisma/client/runtime/library").JsonValue;
+            unavailableDates?: undefined;
+            reason?: undefined;
         };
     }>;
 }
