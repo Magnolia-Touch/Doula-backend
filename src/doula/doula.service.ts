@@ -2208,5 +2208,151 @@ export class DoulaService {
     };
   }
 
+  async getShiftsByDoula(doulaId: string, page = 1, limit = 10) {
+    // Validate doula exists
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { id: doulaId },
+      select: { id: true },
+    });
+
+    if (!doula) {
+      throw new NotFoundException('Doula not found');
+    }
+
+    const result = await paginate({
+      prismaModel: this.prisma.schedules,
+      page,
+      limit,
+      where: {
+        doulaProfileId: doulaId,
+      },
+      include: {
+        ServicePricing: {
+          include: {
+            service: {
+              select: { name: true },
+            },
+          },
+        },
+        client: {
+          include: {
+            user: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+
+    type ShiftWithRelations = Prisma.SchedulesGetPayload<{
+      include: {
+        ServicePricing: {
+          include: {
+            service: {
+              select: { name: true };
+            };
+          };
+        };
+        client: {
+          include: {
+            user: {
+              select: { name: true };
+            };
+          };
+        };
+      };
+    }>;
+
+    const shifts = result.data as ShiftWithRelations[];
+
+    return {
+      success: true,
+      message: 'Shifts fetched successfully',
+      data: shifts.map((shift) => ({
+        shiftId: shift.id,
+        date: shift.date,
+        timeshift: shift.timeshift,
+        status: shift.status,
+        serviceName: shift.ServicePricing.service.name,
+        clientName: shift.client.user.name,
+      })),
+      meta: result.meta,
+    };
+  }
+
+  async getShiftById(shiftId: string) {
+    const shift = await this.prisma.schedules.findUnique({
+      where: { id: shiftId },
+      include: {
+        doulaProfile: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        ServicePricing: {
+          include: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        client: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!shift) {
+      throw new NotFoundException('Shift not found');
+    }
+
+    return {
+      success: true,
+      message: 'Shift details fetched successfully',
+      data: {
+        shiftId: shift.id,
+        date: shift.date,
+        timeshift: shift.timeshift,
+        status: shift.status,
+        doula: {
+          doulaId: shift.doulaProfile.id,
+          name: shift.doulaProfile.user.name,
+        },
+        client: shift.client?.user
+          ? {
+            clientId: shift.client.user.id,
+            name: shift.client.user.name,
+            email: shift.client.user.email,
+          }
+          : null,
+        service: {
+          servicePricingId: shift.ServicePricing.id,
+          serviceId: shift.ServicePricing.service.id,
+          serviceName: shift.ServicePricing.service.name,
+          price: shift.ServicePricing.price,
+        },
+      },
+    };
+  }
+
 
 }

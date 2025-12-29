@@ -851,4 +851,98 @@ export class DoulaController {
       Number(visitFrequency),
     );
   }
+
+  @Get('doula/:doulaId/shifts')
+  @ApiOperation({
+    summary: 'Get all shifts for a specific doula',
+    description: 'Returns all scheduled shifts for the given doula',
+  })
+  @ApiParam({ name: 'doulaId', description: 'Doula Profile ID' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        success: true,
+        message: 'Shifts fetched successfully',
+        data: [
+          {
+            shiftId: 'shift-uuid',
+            date: '2025-01-15',
+            timeshift: 'MORNING',
+            status: 'SCHEDULED',
+            serviceName: 'Postnatal Care',
+            clientName: 'Jane Doe',
+          },
+        ],
+        meta: {
+          total: 10,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+        },
+      },
+    },
+  })
+  async getShiftsByDoula(
+    @Param('doulaId') doulaId: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.service.getShiftsByDoula(
+      doulaId,
+      Number(page),
+      Number(limit),
+    );
+  }
+
+  @Get('shifts/:shiftId')
+  @ApiOperation({
+    summary: 'Get shift details by ID',
+    description: 'Returns detailed information about a specific shift',
+  })
+  @ApiParam({ name: 'shiftId', description: 'Shift ID' })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        success: true,
+        message: 'Shift details fetched successfully',
+        data: {
+          shiftId: 'shift-uuid',
+          date: '2025-01-15',
+          timeshift: 'MORNING',
+          status: 'SCHEDULED',
+          doula: {
+            doulaId: 'doula-uuid',
+            name: 'Sarah Johnson',
+          },
+          client: {
+            clientId: 'client-uuid',
+            name: 'Jane Doe',
+            email: 'jane@example.com',
+          },
+          service: {
+            servicePricingId: 'pricing-uuid',
+            serviceName: 'Postnatal Care',
+            price: 150,
+          },
+        },
+      },
+    },
+  })
+  async getShiftById(@Param('shiftId') shiftId: string) {
+    return this.service.getShiftById(shiftId);
+  }
 }
