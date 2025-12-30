@@ -219,12 +219,10 @@ export class DoulaServiceAvailabilityService {
     };
   }
 
-
   async createOffDays(
     dto: CreateDoulaOffDaysDto,
     user: any,
   ) {
-    console.log(user)
     // 1. Fetch doula profile
     const doula = await this.prisma.doulaProfile.findUnique({
       where: { userId: user.id },
@@ -236,17 +234,18 @@ export class DoulaServiceAvailabilityService {
 
     const { date1, date2, offtime } = dto;
 
-    const startDate = new Date(`${date1}T00:00:00.000Z`);
-    const endDate = date2
-      ? new Date(`${date2}T00:00:00.000Z`)
-      : new Date(`${date1}T00:00:00.000Z`);
+    const normalizeDate = (date: string): Date =>
+      new Date(`${date}T00:00:00.000Z`);
+
+    const startDate = normalizeDate(date1);
+    const endDate = date2 ? normalizeDate(date2) : startDate;
 
     if (startDate > endDate) {
       throw new BadRequestException('date1 must be before or equal to date2');
     }
 
     /**
-     * Generate date range (inclusive)
+     * 2. Generate date range (inclusive)
      */
     const dates: Date[] = [];
     const cursor = new Date(startDate);
@@ -257,7 +256,7 @@ export class DoulaServiceAvailabilityService {
     }
 
     /**
-     * 2. Fetch service availability for these dates
+     * 3. Fetch service availability for validation
      */
     const availabilities =
       await this.prisma.availableSlotsForService.findMany({
@@ -266,33 +265,32 @@ export class DoulaServiceAvailabilityService {
           date: { in: dates },
         },
         select: {
+          id: true,
           date: true,
           availability: true,
         },
       });
 
-    /**
-     * Build lookup map: date → availability
-     */
     const availabilityMap = new Map<string, any>();
     for (const a of availabilities) {
-      availabilityMap.set(a.date.toISOString(), a.availability);
+      availabilityMap.set(a.date.toISOString(), a);
     }
 
     /**
-     * 3. Validate availability exists + overlaps
+     * 4. Validate overlap
      */
     const invalidDates: string[] = [];
 
     for (const date of dates) {
-      const availability = availabilityMap.get(date.toISOString());
+      const record = availabilityMap.get(date.toISOString());
 
-      if (!availability) {
+      if (!record) {
         invalidDates.push(date.toISOString().split('T')[0]);
         continue;
       }
 
-      // OPTIONAL: slot-level validation
+      const availability = record.availability;
+
       const hasOverlap =
         (offtime.MORNING && availability.MORNING) ||
         (offtime.NIGHT && availability.NIGHT) ||
@@ -312,7 +310,7 @@ export class DoulaServiceAvailabilityService {
     }
 
     /**
-     * 4. Remove already-existing off-days
+     * 5. Remove already existing off-days
      */
     const existing = await this.prisma.doulaOffDays.findMany({
       where: {
@@ -326,9 +324,6 @@ export class DoulaServiceAvailabilityService {
       existing.map((d) => d.date.toISOString()),
     );
 
-    /**
-     * 5. Prepare records
-     */
     const offtimeJson: Prisma.InputJsonValue = {
       MORNING: offtime.MORNING,
       NIGHT: offtime.NIGHT,
@@ -351,14 +346,37 @@ export class DoulaServiceAvailabilityService {
     }
 
     /**
-     * 6. Create off-days
+     * 6. TRANSACTION:
+     *    - Create off-days
+     *    - Mark service availability as false
      */
-    await this.prisma.doulaOffDays.createMany({
-      data: recordsToCreate,
+    await this.prisma.$transaction(async (tx) => {
+      // 6.1 Create off-days
+      await tx.doulaOffDays.createMany({
+        data: recordsToCreate,
+      });
+
+      // 6.2 Update service availability → force false
+      for (const date of dates) {
+        const record = availabilityMap.get(date.toISOString());
+        if (!record) continue;
+
+        await tx.availableSlotsForService.update({
+          where: { id: record.id },
+          data: {
+            availability: {
+              MORNING: false,
+              NIGHT: false,
+              FULLDAY: false,
+            },
+          },
+        });
+      }
     });
 
     return {
-      message: 'Off days created successfully',
+      message:
+        'Off days created and service availability disabled successfully',
       data: {
         totalCreated: recordsToCreate.length,
         from: startDate,
@@ -367,6 +385,7 @@ export class DoulaServiceAvailabilityService {
       },
     };
   }
+
 
 
   async getOffDays(user: any) {

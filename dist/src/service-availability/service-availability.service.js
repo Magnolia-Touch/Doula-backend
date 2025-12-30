@@ -154,7 +154,6 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
         };
     }
     async createOffDays(dto, user) {
-        console.log(user);
         const doula = await this.prisma.doulaProfile.findUnique({
             where: { userId: user.id },
         });
@@ -162,10 +161,9 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
             throw new common_1.ForbiddenException('Doula profile not found');
         }
         const { date1, date2, offtime } = dto;
-        const startDate = new Date(`${date1}T00:00:00.000Z`);
-        const endDate = date2
-            ? new Date(`${date2}T00:00:00.000Z`)
-            : new Date(`${date1}T00:00:00.000Z`);
+        const normalizeDate = (date) => new Date(`${date}T00:00:00.000Z`);
+        const startDate = normalizeDate(date1);
+        const endDate = date2 ? normalizeDate(date2) : startDate;
         if (startDate > endDate) {
             throw new common_1.BadRequestException('date1 must be before or equal to date2');
         }
@@ -181,21 +179,23 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
                 date: { in: dates },
             },
             select: {
+                id: true,
                 date: true,
                 availability: true,
             },
         });
         const availabilityMap = new Map();
         for (const a of availabilities) {
-            availabilityMap.set(a.date.toISOString(), a.availability);
+            availabilityMap.set(a.date.toISOString(), a);
         }
         const invalidDates = [];
         for (const date of dates) {
-            const availability = availabilityMap.get(date.toISOString());
-            if (!availability) {
+            const record = availabilityMap.get(date.toISOString());
+            if (!record) {
                 invalidDates.push(date.toISOString().split('T')[0]);
                 continue;
             }
+            const availability = record.availability;
             const hasOverlap = (offtime.MORNING && availability.MORNING) ||
                 (offtime.NIGHT && availability.NIGHT) ||
                 (offtime.FULLDAY && availability.FULLDAY);
@@ -232,11 +232,28 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
         if (!recordsToCreate.length) {
             throw new common_1.BadRequestException('Off days already exist for the selected date(s)');
         }
-        await this.prisma.doulaOffDays.createMany({
-            data: recordsToCreate,
+        await this.prisma.$transaction(async (tx) => {
+            await tx.doulaOffDays.createMany({
+                data: recordsToCreate,
+            });
+            for (const date of dates) {
+                const record = availabilityMap.get(date.toISOString());
+                if (!record)
+                    continue;
+                await tx.availableSlotsForService.update({
+                    where: { id: record.id },
+                    data: {
+                        availability: {
+                            MORNING: false,
+                            NIGHT: false,
+                            FULLDAY: false,
+                        },
+                    },
+                });
+            }
         });
         return {
-            message: 'Off days created successfully',
+            message: 'Off days created and service availability disabled successfully',
             data: {
                 totalCreated: recordsToCreate.length,
                 from: startDate,

@@ -125,28 +125,28 @@ export declare class MeetingsController {
     getAllMeetings(): Promise<({
         AvailableSlotsForMeeting: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            ownerRole: import("@prisma/client").$Enums.Role;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
-            ownerRole: import("@prisma/client").$Enums.Role;
             doulaId: string | null;
             adminId: string | null;
             zoneManagerId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         } | null;
         ZoneManagerProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string | null;
             profile_image: string | null;
+            userId: string | null;
         } | null;
         DoulaProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             profile_image: string | null;
+            userId: string;
             regionId: string | null;
             description: string | null;
             achievements: string | null;
@@ -157,25 +157,25 @@ export declare class MeetingsController {
         } | null;
         Service: {
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
             description: string | null;
         } | null;
         AdminProfile: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            userId: string;
             profile_image: string | null;
+            userId: string;
         } | null;
         bookedBy: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            profile_image: string | null;
             region: string | null;
             userId: string;
-            profile_image: string | null;
             is_verified: boolean;
             address: string | null;
         };
