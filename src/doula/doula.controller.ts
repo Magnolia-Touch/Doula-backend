@@ -947,7 +947,7 @@ export class DoulaController {
     return this.service.getShiftById(shiftId);
   }
 
-  @Get('calculate/pricing')
+  @Post('calculate/pricing')
   @ApiOperation({
     summary: 'Calculate pricing for doula service',
     description:
