@@ -2374,10 +2374,10 @@ export class DoulaService {
     const {
       doulaProfileId,
       servicePricingId,
-      startDate,
-      endDate,
+      serviceStartDate,
+      servicEndDate,
       visitFrequency,
-      timeShift,
+      serviceTimeShift,
       buffer = 0,
     } = dto;
 
@@ -2412,94 +2412,79 @@ export class DoulaService {
       );
     }
 
-    // Normalize dates
-    const normalizedStartDate = this.toUtcMidnight(startDate);
-    const normalizedEndDate = this.toUtcMidnight(endDate);
+    const startDate = this.toUtcMidnight(serviceStartDate);
+    const endDate = this.toUtcMidnight(servicEndDate);
 
-    if (normalizedStartDate > normalizedEndDate) {
-      throw new BadRequestException('Start date must be before end date');
+    if (startDate > endDate) {
+      throw new BadRequestException('Invalid service date range');
     }
 
-    const serviceName = servicePricing.service.name;
-    let visitDates: Date[] = [];
+    const visitDates =
+      servicePricing.service.name === 'Post Partum Doula'
+        ? await generateVisitDatesforPostPartumDoula(
+          startDate,
+          endDate,
+          visitFrequency,
+        )
+        : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
+
+    for (const visitDate of visitDates) {
+      if (
+        await isDoulaOffOnShift(
+          doulaProfileId,
+          visitDate,
+          serviceTimeShift,
+        )
+      ) {
+        throw new BadRequestException(
+          `Doula is off on ${visitDate.toISOString().split('T')[0]}`,
+        );
+      }
+
+      if (
+        !(await isDoulaAvailableForShift(
+          doulaProfileId,
+          visitDate,
+          serviceTimeShift,
+        ))
+      ) {
+        throw new BadRequestException(
+          `Doula not available on ${visitDate.toISOString().split('T')[0]}`,
+        );
+      }
+
+      const existingSchedule = await this.prisma.schedules.findFirst({
+        where: {
+          doulaProfileId,
+          date: visitDate,
+          timeshift: serviceTimeShift,
+        },
+      });
+
+      if (existingSchedule) {
+        throw new BadRequestException(
+          `Doula already booked on ${visitDate.toISOString().split('T')[0]}`,
+        );
+      }
+    }
+
     let totalAmount = 0;
-    let unavailableDates: string[] = [];
 
-    // Generate visit dates based on service type
-    if (serviceName === 'Birth Doula') {
-      visitDates = generateVisitDatesforBirthDoula(
-        normalizedStartDate,
-        normalizedEndDate,
-        buffer,
-      );
-
-      // Birth Doula is always FULLDAY
+    if (servicePricing.service.name === 'Birth Doula') {
       totalAmount = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-    } else if (serviceName === 'Post Partum Doula') {
-      // Validate required fields for Post Partum
-      if (!visitFrequency || !timeShift) {
-        throw new BadRequestException(
-          'Visit frequency and time shift are required for Post Partum Doula service',
-        );
-      }
-
-      visitDates = await generateVisitDatesforPostPartumDoula(
-        normalizedStartDate,
-        normalizedEndDate,
-        visitFrequency,
+    } else if (servicePricing.service.name === 'Post Partum Doula') {
+      const perDayPrice = getPriceForShift(
+        servicePricing.price,
+        serviceTimeShift,
       );
-
-      const perDayPrice = getPriceForShift(servicePricing.price, timeShift);
       totalAmount = perDayPrice * visitDates.length;
-    } else {
-      throw new BadRequestException(
-        'Service type must be either "Birth Doula" or "Post Partum Doula"',
-      );
     }
 
-    // Check availability for each visit date
-    const effectiveTimeShift =
-      serviceName === 'Birth Doula' ? TimeShift.FULLDAY : timeShift!;
-
-    for (const visitDate of visitDates) {
-      // Check if doula is off
-      const isOff = await isDoulaOffOnShift(
-        doulaProfileId,
-        visitDate,
-        effectiveTimeShift,
-      );
-
-      if (isOff) {
-        unavailableDates.push(visitDate.toISOString().split('T')[0]);
-        continue;
-      }
-
-      // Check if doula is available
-      const isAvailable = await isDoulaAvailableForShift(
-        doulaProfileId,
-        visitDate,
-        effectiveTimeShift,
-      );
-
-      if (!isAvailable) {
-        unavailableDates.push(visitDate.toISOString().split('T')[0]);
-      }
-    }
-
-    // If any dates are unavailable, return unavailable status
-    if (unavailableDates.length > 0) {
-      return {
-        success: false,
-        message: 'Doula is not available for selected dates',
-        data: {
-          available: false,
-          unavailableDates,
-          reason: `Doula is not available on ${unavailableDates.length} date(s)`,
-        },
-      };
+    if (totalAmount <= 0) {
+      throw new BadRequestException('Invalid total amount');
     }
 
     // All dates are available, return pricing
@@ -2510,16 +2495,16 @@ export class DoulaService {
         available: true,
         doulaProfileId,
         servicePricingId,
-        serviceName,
-        startDate: normalizedStartDate.toISOString().split('T')[0],
-        endDate: normalizedEndDate.toISOString().split('T')[0],
+        serviceName: servicePricing.service.name,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
         visitDates: visitDates.map((date) => date.toISOString().split('T')[0]),
         numberOfVisits: visitDates.length,
-        timeShift: effectiveTimeShift,
+        timeShift: serviceTimeShift,
         pricePerVisit:
-          serviceName === 'Birth Doula'
+          servicePricing.service.name === 'Birth Doula'
             ? totalAmount
-            : getPriceForShift(servicePricing.price, effectiveTimeShift),
+            : getPriceForShift(servicePricing.price, serviceTimeShift),
         totalAmount,
         currency: 'INR',
         priceBreakdown: servicePricing.price,

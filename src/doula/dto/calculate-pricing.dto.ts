@@ -33,7 +33,7 @@ export class CalculatePricingDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  startDate: string;
+  serviceStartDate: string;
 
   @ApiProperty({
     description: 'End date (YYYY-MM-DD)',
@@ -41,27 +41,27 @@ export class CalculatePricingDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  endDate: string;
+  servicEndDate: string;
 
-  @ApiPropertyOptional({
-    description:
-      'Visit frequency (number of days between visits). Required for Post Partum Doula service',
-    example: 7,
+  //set defalut 0.
+  @ApiProperty({
+    example: 2,
+    description: 'Visit Frequency for Services (e.g., twice a week)',
   })
   @IsOptional()
   @IsInt()
-  @Min(1)
-  visitFrequency?: number;
+  visitFrequency: number = 1;
 
-  @ApiPropertyOptional({
-    description:
-      'Time shift for service. Required for Post Partum Doula service',
-    enum: TimeShift,
+  @ApiProperty({
     example: TimeShift.MORNING,
+    enum: TimeShift,
+    description: 'Time shift for the service',
   })
-  @IsOptional()
-  @IsEnum(TimeShift)
-  timeShift?: TimeShift;
+  @IsEnum(TimeShift, {
+    message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
+  })
+  serviceTimeShift: TimeShift;
+
 
   @ApiPropertyOptional({
     description: 'Buffer days before and after for Birth Doula service',

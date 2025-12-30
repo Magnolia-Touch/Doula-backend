@@ -23,7 +23,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "tree": "tree -I node_modules",
     "create:admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "seed:testimonial": "ts-node prisma/seed-testimonial.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

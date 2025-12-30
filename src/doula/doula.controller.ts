@@ -80,7 +80,7 @@ function multerStorage() {
   version: '1',
 })
 export class DoulaController {
-  constructor(private readonly service: DoulaService) {}
+  constructor(private readonly service: DoulaService) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'ZONE_MANAGER')
@@ -947,7 +947,7 @@ export class DoulaController {
     return this.service.getShiftById(shiftId);
   }
 
-  @Post('calculate-pricing')
+  @Get('calculate/pricing')
   @ApiOperation({
     summary: 'Calculate pricing for doula service',
     description:

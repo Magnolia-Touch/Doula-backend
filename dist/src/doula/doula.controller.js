@@ -956,7 +956,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "getShiftById", null);
 __decorate([
-    (0, common_1.Post)('calculate-pricing'),
+    (0, common_1.Get)('calculate/pricing'),
     (0, swagger_1.ApiOperation)({
         summary: 'Calculate pricing for doula service',
         description: 'Calculates the total price for a doula service based on service type, dates, and availability. Returns pricing if doula is available, otherwise returns unavailable dates.',
