@@ -9,15 +9,15 @@ export declare class AuthController {
         message: string;
         data: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     LoginOtp(dto: LoginDto): Promise<{
@@ -27,15 +27,15 @@ export declare class AuthController {
     verifyOtp(dto: OtpVerifyDto): Promise<{
         user: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
+            is_active: boolean;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         };
         accessToken: string;
         message: string;
@@ -56,10 +56,10 @@ export declare class AuthController {
             profile_image: string | null;
             notes: {
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 adminId: string | null;
                 zoneManagerId: string | null;
+                createdAt: Date;
+                updatedAt: Date;
                 remarks: string;
             }[];
             managingRegions?: undefined;
@@ -121,10 +121,10 @@ export declare class AuthController {
             }[];
             notes: {
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 adminId: string | null;
                 zoneManagerId: string | null;
+                createdAt: Date;
+                updatedAt: Date;
                 remarks: string;
             }[];
             description?: undefined;

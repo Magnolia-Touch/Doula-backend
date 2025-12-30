@@ -34,14 +34,14 @@ export declare class AvailableSlotsService {
         }[];
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        ownerRole: import("@prisma/client").$Enums.Role;
         weekday: import("@prisma/client").$Enums.WeekDays;
         availabe: boolean;
+        ownerRole: import("@prisma/client").$Enums.Role;
         doulaId: string | null;
         adminId: string | null;
         zoneManagerId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     })[]>;
     getAllSlots(regionId: string, startDate: string, endDate: string, filter?: 'all' | 'booked' | 'unbooked', page?: number, limit?: number): Promise<{
         data: {
@@ -70,9 +70,9 @@ export declare class AvailableSlotsService {
         slot: {
             AvailableSlotsTimeForMeeting: {
                 id: string;
+                availabe: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                availabe: boolean;
                 startTime: Date;
                 endTime: Date;
                 isBooked: boolean;
@@ -81,23 +81,23 @@ export declare class AvailableSlotsService {
             }[];
         } & {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            ownerRole: import("@prisma/client").$Enums.Role;
             weekday: import("@prisma/client").$Enums.WeekDays;
             availabe: boolean;
+            ownerRole: import("@prisma/client").$Enums.Role;
             doulaId: string | null;
             adminId: string | null;
             zoneManagerId: string | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     updateSlotTimeById(dto: UpdateSlotsForMeetingTimeDto, userId: string): Promise<{
         message: string;
         data: {
             id: string;
+            availabe: boolean;
             createdAt: Date;
             updatedAt: Date;
-            availabe: boolean;
             startTime: Date;
             endTime: Date;
             isBooked: boolean;

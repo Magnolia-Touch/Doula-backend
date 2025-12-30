@@ -47,7 +47,7 @@ let IntakeFormService = class IntakeFormService {
         return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
     }
     async createIntakeForm(dto) {
-        const { name, email, phone, doulaProfileId, serviceId, address, buffer = 0, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeShift, } = dto;
+        const { name, email, phone, address, doulaProfileId, serviceId, buffer = 0, seviceStartDate, serviceEndDate, visitFrequency, serviceTimeShift, } = dto;
         const clientUser = await (0, service_utils_1.getOrcreateClent)(this.prisma, {
             name,
             email,
@@ -63,14 +63,14 @@ let IntakeFormService = class IntakeFormService {
         if (!region) {
             throw new common_1.BadRequestException('Region not listed for doula');
         }
-        const service = await this.prisma.servicePricing.findUnique({
+        const servicePricing = await this.prisma.servicePricing.findUnique({
             where: { id: serviceId },
             select: {
                 id: true,
-                service: { select: { id: true, name: true } }
-            }
+                service: { select: { name: true } },
+            },
         });
-        if (!service) {
+        if (!servicePricing) {
             throw new common_1.NotFoundException('Service not found');
         }
         const startDate = this.toUtcMidnight(seviceStartDate);
@@ -78,131 +78,75 @@ let IntakeFormService = class IntakeFormService {
         if (startDate > endDate) {
             throw new common_1.BadRequestException('Invalid service date range');
         }
-        console.log('RAW INPUT:', seviceStartDate);
-        console.log('PARSED DATE:', startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-        const currentDate = new Date(startDate);
-        const lastDate = new Date(endDate);
-        const visitDates = service.service.name === 'Post Partum Doula'
+        const visitDates = servicePricing.service.name === 'Post Partum Doula'
             ? await (0, service_utils_1.generateVisitDatesforPostPartumDoula)(startDate, endDate, visitFrequency)
             : await (0, service_utils_1.generateVisitDatesforBirthDoula)(startDate, endDate, buffer);
+        if (!visitDates.length) {
+            throw new common_1.BadRequestException('No valid visit dates generated');
+        }
+        console.log(visitDates);
         for (const visitDate of visitDates) {
-            const isOff = await (0, service_utils_1.isDoulaOffOnShift)(doulaProfileId, visitDate, serviceTimeShift);
-            if (isOff) {
-                throw new common_1.BadRequestException(`Doula has marked ${serviceTimeShift} off on ${visitDate.toISOString().split('T')[0]}`);
+            if (await (0, service_utils_1.isDoulaOffOnShift)(doulaProfileId, visitDate, serviceTimeShift)) {
+                throw new common_1.BadRequestException(`Doula is off on ${visitDate.toISOString().split('T')[0]}`);
             }
-            const isAvailable = await (0, service_utils_1.isDoulaAvailableForShift)(doulaProfileId, visitDate, serviceTimeShift);
-            if (!isAvailable) {
-                throw new common_1.BadRequestException(`Doula is not available on ${visitDate.toISOString().split('T')[0]} for ${serviceTimeShift}`);
+            if (!(await (0, service_utils_1.isDoulaAvailableForShift)(doulaProfileId, visitDate, serviceTimeShift))) {
+                throw new common_1.BadRequestException(`Doula not available on ${visitDate.toISOString().split('T')[0]}`);
             }
-            const schedule = await this.prisma.schedules.findFirst({
+            const existingSchedule = await this.prisma.schedules.findFirst({
                 where: {
                     doulaProfileId,
                     date: visitDate,
                     timeshift: serviceTimeShift,
                 },
             });
-            if (schedule) {
+            if (existingSchedule) {
                 throw new common_1.BadRequestException(`Doula already booked on ${visitDate.toISOString().split('T')[0]}`);
             }
         }
-        if (service.service.name == "Birth Doula") {
-            const schedulesToCreate = [];
-            const visitDates = await (0, service_utils_1.generateVisitDatesforBirthDoula)(startDate, endDate, buffer);
-            for (const visitDate of visitDates) {
-                schedulesToCreate.push({
-                    date: visitDate,
+        const result = await this.prisma.$transaction(async (tx) => {
+            const intake = await tx.intakeForm.create({
+                data: {
+                    name,
+                    email,
+                    phone,
+                    address,
+                    startDate,
+                    endDate,
+                    regionId: region.id,
+                    servicePricingId: servicePricing.id,
+                    doulaProfileId,
+                    clientId: clientProfile.id,
+                },
+            });
+            const booking = await tx.serviceBooking.create({
+                data: {
+                    startDate,
+                    endDate,
+                    regionId: region.id,
+                    servicePricingId: servicePricing.id,
+                    doulaProfileId,
+                    clientId: clientProfile.id,
+                    status: client_1.BookingStatus.ACTIVE,
+                    isPaid: true,
+                },
+            });
+            await tx.schedules.createMany({
+                data: visitDates.map((date) => ({
+                    date,
                     timeshift: serviceTimeShift,
                     doulaProfileId,
-                    serviceId: service.id,
+                    serviceId: servicePricing.id,
                     clientId: clientProfile.id,
-                });
-            }
-            if (!schedulesToCreate.length) {
-                throw new common_1.BadRequestException('No valid schedules available for the selected dates and time slot');
-            }
-            const result = await this.prisma.$transaction(async (tx) => {
-                const intake = await tx.intakeForm.create({
-                    data: {
-                        name,
-                        email,
-                        phone,
-                        address,
-                        startDate,
-                        endDate,
-                        regionId: region.id,
-                        servicePricingId: service.id,
-                        doulaProfileId,
-                        clientId: clientProfile.id,
-                    },
-                });
-                const booking = await tx.serviceBooking.create({
-                    data: {
-                        startDate,
-                        endDate,
-                        regionId: region.id,
-                        servicePricingId: service.id,
-                        doulaProfileId,
-                        clientId: clientProfile.id,
-                    },
-                });
-                await tx.schedules.createMany({
-                    data: schedulesToCreate.map((schedule) => ({
-                        ...schedule,
-                        bookingId: booking.id,
-                    })),
-                });
-                return { intake, booking };
+                    bookingId: booking.id,
+                })),
             });
-        }
-        else if (service.service.name == "Post Partum Doula") {
-            const schedulesToCreate = [];
-            const visitDates = await (0, service_utils_1.generateVisitDatesforPostPartumDoula)(startDate, endDate, visitFrequency);
-            for (const visitDate of visitDates) {
-                schedulesToCreate.push({
-                    date: visitDate,
-                    timeshift: serviceTimeShift,
-                    doulaProfileId,
-                    serviceId: service.id,
-                    clientId: clientProfile.id,
-                });
-            }
-            if (!schedulesToCreate.length) {
-                throw new common_1.BadRequestException('No valid schedules available for the selected dates and time slot');
-            }
-            const result = await this.prisma.$transaction(async (tx) => {
-                const intake = await tx.intakeForm.create({
-                    data: {
-                        name,
-                        email,
-                        phone,
-                        address,
-                        startDate,
-                        endDate,
-                        regionId: region.id,
-                        servicePricingId: service.id,
-                        doulaProfileId,
-                        clientId: clientProfile.id,
-                    },
-                });
-                const booking = await tx.serviceBooking.create({
-                    data: {
-                        startDate,
-                        endDate,
-                        regionId: region.id,
-                        servicePricingId: service.id,
-                        doulaProfileId,
-                        clientId: clientProfile.id,
-                    },
-                });
-                await tx.schedules.createMany({
-                    data: schedulesToCreate.map((schedule) => ({
-                        ...schedule,
-                        bookingId: booking.id,
-                    })),
-                });
-                return { intake, booking };
-            });
-        }
+            return { intake, booking };
+        });
+        return {
+            message: 'Intake form created and schedules booked successfully',
+            intakeId: result.intake.id,
+            bookingId: result.booking.id,
+        };
     }
     async getAllForms(page, limit) {
         const result = await (0, pagination_util_1.paginate)({

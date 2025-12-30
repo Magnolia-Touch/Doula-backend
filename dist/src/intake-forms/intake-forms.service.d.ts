@@ -11,7 +11,11 @@ export declare class IntakeFormService {
     private ensureHttpsUrl;
     private getDefaultUrl;
     private toUtcMidnight;
-    createIntakeForm(dto: IntakeFormDto): Promise<void>;
+    createIntakeForm(dto: IntakeFormDto): Promise<{
+        message: string;
+        intakeId: string;
+        bookingId: string;
+    }>;
     getAllForms(page: number, limit: number): Promise<{
         data: {
             intakeFormId: string;
@@ -58,9 +62,9 @@ export declare class IntakeFormService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaId: string;
             date: Date;
             availability: Prisma.JsonValue;
+            doulaId: string;
         }[];
         createdAt: Date;
         updatedAt: Date;

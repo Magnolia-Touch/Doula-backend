@@ -489,6 +489,7 @@ export async function isDoulaAvailableForShift(
 ): Promise<boolean> {
   // Normalize date to avoid time issues
   const normalizedDate = new Date(date);
+  console.log("normalised date")
   // normalizedDate.setHours(0, 0, 0, 0);
 
   const availabilityRecord =
@@ -598,3 +599,4 @@ export function getPriceForShift(
       throw new BadRequestException('Invalid time shift');
   }
 }
+isDoulaAvailableForShift

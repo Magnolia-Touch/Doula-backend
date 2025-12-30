@@ -313,6 +313,7 @@ const client_2 = require("@prisma/client");
 const prisma = new client_2.PrismaClient();
 async function isDoulaAvailableForShift(doulaId, date, timeShift) {
     const normalizedDate = new Date(date);
+    console.log("normalised date");
     const availabilityRecord = await prisma.availableSlotsForService.findFirst({
         where: {
             doulaId,
@@ -382,4 +383,5 @@ function getPriceForShift(price, shift) {
             throw new common_1.BadRequestException('Invalid time shift');
     }
 }
+isDoulaAvailableForShift;
 //# sourceMappingURL=service-utils.js.map

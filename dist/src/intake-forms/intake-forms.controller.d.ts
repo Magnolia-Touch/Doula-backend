@@ -3,7 +3,11 @@ import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
 export declare class IntakeFormController {
     private readonly intakeService;
     constructor(intakeService: IntakeFormService);
-    create(dto: IntakeFormDto): Promise<void>;
+    create(dto: IntakeFormDto): Promise<{
+        message: string;
+        intakeId: string;
+        bookingId: string;
+    }>;
     getAll(page?: number, limit?: number): Promise<{
         data: {
             intakeFormId: string;
@@ -50,9 +54,9 @@ export declare class IntakeFormController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaId: string;
             date: Date;
             availability: import("@prisma/client/runtime/library").JsonValue;
+            doulaId: string;
         }[];
         createdAt: Date;
         updatedAt: Date;
