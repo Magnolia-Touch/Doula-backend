@@ -14,6 +14,7 @@ const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const certificate_dto_1 = require("./certificate.dto");
 const service_pricing_dto_1 = require("../../service-pricing/dto/service-pricing.dto");
+const swagger_1 = require("@nestjs/swagger");
 class UpdateCertificateItemDto {
     certificateId;
     data;
@@ -55,16 +56,19 @@ class UpdateDoulaProfileDto {
 }
 exports.UpdateDoulaProfileDto = UpdateDoulaProfileDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateDoulaProfileDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: true }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateDoulaProfileDto.prototype, "is_active", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

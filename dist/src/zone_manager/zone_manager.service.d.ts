@@ -13,18 +13,18 @@ export declare class ZoneManagerService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string | null;
                 profile_image: string | null;
+                userId: string | null;
             } | null;
         } & {
+            name: string;
+            is_active: boolean;
             id: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -102,14 +102,14 @@ export declare class ZoneManagerService {
     updateStatus(id: string, isActive: boolean): Promise<{
         message: string;
         data: {
+            name: string;
+            is_active: boolean;
             id: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -123,13 +123,13 @@ export declare class ZoneManagerService {
         unassignedCount: number;
         assigned: {
             id: string;
-            zoneManagerId: string | null;
             regionName: string;
+            zoneManagerId: string | null;
         }[];
         unassigned: {
             id: string;
-            zoneManagerId: string | null;
             regionName: string;
+            zoneManagerId: string | null;
         }[];
     }>;
     getZoneManagerSchedules(userId: string, page?: number, limit?: number, filters?: {

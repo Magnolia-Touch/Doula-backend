@@ -111,6 +111,7 @@ export class DoulaService {
       births: 0,
       experience: doula.yoe ?? 0,
       satisfaction,
+      qualification: doula.qualification,
 
       // Contact
       contact: {

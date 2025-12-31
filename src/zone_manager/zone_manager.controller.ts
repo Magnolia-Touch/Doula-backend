@@ -767,10 +767,55 @@ export class ZoneManagerController {
 
 
 
+  @ApiBearerAuth('access-token')
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload doula gallery images' })
+  @ApiQuery({
+    name: 'doulaId',
+    required: true,
+    description: 'Doula profile ID',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+          description: 'Gallery images (max 10)',
+        },
+      },
+      required: ['files'],
+    },
+  })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Gallery images uploaded successfully",
+        "data": [
+          {
+            "id": "040170b7-688a-4058-adb5-0fcc83a2cfa2",
+            "url": "uploads/doulas/1766572517976-31374491.png",
+            "altText": null,
+            "createdAt": "2025-12-24T10:35:17.983Z"
+          },
+          {
+            "id": "6117a362-f8d4-452a-9728-7ca16dcb24fc",
+            "url": "uploads/doulas/1766572517972-331472083.png",
+            "altText": null,
+            "createdAt": "2025-12-24T10:35:17.983Z"
+          }
+        ]
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Post('doulas/gallery/images')
-  @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: multerStoragedoula(),
@@ -792,9 +837,46 @@ export class ZoneManagerController {
     return this.service.addDoulaGalleryImages(doulaId, files, req.user.id);
   }
 
-  // =========================
-  // GET GALLERY IMAGES
-  // =========================
+
+
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Fetch Doula Gallery Images' })
+  @ApiQuery({
+    name: 'doulaId',
+    required: true,
+    description: 'Doula UserID',
+  })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Doula gallery images fetched successfully",
+        "data": [
+          {
+            "id": "003dd08a-fb13-4a2d-a004-76ffe49a5dfc",
+            "doulaProfileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "url": "uploads/doulas/1767154479162-382266985.png",
+            "altText": null,
+            "createdAt": "2025-12-31T04:14:39.180Z"
+          },
+          {
+            "id": "97c0e4c8-54c5-4f72-8120-86803a4a9592",
+            "doulaProfileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "url": "uploads/doulas/1767154479164-287555438.png",
+            "altText": null,
+            "createdAt": "2025-12-31T04:14:39.180Z"
+          },
+          {
+            "id": "57c4ba33-5029-4123-8051-ddfa6aad2b06",
+            "doulaProfileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "url": "uploads/doulas/1767165269144-747759397.jpeg",
+            "altText": null,
+            "createdAt": "2025-12-31T07:14:29.154Z"
+          }
+        ]
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('doulas/gallery/images/')
@@ -802,9 +884,24 @@ export class ZoneManagerController {
     return this.service.getDoulaGalleryImages(doulaId, req.user.id);
   }
 
-  // =========================
-  // DELETE GALLERY IMAGE
-  // =========================
+
+  @ApiOperation({ summary: 'Fetch Doula Gallery Images' })
+  @ApiQuery({
+    name: 'doulaId',
+    required: true,
+    description: 'Doula UserID',
+  })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Gallery image deleted successfully",
+        "data": {
+          "message": "Gallery image deleted successfully"
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Delete('doulas/gallery/images/:id')
@@ -812,6 +909,44 @@ export class ZoneManagerController {
     return this.service.deleteDoulaGalleryImage(doulaId, imageId, req.user.id);
   }
 
+
+
+
+  @ApiOperation({ summary: 'Update Doula Profile as Zone Manager' })
+  @ApiQuery({
+    name: 'doulaId',
+    required: true,
+    description: 'Doula UserID',
+  })
+  @ApiBody({ type: UpdateDoulaProfileDto }) // <-- REQUIRED
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Doula profile fetched successfully",
+        "data": {
+          "id": "01be9f0d-8c08-4091-a0ce-eec44acb063c",
+          "name": "Senior Doula",
+          "title": "Certified Birth Doula",
+          "averageRating": 4.7,
+          "totalReviews": 3,
+          "births": 0,
+          "experience": 6,
+          "satisfaction": 93,
+          "contact": {
+            "email": "doula@test.com",
+            "phone": "9000000005",
+            "location": "Kochi"
+          },
+          "about": "Experienced doula",
+          "certifications": [
+            "Certified"
+          ],
+          "gallery": []
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Patch('doulas/profile')

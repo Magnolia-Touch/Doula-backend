@@ -15,18 +15,18 @@ export declare class DoulaService {
         message: string;
         data: ({
             doulaProfile: ({
-                Region: {
-                    id: string;
-                    zoneManagerId: string | null;
-                    pincode: string;
-                    regionName: string;
-                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    userId: string | null;
                     profile_image: string | null;
+                    userId: string | null;
+                }[];
+                Region: {
+                    id: string;
+                    regionName: string;
+                    pincode: string;
+                    zoneManagerId: string | null;
                 }[];
                 DoulaGallery: {
                     id: string;
@@ -36,35 +36,35 @@ export declare class DoulaService {
                     altText: string | null;
                 }[];
                 Certificates: {
-                    id: string;
                     name: string;
+                    id: string;
                     doulaProfileId: string;
                     issuedBy: string;
                     year: string;
                 }[];
             } & {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                userId: string;
-                regionId: string | null;
-                profile_image: string | null;
                 description: string | null;
                 achievements: string | null;
                 qualification: string | null;
-                yoe: number | null;
                 languages: Prisma.JsonValue | null;
                 specialities: Prisma.JsonValue | null;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                profile_image: string | null;
+                userId: string;
+                regionId: string | null;
+                yoe: number | null;
             }) | null;
         } & {
+            name: string;
+            is_active: boolean;
             id: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         }) | null;
@@ -151,14 +151,14 @@ export declare class DoulaService {
     updateStatus(id: string, isActive: boolean): Promise<{
         message: string;
         data: {
+            name: string;
+            is_active: boolean;
             id: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -166,40 +166,40 @@ export declare class DoulaService {
     UpdateDoulaRegions(dto: UpdateDoulaRegionDto, userId: string): Promise<{
         message: string;
         data: {
-            Region: {
+            zoneManager: {
                 id: string;
-                is_active: boolean;
                 createdAt: Date;
                 updatedAt: Date;
-                zoneManagerId: string | null;
-                pincode: string;
+                profile_image: string | null;
+                userId: string | null;
+            }[];
+            Region: {
+                is_active: boolean;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
                 regionName: string;
+                pincode: string;
                 district: string;
                 state: string;
                 country: string;
                 latitude: string;
                 longitude: string;
-            }[];
-            zoneManager: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                userId: string | null;
-                profile_image: string | null;
+                zoneManagerId: string | null;
             }[];
         } & {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            regionId: string | null;
-            profile_image: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
-            yoe: number | null;
             languages: Prisma.JsonValue | null;
             specialities: Prisma.JsonValue | null;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+            regionId: string | null;
+            yoe: number | null;
         };
     }>;
     getDoulaMeetings(user: any, page?: number, limit?: number, date?: string): Promise<{
@@ -378,18 +378,18 @@ export declare class DoulaService {
     addDoulaprofileImage(userId: string, profileImageUrl?: string): Promise<{
         message: string;
         data: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: string;
-            regionId: string | null;
-            profile_image: string | null;
             description: string | null;
             achievements: string | null;
             qualification: string | null;
-            yoe: number | null;
             languages: Prisma.JsonValue | null;
             specialities: Prisma.JsonValue | null;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            profile_image: string | null;
+            userId: string;
+            regionId: string | null;
+            yoe: number | null;
         };
     }>;
     getDoulaImages(userId: string): Promise<{
@@ -464,22 +464,22 @@ export declare class DoulaService {
     }>;
     private getDoulaProfile;
     getCertificates(userId: string): Promise<{
-        id: string;
         name: string;
+        id: string;
         doulaProfileId: string;
         issuedBy: string;
         year: string;
     }[]>;
     getCertificateById(userId: string, certificateId: string): Promise<{
-        id: string;
         name: string;
+        id: string;
         doulaProfileId: string;
         issuedBy: string;
         year: string;
     }>;
     updateCertificate(userId: string, certificateId: string, dto: UpdateCertificateDto): Promise<{
-        id: string;
         name: string;
+        id: string;
         doulaProfileId: string;
         issuedBy: string;
         year: string;

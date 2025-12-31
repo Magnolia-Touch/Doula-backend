@@ -15,7 +15,14 @@ export class CreateZoneManagerDto {
   @IsString()
   phone: string;
 
-  @ApiProperty({ example: ["a47516aa-a881-4e57-984e-5bb10ce1f236", "bd7516aa-a881-4e57-984e-5ba10ce1f234"] })
+  @ApiProperty({
+    example: [
+      '96efbdce-d7cb-43bb-8787-626c198be1a4',
+      '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
+    ],
+    type: [String],
+    description: 'List of Region IDs to assign to the Zone Manager',
+  })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       try {
