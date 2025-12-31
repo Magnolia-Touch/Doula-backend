@@ -68,12 +68,12 @@ export declare class ServiceBookingService {
         createdAt: Date;
         updatedAt: Date;
         regionId: string;
+        doulaProfileId: string;
+        clientId: string;
         status: import("@prisma/client").$Enums.BookingStatus;
         cancelledAt: Date | null;
-        doulaProfileId: string;
         servicePricingId: string;
         timeshift: import("@prisma/client").$Enums.TimeShift;
-        clientId: string;
         startDate: Date;
         endDate: Date;
         paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;

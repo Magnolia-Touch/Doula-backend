@@ -32,7 +32,7 @@ import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
   version: '1',
 })
 export class RegionController {
-  constructor(private readonly regionService: RegionService) {}
+  constructor(private readonly regionService: RegionService) { }
 
   // @UseGuards(JwtAuthGuard, RolesGuard)
   // @Roles('ADMIN')
@@ -43,17 +43,23 @@ export class RegionController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'Region created',
-        data: {
-          id: 'region-1',
-          regionName: 'South City',
-          pincode: '560001',
-          district: 'Bengaluru',
-          state: 'Karnataka',
-          country: 'India',
-        },
-      },
+        "status": "success",
+        "message": "Request successful",
+        "data": {
+          "id": "ef23b992-c9e7-4525-9316-a85fc1079b1d",
+          "regionName": "North Mumbai",
+          "pincode": "4999035",
+          "district": "Mumbai Suburban",
+          "state": "Maharashtra",
+          "country": "India",
+          "latitude": "19.1136",
+          "longitude": "72.8697",
+          "is_active": true,
+          "createdAt": "2025-11-25T13:18:08.441Z",
+          "updatedAt": "2025-11-25T13:18:08.441Z",
+          "zoneManagerId": null
+        }
+      }
     },
   })
   @Post()
@@ -70,24 +76,31 @@ export class RegionController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'Regions fetched',
-        data: {
-          items: [
-            {
-              id: 'region-1',
-              regionName: 'South City',
-              pincode: '560001',
-              district: 'Bengaluru',
-              state: 'Karnataka',
-              country: 'India',
-            },
-          ],
-          total: 1,
-          page: 1,
-          limit: 10,
-        },
-      },
+        "status": "success",
+        "message": "Regions fetched successfully",
+        "data": [
+          {
+            "regionId": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+            "regionName": "Texas",
+            "pincode": "000348",
+            "district": "Texas",
+            "state": "Texas",
+            "country": "India",
+            "latitude": "19.1136",
+            "longitude": "72.8697",
+            "is_active": true,
+            "zoneManagerId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50"
+          }
+        ],
+        "meta": {
+          "total": 1,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPrevPage": false
+        }
+      }
     },
   })
   @Get()
@@ -106,10 +119,23 @@ export class RegionController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'Region fetched',
-        data: { id: 'region-1', regionName: 'South City' },
-      },
+        "status": "success",
+        "message": "Request successful",
+        "data": {
+          "regionId": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+          "regionName": "Texas",
+          "pincode": "000348",
+          "district": "Texas",
+          "state": "Texas",
+          "country": "India",
+          "latitude": "19.1136",
+          "longitude": "72.8697",
+          "zoneManagerId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
+          "zonemanagerName": "Adam Smith",
+          "zonemanagerPhone": "+918843488338",
+          "zonemanagerEmail": "zonemanager@test.com"
+        }
+      }
     },
   })
   @Get(':id')
@@ -126,10 +152,23 @@ export class RegionController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'Region updated',
-        data: { id: 'region-1' },
-      },
+        "status": "success",
+        "message": "Request successful",
+        "data": {
+          "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+          "regionName": "North Mumbai",
+          "pincode": "4999022",
+          "district": "Mumbai Suburban",
+          "state": "Maharashtra",
+          "country": "India",
+          "latitude": "19.1136",
+          "longitude": "72.8697",
+          "is_active": true,
+          "createdAt": "2025-12-27T12:26:28.299Z",
+          "updatedAt": "2025-12-31T04:52:13.135Z",
+          "zoneManagerId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50"
+        }
+      }
     },
   })
   @Put(':id')
@@ -145,7 +184,24 @@ export class RegionController {
     status: 200,
     type: SwaggerResponseDto,
     schema: {
-      example: { success: true, message: 'Region deleted', data: null },
+      example: {
+        "status": "success",
+        "message": "Request successful",
+        "data": {
+          "id": "9e77d960-e508-4918-8a6f-6712cabedf91",
+          "regionName": "Texas",
+          "pincode": "000348",
+          "district": "Texas",
+          "state": "Texas",
+          "country": "India",
+          "latitude": "19.1136",
+          "longitude": "72.8697",
+          "is_active": true,
+          "createdAt": "2025-12-31T04:52:39.589Z",
+          "updatedAt": "2025-12-31T04:52:39.589Z",
+          "zoneManagerId": null
+        }
+      },
     },
   })
   @Delete(':id')

@@ -68,8 +68,8 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             doulaProfileId: string;
+            date: Date;
             offtime: Prisma.JsonValue;
         }[];
     }>;
@@ -79,8 +79,8 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             doulaProfileId: string;
+            date: Date;
             offtime: Prisma.JsonValue;
         };
     }>;
@@ -90,8 +90,8 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             doulaProfileId: string;
+            date: Date;
             offtime: Prisma.JsonValue;
         };
     }>;

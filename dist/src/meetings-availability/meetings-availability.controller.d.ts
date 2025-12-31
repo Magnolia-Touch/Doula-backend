@@ -114,31 +114,31 @@ export declare class AvailableSlotsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        doulaProfileId: string | null;
         startTime: Date | null;
         endTime: Date | null;
         date: Date;
         zoneManagerProfileId: string | null;
-        doulaProfileId: string | null;
     }>;
     fetchOffDays(req: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        doulaProfileId: string | null;
         startTime: Date | null;
         endTime: Date | null;
         date: Date;
         zoneManagerProfileId: string | null;
-        doulaProfileId: string | null;
     }[]>;
     fetchOffdaysbyid(req: any, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        doulaProfileId: string | null;
         startTime: Date | null;
         endTime: Date | null;
         date: Date;
         zoneManagerProfileId: string | null;
-        doulaProfileId: string | null;
     } | null>;
     DeleteOffdaysbyid(req: any, id: string): Promise<{
         message: string;
@@ -146,11 +146,11 @@ export declare class AvailableSlotsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            doulaProfileId: string | null;
             startTime: Date | null;
             endTime: Date | null;
             date: Date;
             zoneManagerProfileId: string | null;
-            doulaProfileId: string | null;
         };
     }>;
     ZmgetAvailablility(regionId: string, dto: GetAvailabilityDto): Promise<{

@@ -50,26 +50,23 @@ __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create a service' }),
     (0, swagger_1.ApiBody)({
-        type: create_service_dto_1.CreateServiceDto,
-        schema: {
-            example: {
-                name: 'Pregnancy Yoga',
-                description: 'Breathing and relaxation techniques',
-            },
-        },
+        type: create_service_dto_1.CreateServiceDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Service created',
         schema: {
             example: {
-                message: 'Service created successfully',
-                data: {
-                    id: 'uuid',
-                    name: 'Pregnancy Yoga',
-                    description: 'Breathing and relaxation techniques',
-                },
-            },
+                "status": "success",
+                "message": "Request successful",
+                "data": {
+                    "id": "db2f9c1f-fb54-4a30-a365-7971d37ee6e5",
+                    "name": "Birth Doula",
+                    "description": "A Birth Doula is a trained professional who provides emotional, physical, and informational support to an expectant mother throughout pregnancy, labor, and childbirth. Their role is to ensure that the mother feels confident, informed, and comforted during one of life’s most important moments. Birth doulas offer continuous support during labor, help with breathing techniques, positions, and pain-relief methods, and advocate for the mother’s preferences with the healthcare team. They also guide partners on how to participate effectively.",
+                    "createdAt": "2025-11-27T10:11:20.235Z",
+                    "updatedAt": "2025-11-27T10:11:20.235Z"
+                }
+            }
         },
     }),
     __param(0, (0, common_1.Body)()),
@@ -83,13 +80,26 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         schema: {
-            example: [
-                {
-                    id: 'uuid',
-                    name: 'Pregnancy Yoga',
-                    description: 'Helps with breathing',
-                },
-            ],
+            example: {
+                "status": "success",
+                "message": "Request successful",
+                "data": [
+                    {
+                        "id": "26c11b42-417c-4e37-8543-4ef609646718",
+                        "name": "Birth Doula",
+                        "description": "A Post Partum  Doula is a trained professional who provides emotional, physical, and informational support to an expectant mother throughout pregnancy, labor, and childbirth. Their role is to ensure that the mother feels confident, informed, and comforted during one of life’s most important moments. Birth doulas offer continuous support during labor, help with breathing techniques, positions, and pain-relief methods, and advocate for the mother’s preferences with the healthcare team. They also guide partners on how to participate effectively.",
+                        "createdAt": "2025-12-27T19:54:43.687Z",
+                        "updatedAt": "2025-12-27T19:54:43.687Z"
+                    },
+                    {
+                        "id": "41bb32e6-ae80-4a9c-8cd9-855f98ced1b2",
+                        "name": "Post Partum Doula",
+                        "description": "A Post Partum  Doula is a trained professional who provides emotional, physical, and informational support to an expectant mother throughout pregnancy, labor, and childbirth. Their role is to ensure that the mother feels confident, informed, and comforted during one of life’s most important moments. Birth doulas offer continuous support during labor, help with breathing techniques, positions, and pain-relief methods, and advocate for the mother’s preferences with the healthcare team. They also guide partners on how to participate effectively.",
+                        "createdAt": "2025-12-27T19:54:37.168Z",
+                        "updatedAt": "2025-12-27T19:54:37.168Z"
+                    }
+                ]
+            }
         },
     }),
     __metadata("design:type", Function),
@@ -104,10 +114,16 @@ __decorate([
         status: 200,
         schema: {
             example: {
-                id: 'uuid',
-                name: 'Pregnancy Yoga',
-                description: 'Helps with breathing',
-            },
+                "status": "success",
+                "message": "Request successful",
+                "data": {
+                    "id": "26c11b42-417c-4e37-8543-4ef609646718",
+                    "name": "Birth Doula",
+                    "description": "A Post Partum  Doula is a trained professional who provides emotional, physical, and informational support to an expectant mother throughout pregnancy, labor, and childbirth. Their role is to ensure that the mother feels confident, informed, and comforted during one of life’s most important moments. Birth doulas offer continuous support during labor, help with breathing techniques, positions, and pain-relief methods, and advocate for the mother’s preferences with the healthcare team. They also guide partners on how to participate effectively.",
+                    "createdAt": "2025-12-27T19:54:43.687Z",
+                    "updatedAt": "2025-12-27T19:54:43.687Z"
+                }
+            }
         },
     }),
     __param(0, (0, common_1.Param)('id')),
@@ -122,7 +138,19 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Update service' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Service updated successfully',
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Request successful",
+                "data": {
+                    "id": "26c11b42-417c-4e37-8543-4ef609646718",
+                    "name": "Birth Doula",
+                    "description": "Birth Doula is a trained professional who provides emotional, physical, and informational support to an expectant mother throughout pregnancy, labor, and childbirth. Their role is to ensure that the mother feels confident, informed, and comforted during one of life’s most important moments. Birth doulas offer continuous support during labor, help with breathing techniques, positions, and pain-relief methods, and advocate for the mother’s preferences with the healthcare team. They also guide partners on how to participate effectively.",
+                    "createdAt": "2025-12-27T19:54:43.687Z",
+                    "updatedAt": "2025-12-31T04:56:20.466Z"
+                }
+            }
+        },
     }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -137,9 +165,18 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete service' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Service deleted',
         schema: {
-            example: { message: 'Service deleted successfully' },
+            example: {
+                "status": "success",
+                "message": "Request successful",
+                "data": {
+                    "id": "46214841-05a5-45b0-9f04-cb6d2e5869ca",
+                    "name": "Post Partdddum Doula",
+                    "description": "A Post Partum  Doula is a trained professional who provides emotional, physical, and informational support to an expectant mother throughout pregnancy, labor, and childbirth. Their role is to ensure that the mother feels confident, informed, and comforted during one of life’s most important moments. Birth doulas offer continuous support during labor, help with breathing techniques, positions, and pain-relief methods, and advocate for the mother’s preferences with the healthcare team. They also guide partners on how to participate effectively.",
+                    "createdAt": "2025-12-31T04:57:22.094Z",
+                    "updatedAt": "2025-12-31T04:57:22.094Z"
+                }
+            }
         },
     }),
     __param(0, (0, common_1.Param)('id')),

@@ -20,7 +20,7 @@ class IntakeFormDto {
     doulaProfileId;
     serviceId;
     address;
-    buffer;
+    buffer = 1;
     seviceStartDate;
     serviceEndDate;
     visitFrequency = 1;
@@ -127,7 +127,7 @@ class BookDoulaDto {
     servicEndDate;
     visitFrequency = 1;
     serviceTimeShift;
-    buffer;
+    buffer = 1;
     successUrl;
     cancelUrl;
 }

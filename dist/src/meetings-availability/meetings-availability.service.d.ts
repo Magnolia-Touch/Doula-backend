@@ -141,31 +141,31 @@ export declare class AvailableSlotsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        doulaProfileId: string | null;
         startTime: Date | null;
         endTime: Date | null;
         date: Date;
         zoneManagerProfileId: string | null;
-        doulaProfileId: string | null;
     }>;
     fetchOffdays(userId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        doulaProfileId: string | null;
         startTime: Date | null;
         endTime: Date | null;
         date: Date;
         zoneManagerProfileId: string | null;
-        doulaProfileId: string | null;
     }[]>;
     fetchOffdaysbyid(userId: string, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        doulaProfileId: string | null;
         startTime: Date | null;
         endTime: Date | null;
         date: Date;
         zoneManagerProfileId: string | null;
-        doulaProfileId: string | null;
     } | null>;
     DeleteOffdaysbyid(userId: string, id: string): Promise<{
         message: string;
@@ -173,11 +173,11 @@ export declare class AvailableSlotsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            doulaProfileId: string | null;
             startTime: Date | null;
             endTime: Date | null;
             date: Date;
             zoneManagerProfileId: string | null;
-            doulaProfileId: string | null;
         };
     }>;
     private getWeekdayEnum;

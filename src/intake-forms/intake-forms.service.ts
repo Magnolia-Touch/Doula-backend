@@ -951,6 +951,8 @@ export class IntakeFormService {
       amount: totalAmount,
       currency: 'INR',
       checkout_url: checkoutSession.url,
+      successUrl: successUrl,
+      cancelUrl: cancelUrl
     };
   }
 

@@ -33,16 +33,16 @@ export declare function findZoneManagerOrThrowWithId(prisma: PrismaService, zone
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    profile_image: string | null;
     userId: string | null;
+    profile_image: string | null;
 }>;
 export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId: string): Promise<{
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    profile_image: string | null;
     userId: string;
     regionId: string | null;
+    profile_image: string | null;
     description: string | null;
     achievements: string | null;
     qualification: string | null;
@@ -53,9 +53,9 @@ export declare function findDoulaOrThrowWithId(prisma: PrismaService, profileId:
 export declare function checkUserExistorNot(prisma: PrismaService, email: string): Promise<null>;
 export declare function findUserOrThrowwithId(prisma: PrismaService, userId: string): Promise<{
     id: string;
-    name: string;
     email: string;
     phone: string | null;
+    name: string;
     otp: string | null;
     otpExpiresAt: Date | null;
     role: import("@prisma/client").$Enums.Role;

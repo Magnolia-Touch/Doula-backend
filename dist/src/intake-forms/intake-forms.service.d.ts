@@ -62,9 +62,9 @@ export declare class IntakeFormService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaId: string;
             date: Date;
             availability: Prisma.JsonValue;
+            doulaId: string;
         }[];
         createdAt: Date;
         updatedAt: Date;
@@ -83,5 +83,7 @@ export declare class IntakeFormService {
         amount: number;
         currency: string;
         checkout_url: string | null;
+        successUrl: string;
+        cancelUrl: string;
     }>;
 }

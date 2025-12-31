@@ -54,7 +54,7 @@ export class IntakeFormDto {
 
   @ApiProperty({ example: 2, description: 'Buffer time in minutes' })
   @IsNumber()
-  buffer: number;
+  buffer: number = 1;
 
   //Below Are Required Service
   @ApiProperty({
@@ -177,7 +177,7 @@ export class BookDoulaDto {
 
   @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
   @IsNumber()
-  buffer: number;
+  buffer: number = 1;
 
   @IsOptional()
   @IsString()

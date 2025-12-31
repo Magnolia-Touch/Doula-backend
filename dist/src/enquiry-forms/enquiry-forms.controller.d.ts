@@ -7,16 +7,16 @@ export declare class EnquiryController {
         message: string;
         enquiry: {
             id: string;
-            name: string;
             email: string;
             phone: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
-            meetingsId: string | null;
-            serviceName: string;
             serviceId: string;
             clientId: string;
+            meetingsId: string | null;
+            serviceName: string;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date | null;
@@ -30,16 +30,16 @@ export declare class EnquiryController {
     getAllEnquiries(page: string | undefined, limit: string | undefined, req: any): Promise<{
         data: {
             id: string;
-            name: string;
             email: string;
             phone: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
-            meetingsId: string | null;
-            serviceName: string;
             serviceId: string;
             clientId: string;
+            meetingsId: string | null;
+            serviceName: string;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date | null;
@@ -60,16 +60,16 @@ export declare class EnquiryController {
     }>;
     getEnquiryById(id: string, req: any): Promise<{
         id: string;
-        name: string;
         email: string;
         phone: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         regionId: string;
-        meetingsId: string | null;
-        serviceName: string;
         serviceId: string;
         clientId: string;
+        meetingsId: string | null;
+        serviceName: string;
         meetingsDate: Date;
         meetingsTimeSlots: string;
         seviceStartDate: Date | null;

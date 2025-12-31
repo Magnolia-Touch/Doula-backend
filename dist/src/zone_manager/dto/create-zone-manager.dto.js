@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateZoneManagerDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 class CreateZoneManagerDto {
@@ -17,21 +18,26 @@ class CreateZoneManagerDto {
     email;
     phone;
     regionIds;
+    profile_image;
 }
 exports.CreateZoneManagerDto = CreateZoneManagerDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateZoneManagerDto.prototype, "name", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'zonemanager@test.com' }),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], CreateZoneManagerDto.prototype, "email", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateZoneManagerDto.prototype, "phone", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: ["a47516aa-a881-4e57-984e-5bb10ce1f236", "bd7516aa-a881-4e57-984e-5ba10ce1f234"] }),
     (0, class_transformer_1.Transform)(({ value }) => {
         if (typeof value === 'string') {
             try {
@@ -47,4 +53,13 @@ __decorate([
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], CreateZoneManagerDto.prototype, "regionIds", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        type: 'string',
+        format: 'binary',
+        required: false,
+        description: 'Profile image (jpg, jpeg, png, max 5MB)',
+    }),
+    __metadata("design:type", Object)
+], CreateZoneManagerDto.prototype, "profile_image", void 0);
 //# sourceMappingURL=create-zone-manager.dto.js.map

@@ -110,6 +110,34 @@ export class ZoneManagerController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create Zone Manager' })
   @ApiBody({ type: CreateZoneManagerDto }) // <-- REQUIRED
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Zone Manager created successfully",
+        "data": {
+          "id": "386acafc-f7f0-4ad8-887a-9120d94cc4ae",
+          "name": "devanand",
+          "email": "devvv@gmail.com",
+          "phone": "+918921236345",
+          "otp": null,
+          "otpExpiresAt": null,
+          "role": "ZONE_MANAGER",
+          "is_active": true,
+          "createdAt": "2025-12-03T09:59:07.066Z",
+          "updatedAt": "2025-12-03T09:59:07.066Z",
+          "zonemanagerprofile": {
+            "id": "3aa1427e-90f2-4dc2-95c3-890690e3f857",
+            "userId": "386acafc-f7f0-4ad8-887a-9120d94cc4ae",
+            "profile_image": "uploads/manager/1764755947060-99108560.png",
+            "createdAt": "2025-12-03T09:59:07.066Z",
+            "updatedAt": "2025-12-03T09:59:07.066Z"
+          }
+        }
+      }
+    },
+  })
   create(
     @Body() dto: CreateZoneManagerDto,
     @UploadedFiles()
@@ -148,6 +176,39 @@ export class ZoneManagerController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'search', required: false })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Zone Managers fetched successfully",
+        "data": [
+          {
+            "userId": "55f12bf3-317f-4157-8aa0-0d979e3e8fa7",
+            "name": "Adam Smith",
+            "email": "zonemanager@test.com",
+            "phone": "+918843488338",
+            "role": "ZONE_MANAGER",
+            "is_active": true,
+            "profileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
+            "regions": [
+              "North Mumbai"
+            ],
+            "doulas": [
+              "Anita Sharma"
+            ]
+          }
+        ],
+        "meta": {
+          "total": 1,
+          "page": 1,
+          "limit": 1,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPrevPage": false
+        }
+      }
+    }
+  })
   getZoneManagers(
     @Query('page') page = 1,
     @Query('limit') limit = 3,
@@ -169,24 +230,70 @@ export class ZoneManagerController {
     description: 'Zone Manager fetched successfully.',
     schema: {
       example: {
-        message: 'Zone Manager fetched successfully',
-        data: {
-          id: '87c0aaee-b4f8-4d62-b0bc-72246ff312ab',
-          name: 'John Doe',
-          email: 'john@gmail.com',
-          role: 'ZONE_MANAGER',
-          zonemanagerprofile: {
-            id: 'ec25d03a-dba5-43d3-b56e-7a546ec2da9f',
-            region: 'North Zone',
-            phone: '9876543210',
-          },
-        },
-      },
+        "status": "success",
+        "message": "Zone Manager fetched successfully",
+        "data": {
+          "userId": "55f12bf3-317f-4157-8aa0-0d979e3e8fa7",
+          "name": "Adam Smith",
+          "email": "zonemanager@test.com",
+          "phone": "+918843488338",
+          "role": "ZONE_MANAGER",
+          "is_active": true,
+          "profileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
+          "regions": [
+            {
+              "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+              "regionName": "North Mumbai",
+              "pincode": "4999022",
+              "district": "Mumbai Suburban",
+              "state": "Maharashtra",
+              "country": "India",
+              "latitude": "19.1136",
+              "longitude": "72.8697",
+              "is_active": true
+            }
+          ],
+          "doulas": [
+            {
+              "doulaProfileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+              "userId": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
+              "name": "Anita Sharma",
+              "email": "doula@test.com",
+              "phone": "+919876543342",
+              "is_active": true,
+              "description": "Certified birth doula with 6+ years of experience",
+              "qualification": "Certified Birth Doula (CBD)",
+              "achievements": "Supported 300+ successful births",
+              "yoe": 6,
+              "languages": [
+                "English",
+                "Hindi",
+                "Tamil"
+              ],
+              "regions": [
+                {
+                  "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+                  "regionName": "North Mumbai",
+                  "pincode": "4999022",
+                  "district": "Mumbai Suburban",
+                  "state": "Maharashtra",
+                  "country": "India"
+                }
+              ]
+            }
+          ]
+        }
+      }
     },
   })
   @ApiResponse({
-    status: 404,
-    description: 'Zone Manager not found',
+    schema: {
+      example: {
+        "message": "Zone Manager not found",
+        "error": "Not Found",
+        "statusCode": 404
+      }
+    }
   })
   async getZoneManagerById(@Param('id') id: string) {
     return this.service.getById(id);
@@ -207,19 +314,13 @@ export class ZoneManagerController {
     description: 'Zone Manager Deleted successfully.',
     schema: {
       example: {
-        message: 'Zone Manager Deleted successfully',
-        data: {
-          id: '87c0aaee-b4f8-4d62-b0bc-72246ff312ab',
-          name: 'John Doe',
-          email: 'john@gmail.com',
-          role: 'ZONE_MANAGER',
-          zonemanagerprofile: {
-            id: 'ec25d03a-dba5-43d3-b56e-7a546ec2da9f',
-            region: 'North Zone',
-            phone: '9876543210',
-          },
-        },
-      },
+        "status": "success",
+        "message": "Zone Manager deleted successfully",
+        "data": {
+          "message": "Zone Manager deleted successfully",
+          "data": null
+        }
+      }
     },
   })
   @ApiResponse({
@@ -252,20 +353,22 @@ export class ZoneManagerController {
     description: 'Zone Manager status updated successfully',
     schema: {
       example: {
-        message: 'Zone Manager status updated successfully',
-        data: {
-          id: '3fd8c6b4-74db-4b3e-afdd-fa3a77c7465e',
-          name: 'John Doe',
-          email: 'john@gmail.com',
-          role: 'ZONE_MANAGER',
-          is_active: true,
-        },
-      },
+        "status": "success",
+        "message": "Zone Manager status updated successfully",
+        "data": {
+          "id": "9f9bc3d6-05fc-4f1f-b5b3-d9a07117bff7",
+          "name": "Jane Doe",
+          "email": "zonemanager@gmail.com",
+          "phone": "+911234567891",
+          "otp": null,
+          "otpExpiresAt": null,
+          "role": "ZONE_MANAGER",
+          "is_active": false,
+          "createdAt": "2025-11-25T14:25:31.492Z",
+          "updatedAt": "2025-11-25T14:25:44.676Z"
+        }
+      }
     },
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Zone Manager not found',
   })
   @Patch(':id/update/status')
   async UpdateManagerStatus(
@@ -284,9 +387,12 @@ export class ZoneManagerController {
     description: 'Provide Zone Manager Profile ID and Region ID',
     schema: {
       example: {
-        profileId: '4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5',
-        regionId: '96efbdce-d7cb-43bb-8787-626c198be1a4',
-      },
+        "profileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
+        "regionIds": [
+          "3ffb3715-0f31-47cb-b2a8-d62bb36f2ce9"
+        ],
+        "purpose": "add" //add or remove
+      }
     },
   })
   @ApiResponse({
@@ -294,21 +400,13 @@ export class ZoneManagerController {
     description: 'Region successfully assigned',
     schema: {
       example: {
-        message: 'Region successfully Assigned',
-        data: {
-          id: '96efbdce-d7cb-43bb-8787-626c198be1a4',
-          regionName: 'Bangalore West',
-          district: 'Bangalore',
-          state: 'Karnataka',
-          country: 'India',
-          zoneManagerId: '4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5',
-        },
-      },
+        "status": "success",
+        "message": "1 Region(s) successfully assigned to Manager",
+        "data": {
+          "message": "1 Region(s) successfully assigned to Manager"
+        }
+      }
     },
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Zone Manager Profile or Region not found',
   })
   async assignRegionToManager(@Body() dto: UpdateZoneManagerRegionDto) {
     return this.service.UpdateZoneManagerRegions(dto);
@@ -326,24 +424,27 @@ export class ZoneManagerController {
     description: 'Region assignment status fetched',
     schema: {
       example: {
-        message: 'Region assignment status fetched',
-        assignedCount: 1,
-        unassignedCount: 1,
-        assigned: [
-          {
-            id: '96efbdce-d7cb-43bb-8787-626c198be1a4',
-            regionName: 'Bangalore East',
-            zoneManagerId: '9e9c77fa-2cd4-4d92-b7cb-4f6851f1f3a8',
-          },
-        ],
-        unassigned: [
-          {
-            id: '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
-            regionName: 'Chennai North',
-            zoneManagerId: null,
-          },
-        ],
-      },
+        "status": "success",
+        "message": "Region assignment status fetched",
+        "data": {
+          "message": "Region assignment status fetched",
+          "assignedCount": 2,
+          "unassignedCount": 0,
+          "assigned": [
+            {
+              "id": "3ffb3715-0f31-47cb-b2a8-d62bb36f2ce9",
+              "regionName": "Texas",
+              "zoneManagerId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50"
+            },
+            {
+              "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+              "regionName": "North Mumbai",
+              "zoneManagerId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50"
+            }
+          ],
+          "unassigned": []
+        }
+      }
     },
   })
   @ApiResponse({
@@ -354,6 +455,52 @@ export class ZoneManagerController {
     return this.service.regionAlreadyAssignedOrNot(dto.regionIds);
   }
 
+
+  @ApiOperation({ description: "Fetch All Service Schedules that fall under Zone Manager" })
+  @ApiBearerAuth("acccess-token")
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'serviceName', required: false })
+  @ApiQuery({ name: 'date', required: false })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Schedules fetched successfully",
+        "data": [
+          {
+            "scheduleId": "192aec93-cf39-4aa2-a906-43795aea485e",
+            "clientId": "43d9b6d3-727c-4e09-9b0d-42b6c231ee70",
+            "clientName": "shambu",
+            "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "doulaName": "Anita Sharma",
+            "serviceName": "Post Partum Doula",
+            "startDate": "NIGHT",
+            "status": "PENDING"
+          },
+          {
+            "scheduleId": "4fc39667-aa82-4b53-80c6-8dca2ddfd2ea",
+            "clientId": "43d9b6d3-727c-4e09-9b0d-42b6c231ee70",
+            "clientName": "shambu",
+            "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "doulaName": "Anita Sharma",
+            "serviceName": "Post Partum Doula",
+            "startDate": "NIGHT",
+            "status": "PENDING"
+          }
+        ],
+        "meta": {
+          "total": 54,
+          "page": 1,
+          "limit": 2,
+          "totalPages": 27,
+          "hasNextPage": true,
+          "hasPrevPage": false
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('schedules/list')
@@ -377,6 +524,46 @@ export class ZoneManagerController {
     );
   }
 
+
+
+  @ApiOperation({ description: "Fetch All Service Bookings that fall under Zone Manager" })
+  @ApiBearerAuth("acccess-token")
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'serviceName', required: false })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Booked services fetched successfully",
+        "data": [
+          {
+            "bookingId": "c2c68373-954b-4c15-b11c-232ee92a5968",
+            "clientId": "6af732ef-8b4a-4097-98fb-ff0fa165afff",
+            "clientName": "test client",
+            "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "doulaName": "Anita Sharma",
+            "servicePricingId": "f00e2a99-b097-4c3c-9783-75d5d09ba497",
+            "serviceName": "Birth Doula",
+            "startDate": "2042-09-01T00:00:00.000Z",
+            "endDate": "2042-10-31T00:00:00.000Z",
+            "status": "ACTIVE"
+          }
+        ],
+        "meta": {
+          "total": 10,
+          "page": 1,
+          "limit": 1,
+          "totalPages": 10,
+          "hasNextPage": true,
+          "hasPrevPage": false
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('booked-services/list')
@@ -403,6 +590,43 @@ export class ZoneManagerController {
     );
   }
 
+
+  @ApiOperation({ description: "Fetch All Meetings that fall under Zone Manager" })
+  @ApiBearerAuth("acccess-token")
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Zone manager meetings fetched successfully",
+        "data": [
+          {
+            "meetingId": "dfb37e07-08cb-4da2-8224-e990b7a22da1",
+            "clientId": "235248e1-c73a-44d6-b82b-4456a8485010",
+            "clientName": "fayazbroz",
+            "doulaId": null,
+            "doulaName": null,
+            "servicePricingId": null,
+            "serviceName": "Birth Doula",
+            "startDate": "1970-01-01T03:30:00.000Z",
+            "endDate": "1970-01-01T04:00:00.000Z",
+            "status": "SCHEDULED"
+          }
+        ],
+        "meta": {
+          "total": 1,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPrevPage": false
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('meetings/list')
@@ -422,6 +646,26 @@ export class ZoneManagerController {
     );
   }
 
+  @ApiOperation({ description: "Retrieve each Schedules using uuid" })
+  @ApiBearerAuth('access-token')
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Schedule fetched successfully",
+        "data": {
+          "scheduleId": "192aec93-cf39-4aa2-a906-43795aea485e",
+          "clientId": "43d9b6d3-727c-4e09-9b0d-42b6c231ee70",
+          "clientName": "shambu",
+          "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+          "doulaName": "Anita Sharma",
+          "serviceName": "Post Partum Doula",
+          "startDate": "NIGHT",
+          "status": "PENDING"
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('schedules/list/:id')
@@ -429,6 +673,30 @@ export class ZoneManagerController {
     return this.service.getZoneManagerScheduleById(req.user.id, id);
   }
 
+
+
+  @ApiOperation({ description: "Retrieve each Bookings using uuid" })
+  @ApiBearerAuth('access-token')
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Booked service fetched successfully",
+        "data": {
+          "serviceBookingId": "c2c68373-954b-4c15-b11c-232ee92a5968",
+          "clientId": "6af732ef-8b4a-4097-98fb-ff0fa165afff",
+          "clientName": "test client",
+          "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+          "doulaName": "Anita de Asam",
+          "servicePricingId": "f00e2a99-b097-4c3c-9783-75d5d09ba497",
+          "serviceName": "Birth Doula",
+          "startDate": "2042-09-01T00:00:00.000Z",
+          "endDate": "2042-10-31T00:00:00.000Z",
+          "status": "ACTIVE"
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('booked-services/list/:id')
@@ -436,6 +704,30 @@ export class ZoneManagerController {
     return this.service.getZoneManagerBookedServiceById(req.user.id, id);
   }
 
+
+
+  @ApiOperation({ description: "Retrieve each Meetings using uuid" })
+  @ApiBearerAuth('access-token')
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Meeting fetched successfully",
+        "data": {
+          "meetingId": "dfb37e07-08cb-4da2-8224-e990b7a22da1",
+          "clientId": "235248e1-c73a-44d6-b82b-4456a8485010",
+          "clientName": "fayazbroz",
+          "doulaId": null,
+          "doulaName": null,
+          "servicePricingId": null,
+          "serviceName": "Birth Doula",
+          "startDate": "1970-01-01T03:30:00.000Z",
+          "endDate": "1970-01-01T04:00:00.000Z",
+          "status": "SCHEDULED"
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('meetings/list/:id')
@@ -443,7 +735,29 @@ export class ZoneManagerController {
     return this.service.getZoneManagerMeetingById(req.user.id, id);
   }
 
-
+  @ApiOperation({ description: "Fetch all Doulas under Zone Manager" })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Doulas fetched successfully",
+        "data": [
+          {
+            "userId": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
+            "profileid": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "name": "Anita de Asam",
+            "email": "doula@test.com",
+            "phone": "+919876543342",
+            "yoe": 2,
+            "qualification": "",
+            "languages": [],
+            "specialities": [],
+            "profileImage": "uploads/doulas/1767154501903-168020899.png"
+          }
+        ]
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('doulas/list')

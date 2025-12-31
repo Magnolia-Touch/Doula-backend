@@ -159,6 +159,34 @@ __decorate([
     (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, swagger_1.ApiOperation)({ summary: 'Create Zone Manager' }),
     (0, swagger_1.ApiBody)({ type: create_zone_manager_dto_1.CreateZoneManagerDto }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Zone Manager created successfully",
+                "data": {
+                    "id": "386acafc-f7f0-4ad8-887a-9120d94cc4ae",
+                    "name": "devanand",
+                    "email": "devvv@gmail.com",
+                    "phone": "+918921236345",
+                    "otp": null,
+                    "otpExpiresAt": null,
+                    "role": "ZONE_MANAGER",
+                    "is_active": true,
+                    "createdAt": "2025-12-03T09:59:07.066Z",
+                    "updatedAt": "2025-12-03T09:59:07.066Z",
+                    "zonemanagerprofile": {
+                        "id": "3aa1427e-90f2-4dc2-95c3-890690e3f857",
+                        "userId": "386acafc-f7f0-4ad8-887a-9120d94cc4ae",
+                        "profile_image": "uploads/manager/1764755947060-99108560.png",
+                        "createdAt": "2025-12-03T09:59:07.066Z",
+                        "updatedAt": "2025-12-03T09:59:07.066Z"
+                    }
+                }
+            }
+        },
+    }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
@@ -171,6 +199,39 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'search', required: false }),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Zone Managers fetched successfully",
+                "data": [
+                    {
+                        "userId": "55f12bf3-317f-4157-8aa0-0d979e3e8fa7",
+                        "name": "Adam Smith",
+                        "email": "zonemanager@test.com",
+                        "phone": "+918843488338",
+                        "role": "ZONE_MANAGER",
+                        "is_active": true,
+                        "profileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
+                        "regions": [
+                            "North Mumbai"
+                        ],
+                        "doulas": [
+                            "Anita Sharma"
+                        ]
+                    }
+                ],
+                "meta": {
+                    "total": 1,
+                    "page": 1,
+                    "limit": 1,
+                    "totalPages": 1,
+                    "hasNextPage": false,
+                    "hasPrevPage": false
+                }
+            }
+        }
+    }),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
     __param(2, (0, common_1.Query)('search')),
@@ -192,24 +253,70 @@ __decorate([
         description: 'Zone Manager fetched successfully.',
         schema: {
             example: {
-                message: 'Zone Manager fetched successfully',
-                data: {
-                    id: '87c0aaee-b4f8-4d62-b0bc-72246ff312ab',
-                    name: 'John Doe',
-                    email: 'john@gmail.com',
-                    role: 'ZONE_MANAGER',
-                    zonemanagerprofile: {
-                        id: 'ec25d03a-dba5-43d3-b56e-7a546ec2da9f',
-                        region: 'North Zone',
-                        phone: '9876543210',
-                    },
-                },
-            },
+                "status": "success",
+                "message": "Zone Manager fetched successfully",
+                "data": {
+                    "userId": "55f12bf3-317f-4157-8aa0-0d979e3e8fa7",
+                    "name": "Adam Smith",
+                    "email": "zonemanager@test.com",
+                    "phone": "+918843488338",
+                    "role": "ZONE_MANAGER",
+                    "is_active": true,
+                    "profileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
+                    "regions": [
+                        {
+                            "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+                            "regionName": "North Mumbai",
+                            "pincode": "4999022",
+                            "district": "Mumbai Suburban",
+                            "state": "Maharashtra",
+                            "country": "India",
+                            "latitude": "19.1136",
+                            "longitude": "72.8697",
+                            "is_active": true
+                        }
+                    ],
+                    "doulas": [
+                        {
+                            "doulaProfileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                            "userId": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
+                            "name": "Anita Sharma",
+                            "email": "doula@test.com",
+                            "phone": "+919876543342",
+                            "is_active": true,
+                            "description": "Certified birth doula with 6+ years of experience",
+                            "qualification": "Certified Birth Doula (CBD)",
+                            "achievements": "Supported 300+ successful births",
+                            "yoe": 6,
+                            "languages": [
+                                "English",
+                                "Hindi",
+                                "Tamil"
+                            ],
+                            "regions": [
+                                {
+                                    "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+                                    "regionName": "North Mumbai",
+                                    "pincode": "4999022",
+                                    "district": "Mumbai Suburban",
+                                    "state": "Maharashtra",
+                                    "country": "India"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
         },
     }),
     (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Zone Manager not found',
+        schema: {
+            example: {
+                "message": "Zone Manager not found",
+                "error": "Not Found",
+                "statusCode": 404
+            }
+        }
     }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -232,19 +339,13 @@ __decorate([
         description: 'Zone Manager Deleted successfully.',
         schema: {
             example: {
-                message: 'Zone Manager Deleted successfully',
-                data: {
-                    id: '87c0aaee-b4f8-4d62-b0bc-72246ff312ab',
-                    name: 'John Doe',
-                    email: 'john@gmail.com',
-                    role: 'ZONE_MANAGER',
-                    zonemanagerprofile: {
-                        id: 'ec25d03a-dba5-43d3-b56e-7a546ec2da9f',
-                        region: 'North Zone',
-                        phone: '9876543210',
-                    },
-                },
-            },
+                "status": "success",
+                "message": "Zone Manager deleted successfully",
+                "data": {
+                    "message": "Zone Manager deleted successfully",
+                    "data": null
+                }
+            }
         },
     }),
     (0, swagger_1.ApiResponse)({
@@ -279,20 +380,22 @@ __decorate([
         description: 'Zone Manager status updated successfully',
         schema: {
             example: {
-                message: 'Zone Manager status updated successfully',
-                data: {
-                    id: '3fd8c6b4-74db-4b3e-afdd-fa3a77c7465e',
-                    name: 'John Doe',
-                    email: 'john@gmail.com',
-                    role: 'ZONE_MANAGER',
-                    is_active: true,
-                },
-            },
+                "status": "success",
+                "message": "Zone Manager status updated successfully",
+                "data": {
+                    "id": "9f9bc3d6-05fc-4f1f-b5b3-d9a07117bff7",
+                    "name": "Jane Doe",
+                    "email": "zonemanager@gmail.com",
+                    "phone": "+911234567891",
+                    "otp": null,
+                    "otpExpiresAt": null,
+                    "role": "ZONE_MANAGER",
+                    "is_active": false,
+                    "createdAt": "2025-11-25T14:25:31.492Z",
+                    "updatedAt": "2025-11-25T14:25:44.676Z"
+                }
+            }
         },
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Zone Manager not found',
     }),
     (0, common_1.Patch)(':id/update/status'),
     __param(0, (0, common_1.Param)('id')),
@@ -311,9 +414,12 @@ __decorate([
         description: 'Provide Zone Manager Profile ID and Region ID',
         schema: {
             example: {
-                profileId: '4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5',
-                regionId: '96efbdce-d7cb-43bb-8787-626c198be1a4',
-            },
+                "profileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
+                "regionIds": [
+                    "3ffb3715-0f31-47cb-b2a8-d62bb36f2ce9"
+                ],
+                "purpose": "add"
+            }
         },
     }),
     (0, swagger_1.ApiResponse)({
@@ -321,21 +427,13 @@ __decorate([
         description: 'Region successfully assigned',
         schema: {
             example: {
-                message: 'Region successfully Assigned',
-                data: {
-                    id: '96efbdce-d7cb-43bb-8787-626c198be1a4',
-                    regionName: 'Bangalore West',
-                    district: 'Bangalore',
-                    state: 'Karnataka',
-                    country: 'India',
-                    zoneManagerId: '4cb9ddc3-4766-46be-86a7-7c5bdf1b82d5',
-                },
-            },
+                "status": "success",
+                "message": "1 Region(s) successfully assigned to Manager",
+                "data": {
+                    "message": "1 Region(s) successfully assigned to Manager"
+                }
+            }
         },
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Zone Manager Profile or Region not found',
     }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -355,24 +453,27 @@ __decorate([
         description: 'Region assignment status fetched',
         schema: {
             example: {
-                message: 'Region assignment status fetched',
-                assignedCount: 1,
-                unassignedCount: 1,
-                assigned: [
-                    {
-                        id: '96efbdce-d7cb-43bb-8787-626c198be1a4',
-                        regionName: 'Bangalore East',
-                        zoneManagerId: '9e9c77fa-2cd4-4d92-b7cb-4f6851f1f3a8',
-                    },
-                ],
-                unassigned: [
-                    {
-                        id: '4fd68b32-cb85-4f8b-9375-d4477dc7c3ae',
-                        regionName: 'Chennai North',
-                        zoneManagerId: null,
-                    },
-                ],
-            },
+                "status": "success",
+                "message": "Region assignment status fetched",
+                "data": {
+                    "message": "Region assignment status fetched",
+                    "assignedCount": 2,
+                    "unassignedCount": 0,
+                    "assigned": [
+                        {
+                            "id": "3ffb3715-0f31-47cb-b2a8-d62bb36f2ce9",
+                            "regionName": "Texas",
+                            "zoneManagerId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50"
+                        },
+                        {
+                            "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+                            "regionName": "North Mumbai",
+                            "zoneManagerId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50"
+                        }
+                    ],
+                    "unassigned": []
+                }
+            }
         },
     }),
     (0, swagger_1.ApiResponse)({
@@ -385,6 +486,51 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "regionAlreadyAssignedOrNot", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ description: "Fetch All Service Schedules that fall under Zone Manager" }),
+    (0, swagger_1.ApiBearerAuth)("acccess-token"),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'serviceName', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'date', required: false }),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Schedules fetched successfully",
+                "data": [
+                    {
+                        "scheduleId": "192aec93-cf39-4aa2-a906-43795aea485e",
+                        "clientId": "43d9b6d3-727c-4e09-9b0d-42b6c231ee70",
+                        "clientName": "shambu",
+                        "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                        "doulaName": "Anita Sharma",
+                        "serviceName": "Post Partum Doula",
+                        "startDate": "NIGHT",
+                        "status": "PENDING"
+                    },
+                    {
+                        "scheduleId": "4fc39667-aa82-4b53-80c6-8dca2ddfd2ea",
+                        "clientId": "43d9b6d3-727c-4e09-9b0d-42b6c231ee70",
+                        "clientName": "shambu",
+                        "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                        "doulaName": "Anita Sharma",
+                        "serviceName": "Post Partum Doula",
+                        "startDate": "NIGHT",
+                        "status": "PENDING"
+                    }
+                ],
+                "meta": {
+                    "total": 54,
+                    "page": 1,
+                    "limit": 2,
+                    "totalPages": 27,
+                    "hasNextPage": true,
+                    "hasPrevPage": false
+                }
+            }
+        }
+    }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('schedules/list'),
@@ -399,6 +545,44 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getSchedules", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ description: "Fetch All Service Bookings that fall under Zone Manager" }),
+    (0, swagger_1.ApiBearerAuth)("acccess-token"),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'serviceName', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false }),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Booked services fetched successfully",
+                "data": [
+                    {
+                        "bookingId": "c2c68373-954b-4c15-b11c-232ee92a5968",
+                        "clientId": "6af732ef-8b4a-4097-98fb-ff0fa165afff",
+                        "clientName": "test client",
+                        "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                        "doulaName": "Anita Sharma",
+                        "servicePricingId": "f00e2a99-b097-4c3c-9783-75d5d09ba497",
+                        "serviceName": "Birth Doula",
+                        "startDate": "2042-09-01T00:00:00.000Z",
+                        "endDate": "2042-10-31T00:00:00.000Z",
+                        "status": "ACTIVE"
+                    }
+                ],
+                "meta": {
+                    "total": 10,
+                    "page": 1,
+                    "limit": 1,
+                    "totalPages": 10,
+                    "hasNextPage": true,
+                    "hasPrevPage": false
+                }
+            }
+        }
+    }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('booked-services/list'),
@@ -415,6 +599,42 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getBookedServices", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ description: "Fetch All Meetings that fall under Zone Manager" }),
+    (0, swagger_1.ApiBearerAuth)("acccess-token"),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false }),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Zone manager meetings fetched successfully",
+                "data": [
+                    {
+                        "meetingId": "dfb37e07-08cb-4da2-8224-e990b7a22da1",
+                        "clientId": "235248e1-c73a-44d6-b82b-4456a8485010",
+                        "clientName": "fayazbroz",
+                        "doulaId": null,
+                        "doulaName": null,
+                        "servicePricingId": null,
+                        "serviceName": "Birth Doula",
+                        "startDate": "1970-01-01T03:30:00.000Z",
+                        "endDate": "1970-01-01T04:00:00.000Z",
+                        "status": "SCHEDULED"
+                    }
+                ],
+                "meta": {
+                    "total": 1,
+                    "page": 1,
+                    "limit": 10,
+                    "totalPages": 1,
+                    "hasNextPage": false,
+                    "hasPrevPage": false
+                }
+            }
+        }
+    }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('meetings/list'),
@@ -428,6 +648,26 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getZoneManagerMeetings", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ description: "Retrieve each Schedules using uuid" }),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Schedule fetched successfully",
+                "data": {
+                    "scheduleId": "192aec93-cf39-4aa2-a906-43795aea485e",
+                    "clientId": "43d9b6d3-727c-4e09-9b0d-42b6c231ee70",
+                    "clientName": "shambu",
+                    "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                    "doulaName": "Anita Sharma",
+                    "serviceName": "Post Partum Doula",
+                    "startDate": "NIGHT",
+                    "status": "PENDING"
+                }
+            }
+        }
+    }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('schedules/list/:id'),
@@ -438,6 +678,28 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getScheduleById", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ description: "Retrieve each Bookings using uuid" }),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Booked service fetched successfully",
+                "data": {
+                    "serviceBookingId": "c2c68373-954b-4c15-b11c-232ee92a5968",
+                    "clientId": "6af732ef-8b4a-4097-98fb-ff0fa165afff",
+                    "clientName": "test client",
+                    "doulaId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                    "doulaName": "Anita de Asam",
+                    "servicePricingId": "f00e2a99-b097-4c3c-9783-75d5d09ba497",
+                    "serviceName": "Birth Doula",
+                    "startDate": "2042-09-01T00:00:00.000Z",
+                    "endDate": "2042-10-31T00:00:00.000Z",
+                    "status": "ACTIVE"
+                }
+            }
+        }
+    }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('booked-services/list/:id'),
@@ -448,6 +710,28 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getBookedServiceById", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ description: "Retrieve each Meetings using uuid" }),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Meeting fetched successfully",
+                "data": {
+                    "meetingId": "dfb37e07-08cb-4da2-8224-e990b7a22da1",
+                    "clientId": "235248e1-c73a-44d6-b82b-4456a8485010",
+                    "clientName": "fayazbroz",
+                    "doulaId": null,
+                    "doulaName": null,
+                    "servicePricingId": null,
+                    "serviceName": "Birth Doula",
+                    "startDate": "1970-01-01T03:30:00.000Z",
+                    "endDate": "1970-01-01T04:00:00.000Z",
+                    "status": "SCHEDULED"
+                }
+            }
+        }
+    }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('meetings/list/:id'),
@@ -458,6 +742,29 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "getMeetingById", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ description: "Fetch all Doulas under Zone Manager" }),
+    (0, swagger_1.ApiResponse)({
+        schema: {
+            example: {
+                "status": "success",
+                "message": "Doulas fetched successfully",
+                "data": [
+                    {
+                        "userId": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
+                        "profileid": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                        "name": "Anita de Asam",
+                        "email": "doula@test.com",
+                        "phone": "+919876543342",
+                        "yoe": 2,
+                        "qualification": "",
+                        "languages": [],
+                        "specialities": [],
+                        "profileImage": "uploads/doulas/1767154501903-168020899.png"
+                    }
+                ]
+            }
+        }
+    }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
     (0, common_1.Get)('doulas/list'),

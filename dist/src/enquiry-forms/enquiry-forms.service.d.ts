@@ -11,16 +11,16 @@ export declare class EnquiryService {
         message: string;
         enquiry: {
             id: string;
-            name: string;
             email: string;
             phone: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
-            meetingsId: string | null;
-            serviceName: string;
             serviceId: string;
             clientId: string;
+            meetingsId: string | null;
+            serviceName: string;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date | null;
@@ -34,16 +34,16 @@ export declare class EnquiryService {
     getAllEnquiries(page: number | undefined, limit: number | undefined, userId: string): Promise<{
         data: {
             id: string;
-            name: string;
             email: string;
             phone: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             regionId: string;
-            meetingsId: string | null;
-            serviceName: string;
             serviceId: string;
             clientId: string;
+            meetingsId: string | null;
+            serviceName: string;
             meetingsDate: Date;
             meetingsTimeSlots: string;
             seviceStartDate: Date | null;
@@ -64,16 +64,16 @@ export declare class EnquiryService {
     }>;
     getEnquiryById(id: string, userId: string): Promise<{
         id: string;
-        name: string;
         email: string;
         phone: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         regionId: string;
-        meetingsId: string | null;
-        serviceName: string;
         serviceId: string;
         clientId: string;
+        meetingsId: string | null;
+        serviceName: string;
         meetingsDate: Date;
         meetingsTimeSlots: string;
         seviceStartDate: Date | null;

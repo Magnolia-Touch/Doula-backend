@@ -63,8 +63,8 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             doulaProfileId: string;
+            date: Date;
             offtime: import("@prisma/client/runtime/library").JsonValue;
         }[];
     }>;
@@ -74,8 +74,8 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             doulaProfileId: string;
+            date: Date;
             offtime: import("@prisma/client/runtime/library").JsonValue;
         };
     }>;
@@ -85,8 +85,8 @@ export declare class DoulaServiceAvailabilityController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            date: Date;
             doulaProfileId: string;
+            date: Date;
             offtime: import("@prisma/client/runtime/library").JsonValue;
         };
     }>;

@@ -24,20 +24,6 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
-  // Register Admin - protected
-  @ApiOperation({ summary: 'Send registration OTP (admin)' })
-  @ApiBody({ type: RegistrationDto })
-  @ApiResponse({
-    status: 200,
-    type: SwaggerResponseDto,
-    schema: {
-      example: {
-        success: true,
-        message: 'OTP sent to admin email',
-        data: null,
-      },
-    },
-  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth('bearer')
@@ -47,16 +33,16 @@ export class AuthController {
   }
 
   // Send login OTP
-  @ApiOperation({ summary: 'Send login OTP' })
+  @ApiOperation({ summary: 'Send login OTP For All Users' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'OTP sent to the provided email',
-        data: null,
+        success: "success",
+        message: "Otp Sent Succesfully",
+        data: "815007",
       },
     },
   })
@@ -66,22 +52,31 @@ export class AuthController {
   }
 
   // Verify OTP and login/register
-  @ApiOperation({ summary: 'Verify OTP and login/register' })
+  @ApiOperation({ summary: 'Verify Authentication OTP' })
   @ApiBody({ type: OtpVerifyDto })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'OTP verified. User logged in/registered',
+        success: "success",
+        message: "User Verified Successfully",
         data: {
-          token: 'jwt-token',
-          user: {
-            id: 'user-uuid',
-            email: 'user@example.com',
-            role: 'CLIENT',
+          "user": {
+            "id": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
+            "name": "Anita Sharma",
+            "email": "doula@test.com",
+            "phone": "+919876543342",
+            "otp": "563893",
+            "otpExpiresAt": "2025-12-31T04:22:39.695Z",
+            "role": "DOULA",
+            "is_active": true,
+            "createdAt": "2025-12-27T12:27:47.513Z",
+            "updatedAt": "2025-12-31T04:12:39.696Z"
           },
+          "accessToken": "user uuid",
+          "message": "User Verified Successfully",
+          "status": 200
         },
       },
     },
@@ -92,6 +87,63 @@ export class AuthController {
   }
 
   // Authenticated user's own profile
+  @ApiOperation({ summary: 'Profile View API' })
+  @ApiBearerAuth('access-token')
+  @ApiResponse({
+    status: 200,
+    type: SwaggerResponseDto,
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Request successful",
+        "data": {
+          "role": "DOULA",
+          "user": {
+            "userId": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
+            "email": "doula@test.com",
+            "name": "Anita Sharma",
+            "phone": "+919876543342",
+            "is_active": true,
+            "role": "DOULA"
+          },
+          "profile": {
+            "profileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "description": "Certified birth doula with 6+ years of experience",
+            "qualification": "Certified Birth Doula (CBD)",
+            "achievements": "Supported 300+ successful births",
+            "yoe": 6,
+            "languages": [
+              "English",
+              "Hindi",
+              "Tamil"
+            ],
+            "regions": [
+              {
+                "regionId": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+                "regionName": "Texas"
+              }
+            ],
+            "doulaImages": [
+              {
+                "id": "003dd08a-fb13-4a2d-a004-76ffe49a5dfc",
+                "doulaProfileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                "url": "uploads/doulas/1767154479162-382266985.png",
+                "altText": null,
+                "createdAt": "2025-12-31T04:14:39.180Z"
+              },
+              {
+                "id": "97c0e4c8-54c5-4f72-8120-86803a4a9592",
+                "doulaProfileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+                "url": "uploads/doulas/1767154479164-287555438.png",
+                "altText": null,
+                "createdAt": "2025-12-31T04:14:39.180Z"
+              }
+            ]
+          }
+        }
+      }
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async myProfile(@Req() req: any) {

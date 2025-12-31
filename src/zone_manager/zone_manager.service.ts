@@ -68,9 +68,9 @@ export class ZoneManagerService {
       role: Role.ZONE_MANAGER,
       OR: search
         ? [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search.toLowerCase() } },
+          { email: { contains: search.toLowerCase() } },
+          { phone: { contains: search.toLowerCase() } },
           {
             zonemanagerprofile: {
               managingRegion: {

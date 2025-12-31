@@ -7,8 +7,8 @@ export declare class ServicePricingController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string;
         serviceId: string;
+        doulaProfileId: string;
         price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     findAll(req: any): Promise<{
@@ -40,16 +40,16 @@ export declare class ServicePricingController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string;
         serviceId: string;
+        doulaProfileId: string;
         price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        doulaProfileId: string;
         serviceId: string;
+        doulaProfileId: string;
         price: import("@prisma/client/runtime/library").JsonValue;
     }>;
     getServiceWithPricing(query: any): Promise<{

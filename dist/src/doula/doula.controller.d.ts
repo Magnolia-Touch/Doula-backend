@@ -16,6 +16,12 @@ export declare class DoulaController {
         message: string;
         data: ({
             doulaProfile: ({
+                Region: {
+                    id: string;
+                    zoneManagerId: string | null;
+                    pincode: string;
+                    regionName: string;
+                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
@@ -36,12 +42,6 @@ export declare class DoulaController {
                     doulaProfileId: string;
                     issuedBy: string;
                     year: string;
-                }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
                 }[];
             } & {
                 id: string;
@@ -167,26 +167,26 @@ export declare class DoulaController {
     updateRegions(dto: UpdateDoulaRegionDto, req: any): Promise<{
         message: string;
         data: {
+            Region: {
+                id: string;
+                is_active: boolean;
+                createdAt: Date;
+                updatedAt: Date;
+                zoneManagerId: string | null;
+                pincode: string;
+                regionName: string;
+                district: string;
+                state: string;
+                country: string;
+                latitude: string;
+                longitude: string;
+            }[];
             zoneManager: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 userId: string | null;
                 profile_image: string | null;
-            }[];
-            Region: {
-                id: string;
-                is_active: boolean;
-                createdAt: Date;
-                updatedAt: Date;
-                regionName: string;
-                pincode: string;
-                district: string;
-                state: string;
-                country: string;
-                latitude: string;
-                longitude: string;
-                zoneManagerId: string | null;
             }[];
         } & {
             id: string;

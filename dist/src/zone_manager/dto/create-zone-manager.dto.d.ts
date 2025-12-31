@@ -3,4 +3,5 @@ export declare class CreateZoneManagerDto {
     email: string;
     phone: string;
     regionIds: string[];
+    profile_image?: any;
 }
