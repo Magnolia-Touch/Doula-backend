@@ -947,6 +947,119 @@ let ZoneManagerService = class ZoneManagerService {
             message: 'Doula profile updated successfully',
         };
     }
+    async recentActivityForZoneManager(userId) {
+        const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+            where: { userId },
+            include: {
+                managingRegion: {
+                    select: { id: true },
+                },
+            },
+        });
+        if (!zoneManager) {
+            throw new Error('Zone manager profile not found');
+        }
+        const regionIds = zoneManager.managingRegion.map(r => r.id);
+        const bookings = await this.prisma.serviceBooking.findMany({
+            where: {
+                regionId: { in: regionIds },
+            },
+            include: {
+                client: {
+                    include: {
+                        user: { select: { name: true } },
+                    },
+                },
+                DoulaProfile: {
+                    include: {
+                        user: { select: { name: true } },
+                    },
+                },
+            },
+        });
+        const meetings = await this.prisma.meetings.findMany({
+            where: {
+                zoneManagerProfileId: zoneManager.id,
+            },
+            include: {
+                bookedBy: {
+                    include: {
+                        user: { select: { name: true } },
+                    },
+                },
+            },
+        });
+        const galleryImages = await this.prisma.doulaGallery.findMany({
+            where: {
+                doulaProfile: {
+                    zoneManager: {
+                        some: { id: zoneManager.id },
+                    },
+                },
+            },
+            include: {
+                doulaProfile: {
+                    include: {
+                        user: { select: { name: true } },
+                    },
+                },
+            },
+        });
+        const bookingActivities = bookings.flatMap((booking) => {
+            const activities = [];
+            activities.push({
+                id: booking.id,
+                entityType: 'BOOKING',
+                entityId: booking.id,
+                action: 'BOOKING_CREATED',
+                title: 'New Booking Created',
+                description: `${booking.client.user.name} booked ${booking.DoulaProfile.user.name}`,
+                date: booking.createdAt,
+            });
+            if (booking.status === 'COMPLETED') {
+                activities.push({
+                    id: booking.id,
+                    entityType: 'BOOKING',
+                    entityId: booking.id,
+                    action: 'BOOKING_COMPLETED',
+                    title: 'Booking Completed',
+                    description: `Booking between ${booking.client.user.name} and ${booking.DoulaProfile.user.name} completed`,
+                    date: booking.updatedAt,
+                });
+            }
+            if (booking.status === 'CANCELED') {
+                activities.push({
+                    id: booking.id,
+                    entityType: 'BOOKING',
+                    entityId: booking.id,
+                    action: 'BOOKING_CANCELED',
+                    title: 'Booking Canceled',
+                    description: `Booking between ${booking.client.user.name} and ${booking.DoulaProfile.user.name} was canceled`,
+                    date: booking.updatedAt,
+                });
+            }
+            return activities;
+        });
+        const meetingActivities = meetings.map((meeting) => ({
+            id: meeting.id,
+            entityType: 'MEETING',
+            entityId: meeting.id,
+            action: 'MEETING_SCHEDULED',
+            title: 'Meeting Scheduled',
+            description: `Meeting scheduled with ${meeting.bookedBy.user.name}`,
+            date: meeting.createdAt,
+        }));
+        const galleryActivities = galleryImages.map((image) => ({
+            id: image.id,
+            entityType: 'GALLERY',
+            entityId: image.id,
+            action: 'GALLERY_IMAGE_ADDED',
+            title: 'Gallery Image Added',
+            description: `New gallery image added for ${image.doulaProfile.user.name}`,
+            date: image.createdAt,
+        }));
+        return [...bookingActivities, ...meetingActivities, ...galleryActivities].sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
 };
 exports.ZoneManagerService = ZoneManagerService;
 exports.ZoneManagerService = ZoneManagerService = __decorate([

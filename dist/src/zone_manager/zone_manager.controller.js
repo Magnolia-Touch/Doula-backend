@@ -140,6 +140,14 @@ let ZoneManagerController = class ZoneManagerController {
     async updateDoulaProfile(req, dto, doulaId) {
         return this.service.updateDoulaProfile(doulaId, dto, req.user.id);
     }
+    async recentActivity(req) {
+        const userId = req.user.id;
+        return {
+            status: 'success',
+            message: 'Recent activity fetched',
+            data: await this.service.recentActivityForZoneManager(userId),
+        };
+    }
 };
 exports.ZoneManagerController = ZoneManagerController;
 __decorate([
@@ -964,6 +972,48 @@ __decorate([
     __metadata("design:paramtypes", [Object, update_doula_dto_1.UpdateDoulaProfileDto, String]),
     __metadata("design:returntype", Promise)
 ], ZoneManagerController.prototype, "updateDoulaProfile", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Get)('recent/activity'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get recent activity for zone manager' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Recent activity fetched successfully',
+        schema: {
+            example: {
+                status: 'success',
+                message: 'Recent activity fetched',
+                data: [
+                    {
+                        id: 'a12b34c5',
+                        entityType: 'BOOKING',
+                        entityId: 'a12b34c5',
+                        action: 'BOOKING_CREATED',
+                        title: 'New Booking Created',
+                        description: 'Jane Doe booked Anita Sharma',
+                        date: '2025-12-31T08:45:21.000Z',
+                    },
+                    {
+                        id: 'm45c98d1',
+                        entityType: 'MEETING',
+                        entityId: 'm45c98d1',
+                        action: 'MEETING_SCHEDULED',
+                        title: 'Meeting Scheduled',
+                        description: 'Meeting scheduled with Jane Doe',
+                        date: '2025-12-31T07:30:00.000Z',
+                    },
+                ],
+            },
+        },
+    }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Unauthorized' }),
+    (0, swagger_1.ApiForbiddenResponse)({ description: 'Forbidden – not a zone manager' }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ZoneManagerController.prototype, "recentActivity", null);
 exports.ZoneManagerController = ZoneManagerController = __decorate([
     (0, swagger_1.ApiTags)('Zone Managers'),
     (0, swagger_1.ApiBearerAuth)(),

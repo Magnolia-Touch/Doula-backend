@@ -56,46 +56,61 @@ class UpdateDoulaProfileDto {
 }
 exports.UpdateDoulaProfileDto = UpdateDoulaProfileDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
+    (0, swagger_1.ApiProperty)({ example: 'Bambini Doula', required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateDoulaProfileDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: true }),
+    (0, swagger_1.ApiProperty)({ example: true, required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateDoulaProfileDto.prototype, "is_active", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'John Doe' }),
+    (0, swagger_1.ApiProperty)({ example: "Certified birth doula with  10 years of experience", required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateDoulaProfileDto.prototype, "about", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'null', required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateDoulaProfileDto.prototype, "achievements", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'physiology of pregnancy/labor', required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateDoulaProfileDto.prototype, "qualification", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 2, required: false }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdateDoulaProfileDto.prototype, "experience", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: ["English", "Hindi", "Tamil"] }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Object)
 ], UpdateDoulaProfileDto.prototype, "languages", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: ["Prenatal Care", "Postpartum Support"] }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Object)
 ], UpdateDoulaProfileDto.prototype, "specialities", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: {
+            "certificateId": "767a0cc7-1935-498f-8014-5d841d75fb2b",
+            "data": {
+                "name": "Advanceda Birth Support",
+                "issuedBy": "WHO",
+                "year": "2022"
+            }
+        }
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
@@ -103,6 +118,16 @@ __decorate([
     __metadata("design:type", Array)
 ], UpdateDoulaProfileDto.prototype, "certificates", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: {
+            "servicePricingId": "243fdd15-587d-4e1d-8009-4b360904f013",
+            "price": {
+                "morning": 1000,
+                "night": 10,
+                "fullday": 10
+            }
+        }
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),

@@ -12,4 +12,6 @@ export declare class CreateDoulaDto {
     specialities: string;
     certificates?: string;
     get parsedCertificates(): CreateCertificateDto[];
+    profile_image?: any;
+    gallery_image?: any[];
 }

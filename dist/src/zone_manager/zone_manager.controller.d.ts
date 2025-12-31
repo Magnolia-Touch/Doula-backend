@@ -19,14 +19,14 @@ export declare class ZoneManagerController {
                 userId: string | null;
             } | null;
         } & {
-            name: string;
-            is_active: boolean;
             id: string;
+            name: string;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -104,14 +104,14 @@ export declare class ZoneManagerController {
     UpdateManagerStatus(id: string, isActive: boolean): Promise<{
         message: string;
         data: {
-            name: string;
-            is_active: boolean;
             id: string;
+            name: string;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -291,5 +291,18 @@ export declare class ZoneManagerController {
     }>;
     updateDoulaProfile(req: any, dto: UpdateDoulaProfileDto, doulaId: string): Promise<{
         message: string;
+    }>;
+    recentActivity(req: any): Promise<{
+        status: string;
+        message: string;
+        data: {
+            id: string;
+            entityType: "BOOKING" | "MEETING" | "DOULA" | "GALLERY";
+            entityId: string;
+            action: "BOOKING_CREATED" | "BOOKING_COMPLETED" | "BOOKING_CANCELED" | "MEETING_SCHEDULED" | "MEETING_COMPLETED" | "MEETING_CANCELED" | "DOULA_PROFILE_UPDATED" | "GALLERY_IMAGE_ADDED";
+            title: string;
+            description: string;
+            date: Date;
+        }[];
     }>;
 }

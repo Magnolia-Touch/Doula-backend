@@ -109,4 +109,26 @@ export class CreateDoulaDto {
     );
   }
 
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: false,
+    description: 'Profile image (jpg, jpeg, png)',
+  })
+  profile_image?: any;
+
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'string',
+      format: 'binary',
+    },
+    required: false,
+    description: 'Gallery images (jpg, jpeg, png). Max 5 files.',
+  })
+  gallery_image?: any[];
+
+
+
+
 }

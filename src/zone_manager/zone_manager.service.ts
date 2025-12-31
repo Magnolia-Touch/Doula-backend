@@ -22,6 +22,24 @@ import {
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 
+type ZoneManagerRecentActivity = {
+  id: string;                // activity id (derived from source record)
+  entityType: 'BOOKING' | 'MEETING' | 'DOULA' | 'GALLERY';
+  entityId: string;          // bookingId / meetingId / doulaId / galleryId
+  action:
+  | 'BOOKING_CREATED'
+  | 'BOOKING_COMPLETED'
+  | 'BOOKING_CANCELED'
+  | 'MEETING_SCHEDULED'
+  | 'MEETING_COMPLETED'
+  | 'MEETING_CANCELED'
+  | 'DOULA_PROFILE_UPDATED'
+  | 'GALLERY_IMAGE_ADDED';
+  title: string;
+  description: string;
+  date: Date;
+};
+
 @Injectable()
 export class ZoneManagerService {
   constructor(private prisma: PrismaService) { }
@@ -1312,6 +1330,159 @@ export class ZoneManagerService {
     return {
       message: 'Doula profile updated successfully',
     };
+  }
+  async recentActivityForZoneManager(userId: string) {
+    // 1. Get zone manager profile
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId },
+      include: {
+        managingRegion: {
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!zoneManager) {
+      throw new Error('Zone manager profile not found');
+    }
+
+    const regionIds = zoneManager.managingRegion.map(r => r.id);
+
+    /* ----------------------------------------------------
+     * 2. Fetch bookings in managed regions
+     * -------------------------------------------------- */
+    const bookings = await this.prisma.serviceBooking.findMany({
+      where: {
+        regionId: { in: regionIds },
+      },
+      include: {
+        client: {
+          include: {
+            user: { select: { name: true } },
+          },
+        },
+        DoulaProfile: {
+          include: {
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    /* ----------------------------------------------------
+     * 3. Fetch meetings hosted by zone manager
+     * -------------------------------------------------- */
+    const meetings = await this.prisma.meetings.findMany({
+      where: {
+        zoneManagerProfileId: zoneManager.id,
+      },
+      include: {
+        bookedBy: {
+          include: {
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    /* ----------------------------------------------------
+     * 4. Fetch gallery image additions (optional but useful)
+     * -------------------------------------------------- */
+    const galleryImages = await this.prisma.doulaGallery.findMany({
+      where: {
+        doulaProfile: {
+          zoneManager: {
+            some: { id: zoneManager.id },
+          },
+        },
+      },
+      include: {
+        doulaProfile: {
+          include: {
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    /* ----------------------------------------------------
+     * 5. Map activities
+     * -------------------------------------------------- */
+    const bookingActivities: ZoneManagerRecentActivity[] = bookings.flatMap(
+      (booking) => {
+        const activities: ZoneManagerRecentActivity[] = [];
+
+        // Booking created
+        activities.push({
+          id: booking.id,
+          entityType: 'BOOKING',
+          entityId: booking.id,
+          action: 'BOOKING_CREATED',
+          title: 'New Booking Created',
+          description: `${booking.client.user.name} booked ${booking.DoulaProfile.user.name}`,
+          date: booking.createdAt,
+        });
+
+        // Booking completed
+        if (booking.status === 'COMPLETED') {
+          activities.push({
+            id: booking.id,
+            entityType: 'BOOKING',
+            entityId: booking.id,
+            action: 'BOOKING_COMPLETED',
+            title: 'Booking Completed',
+            description: `Booking between ${booking.client.user.name} and ${booking.DoulaProfile.user.name} completed`,
+            date: booking.updatedAt,
+          });
+        }
+
+        // Booking canceled
+        if (booking.status === 'CANCELED') {
+          activities.push({
+            id: booking.id,
+            entityType: 'BOOKING',
+            entityId: booking.id,
+            action: 'BOOKING_CANCELED',
+            title: 'Booking Canceled',
+            description: `Booking between ${booking.client.user.name} and ${booking.DoulaProfile.user.name} was canceled`,
+            date: booking.updatedAt,
+          });
+        }
+
+        return activities;
+      },
+    );
+
+    const meetingActivities: ZoneManagerRecentActivity[] = meetings.map(
+      (meeting) => ({
+        id: meeting.id,
+        entityType: 'MEETING',
+        entityId: meeting.id,
+        action: 'MEETING_SCHEDULED',
+        title: 'Meeting Scheduled',
+        description: `Meeting scheduled with ${meeting.bookedBy.user.name}`,
+        date: meeting.createdAt,
+      }),
+    );
+
+    const galleryActivities: ZoneManagerRecentActivity[] = galleryImages.map(
+      (image) => ({
+        id: image.id,
+        entityType: 'GALLERY',
+        entityId: image.id,
+        action: 'GALLERY_IMAGE_ADDED',
+        title: 'Gallery Image Added',
+        description: `New gallery image added for ${image.doulaProfile.user.name}`,
+        date: image.createdAt,
+      }),
+    );
+
+    /* ----------------------------------------------------
+     * 6. Merge & sort
+     * -------------------------------------------------- */
+    return [...bookingActivities, ...meetingActivities, ...galleryActivities].sort(
+      (a, b) => b.date.getTime() - a.date.getTime(),
+    );
   }
 
 }

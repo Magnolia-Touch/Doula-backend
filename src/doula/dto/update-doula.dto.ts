@@ -46,7 +46,7 @@ export class UpdateDoulaProfileDto {
   @IsString()
   achievements?: string;
 
-  @ApiProperty({ example: 'John Doe' })
+  @ApiProperty({ example: 'physiology of pregnancy/labor', required: false })
   @IsOptional()
   @IsString()
   qualification?: string;
@@ -55,16 +55,25 @@ export class UpdateDoulaProfileDto {
   @IsOptional()
   experience?: number;
 
-  @ApiProperty({ example: 'John Doe' })
+  @ApiProperty({ example: ["English", "Hindi", "Tamil"] })
   @IsOptional()
   languages?: any;
 
 
-  @ApiProperty({ example: 'John Doe' })
+  @ApiProperty({ example: ["Prenatal Care", "Postpartum Support"] })
   @IsOptional()
   specialities?: any;
 
-  @ApiProperty({ example: 'John Doe' })
+  @ApiProperty({
+    example: {
+      "certificateId": "767a0cc7-1935-498f-8014-5d841d75fb2b",
+      "data": {
+        "name": "Advanceda Birth Support",
+        "issuedBy": "WHO",
+        "year": "2022"
+      }
+    }
+  })
   // ✅ Certificate edits
   @IsOptional()
   @IsArray()
@@ -73,7 +82,16 @@ export class UpdateDoulaProfileDto {
   certificates?: UpdateCertificateItemDto[];
 
 
-  @ApiProperty({ example: 'John Doe' })
+  @ApiProperty({
+    example: {
+      "servicePricingId": "243fdd15-587d-4e1d-8009-4b360904f013",
+      "price": {
+        "morning": 1000,
+        "night": 10,
+        "fullday": 10
+      }
+    }
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

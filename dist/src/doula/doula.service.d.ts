@@ -15,18 +15,18 @@ export declare class DoulaService {
         message: string;
         data: ({
             doulaProfile: ({
-                zoneManager: {
-                    id: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    profile_image: string | null;
-                    userId: string | null;
-                }[];
                 Region: {
                     id: string;
                     regionName: string;
                     pincode: string;
                     zoneManagerId: string | null;
+                }[];
+                zoneManager: {
+                    profile_image: string | null;
+                    id: string;
+                    userId: string | null;
+                    createdAt: Date;
+                    updatedAt: Date;
                 }[];
                 DoulaGallery: {
                     id: string;
@@ -46,27 +46,27 @@ export declare class DoulaService {
                 description: string | null;
                 achievements: string | null;
                 qualification: string | null;
+                yoe: number | null;
                 languages: Prisma.JsonValue | null;
                 specialities: Prisma.JsonValue | null;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 profile_image: string | null;
+                id: string;
                 userId: string;
                 regionId: string | null;
-                yoe: number | null;
+                createdAt: Date;
+                updatedAt: Date;
             }) | null;
         } & {
             name: string;
-            is_active: boolean;
-            id: string;
             email: string;
             phone: string | null;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            createdAt: Date;
-            updatedAt: Date;
+            is_active: boolean;
         }) | null;
     }>;
     get(page?: number, limit?: number, search?: string, serviceId?: string, isAvailable?: boolean, isActive?: boolean, regionName?: string, minExperience?: number, serviceName?: string, startDate?: string, endDate?: string): Promise<{
@@ -152,32 +152,25 @@ export declare class DoulaService {
         message: string;
         data: {
             name: string;
-            is_active: boolean;
-            id: string;
             email: string;
             phone: string | null;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
-            createdAt: Date;
-            updatedAt: Date;
+            is_active: boolean;
         };
     }>;
     UpdateDoulaRegions(dto: UpdateDoulaRegionDto, userId: string): Promise<{
         message: string;
         data: {
-            zoneManager: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                profile_image: string | null;
-                userId: string | null;
-            }[];
             Region: {
-                is_active: boolean;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                is_active: boolean;
                 regionName: string;
                 pincode: string;
                 district: string;
@@ -187,19 +180,26 @@ export declare class DoulaService {
                 longitude: string;
                 zoneManagerId: string | null;
             }[];
+            zoneManager: {
+                profile_image: string | null;
+                id: string;
+                userId: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+            }[];
         } & {
             description: string | null;
             achievements: string | null;
             qualification: string | null;
+            yoe: number | null;
             languages: Prisma.JsonValue | null;
             specialities: Prisma.JsonValue | null;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             profile_image: string | null;
+            id: string;
             userId: string;
             regionId: string | null;
-            yoe: number | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     getDoulaMeetings(user: any, page?: number, limit?: number, date?: string): Promise<{
@@ -351,6 +351,7 @@ export declare class DoulaService {
             births: number;
             experience: number;
             satisfaction: number;
+            qualification: string | null;
             contact: {
                 email: string;
                 phone: string | null;
@@ -381,23 +382,23 @@ export declare class DoulaService {
             description: string | null;
             achievements: string | null;
             qualification: string | null;
+            yoe: number | null;
             languages: Prisma.JsonValue | null;
             specialities: Prisma.JsonValue | null;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             profile_image: string | null;
+            id: string;
             userId: string;
             regionId: string | null;
-            yoe: number | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     getDoulaImages(userId: string): Promise<{
         status: string;
         message: string;
         data: {
-            id: string;
             profile_image: string | null;
+            id: string;
         };
     }>;
     deleteDoulaprofileImage(userId: string): Promise<{
@@ -438,6 +439,7 @@ export declare class DoulaService {
             births: number;
             experience: number;
             satisfaction: number;
+            qualification: string | null;
             contact: {
                 email: string;
                 phone: string | null;

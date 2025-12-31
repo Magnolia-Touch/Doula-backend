@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateDoulaDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const certificate_dto_1 = require("./certificate.dto");
 class CreateDoulaDto {
@@ -34,6 +35,8 @@ class CreateDoulaDto {
         }
         return parsed.map((item) => Object.assign(new certificate_dto_1.CreateCertificateDto(), item));
     }
+    profile_image;
+    gallery_image;
 }
 exports.CreateDoulaDto = CreateDoulaDto;
 __decorate([
@@ -125,4 +128,25 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateDoulaDto.prototype, "certificates", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        type: 'string',
+        format: 'binary',
+        required: false,
+        description: 'Profile image (jpg, jpeg, png)',
+    }),
+    __metadata("design:type", Object)
+], CreateDoulaDto.prototype, "profile_image", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        type: 'array',
+        items: {
+            type: 'string',
+            format: 'binary',
+        },
+        required: false,
+        description: 'Gallery images (jpg, jpeg, png). Max 5 files.',
+    }),
+    __metadata("design:type", Array)
+], CreateDoulaDto.prototype, "gallery_image", void 0);
 //# sourceMappingURL=create-doula.dto.js.map

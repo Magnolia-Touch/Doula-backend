@@ -82,6 +82,130 @@ function multerStorage() {
 export class DoulaController {
   constructor(private readonly service: DoulaService) { }
 
+
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Create Doulas' })
+  @ApiBody({ type: CreateDoulaDto }) // <-- REQUIRED
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Doula created successfully",
+        "data": {
+          "id": "97879cc9-69e0-4d7a-b982-740ae4e179cb",
+          "name": "tomy antony",
+          "email": "tomyyt@gmail.com",
+          "phone": "+918194740535",
+          "otp": null,
+          "otpExpiresAt": null,
+          "role": "DOULA",
+          "is_active": true,
+          "createdAt": "2025-12-22T04:32:17.356Z",
+          "updatedAt": "2025-12-22T04:32:17.356Z",
+          "doulaProfile": {
+            "id": "6ad853d5-7588-4ebf-962c-6df1c116c024",
+            "userId": "97879cc9-69e0-4d7a-b982-740ae4e179cb",
+            "regionId": null,
+            "profile_image": "uploads/doulas/1766377937344-760626556.png",
+            "description": "Experienced postnatal care doula",
+            "achievements": "Handled 200+ successful postnatal cases",
+            "qualification": "BSc Nursing",
+            "yoe": 4,
+            "languages": [
+              "English",
+              "Malayalam",
+              "Hindi"
+            ],
+            "specialities": [
+              "Verified and Certified Professional",
+              "Highly rated by past clients",
+              "Flexible Scheduling options",
+              "Compassionate and personalised care"
+            ],
+            "createdAt": "2025-12-22T04:32:17.356Z",
+            "updatedAt": "2025-12-22T04:32:17.356Z",
+            "ServicePricing": [
+              {
+                "id": "6c1d4738-32ee-4bb6-bebd-8ceb0f8c9c2f",
+                "serviceId": "40d19d10-6a90-4323-a083-e1dc20fb4563",
+                "price": "1000",
+                "service": {
+                  "name": "Postnatal Care",
+                  "description": "Postnatal care and support"
+                }
+              },
+              {
+                "id": "930bc4ea-efdb-4817-9740-6ed5789c91a2",
+                "serviceId": "bed0a696-e695-4b6c-bda4-7d9bf11b8898",
+                "price": "2000",
+                "service": {
+                  "name": "Doula Home Visit",
+                  "description": "Home care service"
+                }
+              }
+            ],
+            "Region": [
+              {
+                "id": "4c8b7feb-a263-480c-9279-06baecacb0bc",
+                "regionName": "Kochi",
+                "pincode": "682002",
+                "zoneManagerId": "9ec64ea8-4f43-4642-872c-5e8eb5d13de9"
+              }
+            ],
+            "zoneManager": [
+              {
+                "id": "9ec64ea8-4f43-4642-872c-5e8eb5d13de9",
+                "userId": "6b6772d0-b4a5-49e0-bbe5-29767e620ce2",
+                "profile_image": "uploads/manager/1766377852442-318850550.png",
+                "createdAt": "2025-12-22T04:30:52.493Z",
+                "updatedAt": "2025-12-22T04:30:52.493Z"
+              }
+            ],
+            "DoulaGallery": [
+              {
+                "id": "265113dd-ae8a-4297-959a-b4b56a95dabf",
+                "doulaProfileId": "6ad853d5-7588-4ebf-962c-6df1c116c024",
+                "url": "uploads/doulas/1766377937340-729624394.png",
+                "altText": null,
+                "createdAt": "2025-12-22T04:32:17.356Z"
+              },
+              {
+                "id": "6f7e8b5e-9948-4630-aa74-45f43a82d2c6",
+                "doulaProfileId": "6ad853d5-7588-4ebf-962c-6df1c116c024",
+                "url": "uploads/doulas/1766377937343-471483407.png",
+                "altText": null,
+                "createdAt": "2025-12-22T04:32:17.356Z"
+              },
+              {
+                "id": "b5b9ed24-80a5-4748-97c8-f62b563481d9",
+                "doulaProfileId": "6ad853d5-7588-4ebf-962c-6df1c116c024",
+                "url": "uploads/doulas/1766377937342-721963515.png",
+                "altText": null,
+                "createdAt": "2025-12-22T04:32:17.356Z"
+              }
+            ],
+            "Certificates": [
+              {
+                "id": "68c8def5-26ac-44d6-a6ec-4998496a9df8",
+                "name": "Postpartum Care",
+                "issuedBy": "XYZ Org",
+                "year": "2023",
+                "doulaProfileId": "6ad853d5-7588-4ebf-962c-6df1c116c024"
+              },
+              {
+                "id": "9d23e82e-6c48-4e96-834a-49601c80e4a4",
+                "name": "Childbirth Educator",
+                "issuedBy": "ABC Institute",
+                "year": "2021",
+                "doulaProfileId": "6ad853d5-7588-4ebf-962c-6df1c116c024"
+              }
+            ]
+          }
+        }
+      }
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'ZONE_MANAGER')
   @Post()
@@ -107,7 +231,6 @@ export class DoulaController {
       },
     ),
   )
-  @ApiConsumes('multipart/form-data')
   async create(
     @Body() dto: CreateDoulaDto,
     @Req() req,
@@ -157,28 +280,20 @@ export class DoulaController {
     };
   }
 
-  // GET LIST
-  @Get()
-  @ApiOperation({ summary: 'Get all doulas with filters & pagination' })
 
-  // pagination
+  @Get()
+  @ApiOperation({ summary: 'Fetch All Doulas' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
-
-  // search
   @ApiQuery({
     name: 'search',
     required: false,
     type: String,
     description: 'Search by name, email, phone, region',
   })
-
-  // existing filters
   @ApiQuery({ name: 'serviceId', required: false, type: String })
   @ApiQuery({ name: 'isAvailable', required: false, type: Boolean })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
-
-  // new filters
   @ApiQuery({ name: 'regionName', required: false, type: String })
   @ApiQuery({
     name: 'minExperience',
@@ -199,8 +314,140 @@ export class DoulaController {
     type: String,
     description: 'ISO date yyyy-MM-dd',
   })
-  @ApiOkResponse({
-    description: 'Returns a filtered & paginated list of doulas',
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Doulas fetched successfully",
+        "data": [
+          {
+            "userId": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
+            "isActive": true,
+            "name": "Reena Smith",
+            "email": "doula@test.com",
+            "profileId": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+            "yoe": 6,
+            "profile_image": "uploads/doulas/1767154501903-168020899.png",
+            "serviceNames": [
+              {
+                "servicePricingId": "0b4a9cc8-3ce5-4039-858d-9b60cb8b381f",
+                "serviceId": "26c11b42-417c-4e37-8543-4ef609646718",
+                "serviceName": "Birth Doula",
+                "price": {
+                  "night": 12,
+                  "fullday": 12,
+                  "morning": 12
+                }
+              },
+              {
+                "servicePricingId": "0cee20c7-14e5-498f-ab73-a5b8e38cac02",
+                "serviceId": "41bb32e6-ae80-4a9c-8cd9-855f98ced1b2",
+                "serviceName": "Post Partum Doula",
+                "price": {
+                  "night": 1900,
+                  "fullday": 1900,
+                  "morning": 1900
+                }
+              },
+              {
+                "servicePricingId": "4924b14a-5b80-46f9-bb7e-29e89ed7c55b",
+                "serviceId": "41bb32e6-ae80-4a9c-8cd9-855f98ced1b2",
+                "serviceName": "Post Partum Doula",
+                "price": {
+                  "night": 5,
+                  "fullday": 5,
+                  "morning": 5
+                }
+              },
+              {
+                "servicePricingId": "5ef3ddd2-e058-4d9c-b7cb-288e0baaa14a",
+                "serviceId": "41bb32e6-ae80-4a9c-8cd9-855f98ced1b2",
+                "serviceName": "Post Partum Doula",
+                "price": {
+                  "night": 15,
+                  "fullday": 15,
+                  "morning": 15
+                }
+              },
+              {
+                "servicePricingId": "a7e7ebcc-8855-4c08-b6c1-76132ba676a6",
+                "serviceId": "41bb32e6-ae80-4a9c-8cd9-855f98ced1b2",
+                "serviceName": "Post Partum Doula",
+                "price": {
+                  "night": 10,
+                  "fullday": 10,
+                  "morning": 1000
+                }
+              },
+              {
+                "servicePricingId": "c671c36c-5ec4-4f8a-ba49-74ff6e5dc415",
+                "serviceId": "41bb32e6-ae80-4a9c-8cd9-855f98ced1b2",
+                "serviceName": "Post Partum Doula",
+                "price": {
+                  "night": 56,
+                  "fullday": 56,
+                  "morning": 56
+                }
+              },
+              {
+                "servicePricingId": "f00e2a99-b097-4c3c-9783-75d5d09ba497",
+                "serviceId": "26c11b42-417c-4e37-8543-4ef609646718",
+                "serviceName": "Birth Doula",
+                "price": {
+                  "night": 1,
+                  "fullday": 100,
+                  "morning": 1
+                }
+              }
+            ],
+            "regionNames": [
+              {
+                "id": "b6d5f121-9e09-436f-af18-39f3e5a824c7",
+                "name": "North Mumbai"
+              }
+            ],
+            "ratings": 4.666666666666667,
+            "reviewsCount": 3,
+            "isAvailable": null,
+            "nextImmediateAvailabilityDate": "2042-10-29T00:00:00.000Z",
+            "images": [
+              {
+                "id": "57c4ba33-5029-4123-8051-ddfa6aad2b06",
+                "url": "uploads/doulas/1767165269144-747759397.jpeg",
+                "isPrimary": false
+              },
+              {
+                "id": "97c0e4c8-54c5-4f72-8120-86803a4a9592",
+                "url": "uploads/doulas/1767154479164-287555438.png",
+                "isPrimary": false
+              }
+            ],
+            "certificates": [
+              {
+                "id": "1d87d45c-9730-423e-8fff-0b7ba21d95db",
+                "name": "Advanceda Birth Support",
+                "issuedBy": "WHO",
+                "year": "2022"
+              },
+              {
+                "id": "d9907ca6-01fd-47e3-af61-65d555028982",
+                "name": "Childbirth Educator",
+                "issuedBy": "ABC Institute",
+                "year": "2021"
+              }
+            ]
+          }
+        ],
+        "meta": {
+          "total": 1,
+          "page": 1,
+          "limit": 100,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPrevPage": false
+        }
+      }
+    }
   })
   async get(
     @Query('page') page = 1,
@@ -209,7 +456,6 @@ export class DoulaController {
     @Query('serviceId') serviceId?: string,
     @Query('isAvailable') isAvailable?: boolean,
     @Query('isActive') isActive?: boolean,
-
     @Query('regionName') regionName?: string,
     @Query('minExperience') minExperience?: number,
     @Query('serviceName') serviceName?: string,
@@ -234,22 +480,94 @@ export class DoulaController {
 
   // GET BY ID
   @Get(':id')
-  @ApiOperation({ summary: 'Get a Doula by ID' })
+  @ApiOperation({ summary: 'Retrieve Doula using ID' })
   @ApiParam({ name: 'id', required: true, description: 'Doula UUID' })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'Doula fetched',
-        data: {
-          id: 'doula-uuid',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-          phone: '+919876543210',
-          regions: [{ id: 'region-1', name: 'Region A' }],
-        },
+        "status": "success",
+        "message": "Doula fetched successfully",
+        "data": {
+          "userId": "305cd275-b043-4533-bf37-c2903c314e84",
+          "name": "manju warrie",
+          "email": "manju@gmail.com",
+          "profileId": "d79fee60-f541-4de3-aa29-09486867308c",
+          "yoe": 4,
+          "specialities": [
+            "Verified and Certified Professional",
+            "Highly rated by past clients",
+            "Flexible Scheduling options",
+            "Compassionate and personalised care"
+          ],
+          "description": "Experienced postnatal care doula",
+          "qualification": "BSc Nursing",
+          "profileImage": "uploads/doulas/1766571959818-993549016.png",
+          "serviceNames": [
+            {
+              "servicePricingId": "485ca59d-4442-4ac7-bf72-ec55ab08e884",
+              "serviceId": "9bb22e28-994a-4451-af86-785deb6da2f0",
+              "serviceName": "Postnatal Care",
+              "price": {
+                "night": 1030,
+                "fullday": 1030,
+                "morning": 1030
+              }
+            }
+          ],
+          "regionNames": [
+            {
+              "id": "03df8114-cecc-494b-894f-43bd0293e87a",
+              "name": "Kochi"
+            }
+          ],
+          "ratings": 4,
+          "reviewsCount": 1,
+          "nextImmediateAvailabilityDate": null,
+          "galleryImages": [
+            {
+              "id": "27a1b271-2292-40d5-923f-a2f74d7f1566",
+              "url": "uploads/doulas/1766571959814-977031325.png",
+              "createdAt": "2025-12-24T10:25:59.824Z"
+            },
+            {
+              "id": "a4f3e4c9-a5b6-4af6-b9c1-829e11bd7958",
+              "url": "uploads/doulas/1766571959816-234739904.png",
+              "createdAt": "2025-12-24T10:25:59.824Z"
+            },
+            {
+              "id": "e60d0c47-c96d-4b6f-a3a3-750829f55ea2",
+              "url": "uploads/doulas/1766571959812-808086411.png",
+              "createdAt": "2025-12-24T10:25:59.824Z"
+            }
+          ],
+          "certificates": [
+            {
+              "id": "55d13dc1-d810-4c56-8f3b-92006a584cf1",
+              "name": "Postpartum Care",
+              "issuedBy": "XYZ Org",
+              "year": "2023"
+            },
+            {
+              "id": "78a677de-eec7-49f9-a068-5dac65569a0c",
+              "name": "Childbirth Educator",
+              "issuedBy": "ABC Institute",
+              "year": "2021"
+            }
+          ],
+          "testimonials": [
+            {
+              "id": "8425771a-06a9-415f-ad4e-8df79840d2fb",
+              "rating": 4,
+              "review": "Excellent service by manju warrie. Highly recommended.",
+              "clientName": "Suni",
+              "clientId": "6f2da163-44d1-4f6f-a5b2-8b946c664569",
+              "serviceId": "485ca59d-4442-4ac7-bf72-ec55ab08e884",
+              "createdAt": "2025-12-24T10:26:08.514Z"
+            }
+          ]
+        }
       },
     },
   })
@@ -261,13 +579,20 @@ export class DoulaController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'ZONE_MANAGER')
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a Doula' })
+  @ApiOperation({ summary: 'Delete Doula using ID' })
   @ApiParam({ name: 'id', required: true, description: 'Doula UUID' })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
     schema: {
-      example: { success: true, message: 'Doula deleted', data: null },
+      example: {
+        "status": "success",
+        "message": "Doula deleted successfully",
+        "data": {
+          "message": "Doula deleted successfully",
+          "data": null
+        }
+      },
     },
   })
   async delete(@Param('id') id: string) {
@@ -275,23 +600,34 @@ export class DoulaController {
   }
 
   // UPDATE STATUS
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'ZONE_MANAGER')
-  @Patch(':id/update/status/')
-  @ApiOperation({ summary: 'Update Doula status' })
-  @ApiParam({ name: 'id', description: 'Doula ID' })
+  @ApiOperation({ summary: "Update Doula's status" })
+  @ApiParam({ name: 'id', description: 'Doula ID', required: true })
   @ApiBody({ type: UpdateDoulaStatusDto })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'Status updated',
-        data: { id: 'doula-uuid', isActive: true },
-      },
+        "status": "success",
+        "message": "Doula status updated successfully",
+        "data": {
+          "id": "c9a2b97c-2952-466e-a3c3-ef2d7a429fe8",
+          "name": "Doula 1",
+          "email": "doula1@example.com",
+          "phone": "+919876543111",
+          "otp": null,
+          "otpExpiresAt": null,
+          "role": "DOULA",
+          "is_active": true,
+          "createdAt": "2025-11-25T14:54:28.899Z",
+          "updatedAt": "2025-11-25T15:27:59.960Z"
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'ZONE_MANAGER')
+  @Patch(':id/update/status/')
   async updateStatus(
     @Param('id') id: string,
     @Body() body: UpdateDoulaStatusDto,
@@ -300,62 +636,159 @@ export class DoulaController {
   }
 
   // UPDATE DOULA REGIONS
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'ZONE_MANAGER')
-  @Patch('update/regions')
   @ApiOperation({ summary: 'Add or remove regions from a Doula' })
-  @ApiBody({ type: UpdateDoulaRegionDto })
+  @ApiBody({
+    schema: {
+      example: {
+        "profileId": "090a1073-a2b6-461f-90de-86d437dd4648",
+        "regionIds": [
+          "03df8114-cecc-494b-894f-43bd0293e87a"
+        ],
+        "purpose": "add" //add or remove
+      }
+
+    }
+  })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: true,
-        message: 'Doula regions updated',
-        data: {
-          profileId: 'profile-uuid',
-          regionIds: ['r1', 'r2'],
-          purpose: 'add',
-        },
-      },
+        "status": "success",
+        "message": "Regions added successfully",
+        "data": {
+          "id": "ba67e5af-01b5-468d-a10a-046937185c7b",
+          "userId": "d1bc1741-03d0-4204-9abd-2a043652e495",
+          "regionId": null,
+          "createdAt": "2025-11-25T15:33:18.922Z",
+          "updatedAt": "2025-11-25T15:33:18.922Z",
+          "Region": [
+            {
+              "id": "5578d49b-d2ab-4a28-9e55-e6e2e5b1d2ce",
+              "regionName": "North Mumbai",
+              "pincode": "4999032",
+              "district": "Mumbai Suburban",
+              "state": "Maharashtra",
+              "country": "India",
+              "latitude": "19.1136",
+              "longitude": "72.8697",
+              "is_active": true,
+              "createdAt": "2025-11-25T12:54:48.643Z",
+              "updatedAt": "2025-11-25T14:25:31.492Z",
+              "zoneManagerId": "173a8866-42da-4500-b20c-c609014d214c"
+            },
+            {
+              "id": "9629c142-e499-4f1c-862b-02ec49975f13",
+              "regionName": "North Mumbai",
+              "pincode": "4999031",
+              "district": "Mumbai Suburban",
+              "state": "Maharashtra",
+              "country": "India",
+              "latitude": "19.1136",
+              "longitude": "72.8697",
+              "is_active": true,
+              "createdAt": "2025-11-25T12:54:45.630Z",
+              "updatedAt": "2025-11-25T14:44:33.766Z",
+              "zoneManagerId": "173a8866-42da-4500-b20c-c609014d214c"
+            },
+            {
+              "id": "ef23b992-c9e7-4525-9316-a85fc1079b1d",
+              "regionName": "North Mumbai",
+              "pincode": "4999035",
+              "district": "Mumbai Suburban",
+              "state": "Maharashtra",
+              "country": "India",
+              "latitude": "19.1136",
+              "longitude": "72.8697",
+              "is_active": true,
+              "createdAt": "2025-11-25T13:18:08.441Z",
+              "updatedAt": "2025-11-25T14:25:31.492Z",
+              "zoneManagerId": "173a8866-42da-4500-b20c-c609014d214c"
+            }
+          ],
+          "zoneManager": [
+            {
+              "id": "173a8866-42da-4500-b20c-c609014d214c",
+              "userId": "9f9bc3d6-05fc-4f1f-b5b3-d9a07117bff7",
+              "createdAt": "2025-11-25T14:25:31.492Z",
+              "updatedAt": "2025-11-25T14:25:31.492Z"
+            }
+          ]
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'ZONE_MANAGER')
+  @Patch('update/regions')
   async updateRegions(@Body() dto: UpdateDoulaRegionDto, @Req() req) {
     return this.service.UpdateDoulaRegions(dto, req.user.id);
   }
 
   // UPDATE DOULA REGIONS
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
-  @Get('app/meetings')
-  @ApiOperation({ summary: 'Get Meetings of Doula' })
+  @ApiOperation({ summary: 'Fetch All Meetings of Doula' })
+  @ApiBearerAuth('access-token')
   @ApiQuery({ name: 'date', required: false, example: '2025-01-20' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 10 })
+  @ApiQuery({ name: 'page', example: 1 })
+  @ApiQuery({ name: 'limit', example: 10 })
   @ApiResponse({
     status: 200,
     schema: {
       example: {
-        success: true,
-        message: 'Doula meetings fetched successfully',
-        data: [
+        "status": "success",
+        "message": "Doula meetings fetched successfully",
+        "data": [
           {
-            date: '2025-01-20T00:00:00.000Z',
-            serviceName: 'Postnatal Consultation',
-            clientName: 'Anita Joseph',
+            "meetingId": "2be347b8-2577-4be5-99a0-90b064d25bf2",
+            "date": "2025-12-23T00:00:00.000Z",
+            "serviceName": "Postnatal Care",
+            "clientName": "Test Client"
           },
+          {
+            "meetingId": "93ee18dd-d9c7-4af0-bf29-f26ecf7419ac",
+            "date": "2025-12-20T00:00:00.000Z",
+            "serviceName": "Postnatal Care",
+            "clientName": "Test Client"
+          },
+          {
+            "meetingId": "16233725-e8b2-4e69-a743-48ff4cf78a5b",
+            "date": "2025-12-01T00:00:00.000Z",
+            "serviceName": "Doula Consultation",
+            "clientName": "Client User"
+          },
+          {
+            "meetingId": "a05d0aa2-6cee-4d2e-83f5-69fd87006a1e",
+            "date": "2025-12-01T00:00:00.000Z",
+            "serviceName": "Doula Consultation",
+            "clientName": "Client User"
+          },
+          {
+            "meetingId": "48b6dd6d-4581-44bd-98e0-cca4bb36c370",
+            "date": "2025-11-30T00:00:00.000Z",
+            "serviceName": "Doula Consultation",
+            "clientName": "Client User"
+          },
+          {
+            "meetingId": "5e5dc703-68ad-4094-9146-1158f3e6f9f0",
+            "date": "2025-11-30T00:00:00.000Z",
+            "serviceName": "Doula Consultation",
+            "clientName": "Client User"
+          }
         ],
-        meta: {
-          total: 2,
-          page: 1,
-          limit: 10,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
-      },
+        "meta": {
+          "total": 6,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPrevPage": false
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Get('app/meetings')
   async getDoulaMeetings(
     @Req() req,
     @Query('date') date?: string,
@@ -370,6 +803,32 @@ export class DoulaController {
     );
   }
 
+
+
+  @ApiOperation({ description: "Retrieve each Meetings using uuid" })
+  @ApiBearerAuth('access-token')
+  @ApiParam({ name: "meetingId", description: "uuid of Meeting Instance" })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Doula meeting fetched successfully",
+        "data": {
+          "meetingId": "2be347b8-2577-4be5-99a0-90b064d25bf2",
+          "date": "2025-12-23T00:00:00.000Z",
+          "startTime": "1970-01-01T10:00:00.000Z",
+          "endTime": "1970-01-01T11:00:00.000Z",
+          "status": "SCHEDULED",
+          "serviceName": "Postnatal Care",
+          "client": {
+            "clientId": "05390b91-e02f-4ea6-b9db-35286d95b3d6",
+            "name": "Test Client",
+            "email": "clienttt@test.com"
+          }
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
   @Get('app/meetings/:meetingId')
@@ -379,6 +838,7 @@ export class DoulaController {
   ) {
     return this.service.getDoulaMeetingDetail(req.user, meetingId);
   }
+
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
@@ -404,25 +864,27 @@ export class DoulaController {
     status: 200,
     schema: {
       example: {
-        success: true,
-        message: 'Doula schedules fetched successfully',
-        data: [
+        "status": "success",
+        "message": "Doula schedules fetched successfully",
+        "data": [
           {
-            startTime: '2025-01-20T09:00:00.000Z',
-            endTime: '2025-01-20T10:00:00.000Z',
-            serviceName: 'Postnatal Consultation',
-            clientName: 'Anita Joseph',
-          },
+            "scheduleId": "d55172fa-1464-46d0-83cd-052ef59c84f9",
+            "date": "2025-12-24T00:00:00.000Z",
+            "startTime": "1970-01-01T09:00:00.000Z",
+            "endTime": "1970-01-01T10:00:00.000Z",
+            "serviceName": "Postnatal Care",
+            "clientName": "Test Client"
+          }
         ],
-        meta: {
-          total: 5,
-          page: 1,
-          limit: 10,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
-      },
+        "meta": {
+          "total": 1,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPrevPage": false
+        }
+      }
     },
   })
   async getDoulaSchedules(
@@ -439,6 +901,38 @@ export class DoulaController {
     );
   }
 
+
+
+
+  @ApiOperation({ description: "Retrieve each Schedules using uuid" })
+  @ApiBearerAuth('access-token')
+  @ApiParam({ name: "scheduleId", description: "uuid of Meeting Instance" })
+  @ApiResponse({
+    schema: {
+      example: {
+        "status": "success",
+        "message": "Doula schedule fetched successfully",
+        "data": {
+          "scheduleId": "d55172fa-1464-46d0-83cd-052ef59c84f9",
+          "date": "2025-12-24T00:00:00.000Z",
+          "startTime": "1970-01-01T09:00:00.000Z",
+          "endTime": "1970-01-01T10:00:00.000Z",
+          "status": "PENDING",
+          "service": {
+            "servicePricingId": "0f84c81e-dfbe-46f9-9e87-997750a1b135",
+            "serviceId": "a8837615-78d9-40a0-a801-4ba7b322b7a6",
+            "serviceName": "Postnatal Care",
+            "price": "1800"
+          },
+          "client": {
+            "clientId": "05390b91-e02f-4ea6-b9db-35286d95b3d6",
+            "name": "Test Client",
+            "email": "clienttt@test.com"
+          }
+        }
+      }
+    }
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
   @Get('app/schedules/:scheduleId')
@@ -449,84 +943,85 @@ export class DoulaController {
     return this.service.getDoulaScheduleDetail(req.user, scheduleId);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
-  @Get('app/schedules/count')
+
   @ApiOperation({ summary: 'Get today and weekly schedule count for doula' })
   @ApiResponse({
     status: 200,
     schema: {
       example: {
-        success: true,
-        message: 'Doula schedule counts fetched successfully',
-        data: {
-          today: 2,
-          thisWeek: 7,
-        },
-      },
+        "status": "success",
+        "message": "Doula schedule counts fetched successfully",
+        "data": {
+          "today": 0,
+          "thisWeek": 0
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Get('app/schedules/count')
   async getDoulaScheduleCount(@Req() req) {
     return this.service.getDoulaScheduleCount(req.user);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
-  @Get('app/meetings/immediate')
+
   @ApiOperation({ summary: 'Get next immediate meeting for doula dashboard' })
   @ApiResponse({
     status: 200,
     schema: {
       example: {
-        success: true,
-        message: 'Immediate meeting fetched successfully',
-        data: {
-          clientName: 'Sarah Johnson',
-          serviceName: 'Prenatal Consultation',
-          startTime: '2025-01-20T10:00:00.000Z',
-          timeToStart: 'in 30 mins',
-          meetingLink: 'https://meet.example.com/abc123',
-        },
-      },
+        "status": "success",
+        "message": "Immediate meeting fetched successfully",
+        "data": {
+          "clientName": "John Doeyy",
+          "serviceName": "Doula Consultation",
+          "startTime": "1970-01-01T05:30:00.000Z",
+          "timeToStart": "in 2541 mins",
+          "meetingLink": "https://meet.google.com/ysm19g5e"
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Get('app/meetings/immediate')
   async getImmediateMeeting(@Req() req) {
     return this.service.ImmediateMeeting(req.user);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
-  @Get('app/ratings/summary')
+
   @ApiOperation({ summary: 'Get doula rating summary' })
   @ApiResponse({
     status: 200,
     schema: {
       example: {
-        success: true,
-        message: 'Doula rating summary fetched successfully',
-        data: {
-          averageRating: 4.8,
-          totalReviews: 5,
-          distribution: {
-            5: 4,
-            4: 1,
-            3: 0,
-            2: 0,
-            1: 0,
-          },
-        },
-      },
+        "status": "success",
+        "message": "Doula rating summary fetched successfully",
+        "data": {
+          "averageRating": 4.7,
+          "totalReviews": 3,
+          "distribution": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 1,
+            "5": 2
+          }
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Get('app/ratings/summary')
   async getRatingSummary(@Req() req) {
     return this.service.getDoulaRatingSummary(req.user);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
-  @Get('app/testimonials')
+
   @ApiOperation({
-    summary: 'Get testimonials associated with the logged-in doula',
+    summary: 'Fetch testimonials associated with the Doula',
   })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
@@ -534,31 +1029,57 @@ export class DoulaController {
     status: 200,
     schema: {
       example: {
-        success: true,
-        message: 'Doula testimonials fetched successfully',
-        data: [
+        "status": "success",
+        "message": "Doula testimonials fetched successfully",
+        "data": [
           {
-            clientId: 'client-uuid',
-            clientName: 'Sarah Johnson',
-            email: 'sarah@example.com',
-            phone: '9876543210',
-            ratings: 5,
-            reviews: 'Very supportive and professional.',
-            createdAt: '2025-01-18T08:30:00.000Z',
-            serviceName: 'Prenatal Consultation',
+            "clientId": "6aa686a9-9b1e-47d4-af52-cfd329239ebb",
+            "clientName": "John Doeyy",
+            "email": "john1233@example.com",
+            "phone": "9836540222",
+            "ratings": 5,
+            "reviews": "Highly recommend this doula.",
+            "createdAt": "2025-12-19T11:02:01.834Z",
+            "serviceName": "Postnatal Care",
+            "servicePricingId": "5af77fea-6805-4780-9fc3-db8ad9b0b887"
           },
+          {
+            "clientId": "6aa686a9-9b1e-47d4-af52-cfd329239ebb",
+            "clientName": "John Doeyy",
+            "email": "john1233@example.com",
+            "phone": "9836540222",
+            "ratings": 5,
+            "reviews": "Excellent care and very supportive.",
+            "createdAt": "2025-12-19T11:02:01.834Z",
+            "serviceName": "Postnatal Care",
+            "servicePricingId": "5af77fea-6805-4780-9fc3-db8ad9b0b887"
+          },
+          {
+            "clientId": "6aa686a9-9b1e-47d4-af52-cfd329239ebb",
+            "clientName": "John Doeyy",
+            "email": "john1233@example.com",
+            "phone": "9836540222",
+            "ratings": 4,
+            "reviews": "Very professional and kind.",
+            "createdAt": "2025-12-19T11:02:01.834Z",
+            "serviceName": "Postnatal Care",
+            "servicePricingId": "5af77fea-6805-4780-9fc3-db8ad9b0b887"
+          }
         ],
-        meta: {
-          total: 5,
-          page: 1,
-          limit: 10,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
-      },
+        "meta": {
+          "total": 3,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPrevPage": false
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Get('app/testimonials')
   async getDoulaTestimonials(
     @Req() req,
     @Query('page') page = '1',
@@ -571,52 +1092,117 @@ export class DoulaController {
     );
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
-  @Get('app/profile')
-  @ApiOperation({ summary: 'Get logged-in doula profile details' })
+
+  @ApiOperation({
+    summary: "Fetch Doula's Profile"
+  })
   @ApiResponse({
     status: 200,
     schema: {
       example: {
-        success: true,
-        message: 'Doula profile fetched successfully',
-        data: {
-          id: 'doula-uuid',
-          name: 'Jane Doe',
-          title: 'Certified Birth Doula',
-          averageRating: 4.9,
-          totalReviews: 156,
-          births: 156,
-          experience: 8,
-          satisfaction: 98,
-          contact: {
-            email: 'jane.doe@doula.com',
-            phone: '5551234567',
-            location: 'San Francisco, CA',
+        "status": "success",
+        "message": "Doula profile fetched successfully",
+        "data": {
+          "id": "655fa3dd-7b27-4371-b9e8-9bf4343b7735",
+          "name": "Reena Smith",
+          "title": "Certified Birth Doula",
+          "averageRating": 4.7,
+          "totalReviews": 3,
+          "births": 0,
+          "experience": 6,
+          "satisfaction": 93,
+          "qualification": "Certified Birth Doula (CBD)",
+          "contact": {
+            "email": "doula@test.com",
+            "phone": "+919876543342",
+            "location": "North Mumbai"
           },
-          about:
-            'I am a passionate birth doula with over 8 years of experience...',
-          certifications: [
-            'Certified Birth Doula',
-            'Childbirth Educator',
-            'Lactation Counselor',
-            'CPR & First Aid',
-          ],
-          gallery: [
+          "about": "Certified birth doula with 6+ years of experience",
+          "servicePricing": [
             {
-              id: 'img-uuid',
-              url: 'https://cdn.app.com/img1.jpg',
-              altText: 'Session photo',
+              "servicePricingid": "0b4a9cc8-3ce5-4039-858d-9b60cb8b381f",
+              "servicename": "Birth Doula",
+              "price": {
+                "night": 12,
+                "fullday": 12,
+                "morning": 15
+              }
             },
+            {
+              "servicePricingid": "0cee20c7-14e5-498f-ab73-a5b8e38cac02",
+              "servicename": "Post Partum Doula",
+              "price": {
+                "night": 1900,
+                "fullday": 1900,
+                "morning": 1900
+              }
+            },
+            {
+              "servicePricingid": "4924b14a-5b80-46f9-bb7e-29e89ed7c55b",
+              "servicename": "Post Partum Doula",
+              "price": {
+                "night": 5,
+                "fullday": 5,
+                "morning": 5
+              }
+            },
+            {
+              "servicePricingid": "a7e7ebcc-8855-4c08-b6c1-76132ba676a6",
+              "servicename": "Post Partum Doula",
+              "price": {
+                "night": 10,
+                "fullday": 10,
+                "morning": 1000
+              }
+            },
+            {
+              "servicePricingid": "f00e2a99-b097-4c3c-9783-75d5d09ba497",
+              "servicename": "Birth Doula",
+              "price": {
+                "night": 1,
+                "fullday": 100,
+                "morning": 1
+              }
+            }
           ],
-        },
-      },
+          "certificates": [
+            {
+              "certificateId": "1d87d45c-9730-423e-8fff-0b7ba21d95db",
+              "name": "Advanceda Birth Support",
+              "issuedBy": "WHO",
+              "year": "2022"
+            },
+            {
+              "certificateId": "d9907ca6-01fd-47e3-af61-65d555028982",
+              "name": "Childbirth Educator",
+              "issuedBy": "ABC Institute",
+              "year": "2021"
+            }
+          ],
+          "gallery": [
+            {
+              "id": "57c4ba33-5029-4123-8051-ddfa6aad2b06",
+              "url": "uploads/doulas/1767165269144-747759397.jpeg",
+              "altText": null
+            },
+            {
+              "id": "97c0e4c8-54c5-4f72-8120-86803a4a9592",
+              "url": "uploads/doulas/1767154479164-287555438.png",
+              "altText": null
+            }
+          ]
+        }
+      }
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Get('app/profile')
   async getDoulaProfile(@Req() req) {
     return this.service.doulaProfile(req.user);
   }
+
+
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)

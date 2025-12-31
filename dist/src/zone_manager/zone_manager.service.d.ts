@@ -3,6 +3,15 @@ import { CreateZoneManagerDto } from './dto/create-zone-manager.dto';
 import { BookingStatus, MeetingStatus, Prisma, ServiceStatus } from '@prisma/client';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
+type ZoneManagerRecentActivity = {
+    id: string;
+    entityType: 'BOOKING' | 'MEETING' | 'DOULA' | 'GALLERY';
+    entityId: string;
+    action: 'BOOKING_CREATED' | 'BOOKING_COMPLETED' | 'BOOKING_CANCELED' | 'MEETING_SCHEDULED' | 'MEETING_COMPLETED' | 'MEETING_CANCELED' | 'DOULA_PROFILE_UPDATED' | 'GALLERY_IMAGE_ADDED';
+    title: string;
+    description: string;
+    date: Date;
+};
 export declare class ZoneManagerService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -17,14 +26,14 @@ export declare class ZoneManagerService {
                 userId: string | null;
             } | null;
         } & {
-            name: string;
-            is_active: boolean;
             id: string;
+            name: string;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -102,14 +111,14 @@ export declare class ZoneManagerService {
     updateStatus(id: string, isActive: boolean): Promise<{
         message: string;
         data: {
-            name: string;
-            is_active: boolean;
             id: string;
+            name: string;
             email: string;
             phone: string | null;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
+            is_active: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -299,4 +308,6 @@ export declare class ZoneManagerService {
     updateDoulaProfile(doulaId: string, dto: UpdateDoulaProfileDto, userId: string): Promise<{
         message: string;
     }>;
+    recentActivityForZoneManager(userId: string): Promise<ZoneManagerRecentActivity[]>;
 }
+export {};

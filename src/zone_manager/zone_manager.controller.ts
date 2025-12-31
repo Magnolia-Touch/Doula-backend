@@ -27,6 +27,8 @@ import {
   ApiParam,
   ApiBody,
   ApiConsumes,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
 } from '@nestjs/swagger';
 import {
   BookingStatus,
@@ -957,5 +959,50 @@ export class ZoneManagerController {
     return this.service.updateDoulaProfile(doulaId, dto, req.user.id);
   }
 
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Get('recent/activity')
+  @ApiOperation({ summary: 'Get recent activity for zone manager' })
+  @ApiResponse({
+    status: 200,
+    description: 'Recent activity fetched successfully',
+    schema: {
+      example: {
+        status: 'success',
+        message: 'Recent activity fetched',
+        data: [
+          {
+            id: 'a12b34c5',
+            entityType: 'BOOKING',
+            entityId: 'a12b34c5',
+            action: 'BOOKING_CREATED',
+            title: 'New Booking Created',
+            description: 'Jane Doe booked Anita Sharma',
+            date: '2025-12-31T08:45:21.000Z',
+          },
+          {
+            id: 'm45c98d1',
+            entityType: 'MEETING',
+            entityId: 'm45c98d1',
+            action: 'MEETING_SCHEDULED',
+            title: 'Meeting Scheduled',
+            description: 'Meeting scheduled with Jane Doe',
+            date: '2025-12-31T07:30:00.000Z',
+          },
+        ],
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden – not a zone manager' })
+  async recentActivity(@Req() req: any) {
+    const userId = req.user.id;
+    return {
+      status: 'success',
+      message: 'Recent activity fetched',
+      data: await this.service.recentActivityForZoneManager(userId),
+    };
+  }
 
 }

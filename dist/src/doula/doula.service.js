@@ -79,6 +79,7 @@ let DoulaService = class DoulaService {
             births: 0,
             experience: doula.yoe ?? 0,
             satisfaction,
+            qualification: doula.qualification,
             contact: {
                 email: doula.user.email,
                 phone: doula.user.phone,
