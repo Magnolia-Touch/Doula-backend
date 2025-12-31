@@ -1,0 +1,393 @@
+{
+	"info": {
+		"_postman_id": "shift-routes-collection",
+		"name": "Doula Shift Routes API",
+		"description": "Collection for Doula shift management and pricing calculation endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Shifts by Doula",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/v1/doula/doula/:doulaId/shifts?page=1&limit=10",
+					"host": ["{{base_url}}"],
+					"path": ["v1", "doula", "doula", ":doulaId", "shifts"],
+					"query": [
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Page number for pagination"
+						},
+						{
+							"key": "limit",
+							"value": "10",
+							"description": "Number of items per page"
+						}
+					],
+					"variable": [
+						{
+							"key": "doulaId",
+							"value": "abc123-def456-ghi789",
+							"description": "The unique identifier of the doula profile (UUID)"
+						}
+					]
+				},
+				"description": "Retrieves all scheduled shifts for a specific doula with pagination support."
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/doula/doula/abc123-def456-ghi789/shifts?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "doula", "abc123-def456-ghi789", "shifts"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": true,\n  \"message\": \"Shifts fetched successfully\",\n  \"data\": [\n    {\n      \"shiftId\": \"shift-uuid-1\",\n      \"date\": \"2025-01-15T00:00:00.000Z\",\n      \"timeshift\": \"MORNING\",\n      \"status\": \"SCHEDULED\",\n      \"serviceName\": \"Postnatal Care\",\n      \"clientName\": \"Jane Doe\"\n    },\n    {\n      \"shiftId\": \"shift-uuid-2\",\n      \"date\": \"2025-01-16T00:00:00.000Z\",\n      \"timeshift\": \"NIGHT\",\n      \"status\": \"COMPLETED\",\n      \"serviceName\": \"Prenatal Consultation\",\n      \"clientName\": \"Sarah Smith\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 25,\n    \"page\": 1,\n    \"limit\": 10,\n    \"totalPages\": 3,\n    \"hasNextPage\": true,\n    \"hasPrevPage\": false\n  }\n}"
+				},
+				{
+					"name": "Doula Not Found",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/doula/doula/invalid-id/shifts?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "doula", "invalid-id", "shifts"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"statusCode\": 404,\n  \"message\": \"Doula not found\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Shift by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/v1/doula/shifts/:shiftId",
+					"host": ["{{base_url}}"],
+					"path": ["v1", "doula", "shifts", ":shiftId"],
+					"variable": [
+						{
+							"key": "shiftId",
+							"value": "shift-uuid-123",
+							"description": "The unique identifier of the shift (UUID)"
+						}
+					]
+				},
+				"description": "Retrieves detailed information about a specific shift including doula, client, and service details."
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/doula/shifts/shift-uuid-123",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "shifts", "shift-uuid-123"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": true,\n  \"message\": \"Shift details fetched successfully\",\n  \"data\": {\n    \"shiftId\": \"shift-uuid-123\",\n    \"date\": \"2025-01-15T00:00:00.000Z\",\n    \"timeshift\": \"MORNING\",\n    \"status\": \"SCHEDULED\",\n    \"doula\": {\n      \"doulaId\": \"doula-uuid-456\",\n      \"name\": \"Sarah Johnson\"\n    },\n    \"client\": {\n      \"clientId\": \"client-uuid-789\",\n      \"name\": \"Jane Doe\",\n      \"email\": \"jane.doe@example.com\"\n    },\n    \"service\": {\n      \"servicePricingId\": \"pricing-uuid-101\",\n      \"serviceId\": \"service-uuid-202\",\n      \"serviceName\": \"Postnatal Care\",\n      \"price\": {\n        \"morning\": 100,\n        \"night\": 120,\n        \"fullday\": 200\n      }\n    }\n  }\n}"
+				},
+				{
+					"name": "Shift Not Found",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v1/doula/shifts/invalid-shift-id",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "shifts", "invalid-shift-id"]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"statusCode\": 404,\n  \"message\": \"Shift not found\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Calculate Pricing - Post Partum Doula",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n  \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-01-31\",\n  \"visitFrequency\": 7,\n  \"timeShift\": \"MORNING\",\n  \"buffer\": 0\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/v1/doula/calculate-pricing",
+					"host": ["{{base_url}}"],
+					"path": ["v1", "doula", "calculate-pricing"]
+				},
+				"description": "Calculates the total price for a Post Partum Doula service based on service type, dates, and doula availability. Requires visitFrequency and timeShift parameters."
+			},
+			"response": [
+				{
+					"name": "Success - Doula Available",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n  \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-01-31\",\n  \"visitFrequency\": 7,\n  \"timeShift\": \"MORNING\",\n  \"buffer\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/doula/calculate-pricing",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "calculate-pricing"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": true,\n  \"message\": \"Pricing calculated successfully\",\n  \"data\": {\n    \"available\": true,\n    \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n    \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n    \"serviceName\": \"Post Partum Doula\",\n    \"startDate\": \"2025-01-01\",\n    \"endDate\": \"2025-01-31\",\n    \"visitDates\": [\n      \"2025-01-01\",\n      \"2025-01-08\",\n      \"2025-01-15\",\n      \"2025-01-22\",\n      \"2025-01-29\"\n    ],\n    \"numberOfVisits\": 5,\n    \"timeShift\": \"MORNING\",\n    \"pricePerVisit\": 10,\n    \"totalAmount\": 50,\n    \"currency\": \"INR\",\n    \"priceBreakdown\": {\n      \"morning\": 10,\n      \"night\": 20,\n      \"fullday\": 30\n    }\n  }\n}"
+				},
+				{
+					"name": "Success - Doula Not Available",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n  \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-01-31\",\n  \"visitFrequency\": 7,\n  \"timeShift\": \"MORNING\",\n  \"buffer\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/doula/calculate-pricing",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "calculate-pricing"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": false,\n  \"message\": \"Doula is not available for selected dates\",\n  \"data\": {\n    \"available\": false,\n    \"unavailableDates\": [\n      \"2025-01-08\",\n      \"2025-01-15\"\n    ],\n    \"reason\": \"Doula is not available on 2 date(s)\"\n  }\n}"
+				},
+				{
+					"name": "Bad Request - Missing Required Fields",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n  \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-01-31\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/doula/calculate-pricing",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "calculate-pricing"]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"statusCode\": 400,\n  \"message\": \"Visit frequency and time shift are required for Post Partum Doula service\"\n}"
+				},
+				{
+					"name": "Not Found - Doula Profile Not Found",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"doulaProfileId\": \"invalid-profile-id\",\n  \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-01-31\",\n  \"visitFrequency\": 7,\n  \"timeShift\": \"MORNING\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/doula/calculate-pricing",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "calculate-pricing"]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"statusCode\": 404,\n  \"message\": \"Doula profile not found\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Calculate Pricing - Birth Doula",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n  \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n  \"startDate\": \"2025-02-15\",\n  \"endDate\": \"2025-02-20\",\n  \"buffer\": 2\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/v1/doula/calculate-pricing",
+					"host": ["{{base_url}}"],
+					"path": ["v1", "doula", "calculate-pricing"]
+				},
+				"description": "Calculates the total price for a Birth Doula service. Uses FULLDAY shift automatically. Optional buffer parameter adds days before/after the date range. visitFrequency and timeShift are not required."
+			},
+			"response": [
+				{
+					"name": "Success - Birth Doula Pricing",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n  \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n  \"startDate\": \"2025-02-15\",\n  \"endDate\": \"2025-02-20\",\n  \"buffer\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/doula/calculate-pricing",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "doula", "calculate-pricing"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": true,\n  \"message\": \"Pricing calculated successfully\",\n  \"data\": {\n    \"available\": true,\n    \"doulaProfileId\": \"7de77403-ca72-452b-abfa-296c26df8116\",\n    \"servicePricingId\": \"00880c8d-abbc-42df-b6d7-c24ab4044ed0\",\n    \"serviceName\": \"Birth Doula\",\n    \"startDate\": \"2025-02-15\",\n    \"endDate\": \"2025-02-20\",\n    \"timeShift\": \"FULLDAY\",\n    \"totalAmount\": 3000,\n    \"currency\": \"INR\"\n  }\n}"
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
