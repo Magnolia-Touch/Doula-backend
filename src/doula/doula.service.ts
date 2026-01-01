@@ -1888,46 +1888,249 @@ export class DoulaService {
     };
   }
 
+  // async getServiceBookings(userId: string, page = 1, limit = 10) {
+  //   const doula = await this.prisma.doulaProfile.findUnique({
+  //     where: { userId: userId },
+  //     select: {
+  //       id: true,
+  //       user: {
+  //         select: { name: true },
+  //       },
+  //     },
+  //   });
+  //   if (!doula) {
+  //     throw new NotFoundException('Doula profile not found');
+  //   }
+  //   type ServiceBookingWithRelations = Prisma.ServiceBookingGetPayload<{
+  //     include: {
+  //       region: {
+  //         select: {
+  //           id: true;
+  //           regionName: true;
+  //         };
+  //       };
+  //       service: {
+  //         select: {
+  //           id: true;
+  //           service: {
+  //             select: {
+  //               id: true;
+  //               name: true;
+  //             };
+  //           };
+  //         };
+  //       };
+  //       schedules: {
+  //         select: {
+  //           id: true;
+  //         };
+  //       };
+  //     };
+  //   }>;
+
+  //   const result = await paginateWithRelations<ServiceBookingWithRelations>({
+  //     page,
+  //     limit,
+  //     query: () =>
+  //       this.prisma.serviceBooking.findMany({
+  //         skip: (page - 1) * limit,
+  //         take: limit,
+  //         where: {
+  //           doulaProfileId: doula.id,
+  //         },
+  //         orderBy: {
+  //           startDate: 'desc',
+  //         },
+  //         include: {
+  //           region: {
+  //             select: {
+  //               id: true,
+  //               regionName: true,
+  //             },
+  //           },
+  //           service: {
+  //             select: {
+  //               id: true,
+  //               service: {
+  //                 select: {
+  //                   id: true,
+  //                   name: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //           schedules: {
+  //             select: {
+  //               id: true,
+  //             },
+  //           },
+  //         },
+  //       }),
+  //     countQuery: () =>
+  //       this.prisma.serviceBooking.count({
+  //         where: {
+  //           doulaProfileId: doula.id,
+  //         },
+  //       }),
+  //   });
+
+  //   return {
+  //     data: result.data.map((booking) => ({
+  //       serviceBookingId: booking.id,
+  //       satisfiestartDate: booking.startDate,
+  //       endDate: booking.endDate,
+  //       status: booking.status,
+  //       regionId: booking.region.id,
+  //       regionName: booking.region.regionName,
+  //       servicePricingId: booking.service.id,
+  //       serviceName: booking.service.service.name,
+  //       serviceId: booking.service.service.id,
+  //       schedulesCount: booking.schedules.length,
+  //     })),
+  //     meta: result.meta,
+  //   };
+  // }
+
+  // async getServiceBookingsinDetail(userId: string, serviceBookingId: string) {
+  //   const doula = await this.prisma.doulaProfile.findUnique({
+  //     where: { userId: userId },
+  //     select: {
+  //       id: true,
+  //       user: {
+  //         select: { name: true },
+  //       },
+  //     },
+  //   });
+  //   if (!doula) {
+  //     throw new NotFoundException('Doula profile not found');
+  //   }
+  //   const booking = await this.prisma.serviceBooking.findUnique({
+  //     where: { id: serviceBookingId },
+  //     select: {
+  //       id: true,
+  //       startDate: true,
+  //       endDate: true,
+  //       status: true,
+  //       region: {
+  //         select: {
+  //           id: true,
+  //           regionName: true,
+  //           zoneManager: {
+  //             select: {
+  //               id: true,
+  //               user: { select: { id: true, email: true, name: true } },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       service: {
+  //         select: {
+  //           id: true,
+  //           price: true,
+  //           service: {
+  //             select: {
+  //               id: true,
+  //               name: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       schedules: true,
+  //     },
+  //   });
+  //   if (!booking) {
+  //     throw new NotFoundException('Service booking not found');
+  //   }
+
+  //   return {
+  //     serviceBookingId: booking.id,
+  //     startDate: booking.startDate,
+  //     endDate: booking.endDate,
+  //     status: booking.status,
+
+  //     region: {
+  //       id: booking.region.id,
+  //       name: booking.region.regionName,
+  //       zoneManager: booking.region.zoneManager?.user
+  //         ? {
+  //           id: booking.region.zoneManager.id,
+  //           name: booking.region.zoneManager.user.name,
+  //           email: booking.region.zoneManager.user.email,
+  //         }
+  //         : null,
+  //     },
+
+  //     service: {
+  //       servicePricingId: booking.service.id,
+  //       serviceId: booking.service.service.id,
+  //       serviceName: booking.service.service.name,
+  //       price: booking.service.price,
+  //     },
+
+  //     schedules: booking.schedules.map((schedule) => ({
+  //       id: schedule.id,
+  //       date: schedule.date,
+  //       timeshift: schedule.timeshift,
+  //       status: schedule.status,
+  //     })),
+  //   };
+  // }
+
+
   async getServiceBookings(userId: string, page = 1, limit = 10) {
+    /* ---------------- FETCH DOULA ---------------- */
     const doula = await this.prisma.doulaProfile.findUnique({
-      where: { userId: userId },
-      select: {
-        id: true,
-        user: {
-          select: { name: true },
-        },
-      },
+      where: { userId },
+      select: { id: true },
     });
+
     if (!doula) {
       throw new NotFoundException('Doula profile not found');
     }
-    type ServiceBookingWithRelations = Prisma.ServiceBookingGetPayload<{
-      include: {
-        region: {
-          select: {
-            id: true;
-            regionName: true;
+
+    /* ---------------- TYPES ---------------- */
+    type ServiceBookingWithRelations =
+      Prisma.ServiceBookingGetPayload<{
+        include: {
+          region: {
+            select: {
+              id: true;
+              regionName: true;
+            };
           };
-        };
-        service: {
-          select: {
-            id: true;
-            service: {
-              select: {
-                id: true;
-                name: true;
+          service: {
+            select: {
+              id: true;
+              price: true;
+              service: {
+                select: {
+                  id: true;
+                  name: true;
+                };
+              };
+            };
+          };
+          schedules: {
+            select: {
+              id: true;
+            };
+          };
+          client: {
+            select: {
+              id: true;
+              user: {
+                select: {
+                  name: true;
+                  email: true;
+                  phone: true;
+                };
               };
             };
           };
         };
-        schedules: {
-          select: {
-            id: true;
-          };
-        };
-      };
-    }>;
+      }>;
 
+    /* ---------------- PAGINATION ---------------- */
     const result = await paginateWithRelations<ServiceBookingWithRelations>({
       page,
       limit,
@@ -1951,6 +2154,7 @@ export class DoulaService {
             service: {
               select: {
                 id: true,
+                price: true,
                 service: {
                   select: {
                     id: true,
@@ -1964,6 +2168,18 @@ export class DoulaService {
                 id: true,
               },
             },
+            client: {
+              select: {
+                id: true,
+                user: {
+                  select: {
+                    name: true,
+                    email: true,
+                    phone: true,
+                  },
+                },
+              },
+            },
           },
         }),
       countQuery: () =>
@@ -1974,43 +2190,87 @@ export class DoulaService {
         }),
     });
 
+    /* ---------------- RESPONSE ---------------- */
     return {
-      data: result.data.map((booking) => ({
-        serviceBookingId: booking.id,
-        satisfiestartDate: booking.startDate,
-        endDate: booking.endDate,
-        status: booking.status,
-        regionId: booking.region.id,
-        regionName: booking.region.regionName,
-        servicePricingId: booking.service.id,
-        serviceName: booking.service.service.name,
-        serviceId: booking.service.service.id,
-        schedulesCount: booking.schedules.length,
-      })),
+      data: result.data.map((booking) => {
+        const schedulesCount = booking.schedules.length;
+        const totalPrice = booking.totalAmount
+
+        return {
+          serviceBookingId: booking.id,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          timeShift: booking.timeshift,
+          status: booking.status,
+
+          client: {
+            name: booking.client.user.name,
+            email: booking.client.user.email,
+            phone: booking.client.user.phone,
+          },
+
+          region: {
+            id: booking.region.id,
+            name: booking.region.regionName,
+          },
+
+          service: {
+            servicePricingId: booking.service.id,
+            serviceId: booking.service.service.id,
+            serviceName: booking.service.service.name,
+            pricePerVisit: booking.service.price,
+          },
+
+          schedulesCount,
+          totalPrice,
+        };
+      }),
       meta: result.meta,
     };
   }
 
-  async getServiceBookingsinDetail(userId: string, serviceBookingId: string) {
+
+  async getServiceBookingsInDetail(
+    userId: string,
+    serviceBookingId: string,
+  ) {
+    /* ---------------- FETCH DOULA ---------------- */
     const doula = await this.prisma.doulaProfile.findUnique({
-      where: { userId: userId },
-      select: {
-        id: true,
-        user: {
-          select: { name: true },
-        },
-      },
+      where: { userId },
+      select: { id: true },
     });
+
     if (!doula) {
       throw new NotFoundException('Doula profile not found');
     }
+
+    /* ---------------- FETCH BOOKING ---------------- */
     const booking = await this.prisma.serviceBooking.findUnique({
       where: { id: serviceBookingId },
       select: {
         id: true,
         startDate: true,
         endDate: true,
+        timeshift: true,
         status: true,
+        isPaid: true,
+        totalAmount: true,
+
+        client: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
+            address: true,
+          },
+        },
+
         region: {
           select: {
             id: true,
@@ -2018,11 +2278,18 @@ export class DoulaService {
             zoneManager: {
               select: {
                 id: true,
-                user: { select: { id: true, email: true, name: true } },
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
               },
             },
           },
         },
+
         service: {
           select: {
             id: true,
@@ -2035,42 +2302,61 @@ export class DoulaService {
             },
           },
         },
-        schedules: true,
+
+        schedules: {
+          select: {
+            id: true,
+            date: true,
+            timeshift: true,
+            status: true,
+          },
+        },
       },
     });
+
     if (!booking) {
       throw new NotFoundException('Service booking not found');
     }
 
+    /* ---------------- CALCULATIONS ---------------- */
+    const totalVisits = booking.schedules.length;
+    const totalPrice = booking.totalAmount
+
+    /* ---------------- RESPONSE ---------------- */
     return {
       serviceBookingId: booking.id,
       startDate: booking.startDate,
       endDate: booking.endDate,
+      timeShift: booking.timeshift,
       status: booking.status,
+      isPaid: booking.isPaid,
+
+      client: {
+        id: booking.client.id,
+        name: booking.client.user.name,
+        email: booking.client.user.email,
+        phone: booking.client.user.phone,
+        address: booking.client.address,
+      },
 
       region: {
         id: booking.region.id,
         name: booking.region.regionName,
-        zoneManager: booking.region.zoneManager?.user
-          ? {
-            id: booking.region.zoneManager.id,
-            name: booking.region.zoneManager.user.name,
-            email: booking.region.zoneManager.user.email,
-          }
-          : null,
       },
 
       service: {
         servicePricingId: booking.service.id,
         serviceId: booking.service.service.id,
         serviceName: booking.service.service.name,
-        price: booking.service.price,
+        pricePerVisit: booking.service.price,
+        totalVisits,
+        totalPrice,
       },
 
       schedules: booking.schedules.map((schedule) => ({
         id: schedule.id,
         date: schedule.date,
-        timeshift: schedule.timeshift,
+        timeShift: schedule.timeshift,
         status: schedule.status,
       })),
     };
