@@ -211,6 +211,8 @@ export declare class DoulaController {
             date: Date;
             serviceName: string;
             clientName: string;
+            clientEmail: string;
+            clientPhone: string | null;
         }[];
         meta: {
             total: number;
@@ -243,10 +245,15 @@ export declare class DoulaController {
         message: string;
         data: {
             scheduleId: string;
+            TimeShift: import("@prisma/client").$Enums.TimeShift;
             date: Date;
             timeshift: import("@prisma/client").$Enums.TimeShift;
             serviceName: string;
+            clientId: string;
             clientName: string;
+            clientEmail: string;
+            clientPhone: string | null;
+            clientAddress: never;
             status: import("@prisma/client").$Enums.ServiceStatus;
         }[];
         meta: {
@@ -276,6 +283,7 @@ export declare class DoulaController {
                 clientId: string;
                 name: string;
                 email: string;
+                phone: string | null;
             } | null;
         };
     }>;
@@ -345,6 +353,7 @@ export declare class DoulaController {
         message: string;
         data: {
             id: string;
+            userId: string;
             name: string;
             title: string;
             averageRating: number;
@@ -433,6 +442,7 @@ export declare class DoulaController {
         message: string;
         data: {
             id: string;
+            userId: string;
             name: string;
             title: string;
             averageRating: number;
@@ -496,6 +506,7 @@ export declare class DoulaController {
             endDate: Date;
             timeShift: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.BookingStatus;
+            totalAmount: string | null;
             client: {
                 name: string;
                 email: string;
@@ -540,6 +551,11 @@ export declare class DoulaController {
         region: {
             id: string;
             name: string;
+            zoneManager: {
+                id: string;
+                name: string;
+                email: string;
+            } | null;
         };
         service: {
             servicePricingId: string;

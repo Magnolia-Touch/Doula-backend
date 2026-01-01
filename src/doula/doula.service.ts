@@ -41,6 +41,7 @@ export class DoulaService {
       include: {
         user: {
           select: {
+            id: true,
             name: true,
             email: true,
             phone: true,
@@ -100,7 +101,7 @@ export class DoulaService {
      * ---------------------- */
     return {
       id: doula.id,
-
+      userId: doula.user.id,
       // Header
       name: doula.user.name,
       title: 'Certified Birth Doula',

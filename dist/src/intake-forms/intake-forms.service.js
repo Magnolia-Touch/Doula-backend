@@ -350,11 +350,16 @@ let IntakeFormService = class IntakeFormService {
         }
         let totalAmount = 0;
         if (servicePricing.service.name === 'Birth Doula') {
-            totalAmount = (0, service_utils_1.getPriceForShift)(servicePricing.price, client_1.TimeShift.FULLDAY);
+            const perDayPrice = (0, service_utils_1.getPriceForShift)(servicePricing.price, client_1.TimeShift.FULLDAY);
+            console.log(perDayPrice);
+            console.log(visitDates.length);
+            totalAmount = perDayPrice * (visitDates.length - (2 * buffer));
         }
         else if (servicePricing.service.name === 'Post Partum Doula') {
             const perDayPrice = (0, service_utils_1.getPriceForShift)(servicePricing.price, serviceTimeShift);
-            totalAmount = perDayPrice * visitDates.length;
+            console.log(perDayPrice);
+            console.log(visitDates.length);
+            totalAmount = (perDayPrice * visitDates.length);
         }
         if (totalAmount <= 0) {
             throw new common_1.BadRequestException('Invalid total amount');
@@ -378,7 +383,7 @@ let IntakeFormService = class IntakeFormService {
                     bookingId: booking.id,
                     clientId: clientProfile.id,
                     amount: totalAmount,
-                    currency: 'INR',
+                    currency: 'USD',
                     status: client_1.PaymentStatus.PENDING,
                     provider: client_1.PaymentProvider.STRIPE,
                     metadata: {
@@ -402,7 +407,7 @@ let IntakeFormService = class IntakeFormService {
             bookingId: booking.id,
             paymentId: payment.id,
             amount: totalAmount,
-            currency: 'INR',
+            currency: 'USD',
             checkout_url: checkoutSession.url,
             successUrl: successUrl,
             cancelUrl: cancelUrl

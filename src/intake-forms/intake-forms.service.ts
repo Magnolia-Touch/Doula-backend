@@ -18,6 +18,7 @@ import {
 import { MailerService } from '@nestjs-modules/mailer';
 import { BookingStatus, PaymentProvider, PaymentStatus, Prisma, TimeShift, WeekDays } from '@prisma/client';
 import { StripeService } from 'src/stripe/stripe.service';
+import { Console } from 'console';
 type IntakeFormWithRelations = Prisma.IntakeFormGetPayload<{
   include: {
     region: { select: { regionName: true } };
@@ -869,16 +870,21 @@ export class IntakeFormService {
     let totalAmount = 0;
 
     if (servicePricing.service.name === 'Birth Doula') {
-      totalAmount = getPriceForShift(
+      const perDayPrice = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
+      console.log(perDayPrice)
+      console.log(visitDates.length)
+      totalAmount = perDayPrice * (visitDates.length - (2 * buffer))
     } else if (servicePricing.service.name === 'Post Partum Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = perDayPrice * visitDates.length;
+      console.log(perDayPrice)
+      console.log(visitDates.length)
+      totalAmount = (perDayPrice * visitDates.length)
     }
 
     if (totalAmount <= 0) {
@@ -908,7 +914,7 @@ export class IntakeFormService {
           bookingId: booking.id,
           clientId: clientProfile.id,
           amount: totalAmount,
-          currency: 'INR',
+          currency: 'USD',
           status: PaymentStatus.PENDING,
           provider: PaymentProvider.STRIPE,
           metadata: {
@@ -950,7 +956,7 @@ export class IntakeFormService {
       bookingId: booking.id,
       paymentId: payment.id,
       amount: totalAmount,
-      currency: 'INR',
+      currency: 'USD',
       checkout_url: checkoutSession.url,
       successUrl: successUrl,
       cancelUrl: cancelUrl
