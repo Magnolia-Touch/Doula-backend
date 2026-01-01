@@ -19,19 +19,25 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-
-  app.use(
-    bodyParser.json({
-      verify: (req: any, _res, buf) => {
-        req.rawBody = buf;
-      },
-    }),
-  );
-  // Optional: set a global prefix (nice for staging/prod)
   app.setGlobalPrefix('backend');
   app.enableVersioning({
     type: VersioningType.URI,
   });
+
+  app.use(
+    '/backend/v1/stripe/webhook',
+    bodyParser.raw({ type: 'application/json' }),
+  );
+
+
+  // app.use(
+  //   bodyParser.json({
+  //     verify: (req: any, _res, buf) => {
+  //       req.rawBody = buf;
+  //     },
+  //   }),
+  // );
+  // Optional: set a global prefix (nice for staging/prod)
 
   // Enable validation pipe so class-validator/class-transformer metadata is consistent
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

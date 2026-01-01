@@ -27,6 +27,7 @@ import { ContactFormModule } from './contact-form/contact-form.module';
 import { DeviceTokenModule } from './token/device-token.module';
 import { UserModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ConfigModule } from '@nestjs/config';
     AnalyticsModule,
     TestimonialsModule,
     // FirebaseModule,
+    StripeModule.forRootAsync(),
     // NotificationModule,
     ClientModule,
     DeviceTokenModule,

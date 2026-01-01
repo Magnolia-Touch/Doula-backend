@@ -33,6 +33,7 @@ const contact_form_module_1 = require("./contact-form/contact-form.module");
 const device_token_module_1 = require("./token/device-token.module");
 const users_module_1 = require("./users/users.module");
 const config_1 = require("@nestjs/config");
+const stripe_module_1 = require("./stripe/stripe.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -55,6 +56,7 @@ exports.AppModule = AppModule = __decorate([
             service_pricing_module_1.ServicePricingModule,
             analytics_module_1.AnalyticsModule,
             testimonials_module_1.TestimonialsModule,
+            stripe_module_1.StripeModule.forRootAsync(),
             client_module_1.ClientModule,
             device_token_module_1.DeviceTokenModule,
             contact_form_module_1.ContactFormModule,

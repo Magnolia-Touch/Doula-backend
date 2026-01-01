@@ -112,10 +112,15 @@ export class WebhookService {
       doulaProfileId,
       servicePricingId,
       clientId,
+
     } = payment.metadata as any;
 
 
     await this.prisma.$transaction(async (tx) => {
+      await tx.serviceBooking.update({
+        where: { id: bookingId },
+        data: { status: BookingStatus.PENDING, }
+      })
       await tx.schedules.createMany({
         data: visitDates.map((date: string) => ({
           date: new Date(date),

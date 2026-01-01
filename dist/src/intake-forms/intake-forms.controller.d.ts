@@ -54,9 +54,9 @@ export declare class IntakeFormController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            doulaId: string;
             date: Date;
             availability: import("@prisma/client/runtime/library").JsonValue;
-            doulaId: string;
         }[];
         createdAt: Date;
         updatedAt: Date;

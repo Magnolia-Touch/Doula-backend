@@ -47,15 +47,11 @@ async function bootstrap() {
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true,
     });
-    app.use(bodyParser.json({
-        verify: (req, _res, buf) => {
-            req.rawBody = buf;
-        },
-    }));
     app.setGlobalPrefix('backend');
     app.enableVersioning({
         type: common_2.VersioningType.URI,
     });
+    app.use('/backend/v1/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
     const config = new swagger_1.DocumentBuilder()
         .setTitle('Doulas API')
