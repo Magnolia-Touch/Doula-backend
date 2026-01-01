@@ -599,4 +599,3 @@ export function getPriceForShift(
       throw new BadRequestException('Invalid time shift');
   }
 }
-isDoulaAvailableForShift

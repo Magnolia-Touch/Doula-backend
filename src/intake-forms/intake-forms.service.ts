@@ -898,8 +898,9 @@ export class IntakeFormService {
           servicePricingId: servicePricing.id,
           doulaProfileId,
           clientId: clientProfile.id,
-          status: BookingStatus.ACTIVE,
+          status: BookingStatus.PENDING,
           isPaid: false,
+          totalAmount: String(totalAmount),
         },
       });
       const payment = await tx.payment.create({

@@ -22,6 +22,7 @@ enum MeetingStatus {
 }
 
 enum BookingStatus {
+  PENDING
   ACTIVE
   COMPLETED
   CANCELED
@@ -371,7 +372,7 @@ model ServiceBooking {
   endDate        DateTime      @default(now())
   timeshift      TimeShift     @default(FULLDAY)
   paymentDetails Json?
-  status         BookingStatus @default(ACTIVE)
+  status         BookingStatus @default(PENDING)
   isPaid         Boolean       @default(false)
 
   regionId         String
