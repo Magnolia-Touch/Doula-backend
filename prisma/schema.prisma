@@ -374,6 +374,7 @@ model ServiceBooking {
   paymentDetails Json?
   status         BookingStatus @default(PENDING)
   isPaid         Boolean       @default(false)
+  totalAmount    String?
 
   regionId         String
   servicePricingId String

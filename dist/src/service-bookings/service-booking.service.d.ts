@@ -77,7 +77,7 @@ export declare class ServiceBookingService {
         startDate: Date;
         endDate: Date;
         paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
-        totalAmount: string | null;
         isPaid: boolean;
+        totalAmount: string | null;
     }>;
 }

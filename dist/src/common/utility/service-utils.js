@@ -383,5 +383,4 @@ function getPriceForShift(price, shift) {
             throw new common_1.BadRequestException('Invalid time shift');
     }
 }
-isDoulaAvailableForShift;
 //# sourceMappingURL=service-utils.js.map

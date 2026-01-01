@@ -368,8 +368,9 @@ let IntakeFormService = class IntakeFormService {
                     servicePricingId: servicePricing.id,
                     doulaProfileId,
                     clientId: clientProfile.id,
-                    status: client_1.BookingStatus.ACTIVE,
+                    status: client_1.BookingStatus.PENDING,
                     isPaid: false,
+                    totalAmount: String(totalAmount),
                 },
             });
             const payment = await tx.payment.create({
