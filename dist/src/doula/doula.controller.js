@@ -166,7 +166,7 @@ let DoulaController = class DoulaController {
     }
     async getServiceBookingsinDetail(req, serviceBookingId) {
         console.log(serviceBookingId);
-        return this.service.getServiceBookingsinDetail(req.user.id, serviceBookingId);
+        return this.service.getServiceBookingsInDetail(req.user.id, serviceBookingId);
     }
     async getAvailableShifts(doulaId, startDate, endDate, visitFrequency) {
         return this.service.getAvailableShifts(doulaId, startDate, endDate, Number(visitFrequency));

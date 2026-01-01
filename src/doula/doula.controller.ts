@@ -1364,7 +1364,7 @@ export class DoulaController {
     @Param('id') serviceBookingId: string,
   ) {
     console.log(serviceBookingId);
-    return this.service.getServiceBookingsinDetail(
+    return this.service.getServiceBookingsInDetail(
       req.user.id,
       serviceBookingId,
     );
