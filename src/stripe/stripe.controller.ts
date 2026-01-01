@@ -5,6 +5,7 @@ import {
   Res,
   HttpStatus,
   Logger,
+  Get,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { WebhookService } from './webhook.service';
@@ -18,6 +19,10 @@ export class StripeController {
     private readonly webhookService: WebhookService,
   ) { }
 
+  @Get('webhook')
+  testWebhook() {
+    return { ok: true };
+  }
   /**
    * Stripe Webhook Endpoint
    * IMPORTANT:
