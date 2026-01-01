@@ -16,6 +16,12 @@ export declare class DoulaController {
         message: string;
         data: ({
             doulaProfile: ({
+                Region: {
+                    id: string;
+                    zoneManagerId: string | null;
+                    pincode: string;
+                    regionName: string;
+                }[];
                 zoneManager: {
                     id: string;
                     createdAt: Date;
@@ -36,12 +42,6 @@ export declare class DoulaController {
                     doulaProfileId: string;
                     issuedBy: string;
                     year: string;
-                }[];
-                Region: {
-                    id: string;
-                    regionName: string;
-                    pincode: string;
-                    zoneManagerId: string | null;
                 }[];
             } & {
                 id: string;
@@ -167,26 +167,26 @@ export declare class DoulaController {
     updateRegions(dto: UpdateDoulaRegionDto, req: any): Promise<{
         message: string;
         data: {
+            Region: {
+                id: string;
+                is_active: boolean;
+                createdAt: Date;
+                updatedAt: Date;
+                zoneManagerId: string | null;
+                pincode: string;
+                regionName: string;
+                district: string;
+                state: string;
+                country: string;
+                latitude: string;
+                longitude: string;
+            }[];
             zoneManager: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 userId: string | null;
                 profile_image: string | null;
-            }[];
-            Region: {
-                id: string;
-                is_active: boolean;
-                createdAt: Date;
-                updatedAt: Date;
-                regionName: string;
-                pincode: string;
-                district: string;
-                state: string;
-                country: string;
-                latitude: string;
-                longitude: string;
-                zoneManagerId: string | null;
             }[];
         } & {
             id: string;
@@ -492,15 +492,27 @@ export declare class DoulaController {
     getServiceBookings(req: any, date?: string, page?: string, limit?: string): Promise<{
         data: {
             serviceBookingId: string;
-            satisfiestartDate: Date;
+            startDate: Date;
             endDate: Date;
+            timeShift: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.BookingStatus;
-            regionId: string;
-            regionName: string;
-            servicePricingId: string;
-            serviceName: string;
-            serviceId: string;
+            client: {
+                name: string;
+                email: string;
+                phone: string | null;
+            };
+            region: {
+                id: string;
+                name: string;
+            };
+            service: {
+                servicePricingId: string;
+                serviceId: string;
+                serviceName: string;
+                pricePerVisit: import("@prisma/client/runtime/library").JsonValue;
+            };
             schedulesCount: number;
+            totalPrice: string | null;
         }[];
         meta: {
             total: number;
@@ -515,26 +527,32 @@ export declare class DoulaController {
         serviceBookingId: string;
         startDate: Date;
         endDate: Date;
+        timeShift: import("@prisma/client").$Enums.TimeShift;
         status: import("@prisma/client").$Enums.BookingStatus;
+        isPaid: boolean;
+        client: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string | null;
+            address: string | null;
+        };
         region: {
             id: string;
             name: string;
-            zoneManager: {
-                id: string;
-                name: string;
-                email: string;
-            } | null;
         };
         service: {
             servicePricingId: string;
             serviceId: string;
             serviceName: string;
-            price: import("@prisma/client/runtime/library").JsonValue;
+            pricePerVisit: import("@prisma/client/runtime/library").JsonValue;
+            totalVisits: number;
+            totalPrice: string | null;
         };
         schedules: {
             id: string;
             date: Date;
-            timeshift: import("@prisma/client").$Enums.TimeShift;
+            timeShift: import("@prisma/client").$Enums.TimeShift;
             status: import("@prisma/client").$Enums.ServiceStatus;
         }[];
     }>;
