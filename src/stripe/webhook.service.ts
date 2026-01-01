@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -99,14 +99,27 @@ export class WebhookService {
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
     });
+    if (!payment) {
+      throw new NotFoundException("Payment Data not Found")
+    }
 
-    // Idempotency guard
-    if (!payment || payment.status === PaymentStatus.SUCCESS) {
+    const booking = await this.prisma.serviceBooking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      this.logger.error(`Booking ${bookingId} not found`);
+      return { received: true };
+    }
+
+    // Idempotency based on booking
+    if (booking.status === BookingStatus.ACTIVE) {
       this.logger.log(
-        `Payment ${paymentId} already processed, skipping`,
+        `Booking ${bookingId} already activated, skipping`,
       );
       return { received: true };
     }
+
     const {
       visitDates,
       serviceTimeShift,
@@ -118,10 +131,6 @@ export class WebhookService {
 
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.serviceBooking.update({
-        where: { id: bookingId },
-        data: { status: BookingStatus.PENDING, }
-      })
       await tx.schedules.createMany({
         data: visitDates.map((date: string) => ({
           date: new Date(date),
@@ -131,6 +140,7 @@ export class WebhookService {
           clientId,
           bookingId,
         })),
+        skipDuplicates: true, // VERY IMPORTANT
       });
 
       await tx.payment.update({
