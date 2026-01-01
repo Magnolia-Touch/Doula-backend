@@ -912,7 +912,7 @@ export class DoulaService {
         bookedBy: {
           include: {
             user: {
-              select: { name: true },
+              select: { name: true, id: true, },
             },
           },
         },
@@ -928,7 +928,7 @@ export class DoulaService {
           include: {
             user: {
               select: {
-                name: true;
+                name: true, id: true, email: true, phone: true
               };
             };
           };
@@ -946,6 +946,8 @@ export class DoulaService {
         date: meeting.date,
         serviceName: meeting.serviceName,
         clientName: meeting.bookedBy.user.name,
+        clientEmail: meeting.bookedBy.user.email,
+        clientPhone: meeting.bookedBy.user.phone,
       })),
       meta: result.meta,
     };
@@ -1074,7 +1076,7 @@ export class DoulaService {
         client: {
           include: {
             user: {
-              select: { name: true };
+              select: { id: true, name: true, email: true, phone: true, address: true };
             };
           };
         };
@@ -1088,10 +1090,15 @@ export class DoulaService {
       message: 'Doula schedules fetched successfully',
       data: schedules.map((schedule) => ({
         scheduleId: schedule.id,
+        TimeShift: schedule.timeshift,
         date: schedule.date,
         timeshift: schedule.timeshift,
         serviceName: schedule.ServicePricing.service.name,
+        clientId: schedule.client.user.id,
         clientName: schedule.client.user.name,
+        clientEmail: schedule.client.user.email,
+        clientPhone: schedule.client.user.phone,
+        clientAddress: schedule.client.user.address,
         status: schedule.status,
       })),
       meta: result.meta,
@@ -1136,6 +1143,7 @@ export class DoulaService {
                 id: true,
                 name: true,
                 email: true,
+                phone: true,
               },
             },
           },
@@ -1154,6 +1162,7 @@ export class DoulaService {
         scheduleId: schedule.id,
         date: schedule.date,
         timeshift: schedule.timeshift,
+
         status: schedule.status,
 
         service: {
@@ -1168,6 +1177,7 @@ export class DoulaService {
             clientId: schedule.client.user.id,
             name: schedule.client.user.name,
             email: schedule.client.user.email,
+            phone: schedule.client.user.phone,
           }
           : null,
       },
@@ -2202,6 +2212,7 @@ export class DoulaService {
           endDate: booking.endDate,
           timeShift: booking.timeshift,
           status: booking.status,
+          totalAmount: booking.totalAmount,
 
           client: {
             name: booking.client.user.name,
@@ -2212,6 +2223,7 @@ export class DoulaService {
           region: {
             id: booking.region.id,
             name: booking.region.regionName,
+
           },
 
           service: {
@@ -2278,13 +2290,7 @@ export class DoulaService {
             zoneManager: {
               select: {
                 id: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                  },
-                },
+                user: { select: { id: true, email: true, name: true } },
               },
             },
           },
@@ -2342,6 +2348,13 @@ export class DoulaService {
       region: {
         id: booking.region.id,
         name: booking.region.regionName,
+        zoneManager: booking.region.zoneManager?.user
+          ? {
+            id: booking.region.zoneManager.id,
+            name: booking.region.zoneManager.user.name,
+            email: booking.region.zoneManager.user.email,
+          }
+          : null,
       },
 
       service: {
