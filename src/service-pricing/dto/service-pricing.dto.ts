@@ -11,17 +11,17 @@ import { Type } from 'class-transformer';
 export class PriceBreakdownDto {
   @ApiProperty({ example: 1000 })
   @IsNumber()
-  @IsPositive()
+  @IsOptional()
   morning: number;
 
   @ApiProperty({ example: 2000 })
   @IsNumber()
-  @IsPositive()
+  @IsOptional()
   night: number;
 
   @ApiProperty({ example: 3000 })
   @IsNumber()
-  @IsPositive()
+  @IsOptional()
   fullday: number;
 }
 
