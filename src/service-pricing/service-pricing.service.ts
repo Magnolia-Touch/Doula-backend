@@ -141,12 +141,32 @@ export class ServicePricingService {
 
   // Delete a service Pricing
   async remove(id: string) {
-    await this.findOne(id); // ensures exists
+    await this.findOne(id);
 
-    return this.prisma.servicePricing.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.testimonials.deleteMany({
+        where: { serviceId: id },
+      });
+
+      await tx.schedules.deleteMany({
+        where: { serviceId: id },
+      });
+
+      await tx.intakeForm.deleteMany({
+        where: { servicePricingId: id },
+      });
+
+      await tx.serviceBooking.deleteMany({
+        where: { servicePricingId: id },
+      });
+
+      return tx.servicePricing.delete({
+        where: { id },
+      });
     });
   }
+
+
   async listServices(query: any) {
     const { name, doulaId, page = 1, limit = 10 } = query;
 
