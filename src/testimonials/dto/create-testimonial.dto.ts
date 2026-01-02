@@ -17,6 +17,13 @@ export class CreateTestimonialDto {
   servicePricingId: string;
 
   @ApiProperty({
+    example: '3e9c559d-d9f6-438c-a36d-0177c7a8c8c1',
+    description: 'UUID of the Booking',
+  })
+  @IsUUID()
+  serviceBookingId: string;
+
+  @ApiProperty({
     example: 5,
     description: 'Customer rating between 1–5',
   })
