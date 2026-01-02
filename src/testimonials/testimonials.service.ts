@@ -9,6 +9,7 @@ import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 import { FilterTestimonialsDto, GetZmTestimonialDto } from './dto/filter-testimonials.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
+import { BookingStatus } from '@prisma/client';
 
 //testimonials can be added for purchased services.
 @Injectable()
@@ -17,7 +18,7 @@ export class TestimonialsService {
 
   async create(dto: CreateTestimonialDto, user: any) {
     const bookedservice = await this.prisma.serviceBooking.findFirst({
-      where: { client: { userId: user.id }, id: dto.serviceBookingId },
+      where: { client: { userId: user.id }, id: dto.serviceBookingId, status: BookingStatus.COMPLETED },
     });
     if (!bookedservice) {
       throw new NotFoundException(
