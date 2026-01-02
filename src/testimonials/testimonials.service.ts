@@ -17,7 +17,7 @@ export class TestimonialsService {
 
   async create(dto: CreateTestimonialDto, user: any) {
     const bookedservice = await this.prisma.serviceBooking.findFirst({
-      where: { client: { userId: user.id }, servicePricingId: dto.serviceId },
+      where: { client: { userId: user.id }, servicePricingId: dto.servicePricingId },
     });
     if (!bookedservice) {
       throw new NotFoundException(
@@ -25,7 +25,7 @@ export class TestimonialsService {
       );
     }
     return this.prisma.testimonials.create({
-      data: { ...dto, clientId: user.id },
+      data: { ...dto, clientId: user.id, serviceId: dto.servicePricingId },
     });
   }
 

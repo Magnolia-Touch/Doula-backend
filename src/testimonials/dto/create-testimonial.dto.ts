@@ -14,7 +14,7 @@ export class CreateTestimonialDto {
     description: 'UUID of the Service for which feedback is given',
   })
   @IsUUID()
-  serviceId: string;
+  servicePricingId: string;
 
   @ApiProperty({
     example: 5,
