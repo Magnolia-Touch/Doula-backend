@@ -1,9 +1,18 @@
+import { MeetingStatus } from '@prisma/client';
 export declare class ScheduleDoulaDto {
-    clientId: string;
-    serviceName: string;
-    serviceId: string;
-    meetingsDate: string;
-    meetingsTimeSlots: string;
+    enquiryId: string;
+    date: string;
+    time: string;
+    notes?: string;
+    serviceName?: string;
+    doulaIds: string[];
+}
+export declare class UpdateClientDoulaEnquiryDto {
+    date: string;
+    time: string;
+    notes?: string;
     doulaId: string;
-    additionalNotes?: string;
+}
+export declare class UpdateMeetingStatusDto {
+    status: MeetingStatus;
 }

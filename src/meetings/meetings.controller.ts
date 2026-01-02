@@ -25,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { ScheduleDoulaDto } from './dto/schedule-doula.dto';
+import { ScheduleDoulaDto, UpdateClientDoulaEnquiryDto, UpdateMeetingStatusDto } from './dto/schedule-doula.dto';
 import { cancelDto } from './dto/cancel.dto';
 import { RescheduleDto } from './dto/reschedule.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -38,7 +38,7 @@ import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
   version: '1',
 })
 export class MeetingsController {
-  constructor(private readonly service: MeetingsService) {}
+  constructor(private readonly service: MeetingsService) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.DOULA, Role.ZONE_MANAGER)
@@ -142,6 +142,66 @@ export class MeetingsController {
   async scheduleDoulaMeeting(@Body() dto: ScheduleDoulaDto, @Req() req) {
     return this.service.doulasMeetingSchedule(dto, req.user);
   }
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER, Role.DOULA)
+  @Get('doula/schedule/list')
+  findAll(
+    @Req() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.service.doulaMeeings(
+      req.user.id,
+      req.user.role,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 10,
+    );
+  }
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER, Role.DOULA)
+  @Patch('doula/schedule/list/:id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateMeetingStatusDto,
+    @Req() req: any,
+  ) {
+    return this.service.updateDoulaMeetingsStatus(
+      id,
+      req.user.id,
+      req.user.role,
+      dto.status,
+    );
+  }
+
+
+
+  @Get('doula/schedule/list/:id')
+  findOne(@Param('id') id: string,) {
+    return this.service.doulaMeeingsRetrieve(id,);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Patch('doula/schedule/update/:id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateClientDoulaEnquiryDto,
+    @Req() req: any,
+  ) {
+    return this.service.updateDoulaMeeting(id, dto, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Delete('doula/schedule/delete/:id')
+  remove(@Param('id') id: string, @Req() req: any,) {
+    return this.service.deleteDoulaMeeting(id, req.user.id);
+  }
+
 
   // RESCHEDULE MEETING
   @ApiOperation({ summary: 'Reschedule a meeting to a new slot' })

@@ -9,56 +9,77 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ScheduleDoulaDto = void 0;
-const swagger_1 = require("@nestjs/swagger");
+exports.UpdateMeetingStatusDto = exports.UpdateClientDoulaEnquiryDto = exports.ScheduleDoulaDto = void 0;
+const client_1 = require("@prisma/client");
 const class_validator_1 = require("class-validator");
 class ScheduleDoulaDto {
-    clientId;
+    enquiryId;
+    date;
+    time;
+    notes;
     serviceName;
-    serviceId;
-    meetingsDate;
-    meetingsTimeSlots;
-    doulaId;
-    additionalNotes;
+    doulaIds;
 }
 exports.ScheduleDoulaDto = ScheduleDoulaDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid' }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], ScheduleDoulaDto.prototype, "enquiryId", void 0);
+__decorate([
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], ScheduleDoulaDto.prototype, "date", void 0);
+__decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ScheduleDoulaDto.prototype, "clientId", void 0);
+], ScheduleDoulaDto.prototype, "time", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'john@example.com' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ScheduleDoulaDto.prototype, "notes", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], ScheduleDoulaDto.prototype, "serviceName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], ScheduleDoulaDto.prototype, "serviceId", void 0);
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsUUID)('all', { each: true }),
+    __metadata("design:type", Array)
+], ScheduleDoulaDto.prototype, "doulaIds", void 0);
+class UpdateClientDoulaEnquiryDto {
+    date;
+    time;
+    notes;
+    doulaId;
+}
+exports.UpdateClientDoulaEnquiryDto = UpdateClientDoulaEnquiryDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '2025-10-12' }),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
-], ScheduleDoulaDto.prototype, "meetingsDate", void 0);
+], UpdateClientDoulaEnquiryDto.prototype, "date", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        example: '09:00-11:00',
-        description: 'Time slot for the service',
-    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
-], ScheduleDoulaDto.prototype, "meetingsTimeSlots", void 0);
+], UpdateClientDoulaEnquiryDto.prototype, "time", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-slot-id' }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], ScheduleDoulaDto.prototype, "doulaId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ required: false, description: 'Optional additional notes' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ScheduleDoulaDto.prototype, "additionalNotes", void 0);
+], UpdateClientDoulaEnquiryDto.prototype, "notes", void 0);
+__decorate([
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], UpdateClientDoulaEnquiryDto.prototype, "doulaId", void 0);
+class UpdateMeetingStatusDto {
+    status;
+}
+exports.UpdateMeetingStatusDto = UpdateMeetingStatusDto;
+__decorate([
+    (0, class_validator_1.IsEnum)(client_1.MeetingStatus),
+    __metadata("design:type", String)
+], UpdateMeetingStatusDto.prototype, "status", void 0);
 //# sourceMappingURL=schedule-doula.dto.js.map

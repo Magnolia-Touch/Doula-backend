@@ -15,7 +15,6 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const client_1 = require("@prisma/client");
 const mailer_1 = require("@nestjs-modules/mailer");
-const service_utils_1 = require("../common/utility/service-utils");
 let MeetingsService = class MeetingsService {
     prisma;
     mail;
@@ -426,70 +425,132 @@ let MeetingsService = class MeetingsService {
         };
     }
     async doulasMeetingSchedule(dto, user) {
-        const { clientId, serviceName, meetingsDate, meetingsTimeSlots, doulaId, additionalNotes, serviceId, } = dto;
-        console.log(user);
-        if (user.role !== client_1.Role.ZONE_MANAGER) {
-            throw new common_1.ForbiddenException('Only Zone Manager can schedule doula meetings');
-        }
-        const zoneManagerProfile = await this.prisma.zoneManagerProfile.findUnique({
-            where: { userId: user.id },
+        const { enquiryId, date, time, doulaIds } = dto;
+        const enquiry = await this.prisma.enquiryForm.findUnique({
+            where: { id: enquiryId },
+            select: {
+                id: true,
+                additionalNotes: true,
+                serviceName: true,
+                clientProfile: { select: { id: true, user: { select: { name: true, email: true, phone: true } } } }
+            }
         });
-        if (!zoneManagerProfile) {
-            throw new common_1.ForbiddenException('Zone Manager profile not found');
+        if (!enquiry) {
+            throw new common_1.ForbiddenException('enquiry not found');
         }
-        const doulaProfile = await this.prisma.doulaProfile.findUnique({
-            where: { id: doulaId },
-        });
-        if (!doulaProfile) {
-            throw new common_1.NotFoundException('Doula profile not found');
-        }
-        const doulaUser = await this.prisma.user.findUnique({
-            where: { id: doulaProfile.userId },
-        });
-        if (!doulaUser) {
-            throw new common_1.NotFoundException('Doula user not found');
-        }
-        const weekday = await (0, service_utils_1.getWeekdayFromDate)(meetingsDate);
-        const slot = await (0, service_utils_1.findSlotOrThrow)(this.prisma, {
-            ownerRole: client_1.Role.DOULA,
-            ownerProfileId: doulaProfile.id,
-            weekday,
-        });
-        console.log('slot', slot);
-        const exists = await (0, service_utils_1.isMeetingExists)(this.prisma, new Date(meetingsDate), meetingsTimeSlots, {
-            doulaProfileId: doulaProfile.id,
-        });
-        if (exists) {
-            throw new common_1.BadRequestException('Meeting already exists for this time slot');
-        }
-        const meetCode = Math.random().toString(36).slice(2, 10);
-        const meetLink = `https://meet.google.com/${meetCode}`;
-        const [startTime, endTime] = meetingsTimeSlots.split('-');
-        if (!startTime || !endTime) {
-            throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
-        }
-        const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
-        const endDateTime = new Date(`${meetingsDate}T${startTime}:00`);
-        const meeting = await this.prisma.meetings.create({
+        const enquiries = await this.prisma.$transaction(doulaIds.map((doulaId) => this.prisma.clientDoulaEnquiries.create({
             data: {
-                link: meetLink,
+                clientId: enquiry.clientProfile.id,
+                doulaProfileId: doulaId,
+                date: new Date(date),
+                time: new Date(`1970-01-01T${time}Z`),
+                notes: dto.notes ?? enquiry.additionalNotes,
+                serviceName: dto.serviceName ?? enquiry.serviceName,
                 status: client_1.MeetingStatus.SCHEDULED,
-                startTime: startDateTime,
-                endTime: endDateTime,
-                date: new Date(meetingsDate),
-                serviceName: serviceName,
-                remarks: additionalNotes,
-                bookedById: clientId,
-                availableSlotsForMeetingId: slot.id,
-                doulaProfileId: doulaProfile.id,
-                serviceId: serviceId,
+            },
+            include: this.includeRelations(),
+        })));
+        return enquiries.map((enquiry) => this.formatResponse(enquiry));
+    }
+    ;
+    async doulaMeeings(userId, role, page = 1, limit = 10) {
+        let where = {};
+        if (role === client_1.Role.ZONE_MANAGER) {
+            where = {
+                DoulaProfile: {
+                    zoneManager: {
+                        some: { userId }
+                    }
+                }
+            };
+        }
+        if (role === client_1.Role.DOULA) {
+            where = {
+                DoulaProfile: {
+                    userId: userId
+                }
+            };
+        }
+        const result = await (0, pagination_util_1.paginate)({
+            prismaModel: this.prisma.clientDoulaEnquiries,
+            page,
+            limit,
+            include: this.includeRelations(),
+            where,
+            orderBy: { createdAt: 'desc' },
+        });
+        return {
+            data: result.data.map((enquiry) => this.formatResponse(enquiry)),
+            meta: result.meta,
+        };
+    }
+    async doulaMeeingsRetrieve(id) {
+        const enquiry = await this.prisma.clientDoulaEnquiries.findUnique({
+            where: { id, },
+            include: this.includeRelations(),
+        });
+        if (!enquiry) {
+            throw new common_1.NotFoundException('Client–Doula enquiry not found');
+        }
+        return this.formatResponse(enquiry);
+    }
+    async updateDoulaMeeting(id, dto, userId) {
+        const existing = await this.prisma.clientDoulaEnquiries.findUnique({
+            where: { id, DoulaProfile: { zoneManager: { some: { userId: userId } } } },
+        });
+        if (!existing) {
+            throw new common_1.NotFoundException('Enquiry not found');
+        }
+        const { date, time, notes, doulaId } = dto;
+        const enquiry = await this.prisma.clientDoulaEnquiries.update({
+            where: { id },
+            data: {
+                date: dto.date ? new Date(dto.date) : undefined,
+                time: dto.time
+                    ? new Date(`1970-01-01T${dto.time}Z`)
+                    : undefined,
+                notes: dto.notes,
+                doulaProfileId: dto.doulaId,
+            },
+            include: this.includeRelations(),
+        });
+        return this.formatResponse(enquiry);
+    }
+    async deleteDoulaMeeting(id, userId) {
+        await this.doulaMeeingsRetrieve(id);
+        await this.prisma.clientDoulaEnquiries.delete({
+            where: { id, DoulaProfile: { zoneManager: { some: { userId: userId } } } },
+        });
+        return { message: 'Enquiry deleted successfully' };
+    }
+    async updateDoulaMeetingsStatus(id, userId, role, status) {
+        const enquiry = await this.prisma.clientDoulaEnquiries.findUnique({
+            where: { id },
+            include: {
+                DoulaProfile: {
+                    include: {
+                        zoneManager: true,
+                    },
+                },
             },
         });
-        console.log('meeting created succesfull');
-        return {
-            message: 'Doula meeting scheduled successfully',
-            meeting,
-        };
+        if (!enquiry) {
+            throw new common_1.NotFoundException('Client–Doula enquiry not found');
+        }
+        if (role === client_1.Role.ZONE_MANAGER &&
+            !enquiry.DoulaProfile.zoneManager.some((zm) => zm.userId === userId)) {
+            throw new common_1.ForbiddenException('Access denied');
+        }
+        if (role === client_1.Role.DOULA &&
+            enquiry.DoulaProfile.userId !== userId) {
+            throw new common_1.ForbiddenException('Access denied');
+        }
+        const updated = await this.prisma.clientDoulaEnquiries.update({
+            where: { id },
+            data: { status },
+            include: this.includeRelations(),
+        });
+        return this.formatResponse(updated);
     }
     async findAllmeetings() {
         return this.prisma.meetings.findMany({
@@ -550,6 +611,48 @@ let MeetingsService = class MeetingsService {
                 startTime: m.startTime,
                 endTime: m.endTime,
             })),
+        };
+    }
+    includeRelations() {
+        return {
+            ClientProfile: {
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                },
+            },
+            DoulaProfile: {
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            email: true,
+                        },
+                    },
+                },
+            },
+        };
+    }
+    formatResponse(enquiry) {
+        return {
+            id: enquiry.id,
+            clientId: enquiry.clientId,
+            clientName: enquiry.ClientProfile.user.name,
+            clientEmail: enquiry.ClientProfile.user.email,
+            clientPhone: enquiry.ClientProfile.user.phone,
+            clientAddress: enquiry.ClientProfile.address,
+            doulaId: enquiry.DoulaProfile.id,
+            doulaName: enquiry.DoulaProfile.user.name,
+            doulaEmail: enquiry.DoulaProfile.user.email,
+            date: enquiry.date,
+            time: enquiry.time,
+            notes: enquiry.notes,
+            status: enquiry.status,
         };
     }
 };

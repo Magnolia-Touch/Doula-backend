@@ -35,6 +35,21 @@ let MeetingsController = class MeetingsController {
     async scheduleDoulaMeeting(dto, req) {
         return this.service.doulasMeetingSchedule(dto, req.user);
     }
+    findAll(req, page, limit) {
+        return this.service.doulaMeeings(req.user.id, req.user.role, page ? Number(page) : 1, limit ? Number(limit) : 10);
+    }
+    updateStatus(id, dto, req) {
+        return this.service.updateDoulaMeetingsStatus(id, req.user.id, req.user.role, dto.status);
+    }
+    findOne(id) {
+        return this.service.doulaMeeingsRetrieve(id);
+    }
+    update(id, dto, req) {
+        return this.service.updateDoulaMeeting(id, dto, req.user.id);
+    }
+    remove(id, req) {
+        return this.service.deleteDoulaMeeting(id, req.user.id);
+    }
     async rescheduleMeeting(dto, req) {
         return this.service.rescheduleMeeting(dto, req.user);
     }
@@ -165,6 +180,56 @@ __decorate([
     __metadata("design:paramtypes", [schedule_doula_dto_1.ScheduleDoulaDto, Object]),
     __metadata("design:returntype", Promise)
 ], MeetingsController.prototype, "scheduleDoulaMeeting", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
+    (0, common_1.Get)('doula/schedule/list'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], MeetingsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER, client_1.Role.DOULA),
+    (0, common_1.Patch)('doula/schedule/list/:id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, schedule_doula_dto_1.UpdateMeetingStatusDto, Object]),
+    __metadata("design:returntype", void 0)
+], MeetingsController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Get)('doula/schedule/list/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MeetingsController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Patch)('doula/schedule/update/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, schedule_doula_dto_1.UpdateClientDoulaEnquiryDto, Object]),
+    __metadata("design:returntype", void 0)
+], MeetingsController.prototype, "update", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ZONE_MANAGER),
+    (0, common_1.Delete)('doula/schedule/delete/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], MeetingsController.prototype, "remove", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Reschedule a meeting to a new slot' }),
     (0, swagger_1.ApiBody)({ type: reschedule_dto_1.RescheduleDto }),

@@ -163,8 +163,6 @@ export class EnquiryService {
             slot.id,
 
         );
-
-
         const fullEnquiry = await this.prisma.enquiryForm.findUnique({
             where: { id: enquiry.id },
             include: {
@@ -176,7 +174,6 @@ export class EnquiryService {
             message: 'Enquiry submitted successfully',
             enquiry: fullEnquiry,
         };
-
     }
 
     // --------------------------------------------------------------

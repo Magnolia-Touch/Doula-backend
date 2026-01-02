@@ -34,7 +34,6 @@ const device_token_module_1 = require("./token/device-token.module");
 const users_module_1 = require("./users/users.module");
 const config_1 = require("@nestjs/config");
 const stripe_module_1 = require("./stripe/stripe.module");
-const client_doula_enquiry_module_1 = require("./client-doula-enquiry/client-doula-enquiry.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -51,7 +50,6 @@ exports.AppModule = AppModule = __decorate([
             meetings_availability_module_1.AvailableSlotsModule,
             meetings_module_1.MeetingsModule,
             regions_module_1.RegionModule,
-            client_doula_enquiry_module_1.ClientDoulaEnquiryModule,
             service_availability_module_1.DoulaServiceAvailabilityModule,
             services_module_1.ServicesModule,
             zone_manager_module_1.ZoneManagerModule,

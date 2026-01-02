@@ -11,29 +11,34 @@ export declare class EnquiryService {
         message: string;
         enquiry: ({
             Meetings: {
-                id: string;
+                enquiryId: string | null;
+                date: Date;
                 serviceName: string;
-                createdAt: Date;
-                updatedAt: Date;
-                serviceId: string | null;
-                link: string;
                 status: import("@prisma/client").$Enums.MeetingStatus;
+                id: string;
+                link: string;
                 startTime: Date;
                 endTime: Date;
-                date: Date;
                 remarks: string | null;
-                bookedById: string;
+                createdAt: Date;
+                updatedAt: Date;
                 cancelledAt: Date | null;
                 rescheduledAt: Date | null;
+                bookedById: string;
                 availableSlotsForMeetingId: string | null;
                 zoneManagerProfileId: string | null;
                 doulaProfileId: string | null;
                 adminProfileId: string | null;
-                enquiryId: string | null;
+                serviceId: string | null;
             } | null;
         } & {
+            serviceName: string;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            serviceId: string;
             name: string;
+            regionId: string;
             email: string;
             phone: string;
             additionalNotes: string | null;
@@ -43,19 +48,19 @@ export declare class EnquiryService {
             serviceEndDate: Date | null;
             VisitFrequency: number | null;
             serviceTimeSlots: string | null;
-            serviceName: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string;
             slotId: string;
-            serviceId: string;
             clientId: string;
         }) | null;
     }>;
     getAllEnquiries(page: number | undefined, limit: number | undefined, userId: string): Promise<{
         data: {
+            serviceName: string;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            serviceId: string;
             name: string;
+            regionId: string;
             email: string;
             phone: string;
             additionalNotes: string | null;
@@ -65,12 +70,7 @@ export declare class EnquiryService {
             serviceEndDate: Date | null;
             VisitFrequency: number | null;
             serviceTimeSlots: string | null;
-            serviceName: string;
-            createdAt: Date;
-            updatedAt: Date;
-            regionId: string;
             slotId: string;
-            serviceId: string;
             clientId: string;
         }[];
         meta: {
@@ -83,8 +83,34 @@ export declare class EnquiryService {
         };
     }>;
     getEnquiryById(id: string, userId: string): Promise<{
+        serviceName: string;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        serviceId: string;
         name: string;
+        Meetings: {
+            enquiryId: string | null;
+            date: Date;
+            serviceName: string;
+            status: import("@prisma/client").$Enums.MeetingStatus;
+            id: string;
+            link: string;
+            startTime: Date;
+            endTime: Date;
+            remarks: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            cancelledAt: Date | null;
+            rescheduledAt: Date | null;
+            bookedById: string;
+            availableSlotsForMeetingId: string | null;
+            zoneManagerProfileId: string | null;
+            doulaProfileId: string | null;
+            adminProfileId: string | null;
+            serviceId: string | null;
+        } | null;
+        regionId: string;
         email: string;
         phone: string;
         additionalNotes: string | null;
@@ -94,34 +120,8 @@ export declare class EnquiryService {
         serviceEndDate: Date | null;
         VisitFrequency: number | null;
         serviceTimeSlots: string | null;
-        serviceName: string;
-        createdAt: Date;
-        updatedAt: Date;
-        regionId: string;
         slotId: string;
-        serviceId: string;
         clientId: string;
-        Meetings: {
-            id: string;
-            serviceName: string;
-            createdAt: Date;
-            updatedAt: Date;
-            serviceId: string | null;
-            link: string;
-            status: import("@prisma/client").$Enums.MeetingStatus;
-            startTime: Date;
-            endTime: Date;
-            date: Date;
-            remarks: string | null;
-            bookedById: string;
-            cancelledAt: Date | null;
-            rescheduledAt: Date | null;
-            availableSlotsForMeetingId: string | null;
-            zoneManagerProfileId: string | null;
-            doulaProfileId: string | null;
-            adminProfileId: string | null;
-            enquiryId: string | null;
-        } | null;
     }>;
     deleteEnquiry(id: string): Promise<{
         message: string;

@@ -1,43 +1,59 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { MeetingStatus } from '@prisma/client';
 import {
+  IsArray,
   IsDateString,
   IsEnum,
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
-import { MeetingStatus } from '@prisma/client';
 
 export class ScheduleDoulaDto {
-  @ApiProperty({ example: 'uuid' })
-  @IsString()
-  clientId: string;
+  @IsUUID()
+  enquiryId: string;
 
-  @ApiProperty({ example: 'john@example.com' })
-  @IsString()
-  serviceName: string;
+  @IsDateString()
+  date: string;
 
-  @ApiProperty({ example: 'uuid' })
   @IsString()
-  serviceId: string;
+  time: string; // HH:mm:ss
 
-  @ApiProperty({ example: '2025-10-12' })
-  @IsString()
-  meetingsDate: string;
-
-  @ApiProperty({
-    example: '09:00-11:00',
-    description: 'Time slot for the service',
-  })
-  @IsString()
-  meetingsTimeSlots: string;
-
-  @ApiProperty({ example: 'uuid-slot-id' })
-  @IsString()
-  doulaId: string;
-
-  @ApiProperty({ required: false, description: 'Optional additional notes' })
   @IsOptional()
   @IsString()
-  additionalNotes?: string;
+  notes?: string;
+
+  @IsOptional()
+  @IsString()
+  serviceName?: string;
+
+  @IsArray()
+  @IsUUID('all', { each: true })
+  doulaIds: string[];
+}
+
+
+
+export class UpdateClientDoulaEnquiryDto {
+  @IsDateString()
+  @IsOptional()
+  date: string;
+
+  @IsString()
+  @IsOptional()
+  time: string; // HH:mm:ss
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsUUID()
+  doulaId: string;
+}
+
+
+export class UpdateMeetingStatusDto {
+  @IsEnum(MeetingStatus)
+  status: MeetingStatus;
 }
