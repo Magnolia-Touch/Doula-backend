@@ -16,9 +16,10 @@ import { BookingStatus } from '@prisma/client';
 export class TestimonialsService {
   constructor(private prisma: PrismaService) { }
 
-  async create(dto: CreateTestimonialDto, user: any) {
+  async create(dto: CreateTestimonialDto, userId: string) {
+    console.log("client Id", userId)
     const bookedservice = await this.prisma.serviceBooking.findFirst({
-      where: { client: { userId: user.id }, id: dto.serviceBookingId, status: BookingStatus.COMPLETED },
+      where: { client: { userId: userId }, id: dto.serviceBookingId, status: BookingStatus.COMPLETED },
     });
     if (!bookedservice) {
       throw new NotFoundException(
@@ -31,7 +32,7 @@ export class TestimonialsService {
         serviceId: dto.servicePricingId,
         ratings: dto.ratings,
         reviews: dto.reviews,
-        clientId: user.id,
+        clientId: userId,
 
       },
     });

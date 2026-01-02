@@ -52,7 +52,7 @@ export class TestimonialsController {
     },
   })
   create(@Body() dto: CreateTestimonialDto, @Req() req) {
-    return this.service.create(dto, req.user);
+    return this.service.create(dto, req.user.id);
   }
 
   @Get()
