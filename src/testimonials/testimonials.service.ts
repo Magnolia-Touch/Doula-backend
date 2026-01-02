@@ -18,6 +18,7 @@ export class TestimonialsService {
 
   async create(dto: CreateTestimonialDto, userId: string) {
     console.log("client Id", userId)
+    console.log(dto)
     const client = await this.prisma.clientProfile.findUnique({
       where: { userId: userId },
       select: { id: true }
