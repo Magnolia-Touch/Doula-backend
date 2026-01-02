@@ -28,7 +28,7 @@ import { DeviceTokenModule } from './token/device-token.module';
 import { UserModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { StripeModule } from './stripe/stripe.module';
-import { ClientDoulaEnquiryModule } from './client-doula-enquiry/client-doula-enquiry.module';
+
 
 @Module({
   imports: [
@@ -42,7 +42,7 @@ import { ClientDoulaEnquiryModule } from './client-doula-enquiry/client-doula-en
     AvailableSlotsModule,
     MeetingsModule,
     RegionModule,
-    ClientDoulaEnquiryModule,
+
     DoulaServiceAvailabilityModule,
     ServicesModule,
     ZoneManagerModule,
