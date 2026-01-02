@@ -145,6 +145,9 @@ export declare class ClientsService {
         servicePricingId: string;
         service: string;
         doulaName: string;
+        doulaEmail: string;
+        doulaProfileId: string;
+        doulaUserId: string;
         mainDoulaImage: string | null;
     }[]>;
     bookedScheduleById(userId: string, serviceBookingId: string): Promise<{

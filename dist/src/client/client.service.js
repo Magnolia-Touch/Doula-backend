@@ -247,6 +247,7 @@ let ClientsService = class ClientsService {
                                         user: {
                                             select: {
                                                 name: true,
+                                                email: true
                                             },
                                         },
                                         DoulaGallery: {
@@ -288,6 +289,9 @@ let ClientsService = class ClientsService {
                 servicePricingId: booking.servicePricingId,
                 service: booking.service.service.name,
                 doulaName: booking.DoulaProfile.user.name,
+                doulaEmail: booking.DoulaProfile.user.email,
+                doulaProfileId: booking.DoulaProfile.id,
+                doulaUserId: booking.DoulaProfile.userId,
                 mainDoulaImage: booking.DoulaProfile.profile_image,
             };
         });
