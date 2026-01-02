@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateClientDoulaEnquiryDto } from './dto/create-client-doula-enquiry.dto';
 import { UpdateClientDoulaEnquiryDto } from './dto/update-client-doula-enquiry.dto';
 import { MeetingStatus } from '@prisma/client';
+import { paginate } from 'src/common/utility/pagination.util';
 
 @Injectable()
 export class ClientDoulaEnquiryService {
@@ -41,14 +42,21 @@ export class ClientDoulaEnquiryService {
 
 
     /* -------------------------------- FIND ALL -------------------------------- */
-    async findAll() {
-        const enquiries = await this.prisma.clientDoulaEnquiries.findMany({
+    async findAll(page = 1, limit = 10) {
+        const result = await paginate({
+            prismaModel: this.prisma.clientDoulaEnquiries,
+            page,
+            limit,
             include: this.includeRelations(),
             orderBy: { createdAt: 'desc' },
         });
 
-        return enquiries.map(this.formatResponse);
+        return {
+            data: result.data.map((enquiry) => this.formatResponse(enquiry)),
+            meta: result.meta,
+        };
     }
+
 
     /* -------------------------------- FIND ONE -------------------------------- */
     async findOne(id: string) {
@@ -128,6 +136,7 @@ export class ClientDoulaEnquiryService {
 
     private formatResponse(enquiry: any) {
         return {
+            id: enquiry.id,
             clientId: enquiry.clientId,
             clientName: enquiry.ClientProfile.user.name,
             clientEmail: enquiry.ClientProfile.user.email,
