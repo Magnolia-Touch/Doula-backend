@@ -13,6 +13,7 @@ exports.ServiceBookingService = void 0;
 const common_1 = require("@nestjs/common");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let ServiceBookingService = class ServiceBookingService {
     prisma;
     constructor(prisma) {
@@ -138,23 +139,47 @@ let ServiceBookingService = class ServiceBookingService {
             data: transformed,
         };
     }
-    async updateScheduleStatus(userId, scheduleId, dto) {
+    async updateScheduleStatus(userId, userRole, scheduleId, dto) {
         const { status } = dto;
-        const doulaProfile = await this.prisma.doulaProfile.findUnique({
-            where: { userId },
-            select: { id: true },
-        });
-        if (!doulaProfile) {
-            throw new common_1.ForbiddenException('Doula profile not found');
+        let schedule;
+        if (userRole === client_1.Role.DOULA) {
+            const doulaProfile = await this.prisma.doulaProfile.findUnique({
+                where: { userId },
+                select: { id: true },
+            });
+            if (!doulaProfile) {
+                throw new common_1.ForbiddenException('Doula profile not found');
+            }
+            schedule = await this.prisma.schedules.findFirst({
+                where: {
+                    id: scheduleId,
+                    doulaProfileId: doulaProfile.id,
+                },
+            });
         }
-        const schedule = await this.prisma.schedules.findFirst({
-            where: {
-                id: scheduleId,
-                doulaProfileId: doulaProfile.id,
-            },
-        });
+        if (userRole === client_1.Role.ZONE_MANAGER) {
+            const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+                where: { userId },
+                select: { id: true },
+            });
+            if (!zoneManager) {
+                throw new common_1.ForbiddenException('Zone manager profile not found');
+            }
+            schedule = await this.prisma.schedules.findFirst({
+                where: {
+                    id: scheduleId,
+                    DoulaProfile: {
+                        zoneManager: {
+                            some: {
+                                id: zoneManager.id,
+                            },
+                        },
+                    },
+                },
+            });
+        }
         if (!schedule) {
-            throw new common_1.NotFoundException('Schedule not found');
+            throw new common_1.NotFoundException('Schedule not found or access denied');
         }
         const updatedSchedule = await this.prisma.schedules.update({
             where: { id: scheduleId },
@@ -166,56 +191,57 @@ let ServiceBookingService = class ServiceBookingService {
             status: updatedSchedule.status,
         };
     }
-    async updateBookingStatus(userId, bookingId, dto) {
+    async updateBookingStatus(userId, userRole, bookingId, dto) {
         const { status } = dto;
-        const doulaProfile = await this.prisma.doulaProfile.findUnique({
-            where: { userId },
-            select: { id: true },
-        });
-        if (!doulaProfile) {
-            throw new common_1.ForbiddenException('Doula profile not found');
+        let booking;
+        if (userRole === client_1.Role.DOULA) {
+            const doulaProfile = await this.prisma.doulaProfile.findUnique({
+                where: { userId },
+                select: { id: true },
+            });
+            if (!doulaProfile) {
+                throw new common_1.ForbiddenException('Doula profile not found');
+            }
+            booking = await this.prisma.serviceBooking.findFirst({
+                where: {
+                    id: bookingId,
+                    doulaProfileId: doulaProfile.id,
+                },
+            });
         }
-        const schedule = await this.prisma.serviceBooking.findFirst({
-            where: {
-                id: bookingId,
-                doulaProfileId: doulaProfile.id,
-            },
-        });
-        if (!schedule) {
-            throw new common_1.NotFoundException('Schedule not found');
+        if (userRole === client_1.Role.ZONE_MANAGER) {
+            const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+                where: { userId },
+                select: { id: true },
+            });
+            if (!zoneManager) {
+                throw new common_1.ForbiddenException('Zone manager profile not found');
+            }
+            booking = await this.prisma.serviceBooking.findFirst({
+                where: {
+                    id: bookingId,
+                    DoulaProfile: {
+                        zoneManager: {
+                            some: {
+                                id: zoneManager.id,
+                            },
+                        },
+                    },
+                },
+            });
         }
-        const updatedSchedule = await this.prisma.serviceBooking.update({
+        if (!booking) {
+            throw new common_1.NotFoundException('Booking not found or access denied');
+        }
+        const updatedBooking = await this.prisma.serviceBooking.update({
             where: { id: bookingId },
             data: { status },
         });
         return {
             message: 'Booking status updated successfully',
-            scheduleId: updatedSchedule.id,
-            status: updatedSchedule.status,
+            bookingId: updatedBooking.id,
+            status: updatedBooking.status,
         };
-    }
-    async updateOrderStatus(bookingId, dto) {
-        const booking = await this.prisma.serviceBooking.findUnique({
-            where: { id: bookingId },
-        });
-        if (!booking) {
-            throw new common_1.NotFoundException('Booking not found');
-        }
-        return this.prisma.serviceBooking.update({
-            where: { id: bookingId },
-            data: {
-                status: dto.status,
-                isPaid: dto.isPaid ?? booking.isPaid,
-                paymentDetails: dto.paymentDetails
-                    ? {
-                        ...(booking.paymentDetails ?? {}),
-                        ...dto.paymentDetails,
-                        notes: dto.notes,
-                        updatedAt: new Date(),
-                    }
-                    : booking.paymentDetails,
-            },
-        });
     }
 };
 exports.ServiceBookingService = ServiceBookingService;

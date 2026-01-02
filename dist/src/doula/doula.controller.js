@@ -149,6 +149,9 @@ let DoulaController = class DoulaController {
     async updateDoulaProfile(req, dto) {
         return this.service.updateDoulaProfile(req.user.id, dto);
     }
+    async addCertificate(req, dto) {
+        return this.service.addCertificate(req.user.id, dto);
+    }
     async getCertificates(req) {
         return this.service.getCertificates(req.user.id);
     }
@@ -1317,6 +1320,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, update_doula_dto_1.UpdateDoulaProfileDto]),
     __metadata("design:returntype", Promise)
 ], DoulaController.prototype, "updateDoulaProfile", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, common_1.Post)('add/certificates/'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, certificate_dto_1.CreateCertificateDto]),
+    __metadata("design:returntype", Promise)
+], DoulaController.prototype, "addCertificate", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.DOULA),

@@ -102,6 +102,9 @@ export declare class ClientsService {
         servicePricingId: string;
         service: string;
         doulaName: string;
+        doulaProfileId: string;
+        doulaUserId: string;
+        doulaEmail: string;
         mainDoulaImage: string | null;
     }[]>;
     bookedServiceById(userId: string, serviceBookingId: string): Promise<{
@@ -120,6 +123,9 @@ export declare class ClientsService {
         servicePricingId: string;
         service: string;
         doulaName: string;
+        doulaProfileId: string;
+        doulaUserId: string;
+        doulaEmail: string;
         mainDoulaImage: string | null;
     }>;
     bookedSchedules(userId: string): Promise<{

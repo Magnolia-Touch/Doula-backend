@@ -3,7 +3,7 @@ import { CreateDoulaDto } from './dto/create-doula.dto';
 import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
 import { UpdateDoulaStatusDto } from './dto/update-doula-status.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
-import { UpdateCertificateDto } from './dto/certificate.dto';
+import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
 import { CalculatePricingDto } from './dto/calculate-pricing.dto';
 export declare class DoulaController {
     private readonly service;
@@ -473,6 +473,16 @@ export declare class DoulaController {
                 url: string;
                 altText: string | null;
             }[];
+        };
+    }>;
+    addCertificate(req: any, dto: CreateCertificateDto): Promise<{
+        message: string;
+        data: {
+            id: string;
+            name: string;
+            doulaProfileId: string;
+            issuedBy: string;
+            year: string;
         };
     }>;
     getCertificates(req: any): Promise<{

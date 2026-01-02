@@ -1,5 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
+import { Role } from '@prisma/client';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 export declare class ServiceBookingService {
     private prisma;
@@ -53,31 +54,14 @@ export declare class ServiceBookingService {
             createdAt: Date;
         };
     }>;
-    updateScheduleStatus(userId: string, scheduleId: string, dto: UpdateScheduleStatusDto): Promise<{
+    updateScheduleStatus(userId: string, userRole: Role, scheduleId: string, dto: UpdateScheduleStatusDto): Promise<{
         message: string;
         scheduleId: string;
         status: import("@prisma/client").$Enums.ServiceStatus;
     }>;
-    updateBookingStatus(userId: string, bookingId: string, dto: UpdateBookingStatusDto): Promise<{
+    updateBookingStatus(userId: string, userRole: Role, bookingId: string, dto: UpdateBookingStatusDto): Promise<{
         message: string;
-        scheduleId: string;
+        bookingId: string;
         status: import("@prisma/client").$Enums.BookingStatus;
-    }>;
-    updateOrderStatus(bookingId: string, dto: UpdateBookingStatusDto): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        regionId: string;
-        doulaProfileId: string;
-        clientId: string;
-        status: import("@prisma/client").$Enums.BookingStatus;
-        cancelledAt: Date | null;
-        servicePricingId: string;
-        timeshift: import("@prisma/client").$Enums.TimeShift;
-        startDate: Date;
-        endDate: Date;
-        paymentDetails: import("@prisma/client/runtime/library").JsonValue | null;
-        isPaid: boolean;
-        totalAmount: string | null;
     }>;
 }

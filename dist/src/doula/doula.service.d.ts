@@ -3,7 +3,7 @@ import { CreateDoulaDto } from './dto/create-doula.dto';
 import { Prisma } from '@prisma/client';
 import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
-import { UpdateCertificateDto } from './dto/certificate.dto';
+import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
 import { CalculatePricingDto } from './dto/calculate-pricing.dto';
 export declare class DoulaService {
     private prisma;
@@ -475,6 +475,16 @@ export declare class DoulaService {
         };
     }>;
     private getDoulaProfile;
+    addCertificate(userId: string, dto: CreateCertificateDto): Promise<{
+        message: string;
+        data: {
+            id: string;
+            name: string;
+            doulaProfileId: string;
+            issuedBy: string;
+            year: string;
+        };
+    }>;
     getCertificates(userId: string): Promise<{
         id: string;
         name: string;

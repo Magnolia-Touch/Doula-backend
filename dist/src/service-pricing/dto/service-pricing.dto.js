@@ -22,19 +22,19 @@ exports.PriceBreakdownDto = PriceBreakdownDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 1000 }),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], PriceBreakdownDto.prototype, "morning", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 2000 }),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], PriceBreakdownDto.prototype, "night", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 3000 }),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], PriceBreakdownDto.prototype, "fullday", void 0);
 class CreateServicePricingDto {

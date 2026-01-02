@@ -60,7 +60,7 @@ export declare class ServiceBookingController {
     }>;
     updateBookingStatus(req: any, bookingId: string, dto: UpdateBookingStatusDto): Promise<{
         message: string;
-        scheduleId: string;
+        bookingId: string;
         status: import("@prisma/client").$Enums.BookingStatus;
     }>;
 }

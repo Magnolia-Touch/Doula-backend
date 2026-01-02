@@ -281,20 +281,67 @@ let ZoneManagerService = class ZoneManagerService {
                 },
             },
         };
+        const AND = [];
         if (filters?.status) {
             where.status = filters.status;
         }
         if (filters?.date) {
             where.date = new Date(filters.date);
         }
-        if (filters?.serviceName) {
-            where.ServicePricing = {
-                service: {
-                    name: {
-                        contains: filters.serviceName.toLowerCase(),
+        if (filters?.search) {
+            const search = filters.search.trim();
+            AND.push({
+                OR: [
+                    {
+                        ServicePricing: {
+                            service: {
+                                name: {
+                                    contains: search,
+                                },
+                            },
+                        },
                     },
-                },
-            };
+                    {
+                        client: {
+                            user: {
+                                name: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        client: {
+                            user: {
+                                email: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        DoulaProfile: {
+                            user: {
+                                name: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        DoulaProfile: {
+                            user: {
+                                email: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                ],
+            });
+        }
+        if (AND.length > 0) {
+            where.AND = AND;
         }
         const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.schedules,
@@ -308,6 +355,7 @@ let ZoneManagerService = class ZoneManagerService {
                             select: {
                                 id: true,
                                 name: true,
+                                email: true
                             },
                         },
                     },
@@ -318,6 +366,7 @@ let ZoneManagerService = class ZoneManagerService {
                             select: {
                                 id: true,
                                 name: true,
+                                email: true
                             },
                         },
                     },
@@ -343,13 +392,16 @@ let ZoneManagerService = class ZoneManagerService {
             data: schedules.map((schedule) => {
                 return {
                     scheduleId: schedule.id,
+                    serviceName: schedule.ServicePricing.service.name,
+                    serviceTimeshift: schedule.timeshift,
+                    scheduleDate: schedule.date,
+                    status: schedule.status,
                     clientId: schedule.client.id,
                     clientName: schedule.client.user.name,
+                    clientEmail: schedule.client.user.email,
                     doulaId: schedule.DoulaProfile.id,
                     doulaName: schedule.DoulaProfile.user.name,
-                    serviceName: schedule.ServicePricing.service.name,
-                    startDate: schedule.timeshift,
-                    status: schedule.status,
+                    doulaEmail: schedule.DoulaProfile.user.email,
                 };
             }),
             meta: result.meta,
@@ -372,34 +424,81 @@ let ZoneManagerService = class ZoneManagerService {
                 },
             },
         };
+        const AND = [];
         if (filters?.status) {
             where.status = filters.status;
         }
         if (filters?.startDate || filters?.endDate) {
             where.AND = [];
-            if (filters.startDate) {
-                where.AND.push({
+            if (filters?.startDate) {
+                AND.push({
                     endDate: {
                         gte: new Date(filters.startDate),
                     },
                 });
             }
-            if (filters.endDate) {
-                where.AND.push({
+            if (filters?.endDate) {
+                AND.push({
                     startDate: {
                         lte: new Date(filters.endDate),
                     },
                 });
             }
         }
-        if (filters?.serviceName) {
-            where.service = {
-                service: {
-                    name: {
-                        contains: filters.serviceName.toLowerCase(),
+        if (filters?.search) {
+            const search = filters.search.trim();
+            AND.push({
+                OR: [
+                    {
+                        service: {
+                            service: {
+                                name: {
+                                    contains: search,
+                                },
+                            },
+                        },
                     },
-                },
-            };
+                    {
+                        client: {
+                            user: {
+                                name: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        client: {
+                            user: {
+                                email: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        DoulaProfile: {
+                            user: {
+                                name: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        DoulaProfile: {
+                            user: {
+                                email: {
+                                    contains: search,
+                                },
+                            },
+                        },
+                    },
+                ],
+            });
+        }
+        if (AND.length > 0) {
+            where.AND = AND;
         }
         const result = await (0, pagination_util_1.paginate)({
             prismaModel: this.prisma.serviceBooking,
@@ -413,6 +512,7 @@ let ZoneManagerService = class ZoneManagerService {
                             select: {
                                 id: true,
                                 name: true,
+                                email: true
                             },
                         },
                     },
@@ -423,6 +523,7 @@ let ZoneManagerService = class ZoneManagerService {
                             select: {
                                 id: true,
                                 name: true,
+                                email: true
                             },
                         },
                     },
@@ -449,8 +550,10 @@ let ZoneManagerService = class ZoneManagerService {
                 bookingId: booking.id,
                 clientId: booking.client.id,
                 clientName: booking.client.user.name,
+                clientEmail: booking.client.user.email,
                 doulaId: booking.DoulaProfile.id,
                 doulaName: booking.DoulaProfile.user.name,
+                doulaEmail: booking.DoulaProfile.user.email,
                 servicePricingId: booking.service.id,
                 serviceName: booking.service.service.name,
                 startDate: booking.startDate,
@@ -594,12 +697,12 @@ let ZoneManagerService = class ZoneManagerService {
             include: {
                 client: {
                     include: {
-                        user: { select: { id: true, name: true } },
+                        user: { select: { id: true, name: true, email: true } },
                     },
                 },
                 DoulaProfile: {
                     include: {
-                        user: { select: { id: true, name: true } },
+                        user: { select: { id: true, name: true, email: true } },
                     },
                 },
                 ServicePricing: {
@@ -617,13 +720,16 @@ let ZoneManagerService = class ZoneManagerService {
             message: 'Schedule fetched successfully',
             data: {
                 scheduleId: schedule.id,
+                serviceName: schedule.ServicePricing.service.name,
+                serviceTimeshift: schedule.timeshift,
+                scheduleDate: schedule.date,
+                status: schedule.status,
                 clientId: schedule.client.id,
                 clientName: schedule.client.user.name,
+                clientEmail: schedule.client.user.email,
                 doulaId: schedule.DoulaProfile.id,
                 doulaName: schedule.DoulaProfile.user.name,
-                serviceName: schedule.ServicePricing.service.name,
-                startDate: schedule.timeshift,
-                status: schedule.status,
+                doulaEmail: schedule.DoulaProfile.user.email,
             },
         };
     }

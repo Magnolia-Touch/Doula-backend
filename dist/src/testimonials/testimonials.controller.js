@@ -29,7 +29,7 @@ let TestimonialsController = class TestimonialsController {
         this.service = service;
     }
     create(dto, req) {
-        return this.service.create(dto, req.user);
+        return this.service.create(dto, req.user.id);
     }
     findAll(query) {
         return this.service.findAll(query);

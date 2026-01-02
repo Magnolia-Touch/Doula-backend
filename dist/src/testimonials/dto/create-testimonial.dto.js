@@ -14,7 +14,8 @@ const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class CreateTestimonialDto {
     doulaProfileId;
-    serviceId;
+    servicePricingId;
+    serviceBookingId;
     ratings;
     reviews;
 }
@@ -34,7 +35,15 @@ __decorate([
     }),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], CreateTestimonialDto.prototype, "serviceId", void 0);
+], CreateTestimonialDto.prototype, "servicePricingId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: '3e9c559d-d9f6-438c-a36d-0177c7a8c8c1',
+        description: 'UUID of the Booking',
+    }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreateTestimonialDto.prototype, "serviceBookingId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: 5,

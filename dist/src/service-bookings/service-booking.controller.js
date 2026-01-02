@@ -39,10 +39,10 @@ let ServiceBookingController = class ServiceBookingController {
         return this.bookingService.findById(id);
     }
     async updateScheduleStatus(req, scheduleId, dto) {
-        return this.bookingService.updateScheduleStatus(req.user.id, scheduleId, dto);
+        return this.bookingService.updateScheduleStatus(req.user.id, req.user.role, scheduleId, dto);
     }
     async updateBookingStatus(req, bookingId, dto) {
-        return this.bookingService.updateBookingStatus(req.user.id, bookingId, dto);
+        return this.bookingService.updateBookingStatus(req.user.id, req.user.role, bookingId, dto);
     }
 };
 exports.ServiceBookingController = ServiceBookingController;
@@ -115,7 +115,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('schedules/:id/status'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA, client_1.Role.ZONE_MANAGER),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -126,7 +126,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('bookings/:id/status'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.DOULA),
+    (0, roles_decorator_1.Roles)(client_1.Role.DOULA, client_1.Role.ZONE_MANAGER),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),

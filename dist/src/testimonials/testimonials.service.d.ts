@@ -5,7 +5,7 @@ import { FilterTestimonialsDto, GetZmTestimonialDto } from './dto/filter-testimo
 export declare class TestimonialsService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(dto: CreateTestimonialDto, user: any): Promise<{
+    create(dto: CreateTestimonialDto, userId: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

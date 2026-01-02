@@ -357,10 +357,8 @@ export class ZoneManagerService {
     limit = 10,
     filters?: {
       status?: ServiceStatus;
-      serviceName?: string;
+      search?: string;
       date?: string;
-      clientName?: string;
-      doulaName?: string;
     },
   ) {
     console.log('user', userId);
@@ -386,7 +384,7 @@ export class ZoneManagerService {
         },
       },
     };
-    const andConditions: Prisma.SchedulesWhereInput[] = [];
+    const AND: Prisma.SchedulesWhereInput[] = [];
     /* Service Status */
     if (filters?.status) {
       where.status = filters.status;
@@ -397,53 +395,77 @@ export class ZoneManagerService {
       where.date = new Date(filters.date);
     }
     /* Service Name */
-    if (filters?.serviceName) {
-      andConditions.push({
-        ServicePricing: {
-          service: {
-            name: {
-              contains: filters.serviceName.toLowerCase()
+    if (filters?.search) {
+      const search = filters.search.trim();
+
+      AND.push({
+        OR: [
+          /* Service Name */
+          {
+            ServicePricing: {
+              service: {
+                name: {
+                  contains: search,
+
+                },
+              },
             },
           },
-        },
+
+          /* Client Name */
+          {
+            client: {
+              user: {
+                name: {
+                  contains: search,
+
+                },
+              },
+            },
+          },
+
+          /* Client Email */
+          {
+            client: {
+              user: {
+                email: {
+                  contains: search,
+
+                },
+              },
+            },
+          },
+
+          /* Doula Name */
+          {
+            DoulaProfile: {
+              user: {
+                name: {
+                  contains: search,
+                },
+              },
+            },
+          },
+
+          /* Doula Email */
+          {
+            DoulaProfile: {
+              user: {
+                email: {
+                  contains: search,
+
+                },
+              },
+            },
+          },
+        ],
       });
     }
 
-    /* Client Name */
-    if (filters?.clientName) {
-      andConditions.push({
-        client: {
-          user: {
-            name: {
-              contains: filters.clientName.toLowerCase()
-            },
-            email: {
-              contains: filters.clientName.toLowerCase()
-            },
-          },
-        },
-      });
+    if (AND.length > 0) {
+      where.AND = AND;
     }
 
-    /* Doula Name */
-    if (filters?.doulaName) {
-      andConditions.push({
-        DoulaProfile: {
-          user: {
-            name: {
-              contains: filters.doulaName.toLowerCase()
-            },
-            email: {
-              contains: filters.doulaName.toLowerCase()
-            },
-          },
-        },
-      });
-    }
-
-    if (andConditions.length > 0) {
-      where.AND = andConditions;
-    }
 
     const result = await paginate({
       prismaModel: this.prisma.schedules,
@@ -561,12 +583,10 @@ export class ZoneManagerService {
     page = 1,
     limit = 10,
     filters?: {
-      serviceName?: string;
+      search?: string;
       status?: BookingStatus;
       startDate?: string;
       endDate?: string;
-      clientName?: string;
-      doulaName?: string;
     },
   ) {
     // Fetch zone manager profile
@@ -592,7 +612,7 @@ export class ZoneManagerService {
         },
       },
     };
-    const andConditions: Prisma.ServiceBookingWhereInput[] = [];
+    const AND: Prisma.ServiceBookingWhereInput[] = [];
 
     /**
      * Filter: Booking status
@@ -609,7 +629,7 @@ export class ZoneManagerService {
       where.AND = [];
 
       if (filters?.startDate) {
-        andConditions.push({
+        AND.push({
           endDate: {
             gte: new Date(filters.startDate),
           },
@@ -617,7 +637,7 @@ export class ZoneManagerService {
       }
 
       if (filters?.endDate) {
-        andConditions.push({
+        AND.push({
           startDate: {
             lte: new Date(filters.endDate),
           },
@@ -625,51 +645,76 @@ export class ZoneManagerService {
       }
     }
 
-    if (filters?.serviceName) {
-      andConditions.push({
-        service: {
-          service: {
-            name: {
-              contains: filters.serviceName.toLowerCase()
+    if (filters?.search) {
+      const search = filters.search.trim();
+
+      AND.push({
+        OR: [
+          /* Service Name */
+          {
+            service: {
+              service: {
+                name: {
+                  contains: search,
+
+                },
+              },
             },
           },
-        },
+
+          /* Client Name */
+          {
+            client: {
+              user: {
+                name: {
+                  contains: search,
+
+                },
+              },
+            },
+          },
+
+          /* Client Email */
+          {
+            client: {
+              user: {
+                email: {
+                  contains: search,
+
+                },
+              },
+            },
+          },
+
+          /* Doula Name */
+          {
+            DoulaProfile: {
+              user: {
+                name: {
+                  contains: search,
+                },
+              },
+            },
+          },
+
+          /* Doula Email */
+          {
+            DoulaProfile: {
+              user: {
+                email: {
+                  contains: search,
+
+                },
+              },
+            },
+          },
+        ],
       });
     }
 
-    /* Client Name */
-    if (filters?.clientName) {
-      andConditions.push({
-        client: {
-          user: {
-            name: {
-              contains: filters.clientName.toLowerCase()
-            },
-            email: {
-              contains: filters.clientName.toLowerCase()
-            }
-          },
-        },
-      });
-    }
 
-    /* Doula Name */
-    if (filters?.doulaName) {
-      andConditions.push({
-        DoulaProfile: {
-          user: {
-            name: {
-              contains: filters.doulaName.toLowerCase()
-            },
-            email: {
-              contains: filters.doulaName.toLowerCase()
-            }
-          },
-        },
-      });
-    }
-    if (andConditions.length > 0) {
-      where.AND = andConditions;
+    if (AND.length > 0) {
+      where.AND = AND;
     }
 
 

@@ -15,14 +15,14 @@ export declare class ZoneManagerController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                userId: string | null;
                 profile_image: string | null;
+                userId: string | null;
             } | null;
         } & {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -105,9 +105,9 @@ export declare class ZoneManagerController {
         message: string;
         data: {
             id: string;
+            name: string;
             email: string;
             phone: string | null;
-            name: string;
             otp: string | null;
             otpExpiresAt: Date | null;
             role: import("@prisma/client").$Enums.Role;
@@ -125,27 +125,30 @@ export declare class ZoneManagerController {
         unassignedCount: number;
         assigned: {
             id: string;
-            zoneManagerId: string | null;
             regionName: string;
+            zoneManagerId: string | null;
         }[];
         unassigned: {
             id: string;
-            zoneManagerId: string | null;
             regionName: string;
+            zoneManagerId: string | null;
         }[];
     }>;
-    getSchedules(req: any, page?: string, limit?: string, status?: ServiceStatus, serviceName?: string, date?: string): Promise<{
+    getSchedules(req: any, page?: string, limit?: string, status?: ServiceStatus, search?: string, date?: string): Promise<{
         success: boolean;
         message: string;
         data: {
             scheduleId: string;
+            serviceName: string;
+            serviceTimeshift: import("@prisma/client").$Enums.TimeShift;
+            scheduleDate: Date;
+            status: import("@prisma/client").$Enums.ServiceStatus;
             clientId: string;
             clientName: string;
+            clientEmail: string;
             doulaId: string;
             doulaName: string;
-            serviceName: string;
-            startDate: import("@prisma/client").$Enums.TimeShift;
-            status: import("@prisma/client").$Enums.ServiceStatus;
+            doulaEmail: string;
         }[];
         meta: {
             total: number;
@@ -156,15 +159,17 @@ export declare class ZoneManagerController {
             hasPrevPage: boolean;
         };
     }>;
-    getBookedServices(req: any, page?: string, limit?: string, serviceName?: string, status?: BookingStatus, startDate?: string, endDate?: string): Promise<{
+    getBookedServices(req: any, page?: string, limit?: string, search?: string, status?: BookingStatus, startDate?: string, endDate?: string): Promise<{
         success: boolean;
         message: string;
         data: {
             bookingId: string;
             clientId: string;
             clientName: string;
+            clientEmail: string;
             doulaId: string;
             doulaName: string;
+            doulaEmail: string;
             servicePricingId: string;
             serviceName: string;
             startDate: Date;
@@ -209,13 +214,16 @@ export declare class ZoneManagerController {
         message: string;
         data: {
             scheduleId: string;
+            serviceName: string;
+            serviceTimeshift: import("@prisma/client").$Enums.TimeShift;
+            scheduleDate: Date;
+            status: import("@prisma/client").$Enums.ServiceStatus;
             clientId: string;
             clientName: string;
+            clientEmail: string;
             doulaId: string;
             doulaName: string;
-            serviceName: string;
-            startDate: import("@prisma/client").$Enums.TimeShift;
-            status: import("@prisma/client").$Enums.ServiceStatus;
+            doulaEmail: string;
         };
     }>;
     getBookedServiceById(req: any, id: string): Promise<{

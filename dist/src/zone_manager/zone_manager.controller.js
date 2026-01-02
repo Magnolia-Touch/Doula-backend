@@ -98,16 +98,16 @@ let ZoneManagerController = class ZoneManagerController {
     async regionAlreadyAssignedOrNot(dto) {
         return this.service.regionAlreadyAssignedOrNot(dto.regionIds);
     }
-    async getSchedules(req, page, limit, status, serviceName, date) {
+    async getSchedules(req, page, limit, status, search, date) {
         return this.service.getZoneManagerSchedules(req.user.id, Number(page) || 1, Number(limit) || 10, {
             status,
-            serviceName,
+            search,
             date,
         });
     }
-    async getBookedServices(req, page, limit, serviceName, status, startDate, endDate) {
+    async getBookedServices(req, page, limit, search, status, startDate, endDate) {
         return this.service.getZoneManagerBookedServices(req.user.id, Number(page) || 1, Number(limit) || 10, {
-            serviceName,
+            search,
             status,
             startDate,
             endDate,
@@ -499,7 +499,7 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'status', required: false }),
-    (0, swagger_1.ApiQuery)({ name: 'serviceName', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'date', required: false }),
     (0, swagger_1.ApiResponse)({
         schema: {
@@ -546,7 +546,7 @@ __decorate([
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
     __param(3, (0, common_1.Query)('status')),
-    __param(4, (0, common_1.Query)('serviceName')),
+    __param(4, (0, common_1.Query)('search')),
     __param(5, (0, common_1.Query)('date')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String, String, String, String, String]),
@@ -558,7 +558,7 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'status', required: false }),
-    (0, swagger_1.ApiQuery)({ name: 'serviceName', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: false }),
     (0, swagger_1.ApiResponse)({
@@ -598,7 +598,7 @@ __decorate([
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
-    __param(3, (0, common_1.Query)('serviceName')),
+    __param(3, (0, common_1.Query)('search')),
     __param(4, (0, common_1.Query)('status')),
     __param(5, (0, common_1.Query)('startDate')),
     __param(6, (0, common_1.Query)('endDate')),

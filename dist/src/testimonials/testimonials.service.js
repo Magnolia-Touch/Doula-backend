@@ -14,20 +14,35 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const pagination_util_1 = require("../common/utility/pagination.util");
 const paginate_with_relations_util_1 = require("../common/utility/paginate-with-relations.util");
+const client_1 = require("@prisma/client");
 let TestimonialsService = class TestimonialsService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto, user) {
+    async create(dto, userId) {
+        console.log("client Id", userId);
+        const client = await this.prisma.clientProfile.findUnique({
+            where: { userId: userId },
+            select: { id: true }
+        });
+        if (!client) {
+            throw new common_1.NotFoundException('User Not Found');
+        }
         const bookedservice = await this.prisma.serviceBooking.findFirst({
-            where: { client: { userId: user.id }, servicePricingId: dto.serviceId },
+            where: { client: { userId: userId }, id: dto.serviceBookingId, status: client_1.BookingStatus.COMPLETED },
         });
         if (!bookedservice) {
             throw new common_1.NotFoundException('No purchased service found for adding testimonial');
         }
         return this.prisma.testimonials.create({
-            data: { ...dto, clientId: user.id },
+            data: {
+                doulaProfileId: dto.doulaProfileId,
+                serviceId: dto.servicePricingId,
+                ratings: dto.ratings,
+                reviews: dto.reviews,
+                clientId: client.id,
+            },
         });
     }
     async findAll(query) {

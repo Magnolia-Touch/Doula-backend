@@ -1324,6 +1324,19 @@ let DoulaService = class DoulaService {
         }
         return profile;
     }
+    async addCertificate(userId, dto) {
+        const { name, issuedBy, year } = dto;
+        const doulaProfile = await this.getDoulaProfile(userId);
+        const certificate = await this.prisma.certificates.create({
+            data: {
+                doulaProfileId: doulaProfile.id,
+                name: name,
+                issuedBy: issuedBy,
+                year: year
+            },
+        });
+        return { message: 'Certificate Added Succesfully', data: certificate };
+    }
     async getCertificates(userId) {
         const doulaProfile = await this.getDoulaProfile(userId);
         console.log('dola, ', doulaProfile);

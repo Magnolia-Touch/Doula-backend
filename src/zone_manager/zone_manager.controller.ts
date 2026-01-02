@@ -463,7 +463,7 @@ export class ZoneManagerController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'status', required: false })
-  @ApiQuery({ name: 'serviceName', required: false })
+  @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'date', required: false })
   @ApiResponse({
     schema: {
@@ -511,10 +511,9 @@ export class ZoneManagerController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: ServiceStatus,
-    @Query('serviceName') serviceName?: string,
+    @Query('search') search?: string,
     @Query('date') date?: string,
-    @Query('clientName') clientName?: string,
-    @Query('doulaName') doulaName?: string,
+
   ) {
     return this.service.getZoneManagerSchedules(
       req.user.id,
@@ -522,10 +521,8 @@ export class ZoneManagerController {
       Number(limit) || 10,
       {
         status,
-        serviceName,
+        search,
         date,
-        clientName,
-        doulaName,
       },
     );
   }
@@ -537,7 +534,7 @@ export class ZoneManagerController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'status', required: false })
-  @ApiQuery({ name: 'serviceName', required: false })
+  @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'startDate', required: false })
   @ApiQuery({ name: 'endDate', required: false })
   @ApiResponse({
@@ -578,24 +575,21 @@ export class ZoneManagerController {
     @Req() req: any,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('serviceName') serviceName?: string,
+    @Query('search') search?: string,
     @Query('status') status?: BookingStatus,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    @Query('clientName') clientName?: string,
-    @Query('doulaName') doulaName?: string,
   ) {
     return this.service.getZoneManagerBookedServices(
       req.user.id,
       Number(page) || 1,
       Number(limit) || 10,
       {
-        serviceName,
+        search,
         status,
         startDate,
         endDate,
-        clientName,
-        doulaName,
+
 
       },
     );
