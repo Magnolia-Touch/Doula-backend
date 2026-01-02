@@ -24,16 +24,22 @@ export class ClientDoulaEnquiryController {
     }
 
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
     @Get()
     findAll() {
         return this.service.findAll();
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.service.findOne(id);
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
     @Patch(':id')
     update(
         @Param('id') id: string,
@@ -42,8 +48,12 @@ export class ClientDoulaEnquiryController {
         return this.service.update(id, dto);
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ZONE_MANAGER)
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.service.remove(id);
     }
+
+
 }

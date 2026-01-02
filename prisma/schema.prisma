@@ -198,7 +198,6 @@ model EnquiryForm {
   VisitFrequency    Int?
   serviceTimeSlots  String?
   serviceName       String
-  meetingsId        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -212,6 +211,8 @@ model EnquiryForm {
   slot          AvailableSlotsForMeeting @relation(fields: [slotId], references: [id], onDelete: Cascade)
   service       Service                  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   clientProfile ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade) //remove this line
+
+  Meetings Meetings?
 }
 
 // Regions
@@ -316,6 +317,7 @@ model Meetings {
   doulaProfileId             String?
   adminProfileId             String?
   serviceId                  String?
+  enquiryId                  String? @unique
 
   AvailableSlotsForMeeting     AvailableSlotsForMeeting?      @relation(fields: [availableSlotsForMeetingId], references: [id], onDelete: Cascade)
   ZoneManagerProfile           ZoneManagerProfile?            @relation(fields: [zoneManagerProfileId], references: [id], onDelete: Cascade)
@@ -323,6 +325,8 @@ model Meetings {
   AdminProfile                 AdminProfile?                  @relation(fields: [adminProfileId], references: [id], onDelete: Cascade)
   Service                      Service?                       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   AvailableSlotsTimeForMeeting AvailableSlotsTimeForMeeting[]
+
+  enquiry EnquiryForm? @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
 }
 
 model AvailableSlotsForService {

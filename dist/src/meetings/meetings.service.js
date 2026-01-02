@@ -23,7 +23,7 @@ let MeetingsService = class MeetingsService {
         this.prisma = prisma;
         this.mail = mail;
     }
-    async scheduleMeeting(Form, clientId, profileId, role, slotParentId) {
+    async scheduleMeeting(Form, clientId, profileId, role, enquiryId, slotParentId) {
         const meetCode = Math.random().toString(36).slice(2, 10);
         const meetLink = `https://meet.google.com/${meetCode}`;
         const profileData = {};
@@ -48,6 +48,7 @@ let MeetingsService = class MeetingsService {
                 remarks: Form.additionalNotes,
                 bookedById: clientId,
                 availableSlotsForMeetingId: slotParentId,
+                enquiryId: enquiryId,
                 ...profileData,
             },
         });

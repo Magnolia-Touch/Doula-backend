@@ -8,7 +8,7 @@ export declare class MeetingsService {
     private readonly prisma;
     private readonly mail;
     constructor(prisma: PrismaService, mail: MailerService);
-    scheduleMeeting(Form: any, clientId: string, profileId: string, role: Role, slotParentId?: string): Promise<{
+    scheduleMeeting(Form: any, clientId: string, profileId: string, role: Role, enquiryId: string, slotParentId?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -27,6 +27,7 @@ export declare class MeetingsService {
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
         adminProfileId: string | null;
+        enquiryId: string | null;
     }>;
     getMeetings(params: {
         startDate?: string;
@@ -125,6 +126,7 @@ export declare class MeetingsService {
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
         adminProfileId: string | null;
+        enquiryId: string | null;
     }>;
     updateMeetingStatus(dto: UpdateStatusDto, userId: string): Promise<{
         message: string;
@@ -147,6 +149,7 @@ export declare class MeetingsService {
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
             adminProfileId: string | null;
+            enquiryId: string | null;
         };
     }>;
     deleteAllMeetings(user: any): Promise<{
@@ -174,6 +177,7 @@ export declare class MeetingsService {
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
             adminProfileId: string | null;
+            enquiryId: string | null;
         };
     }>;
     findAllmeetings(): Promise<({
@@ -252,6 +256,7 @@ export declare class MeetingsService {
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
         adminProfileId: string | null;
+        enquiryId: string | null;
     })[]>;
     getBookedMeetingsByDate(params: {
         doulaProfileId?: string;

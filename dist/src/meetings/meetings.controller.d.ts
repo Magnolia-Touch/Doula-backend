@@ -73,6 +73,7 @@ export declare class MeetingsController {
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
             adminProfileId: string | null;
+            enquiryId: string | null;
         };
     }>;
     rescheduleMeeting(dto: RescheduleDto, req: any): Promise<{
@@ -94,6 +95,7 @@ export declare class MeetingsController {
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
         adminProfileId: string | null;
+        enquiryId: string | null;
     }>;
     updateMeetingStatus(dto: UpdateStatusDto, req: any): Promise<{
         message: string;
@@ -116,6 +118,7 @@ export declare class MeetingsController {
             availableSlotsForMeetingId: string | null;
             zoneManagerProfileId: string | null;
             adminProfileId: string | null;
+            enquiryId: string | null;
         };
     }>;
     deleteAllMeetings(req: any): Promise<{
@@ -198,6 +201,7 @@ export declare class MeetingsController {
         availableSlotsForMeetingId: string | null;
         zoneManagerProfileId: string | null;
         adminProfileId: string | null;
+        enquiryId: string | null;
     })[]>;
     getBookedMeetingsByDate(date: string, doulaProfileId?: string, zoneManagerProfileId?: string): Promise<{
         date: string;

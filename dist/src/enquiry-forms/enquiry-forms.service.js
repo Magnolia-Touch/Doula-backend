@@ -90,11 +90,16 @@ let EnquiryService = class EnquiryService {
             serviceName: service.name,
         };
         console.log('enquiry data', enquiryData);
-        const meeting = await this.schedule.scheduleMeeting(enquiryData, client.clientProfile.id, zoneManager.id, client_1.Role.ZONE_MANAGER, slot.id);
-        await enquiry.meetingsId === meeting.id;
+        const meeting = await this.schedule.scheduleMeeting(enquiryData, client.clientProfile.id, zoneManager.id, client_1.Role.ZONE_MANAGER, enquiry.id, slot.id);
+        const fullEnquiry = await this.prisma.enquiryForm.findUnique({
+            where: { id: enquiry.id },
+            include: {
+                Meetings: true,
+            },
+        });
         return {
             message: 'Enquiry submitted successfully',
-            enquiry,
+            enquiry: fullEnquiry,
         };
     }
     async getAllEnquiries(page = 1, limit = 10, userId) {
@@ -128,7 +133,7 @@ let EnquiryService = class EnquiryService {
                 slotId: true,
                 clientId: true,
                 serviceId: true,
-                meetingsId: true,
+                Meetings: true,
             },
         });
         if (!enquiry) {

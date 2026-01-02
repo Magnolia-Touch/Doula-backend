@@ -159,13 +159,24 @@ export class EnquiryService {
             client.clientProfile.id,
             zoneManager.id,
             Role.ZONE_MANAGER,
+            enquiry.id,
             slot.id,
+
         );
-        await enquiry.meetingsId === meeting.id
+
+
+        const fullEnquiry = await this.prisma.enquiryForm.findUnique({
+            where: { id: enquiry.id },
+            include: {
+                Meetings: true,
+            },
+        });
+
         return {
             message: 'Enquiry submitted successfully',
-            enquiry,
+            enquiry: fullEnquiry,
         };
+
     }
 
     // --------------------------------------------------------------
@@ -206,7 +217,7 @@ export class EnquiryService {
                 slotId: true,
                 clientId: true,
                 serviceId: true,
-                meetingsId: true,
+                Meetings: true,
             },
         });
 

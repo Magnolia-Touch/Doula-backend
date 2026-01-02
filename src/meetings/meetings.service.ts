@@ -24,7 +24,7 @@ export class MeetingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailerService,
-  ) {}
+  ) { }
 
   //common function. used inside enquiry and doula meeting scheduling.
   async scheduleMeeting(
@@ -32,7 +32,9 @@ export class MeetingsService {
     clientId: string,
     profileId: string,
     role: Role,
+    enquiryId: string,
     slotParentId?: string,
+
   ) {
     // Generate meet link placeholder (replace with Google Calendar flow later)
     const meetCode = Math.random().toString(36).slice(2, 10);
@@ -61,7 +63,9 @@ export class MeetingsService {
         remarks: Form.additionalNotes,
         bookedById: clientId,
         availableSlotsForMeetingId: slotParentId,
+        enquiryId: enquiryId,
         ...profileData,
+
       },
     });
     console.log('meeting created succesfull');
@@ -235,23 +239,23 @@ export class MeetingsService {
           doula:
             meetingWith === 'DOULA'
               ? {
-                  doulaId: meeting.DoulaProfile?.user?.id,
-                  doulaProfileId: meeting.DoulaProfile?.id,
-                  doulaName: meeting.DoulaProfile?.user?.name,
-                  doulaEmail: meeting.DoulaProfile?.user?.email,
-                  doulaPhone: meeting.DoulaProfile?.user?.phone,
-                }
+                doulaId: meeting.DoulaProfile?.user?.id,
+                doulaProfileId: meeting.DoulaProfile?.id,
+                doulaName: meeting.DoulaProfile?.user?.name,
+                doulaEmail: meeting.DoulaProfile?.user?.email,
+                doulaPhone: meeting.DoulaProfile?.user?.phone,
+              }
               : null,
 
           // ===== ZONE MANAGER =====
           zoneManager:
             meetingWith === 'ZONE_MANAGER'
               ? {
-                  zoneManagerId: meeting.ZoneManagerProfile?.user?.id,
-                  zoneManagerProfileId: meeting.ZoneManagerProfile?.id,
-                  zoneManagerName: meeting.ZoneManagerProfile?.user?.name,
-                  zoneManagerEmail: meeting.ZoneManagerProfile?.user?.email,
-                }
+                zoneManagerId: meeting.ZoneManagerProfile?.user?.id,
+                zoneManagerProfileId: meeting.ZoneManagerProfile?.id,
+                zoneManagerName: meeting.ZoneManagerProfile?.user?.name,
+                zoneManagerEmail: meeting.ZoneManagerProfile?.user?.email,
+              }
               : null,
         };
       }),
@@ -381,23 +385,23 @@ export class MeetingsService {
       doula:
         meetingWith === 'DOULA'
           ? {
-              doulaId: meeting.DoulaProfile?.user?.id,
-              doulaProfileId: meeting.DoulaProfile?.id,
-              doulaName: meeting.DoulaProfile?.user?.name,
-              doulaEmail: meeting.DoulaProfile?.user?.email,
-              doulaPhone: meeting.DoulaProfile?.user?.phone,
-            }
+            doulaId: meeting.DoulaProfile?.user?.id,
+            doulaProfileId: meeting.DoulaProfile?.id,
+            doulaName: meeting.DoulaProfile?.user?.name,
+            doulaEmail: meeting.DoulaProfile?.user?.email,
+            doulaPhone: meeting.DoulaProfile?.user?.phone,
+          }
           : null,
 
       // ===== ZONE MANAGER =====
       zoneManager:
         meetingWith === 'ZONE_MANAGER'
           ? {
-              zoneManagerId: meeting.ZoneManagerProfile?.user?.id,
-              zoneManagerProfileId: meeting.ZoneManagerProfile?.id,
-              zoneManagerName: meeting.ZoneManagerProfile?.user?.name,
-              zoneManagerEmail: meeting.ZoneManagerProfile?.user?.email,
-            }
+            zoneManagerId: meeting.ZoneManagerProfile?.user?.id,
+            zoneManagerProfileId: meeting.ZoneManagerProfile?.id,
+            zoneManagerName: meeting.ZoneManagerProfile?.user?.name,
+            zoneManagerEmail: meeting.ZoneManagerProfile?.user?.email,
+          }
           : null,
     };
   }
