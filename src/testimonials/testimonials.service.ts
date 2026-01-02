@@ -18,6 +18,16 @@ export class TestimonialsService {
 
   async create(dto: CreateTestimonialDto, userId: string) {
     console.log("client Id", userId)
+    const client = await this.prisma.clientProfile.findUnique({
+      where: { userId: userId },
+      select: { id: true }
+    });
+    if (!client) {
+      throw new NotFoundException(
+        'User Not Found',
+      );
+    }
+
     const bookedservice = await this.prisma.serviceBooking.findFirst({
       where: { client: { userId: userId }, id: dto.serviceBookingId, status: BookingStatus.COMPLETED },
     });
@@ -32,7 +42,7 @@ export class TestimonialsService {
         serviceId: dto.servicePricingId,
         ratings: dto.ratings,
         reviews: dto.reviews,
-        clientId: userId,
+        clientId: client.id,
 
       },
     });
