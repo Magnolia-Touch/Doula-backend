@@ -25,7 +25,14 @@ export class TestimonialsService {
       );
     }
     return this.prisma.testimonials.create({
-      data: { ...dto, clientId: user.id, serviceId: dto.servicePricingId },
+      data: {
+        doulaProfileId: dto.doulaProfileId,
+        serviceId: dto.servicePricingId,
+        ratings: dto.ratings,
+        reviews: dto.reviews,
+        clientId: user.id,
+
+      },
     });
   }
 
