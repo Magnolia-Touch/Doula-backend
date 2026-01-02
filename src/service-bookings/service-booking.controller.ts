@@ -87,7 +87,7 @@ export class ServiceBookingController {
 
   @Patch('schedules/:id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
+  @Roles(Role.DOULA, Role.ZONE_MANAGER)
   async updateScheduleStatus(
     @Req() req,
     @Param('id') scheduleId: string,
@@ -103,7 +103,7 @@ export class ServiceBookingController {
 
   @Patch('bookings/:id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
+  @Roles(Role.DOULA, Role.ZONE_MANAGER)
   async updateBookingStatus(
     @Req() req,
     @Param('id') bookingId: string,
