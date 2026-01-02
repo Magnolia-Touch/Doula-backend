@@ -95,6 +95,7 @@ export class ServiceBookingController {
   ) {
     return this.bookingService.updateScheduleStatus(
       req.user.id,
+      req.user.role,
       scheduleId,
       dto,
     );
@@ -110,6 +111,7 @@ export class ServiceBookingController {
   ) {
     return this.bookingService.updateBookingStatus(
       req.user.id,
+      req.user.role,
       bookingId,
       dto,
     );

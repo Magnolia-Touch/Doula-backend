@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { paginate } from 'src/common/utility/pagination.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
-import { ServiceStatus } from '@prisma/client';
+import { Role, ServiceStatus } from '@prisma/client';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 
 @Injectable()
@@ -162,34 +162,64 @@ export class ServiceBookingService {
 
   async updateScheduleStatus(
     userId: string,
+    userRole: Role,
     scheduleId: string,
     dto: UpdateScheduleStatusDto,
   ) {
     const { status } = dto;
 
-    // 1. Fetch doula profile
-    const doulaProfile = await this.prisma.doulaProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
 
-    if (!doulaProfile) {
-      throw new ForbiddenException('Doula profile not found');
+    let schedule;
+
+    /* ---------------------------------------
+     * DOULA access
+     * --------------------------------------- */
+    if (userRole === Role.DOULA) {
+      const doulaProfile = await this.prisma.doulaProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (!doulaProfile) {
+        throw new ForbiddenException('Doula profile not found');
+      }
+
+      schedule = await this.prisma.schedules.findFirst({
+        where: {
+          id: scheduleId,
+          doulaProfileId: doulaProfile.id,
+        },
+      });
     }
 
-    // 2. Fetch schedule & verify ownership
-    const schedule = await this.prisma.schedules.findFirst({
-      where: {
-        id: scheduleId,
-        doulaProfileId: doulaProfile.id,
-      },
-    });
+    if (userRole === Role.ZONE_MANAGER) {
+      const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (!zoneManager) {
+        throw new ForbiddenException('Zone manager profile not found');
+      }
+
+      schedule = await this.prisma.schedules.findFirst({
+        where: {
+          id: scheduleId,
+          DoulaProfile: {
+            zoneManager: {
+              some: {
+                id: zoneManager.id,
+              },
+            },
+          },
+        },
+      });
+    }
 
     if (!schedule) {
-      throw new NotFoundException('Schedule not found');
+      throw new NotFoundException('Schedule not found or access denied');
     }
 
-    // 4. Update status
     const updatedSchedule = await this.prisma.schedules.update({
       where: { id: scheduleId },
       data: { status },
@@ -203,77 +233,78 @@ export class ServiceBookingService {
   }
 
 
-
-
   async updateBookingStatus(
     userId: string,
+    userRole: Role,
     bookingId: string,
     dto: UpdateBookingStatusDto,
   ) {
     const { status } = dto;
 
-    // 1. Fetch doula profile
-    const doulaProfile = await this.prisma.doulaProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
+    let booking;
 
-    if (!doulaProfile) {
-      throw new ForbiddenException('Doula profile not found');
+    /* ---------------------------------------
+     * DOULA access
+     * --------------------------------------- */
+    if (userRole === Role.DOULA) {
+      const doulaProfile = await this.prisma.doulaProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (!doulaProfile) {
+        throw new ForbiddenException('Doula profile not found');
+      }
+
+      booking = await this.prisma.serviceBooking.findFirst({
+        where: {
+          id: bookingId,
+          doulaProfileId: doulaProfile.id,
+        },
+      });
     }
 
-    // 2. Fetch schedule & verify ownership
-    const schedule = await this.prisma.serviceBooking.findFirst({
-      where: {
-        id: bookingId,
-        doulaProfileId: doulaProfile.id,
-      },
-    });
+    /* ---------------------------------------
+     * ZONE MANAGER access
+     * --------------------------------------- */
+    if (userRole === Role.ZONE_MANAGER) {
+      const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
 
-    if (!schedule) {
-      throw new NotFoundException('Schedule not found');
+      if (!zoneManager) {
+        throw new ForbiddenException('Zone manager profile not found');
+      }
+
+      booking = await this.prisma.serviceBooking.findFirst({
+        where: {
+          id: bookingId,
+          DoulaProfile: {
+            zoneManager: {
+              some: {
+                id: zoneManager.id,
+              },
+            },
+          },
+        },
+      });
     }
 
-    // 4. Update status
-    const updatedSchedule = await this.prisma.serviceBooking.update({
+    if (!booking) {
+      throw new NotFoundException('Booking not found or access denied');
+    }
+
+    const updatedBooking = await this.prisma.serviceBooking.update({
       where: { id: bookingId },
       data: { status },
     });
 
     return {
       message: 'Booking status updated successfully',
-      scheduleId: updatedSchedule.id,
-      status: updatedSchedule.status,
+      bookingId: updatedBooking.id,
+      status: updatedBooking.status,
     };
   }
 
-
-  async updateOrderStatus(
-    bookingId: string,
-    dto: UpdateBookingStatusDto,
-  ) {
-    const booking = await this.prisma.serviceBooking.findUnique({
-      where: { id: bookingId },
-    });
-
-    if (!booking) {
-      throw new NotFoundException('Booking not found');
-    }
-
-    return this.prisma.serviceBooking.update({
-      where: { id: bookingId },
-      data: {
-        status: dto.status,
-        isPaid: dto.isPaid ?? booking.isPaid,
-        paymentDetails: dto.paymentDetails
-          ? {
-            ...(booking.paymentDetails as object ?? {}),
-            ...dto.paymentDetails,
-            notes: dto.notes,
-            updatedAt: new Date(),
-          }
-          : booking.paymentDetails,
-      },
-    });
-  }
 }

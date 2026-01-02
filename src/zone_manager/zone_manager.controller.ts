@@ -513,6 +513,8 @@ export class ZoneManagerController {
     @Query('status') status?: ServiceStatus,
     @Query('serviceName') serviceName?: string,
     @Query('date') date?: string,
+    @Query('clientName') clientName?: string,
+    @Query('doulaName') doulaName?: string,
   ) {
     return this.service.getZoneManagerSchedules(
       req.user.id,
@@ -522,6 +524,8 @@ export class ZoneManagerController {
         status,
         serviceName,
         date,
+        clientName,
+        doulaName,
       },
     );
   }
@@ -578,6 +582,8 @@ export class ZoneManagerController {
     @Query('status') status?: BookingStatus,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('clientName') clientName?: string,
+    @Query('doulaName') doulaName?: string,
   ) {
     return this.service.getZoneManagerBookedServices(
       req.user.id,
@@ -588,6 +594,9 @@ export class ZoneManagerController {
         status,
         startDate,
         endDate,
+        clientName,
+        doulaName,
+
       },
     );
   }

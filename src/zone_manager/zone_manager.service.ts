@@ -359,6 +359,8 @@ export class ZoneManagerService {
       status?: ServiceStatus;
       serviceName?: string;
       date?: string;
+      clientName?: string;
+      doulaName?: string;
     },
   ) {
     console.log('user', userId);
@@ -384,26 +386,63 @@ export class ZoneManagerService {
         },
       },
     };
-
-    // ✅ Filter by service status
+    const andConditions: Prisma.SchedulesWhereInput[] = [];
+    /* Service Status */
     if (filters?.status) {
       where.status = filters.status;
     }
 
-    // ✅ Filter by date (Schedules.date is @db.Date)
+    /* Date filter (@db.Date) */
     if (filters?.date) {
       where.date = new Date(filters.date);
     }
-
-    // ✅ Filter by service name
+    /* Service Name */
     if (filters?.serviceName) {
-      where.ServicePricing = {
-        service: {
-          name: {
-            contains: filters.serviceName.toLowerCase(),
+      andConditions.push({
+        ServicePricing: {
+          service: {
+            name: {
+              contains: filters.serviceName.toLowerCase()
+            },
           },
         },
-      };
+      });
+    }
+
+    /* Client Name */
+    if (filters?.clientName) {
+      andConditions.push({
+        client: {
+          user: {
+            name: {
+              contains: filters.clientName.toLowerCase()
+            },
+            email: {
+              contains: filters.clientName.toLowerCase()
+            },
+          },
+        },
+      });
+    }
+
+    /* Doula Name */
+    if (filters?.doulaName) {
+      andConditions.push({
+        DoulaProfile: {
+          user: {
+            name: {
+              contains: filters.doulaName.toLowerCase()
+            },
+            email: {
+              contains: filters.doulaName.toLowerCase()
+            },
+          },
+        },
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const result = await paginate({
@@ -418,6 +457,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
+                email: true
               },
             },
           },
@@ -428,6 +468,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
+                email: true
               },
             },
           },
@@ -455,6 +496,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
+                email: true
               };
             };
           };
@@ -465,6 +507,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
+                email: true
               };
             };
           };
@@ -495,18 +538,18 @@ export class ZoneManagerService {
 
         return {
           scheduleId: schedule.id,
+          serviceName: schedule.ServicePricing.service.name,
+          serviceTimeshift: schedule.timeshift,
+          scheduleDate: schedule.date,
+          status: schedule.status,
+
           clientId: schedule.client.id,
           clientName: schedule.client.user.name,
-
+          clientEmail: schedule.client.user.email,
           doulaId: schedule.DoulaProfile.id,
           doulaName: schedule.DoulaProfile.user.name,
+          doulaEmail: schedule.DoulaProfile.user.email,
 
-          serviceName: schedule.ServicePricing.service.name,
-
-          startDate: schedule.timeshift,
-
-          // duration: `${durationHours}h ${durationMinutes}m`, // dummy / derived
-          status: schedule.status,
         };
       }),
       meta: result.meta,
@@ -522,6 +565,8 @@ export class ZoneManagerService {
       status?: BookingStatus;
       startDate?: string;
       endDate?: string;
+      clientName?: string;
+      doulaName?: string;
     },
   ) {
     // Fetch zone manager profile
@@ -547,6 +592,7 @@ export class ZoneManagerService {
         },
       },
     };
+    const andConditions: Prisma.ServiceBookingWhereInput[] = [];
 
     /**
      * Filter: Booking status
@@ -562,16 +608,16 @@ export class ZoneManagerService {
     if (filters?.startDate || filters?.endDate) {
       where.AND = [];
 
-      if (filters.startDate) {
-        where.AND.push({
+      if (filters?.startDate) {
+        andConditions.push({
           endDate: {
             gte: new Date(filters.startDate),
           },
         });
       }
 
-      if (filters.endDate) {
-        where.AND.push({
+      if (filters?.endDate) {
+        andConditions.push({
           startDate: {
             lte: new Date(filters.endDate),
           },
@@ -579,18 +625,53 @@ export class ZoneManagerService {
       }
     }
 
-    /**
-     * Filter: Service name
-     */
     if (filters?.serviceName) {
-      where.service = {
+      andConditions.push({
         service: {
-          name: {
-            contains: filters.serviceName.toLowerCase(),
+          service: {
+            name: {
+              contains: filters.serviceName.toLowerCase()
+            },
           },
         },
-      };
+      });
     }
+
+    /* Client Name */
+    if (filters?.clientName) {
+      andConditions.push({
+        client: {
+          user: {
+            name: {
+              contains: filters.clientName.toLowerCase()
+            },
+            email: {
+              contains: filters.clientName.toLowerCase()
+            }
+          },
+        },
+      });
+    }
+
+    /* Doula Name */
+    if (filters?.doulaName) {
+      andConditions.push({
+        DoulaProfile: {
+          user: {
+            name: {
+              contains: filters.doulaName.toLowerCase()
+            },
+            email: {
+              contains: filters.doulaName.toLowerCase()
+            }
+          },
+        },
+      });
+    }
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
+    }
+
 
     const result = await paginate({
       prismaModel: this.prisma.serviceBooking,
@@ -604,6 +685,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
+                email: true
               },
             },
           },
@@ -614,6 +696,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
+                email: true
               },
             },
           },
@@ -641,6 +724,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
+                email: true
               };
             };
           };
@@ -651,6 +735,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
+                email: true
               };
             };
           };
@@ -677,9 +762,11 @@ export class ZoneManagerService {
         bookingId: booking.id,
         clientId: booking.client.id,
         clientName: booking.client.user.name,
+        clientEmail: booking.client.user.email,
 
         doulaId: booking.DoulaProfile.id,
         doulaName: booking.DoulaProfile.user.name,
+        doulaEmail: booking.DoulaProfile.user.email,
 
         servicePricingId: booking.service.id,
         serviceName: booking.service.service.name,
@@ -891,12 +978,12 @@ export class ZoneManagerService {
       include: {
         client: {
           include: {
-            user: { select: { id: true, name: true } },
+            user: { select: { id: true, name: true, email: true } },
           },
         },
         DoulaProfile: {
           include: {
-            user: { select: { id: true, name: true } },
+            user: { select: { id: true, name: true, email: true } },
           },
         },
         ServicePricing: {
@@ -922,16 +1009,17 @@ export class ZoneManagerService {
       message: 'Schedule fetched successfully',
       data: {
         scheduleId: schedule.id,
+        serviceName: schedule.ServicePricing.service.name,
+        serviceTimeshift: schedule.timeshift,
+        scheduleDate: schedule.date,
+        status: schedule.status,
+
         clientId: schedule.client.id,
         clientName: schedule.client.user.name,
-
+        clientEmail: schedule.client.user.email,
         doulaId: schedule.DoulaProfile.id,
         doulaName: schedule.DoulaProfile.user.name,
-
-        serviceName: schedule.ServicePricing.service.name,
-
-        startDate: schedule.timeshift,
-        status: schedule.status,
+        doulaEmail: schedule.DoulaProfile.user.email,
       },
     };
   }
