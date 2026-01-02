@@ -507,5 +507,17 @@ export class DoulaServiceAvailabilityService {
   }
 
 
+
+  // async doulaAvailability(
+  //   page = 1,
+  //   limit = 10,
+  //   filters?: {
+  //     search?: string;
+  //     status?: BookingStatus;
+  //     startDate?: string;
+  //     endDate?: string;
+  //   }
+  // )
+
 }
 

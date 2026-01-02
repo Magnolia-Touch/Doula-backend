@@ -321,6 +321,7 @@ export class ClientsService {
                     user: {
                       select: {
                         name: true,
+                        email: true
                       },
                     },
                     DoulaGallery: {
@@ -377,6 +378,9 @@ export class ClientsService {
 
         // Doula details
         doulaName: booking.DoulaProfile.user.name,
+        doulaEmail: booking.DoulaProfile.user.email,
+        doulaProfileId: booking.DoulaProfile.id,
+        doulaUserId: booking.DoulaProfile.userId,
         mainDoulaImage: booking.DoulaProfile.profile_image,
       };
     });
