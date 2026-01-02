@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateDoulaServiceAvailabilityDto = exports.CreateDoulaServiceAvailabilityDto = exports.ServiceAvailabilityDto = void 0;
+exports.AvailableDoulasFilterDto = exports.UpdateDoulaServiceAvailabilityDto = exports.CreateDoulaServiceAvailabilityDto = exports.ServiceAvailabilityDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
@@ -80,4 +80,12 @@ __decorate([
     (0, class_transformer_1.Type)(() => ServiceAvailabilityDto),
     __metadata("design:type", Object)
 ], UpdateDoulaServiceAvailabilityDto.prototype, "availability", void 0);
+class AvailableDoulasFilterDto {
+    startDate;
+    endDate;
+    regionId;
+    serviceId;
+    shift;
+}
+exports.AvailableDoulasFilterDto = AvailableDoulasFilterDto;
 //# sourceMappingURL=service-availability.dto.js.map

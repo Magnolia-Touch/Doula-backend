@@ -346,6 +346,117 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
             message: 'Off day deleted successfully',
         };
     }
+    async getAvailableDoulas(filters) {
+        const { startDate, endDate, regionId, serviceId, shift, } = filters;
+        const start = startDate ? new Date(startDate) : undefined;
+        const end = endDate ? new Date(endDate) : undefined;
+        const doulas = await this.prisma.doulaProfile.findMany({
+            where: {
+                ...(regionId && {
+                    Region: { some: { id: regionId } },
+                }),
+                ...(serviceId && {
+                    ServicePricing: {
+                        some: { serviceId },
+                    },
+                }),
+            },
+            select: {
+                id: true,
+                user: {
+                    select: { name: true },
+                },
+                ServicePricing: {
+                    select: {
+                        service: {
+                            select: { name: true },
+                        },
+                    },
+                },
+                AvailableSlotsForService: {
+                    where: {
+                        ...(start &&
+                            end && {
+                            date: {
+                                gte: start,
+                                lte: end,
+                            },
+                        }),
+                    },
+                    select: {
+                        date: true,
+                        availability: true,
+                    },
+                },
+            },
+        });
+        const dateList = [];
+        if (start && end) {
+            const cursor = new Date(start);
+            cursor.setHours(0, 0, 0, 0);
+            const endDateOnly = new Date(end);
+            endDateOnly.setHours(0, 0, 0, 0);
+            while (cursor <= endDateOnly) {
+                dateList.push(cursor.toISOString().split('T')[0]);
+                cursor.setDate(cursor.getDate() + 1);
+            }
+        }
+        const mapped = doulas.map((doula) => {
+            let unavailableDays = 0;
+            const availableShiftSet = new Set();
+            const availabilityByDate = new Map(doula.AvailableSlotsForService.map((slot) => [
+                slot.date.toISOString().split('T')[0],
+                slot.availability,
+            ]));
+            const hasDateRange = Boolean(start && end);
+            if (!hasDateRange) {
+                for (const availability of availabilityByDate.values()) {
+                    Object.entries(availability)
+                        .filter(([_, v]) => v === true)
+                        .forEach(([k]) => availableShiftSet.add(k));
+                }
+            }
+            else {
+                for (const date of dateList) {
+                    const availability = availabilityByDate.get(date);
+                    if (!availability) {
+                        unavailableDays++;
+                        continue;
+                    }
+                    const trueShifts = Object.entries(availability)
+                        .filter(([_, value]) => value === true)
+                        .map(([key]) => key);
+                    if (trueShifts.length === 0) {
+                        unavailableDays++;
+                    }
+                    else {
+                        trueShifts.forEach((s) => availableShiftSet.add(s));
+                    }
+                }
+            }
+            let shifts = Array.from(availableShiftSet);
+            if (shift) {
+                shifts = shifts.filter((s) => s === shift);
+            }
+            if (shifts.length === 0)
+                return null;
+            return {
+                doulaName: doula.user.name,
+                shift: shifts.map((s) => s.toLowerCase()),
+                noOfUnavailableDaysInThatPeriod: unavailableDays,
+                availableServices: [
+                    ...new Set(doula.ServicePricing.map((sp) => sp.service.name)),
+                ],
+            };
+        });
+        const filtered = mapped.filter((d) => d !== null);
+        filtered.sort((a, b) => a.noOfUnavailableDaysInThatPeriod -
+            b.noOfUnavailableDaysInThatPeriod);
+        return {
+            status: 'success',
+            data: filtered,
+        };
+    }
 };
 exports.DoulaServiceAvailabilityService = DoulaServiceAvailabilityService;
 exports.DoulaServiceAvailabilityService = DoulaServiceAvailabilityService = __decorate([

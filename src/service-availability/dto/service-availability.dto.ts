@@ -53,3 +53,13 @@ export class UpdateDoulaServiceAvailabilityDto {
   @Type(() => ServiceAvailabilityDto)
   availability?: Partial<ServiceAvailabilityDto>;
 }
+
+export class AvailableDoulasFilterDto {
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string;   // YYYY-MM-DD
+
+  regionId?: string;
+  serviceId?: string;
+
+  shift?: 'MORNING' | 'NIGHT' | 'FULLDAY';
+}

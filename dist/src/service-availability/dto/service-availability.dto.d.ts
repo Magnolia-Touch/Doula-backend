@@ -11,3 +11,10 @@ export declare class CreateDoulaServiceAvailabilityDto {
 export declare class UpdateDoulaServiceAvailabilityDto {
     availability?: Partial<ServiceAvailabilityDto>;
 }
+export declare class AvailableDoulasFilterDto {
+    startDate?: string;
+    endDate?: string;
+    regionId?: string;
+    serviceId?: string;
+    shift?: 'MORNING' | 'NIGHT' | 'FULLDAY';
+}

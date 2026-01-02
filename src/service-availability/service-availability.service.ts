@@ -5,9 +5,16 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateDoulaServiceAvailabilityDto, ServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
+import { AvailableDoulasFilterDto, CreateDoulaServiceAvailabilityDto, ServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
 import { Prisma, Role } from '@prisma/client';
 import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
+
+type AvailableDoulaResult = {
+  doulaName: string;
+  shift: string[];
+  noOfUnavailableDaysInThatPeriod: number;
+  availableServices: string[];
+};
 
 @Injectable()
 export class DoulaServiceAvailabilityService {
@@ -508,16 +515,177 @@ export class DoulaServiceAvailabilityService {
 
 
 
-  // async doulaAvailability(
-  //   page = 1,
-  //   limit = 10,
-  //   filters?: {
-  //     search?: string;
-  //     status?: BookingStatus;
-  //     startDate?: string;
-  //     endDate?: string;
-  //   }
-  // )
+  async getAvailableDoulas(
+    filters: AvailableDoulasFilterDto,
+  ): Promise<{ status: string; data: AvailableDoulaResult[] }> {
+    const {
+      startDate,
+      endDate,
+      regionId,
+      serviceId,
+      shift,
+    } = filters;
 
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+
+    /* --------------------------------------------------
+     * 1. Fetch doulas + services + availability
+     * -------------------------------------------------- */
+    const doulas = await this.prisma.doulaProfile.findMany({
+      where: {
+        ...(regionId && {
+          Region: { some: { id: regionId } },
+        }),
+        ...(serviceId && {
+          ServicePricing: {
+            some: { serviceId },
+          },
+        }),
+      },
+      select: {
+        id: true,
+        user: {
+          select: { name: true },
+        },
+        ServicePricing: {
+          select: {
+            service: {
+              select: { name: true },
+            },
+          },
+        },
+        AvailableSlotsForService: {
+          where: {
+            ...(start &&
+              end && {
+              date: {
+                gte: start,
+                lte: end,
+              },
+            }),
+          },
+          select: {
+            date: true,
+            availability: true,
+          },
+        },
+      },
+    });
+
+    /* --------------------------------------------------
+     * 2. Build date range
+     * -------------------------------------------------- */
+    const dateList: string[] = [];
+
+    if (start && end) {
+      const cursor = new Date(start);
+      cursor.setHours(0, 0, 0, 0);
+
+      const endDateOnly = new Date(end);
+      endDateOnly.setHours(0, 0, 0, 0);
+
+      while (cursor <= endDateOnly) {
+        dateList.push(cursor.toISOString().split('T')[0]);
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    /* --------------------------------------------------
+     * 3. Map doulas → availability results
+     * -------------------------------------------------- */
+    const mapped: (AvailableDoulaResult | null)[] = doulas.map(
+      (doula): AvailableDoulaResult | null => {
+        let unavailableDays = 0;
+        const availableShiftSet = new Set<string>();
+
+        const availabilityByDate = new Map<
+          string,
+          Record<string, boolean>
+        >(
+          doula.AvailableSlotsForService.map((slot) => [
+            slot.date.toISOString().split('T')[0],
+            slot.availability as Record<string, boolean>,
+          ]),
+        );
+        const hasDateRange = Boolean(start && end);
+
+        if (!hasDateRange) {
+          // No date filter → aggregate from all records
+          for (const availability of availabilityByDate.values()) {
+            Object.entries(availability)
+              .filter(([_, v]) => v === true)
+              .forEach(([k]) => availableShiftSet.add(k));
+          }
+        } else {
+          // Date range provided → strict availability logic
+          for (const date of dateList) {
+            const availability = availabilityByDate.get(date);
+
+            if (!availability) {
+              unavailableDays++;
+              continue;
+            }
+
+            const trueShifts = Object.entries(availability)
+              .filter(([_, value]) => value === true)
+              .map(([key]) => key);
+
+            if (trueShifts.length === 0) {
+              unavailableDays++;
+            } else {
+              trueShifts.forEach((s) => availableShiftSet.add(s));
+            }
+          }
+        }
+
+
+        let shifts = Array.from(availableShiftSet);
+
+        if (shift) {
+          shifts = shifts.filter((s) => s === shift);
+        }
+
+        if (shifts.length === 0) return null;
+
+        return {
+          doulaName: doula.user.name,
+          shift: shifts.map((s) => s.toLowerCase()),
+          noOfUnavailableDaysInThatPeriod: unavailableDays,
+          availableServices: [
+            ...new Set(
+              doula.ServicePricing.map(
+                (sp) => sp.service.name,
+              ),
+            ),
+          ],
+        };
+      },
+    );
+
+    /* --------------------------------------------------
+     * 4. Type-safe filtering (FIXES TS18047)
+     * -------------------------------------------------- */
+    const filtered: AvailableDoulaResult[] = mapped.filter(
+      (d): d is AvailableDoulaResult => d !== null,
+    );
+
+    /* --------------------------------------------------
+     * 5. Sort by least unavailable days
+     * -------------------------------------------------- */
+    filtered.sort(
+      (a, b) =>
+        a.noOfUnavailableDaysInThatPeriod -
+        b.noOfUnavailableDaysInThatPeriod,
+    );
+
+    /* --------------------------------------------------
+     * 6. Response
+     * -------------------------------------------------- */
+    return {
+      status: 'success',
+      data: filtered,
+    };
+  }
 }
 

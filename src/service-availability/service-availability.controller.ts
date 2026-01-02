@@ -28,7 +28,7 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
-import { CreateDoulaServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
+import { AvailableDoulasFilterDto, CreateDoulaServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
 import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
 
 @ApiTags('Doula Service Availability')
@@ -128,5 +128,13 @@ export class DoulaServiceAvailabilityController {
   ) {
     return this.service.removeOffdays(id, req.user);
   }
+
+  @Get('doula/available-doulas/list')
+  async getAvailableDoulas(
+    @Query() filters: AvailableDoulasFilterDto,
+  ) {
+    return this.service.getAvailableDoulas(filters);
+  }
+
 
 }

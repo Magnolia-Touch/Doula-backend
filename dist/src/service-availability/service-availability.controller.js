@@ -58,6 +58,9 @@ let DoulaServiceAvailabilityController = class DoulaServiceAvailabilityControlle
     async removeOffdays(id, req) {
         return this.service.removeOffdays(id, req.user);
     }
+    async getAvailableDoulas(filters) {
+        return this.service.getAvailableDoulas(filters);
+    }
 };
 exports.DoulaServiceAvailabilityController = DoulaServiceAvailabilityController;
 __decorate([
@@ -160,6 +163,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], DoulaServiceAvailabilityController.prototype, "removeOffdays", null);
+__decorate([
+    (0, common_1.Get)('doula/available-doulas/list'),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [service_availability_dto_1.AvailableDoulasFilterDto]),
+    __metadata("design:returntype", Promise)
+], DoulaServiceAvailabilityController.prototype, "getAvailableDoulas", null);
 exports.DoulaServiceAvailabilityController = DoulaServiceAvailabilityController = __decorate([
     (0, swagger_1.ApiTags)('Doula Service Availability'),
     (0, swagger_1.ApiBearerAuth)('bearer'),

@@ -1,7 +1,13 @@
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateDoulaServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
+import { AvailableDoulasFilterDto, CreateDoulaServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
 import { Prisma } from '@prisma/client';
 import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
+type AvailableDoulaResult = {
+    doulaName: string;
+    shift: string[];
+    noOfUnavailableDaysInThatPeriod: number;
+    availableServices: string[];
+};
 export declare class DoulaServiceAvailabilityService {
     private prisma;
     constructor(prisma: PrismaService);
@@ -23,9 +29,9 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaId: string;
             date: Date;
             availability: Prisma.JsonValue;
+            doulaId: string;
         }[];
     }>;
     findOne(id: string, user: any): Promise<{
@@ -34,9 +40,9 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaId: string;
             date: Date;
             availability: Prisma.JsonValue;
+            doulaId: string;
         };
     }>;
     update(id: string, dto: UpdateDoulaServiceAvailabilityDto, user: any): Promise<{
@@ -45,9 +51,9 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaId: string;
             date: Date;
             availability: Prisma.JsonValue;
+            doulaId: string;
         };
     }>;
     remove(id: string, user: any): Promise<{
@@ -68,9 +74,9 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaProfileId: string;
             date: Date;
             offtime: Prisma.JsonValue;
+            doulaProfileId: string;
         }[];
     }>;
     getOffdaysbyId(id: string, user: any): Promise<{
@@ -79,9 +85,9 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaProfileId: string;
             date: Date;
             offtime: Prisma.JsonValue;
+            doulaProfileId: string;
         };
     }>;
     updateOffdays(id: string, dto: UpdateDoulaOffDaysDto, user: any): Promise<{
@@ -90,12 +96,17 @@ export declare class DoulaServiceAvailabilityService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            doulaProfileId: string;
             date: Date;
             offtime: Prisma.JsonValue;
+            doulaProfileId: string;
         };
     }>;
     removeOffdays(id: string, user: any): Promise<{
         message: string;
     }>;
+    getAvailableDoulas(filters: AvailableDoulasFilterDto): Promise<{
+        status: string;
+        data: AvailableDoulaResult[];
+    }>;
 }
+export {};

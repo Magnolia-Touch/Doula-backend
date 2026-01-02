@@ -653,6 +653,7 @@ let MeetingsService = class MeetingsService {
             time: enquiry.time,
             notes: enquiry.notes,
             status: enquiry.status,
+            serviceName: enquiry.serviceName
         };
     }
 };
