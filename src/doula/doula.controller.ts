@@ -46,7 +46,7 @@ import {
 import { Role } from '@prisma/client';
 import { AddDoulaImageDto } from './dto/add-doula-image.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
-import { UpdateCertificateDto } from './dto/certificate.dto';
+import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
 import { CalculatePricingDto } from './dto/calculate-pricing.dto';
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
@@ -1301,6 +1301,17 @@ export class DoulaController {
   @Patch('app/profile')
   async updateDoulaProfile(@Req() req, @Body() dto: UpdateDoulaProfileDto) {
     return this.service.updateDoulaProfile(req.user.id, dto);
+  }
+
+  // UPDATE certificate
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.DOULA)
+  @Post('add/certificates/')
+  async addCertificate(
+    @Req() req,
+    @Body() dto: CreateCertificateDto,
+  ) {
+    return this.service.addCertificate(req.user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

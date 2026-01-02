@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
+
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
@@ -15,7 +16,7 @@ import { AddDoulaImageDto } from './dto/add-doula-image.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { UpdateCertificateDto } from './dto/certificate.dto';
+import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
 import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
 import { CalculatePricingDto } from './dto/calculate-pricing.dto';
@@ -1816,6 +1817,26 @@ export class DoulaService {
     }
 
     return profile;
+  }
+
+
+  // UPDATE
+  async addCertificate(
+    userId: string,
+    dto: CreateCertificateDto,
+  ) {
+    const { name, issuedBy, year } = dto
+    const doulaProfile = await this.getDoulaProfile(userId);
+
+    const certificate = await this.prisma.certificates.create({
+      data: {
+        doulaProfileId: doulaProfile.id,
+        name: name,
+        issuedBy: issuedBy,
+        year: year
+      },
+    });
+    return { message: 'Certificate Added Succesfully', data: certificate }
   }
 
   // GET all
