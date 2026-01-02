@@ -129,7 +129,7 @@ export class ClientsService {
                   include: {
                     user: {
                       select: {
-                        name: true,
+                        name: true, email: true
                       },
                     },
                     DoulaGallery: {
@@ -185,6 +185,9 @@ export class ClientsService {
 
         // Doula details
         doulaName: booking.DoulaProfile.user.name,
+        doulaProfileId: booking.DoulaProfile.id,
+        doulaUserId: booking.DoulaProfile.userId,
+        doulaEmail: booking.DoulaProfile.user.email,
         mainDoulaImage: booking.DoulaProfile.profile_image,
       };
     });
@@ -231,7 +234,7 @@ export class ClientsService {
               include: {
                 user: {
                   select: {
-                    name: true,
+                    name: true, email: true
                   },
                 },
                 DoulaGallery: {
@@ -281,6 +284,9 @@ export class ClientsService {
 
       // Doula details
       doulaName: booking.DoulaProfile.user.name,
+      doulaProfileId: booking.DoulaProfile.id,
+      doulaUserId: booking.DoulaProfile.userId,
+      doulaEmail: booking.DoulaProfile.user.email,
       mainDoulaImage: booking.DoulaProfile.profile_image,
     };
   }
