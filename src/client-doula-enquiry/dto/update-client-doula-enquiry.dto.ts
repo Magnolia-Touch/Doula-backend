@@ -1,6 +1,20 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateClientDoulaEnquiryDto } from './create-client-doula-enquiry.dto';
 
-export class UpdateClientDoulaEnquiryDto extends PartialType(
-    CreateClientDoulaEnquiryDto,
-) { }
+
+import { IsArray, IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+
+export class UpdateClientDoulaEnquiryDto {
+    @IsDateString()
+    @IsOptional()
+    date: string;
+
+    @IsString()
+    @IsOptional()
+    time: string; // HH:mm:ss
+
+    @IsOptional()
+    @IsString()
+    notes?: string;
+
+    @IsUUID()
+    doulaId: string;
+}

@@ -34,13 +34,13 @@ export class ClientDoulaEnquiryController {
         return this.service.findOne(id);
     }
 
-    // @Patch(':id')
-    // update(
-    //     @Param('id') id: string,
-    //     @Body() dto: UpdateClientDoulaEnquiryDto,
-    // ) {
-    //     return this.service.update(id, dto);
-    // }
+    @Patch(':id')
+    update(
+        @Param('id') id: string,
+        @Body() dto: UpdateClientDoulaEnquiryDto,
+    ) {
+        return this.service.update(id, dto);
+    }
 
     @Delete(':id')
     remove(@Param('id') id: string) {

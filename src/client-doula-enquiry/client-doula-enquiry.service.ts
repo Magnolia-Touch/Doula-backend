@@ -73,28 +73,33 @@ export class ClientDoulaEnquiryService {
     }
 
     /* -------------------------------- UPDATE -------------------------------- */
-    // async update(id: string, dto: UpdateClientDoulaEnquiryDto) {
-    //     await this.findOne(id);
+    async update(id: string, dto: UpdateClientDoulaEnquiryDto) {
+        const existing = await this.prisma.clientDoulaEnquiries.findUnique({
+            where: { id },
+        });
 
-    //     const enquiry = await this.prisma.clientDoulaEnquiries.update({
-    //         where: { id },
-    //         data: {
-    //             date: dto.date ? new Date(dto.date) : undefined,
-    //             time: dto.time
-    //                 ? new Date(`1970-01-01T${dto.time}Z`)
-    //                 : undefined,
-    //             notes: dto.notes,
-    //             DoulaProfile: dto.doulaIds
-    //                 ? {
-    //                     set: dto.doulaIds.map((id) => ({ id })),
-    //                 }
-    //                 : undefined,
-    //         },
-    //         include: this.includeRelations(),
-    //     });
+        if (!existing) {
+            throw new NotFoundException('Enquiry not found');
+        }
 
-    //     return this.formatResponse(enquiry);
-    // }
+        const { date, time, notes, doulaId } = dto;
+
+        const enquiry = await this.prisma.clientDoulaEnquiries.update({
+            where: { id },
+            data: {
+                date: dto.date ? new Date(dto.date) : undefined,
+                time: dto.time
+                    ? new Date(`1970-01-01T${dto.time}Z`)
+                    : undefined,
+                notes: dto.notes,
+                doulaProfileId: dto.doulaId,
+            },
+            include: this.includeRelations(),
+        });
+
+
+        return this.formatResponse(enquiry);
+    }
 
     /* -------------------------------- DELETE -------------------------------- */
     async remove(id: string) {
