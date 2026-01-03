@@ -513,6 +513,7 @@ export class ZoneManagerController {
     @Query('status') status?: ServiceStatus,
     @Query('search') search?: string,
     @Query('date') date?: string,
+    @Query('serviceName') serviceName?: string,
 
   ) {
     return this.service.getZoneManagerSchedules(
@@ -520,6 +521,7 @@ export class ZoneManagerController {
       Number(page) || 1,
       Number(limit) || 10,
       {
+        serviceName,
         status,
         search,
         date,
@@ -579,12 +581,14 @@ export class ZoneManagerController {
     @Query('status') status?: BookingStatus,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('serviceName') serviceName?: string,
   ) {
     return this.service.getZoneManagerBookedServices(
       req.user.id,
       Number(page) || 1,
       Number(limit) || 10,
       {
+        serviceName,
         search,
         status,
         startDate,

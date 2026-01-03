@@ -356,6 +356,7 @@ export class ZoneManagerService {
     page = 1,
     limit = 10,
     filters?: {
+      serviceName?: string;
       status?: ServiceStatus;
       search?: string;
       date?: string;
@@ -394,6 +395,19 @@ export class ZoneManagerService {
     if (filters?.date) {
       where.date = new Date(filters.date);
     }
+
+    if (filters?.serviceName) {
+      AND.push({
+        ServicePricing: {
+          service: {
+            name: {
+              contains: filters.serviceName
+            }
+          }
+        }
+      })
+
+    }
     /* Service Name */
     if (filters?.search) {
       const search = filters.search.trim();
@@ -401,17 +415,6 @@ export class ZoneManagerService {
       AND.push({
         OR: [
           /* Service Name */
-          {
-            ServicePricing: {
-              service: {
-                name: {
-                  contains: search,
-
-                },
-              },
-            },
-          },
-
           /* Client Name */
           {
             client: {
@@ -583,6 +586,7 @@ export class ZoneManagerService {
     page = 1,
     limit = 10,
     filters?: {
+      serviceName?: string;
       search?: string;
       status?: BookingStatus;
       startDate?: string;
@@ -644,24 +648,24 @@ export class ZoneManagerService {
         });
       }
     }
+    if (filters?.serviceName) {
+      AND.push({
+        service: {
+          service: {
+            name: {
+              contains: filters.serviceName
+            }
+          }
+        }
+      })
+
+    }
 
     if (filters?.search) {
       const search = filters.search.trim();
 
       AND.push({
         OR: [
-          /* Service Name */
-          {
-            service: {
-              service: {
-                name: {
-                  contains: search,
-
-                },
-              },
-            },
-          },
-
           /* Client Name */
           {
             client: {
