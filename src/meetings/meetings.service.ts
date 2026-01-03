@@ -226,6 +226,7 @@ export class MeetingsService {
           remarks: meeting.remarks,
 
           meeting_with: meetingWith,
+          enquiryId: meeting.enquiryId,
 
           // ===== CLIENT =====
           client: {
@@ -372,6 +373,7 @@ export class MeetingsService {
       remarks: meeting.remarks,
 
       meeting_with: meetingWith,
+      enquiryId: meeting.enquiryId,
 
       // ===== CLIENT =====
       client: {
