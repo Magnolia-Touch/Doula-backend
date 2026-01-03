@@ -335,6 +335,8 @@ export class ClientsService {
     return clientProfile.Schedules.map((schedule) => {
       const booking = schedule.serviceBooking;
 
+
+
       return {
         // User details
         scheduleId: schedule.id,
@@ -350,8 +352,9 @@ export class ClientsService {
         // Booking details
         serviceBookingId: booking.id,
         status: schedule.status,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
+        date: schedule.date,
+        timeshift: schedule.timeshift,
+        cancelledAt: schedule.cancelledAt,
 
         // Region
         regionName: booking.region.regionName,
@@ -450,8 +453,10 @@ export class ClientsService {
       // Booking details
       serviceBookingId: booking.id,
       status: schedule.status,
-      startDate: booking.startDate,
-      endDate: booking.endDate,
+      date: schedule.date,
+      timeshift: schedule.timeshift,
+
+
 
       // Region
       regionName: booking.region.regionName,
