@@ -35,7 +35,7 @@ import {
   ApiOkResponse,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname } from 'path';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
 import {
@@ -48,29 +48,18 @@ import { AddDoulaImageDto } from './dto/add-doula-image.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
 import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
 import { CalculatePricingDto } from './dto/calculate-pricing.dto';
-const ALLOWED_IMAGE_TYPES = [
+import { S3Service } from 'src/s3/s3.service';
+const allowedImageTypes = [
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
 ];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-function multerStorage() {
-  return diskStorage({
-    destination: (req, file, cb) => {
-      // ensure this folder exists (create on app init or manually)
-      cb(null, './uploads/doulas');
-    },
-    filename: (req, file, cb) => {
-      const safeName =
-        Date.now() +
-        '-' +
-        Math.round(Math.random() * 1e9) +
-        extname(file.originalname);
-      cb(null, safeName);
-    },
-  });
+const maxSize = 10 * 1024 * 1024; // 50MB per media
+const maxSizeGallery = 50 * 1024 * 1024; // 50 MB
+function multerMemoryStorage() {
+  return memoryStorage();
 }
 
 @ApiTags('Doula')
@@ -80,7 +69,10 @@ function multerStorage() {
   version: '1',
 })
 export class DoulaController {
-  constructor(private readonly service: DoulaService) { }
+  constructor(
+    private readonly service: DoulaService,
+    private readonly s3Service: S3Service
+  ) { }
 
 
   @ApiConsumes('multipart/form-data')
@@ -221,14 +213,6 @@ export class DoulaController {
         { name: 'profile_image', maxCount: 1 }, // allow multiple images
         { name: 'gallery_image', maxCount: 5 },
       ],
-      {
-        storage: multerStorage(),
-        limits: { fileSize: MAX_FILE_SIZE },
-        fileFilter: (req, file, cb) => {
-          if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
-          else cb(new BadRequestException('Unsupported file type'), false);
-        },
-      },
     ),
   )
   async create(
@@ -242,30 +226,40 @@ export class DoulaController {
   ) {
     const images = files?.gallery_image ?? [];
     const profileImage = files?.profile_image?.[0];
+
+    const totalGallerySize = images.reduce(
+      (sum, file) => sum + file.size,
+      0,
+    );
+
+    if (totalGallerySize > maxSizeGallery) {
+      throw new BadRequestException(
+        'Total gallery image size must not exceed 50MB',
+      );
+    }
     let profileImageUrl: string | undefined;
     if (profileImage) {
       // double-check mimetype and size (extra safety)
-      if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
+      if (!allowedImageTypes.includes(profileImage.mimetype)) {
         // remove saved file (optional cleanup) and throw
         throw new BadRequestException('Unsupported image type.');
       }
-      if (profileImage.size > MAX_FILE_SIZE) {
+      if (!this.s3Service.validateFileSize(profileImage, maxSize)) {
         throw new BadRequestException(
-          'Profile image exceeds maximum size of 5 MB.',
+          'File is too large (max 10MB)',
         );
       }
-
-      // Construct a URL or a path to store in DB. Two options:
-      // 1) store relative path and serve with ServeStaticModule
-      // 2) store full public URL if hosted
-      // Here we store a relative path (uploads/doulas/<filename>)
-      profileImageUrl = `uploads/doulas/${profileImage.filename}`;
+      const folder = "uploads/doulas/profile"
+      profileImageUrl = await this.s3Service.uploadFile(profileImage, folder);
+      console.log("helo exited outside profileimage ")
     }
 
-    const imagePayload = images.map((file, index) => ({
-      url: `uploads/doulas/${file.filename}`,
-    }));
-
+    let galleryImages: any[] = [];
+    if (images) {
+      const folder = "uploads/doulas/gallery"
+      galleryImages = await this.s3Service.uploadMultipleFiles(images, folder);
+    }
+    const imagePayload = galleryImages.map((url) => ({ url }));
     const result = await this.service.create(
       dto,
       req.user.id,
@@ -279,7 +273,6 @@ export class DoulaController {
       data: result.data,
     };
   }
-
 
   @Get()
   @ApiOperation({ summary: 'Fetch All Doulas' })
@@ -1208,14 +1201,7 @@ export class DoulaController {
   @Roles(Role.DOULA)
   @Post('profile/images')
   @UseInterceptors(
-    FileInterceptor('profile_image', {
-      storage: multerStorage(),
-      limits: { fileSize: MAX_FILE_SIZE },
-      fileFilter: (req, file, cb) => {
-        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
-        else cb(new BadRequestException('Unsupported file type'), false);
-      },
-    }),
+    FileInterceptor('profile_image'),
   )
   @ApiConsumes('multipart/form-data')
   async uploadDoulaImage(
@@ -1225,15 +1211,19 @@ export class DoulaController {
     if (!file) {
       throw new BadRequestException('Profile image is required');
     }
+    const allowedImageTypes = [
+      'image/jpeg',
+      'image/png'
+    ];
+    const maxSize = 10 * 1024 * 1024; // 50MB per media
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (!this.s3Service.validateFileSize(file, maxSize)) {
       throw new BadRequestException(
-        'Profile image exceeds maximum size of 5 MB.',
+        'File is too large (max 10MB)',
       );
     }
-
-    const profileImageUrl = `uploads/doulas/${file.filename}`;
-
+    const folder = "uploads/doulas/profile"
+    const profileImageUrl = await this.s3Service.uploadFile(file, folder);
     return this.service.addDoulaprofileImage(req.user.id, profileImageUrl);
   }
 
@@ -1256,24 +1246,31 @@ export class DoulaController {
   @Post('gallery/images')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      storage: multerStorage(),
-      limits: { fileSize: MAX_FILE_SIZE },
-      fileFilter: (req, file, cb) => {
-        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new BadRequestException('Unsupported file type'), false);
-        }
-      },
-    }),
+    FilesInterceptor('files', 10),
   )
   async addGalleryImages(
     @Req() req,
     @UploadedFiles() files: Express.Multer.File[],
     @Body('altText') altText?: string,
   ) {
-    return this.service.addDoulaGalleryImages(req.user.id, files, altText);
+
+    const totalGallerySize = files.reduce(
+      (sum, file) => sum + file.size,
+      0,
+    );
+
+    if (totalGallerySize > maxSizeGallery) {
+      throw new BadRequestException(
+        'Total gallery image size must not exceed 50MB',
+      );
+    }
+    let galleryImages: any[] = [];
+    if (files) {
+      const folder = "uploads/doulas/gallery"
+      galleryImages = await this.s3Service.uploadMultipleFiles(files, folder);
+    }
+    const imagePayload = galleryImages.map((url) => ({ url }));
+    return this.service.addDoulaGalleryImages(req.user.id, imagePayload, altText);
   }
 
   // =========================

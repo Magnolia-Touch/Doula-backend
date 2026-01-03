@@ -8,10 +8,14 @@ import { CreateClientDto } from './dto/create-client.dto';
 // import { UpdateclientsDto } from './dto/update-zone-manager.dto';
 import { BookingStatus, MeetingStatus, Role, ServiceStatus } from '@prisma/client';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { S3Service } from 'src/s3/s3.service';
+
 
 @Injectable()
 export class ClientsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private readonly s3Service: S3Service,) { }
 
   // Create new Clients
   async create(dto: CreateClientDto) {
@@ -1074,13 +1078,15 @@ export class ClientsService {
     const clientProfile = await this.prisma.clientProfile.findUnique({
       where: { userId },
     });
-    if (!clientProfile) {
+    if (!clientProfile || !clientProfile.profile_image) {
       throw new NotFoundException('Client profile not found');
     }
+    await this.s3Service.deleteFile(clientProfile.profile_image);
     const image = await this.prisma.clientProfile.update({
       where: { userId: userId },
       data: { profile_image: null },
     });
+
     return { message: 'Image deleted successfully' };
   }
 }

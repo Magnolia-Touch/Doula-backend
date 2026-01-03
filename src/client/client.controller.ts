@@ -9,6 +9,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ApiConsumes } from '@nestjs/swagger';
+import { S3Service } from 'src/s3/s3.service';
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
@@ -17,29 +18,16 @@ const ALLOWED_IMAGE_TYPES = [
 ];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-function multerStorage() {
-  return diskStorage({
-    destination: (req, file, cb) => {
-      // ensure this folder exists (create on app init or manually)
-      cb(null, './uploads/clients');
-    },
-    filename: (req, file, cb) => {
-      const safeName =
-        Date.now() +
-        '-' +
-        Math.round(Math.random() * 1e9) +
-        extname(file.originalname);
-      cb(null, safeName);
-    },
-  });
-}
 @Controller({
   path: 'clients',
   version: '1',
 })
 @UseGuards(JwtAuthGuard)
 export class ClientController {
-  constructor(private readonly clientService: ClientsService) { }
+  constructor(
+    private readonly clientService: ClientsService,
+    private readonly s3Service: S3Service,
+  ) { }
 
   //  SERVICE BOOKINGS
   // GET: All booked services
@@ -119,14 +107,7 @@ export class ClientController {
   @Roles(Role.CLIENT)
   @Patch('profile/images')
   @UseInterceptors(
-    FileInterceptor('profile_image', {
-      storage: multerStorage(),
-      limits: { fileSize: MAX_FILE_SIZE },
-      fileFilter: (req, file, cb) => {
-        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
-        else cb(new BadRequestException('Unsupported file type'), false);
-      },
-    }),
+    FileInterceptor('profile_image'),
   )
   @ApiConsumes('multipart/form-data')
   async uploadDoulaImage(
@@ -137,14 +118,19 @@ export class ClientController {
       throw new BadRequestException('Profile image is required');
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    const allowedImageTypes = [
+      'image/jpeg',
+      'image/png'
+    ];
+    const maxSize = 10 * 1024 * 1024; // 50MB per media
+
+    if (!this.s3Service.validateFileSize(file, maxSize)) {
       throw new BadRequestException(
-        'Profile image exceeds maximum size of 5 MB.',
+        'File is too large (max 10MB)',
       );
     }
-
-    const profileImageUrl = `uploads/clients/${file.filename}`;
-
+    const folder = "uploads/clients/profile"
+    const profileImageUrl = await this.s3Service.uploadFile(file, folder);
     return this.clientService.addClientProfileImage(req.user.id, profileImageUrl);
   }
 
@@ -159,6 +145,7 @@ export class ClientController {
   @Roles(Role.CLIENT)
   @Delete('profile/images/')
   async deleteDoulaImage(@Req() req) {
+
     return this.clientService.deleteClientProfileImage(req.user.id);
   }
 

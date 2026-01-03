@@ -44,49 +44,15 @@ import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-expres
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
-const ALLOWED_IMAGE_TYPES = [
+import { S3Service } from 'src/s3/s3.service';
+const allowedImageTypes = [
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
 ];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-function multerStorage() {
-  return diskStorage({
-    destination: (req, file, cb) => {
-      // ensure this folder exists (create on app init or manually)
-      cb(null, './uploads/manager');
-    },
-    filename: (req, file, cb) => {
-      const safeName =
-        Date.now() +
-        '-' +
-        Math.round(Math.random() * 1e9) +
-        extname(file.originalname);
-      cb(null, safeName);
-    },
-  });
-}
-
-
-function multerStoragedoula() {
-  return diskStorage({
-    destination: (req, file, cb) => {
-      // ensure this folder exists (create on app init or manually)
-      cb(null, './uploads/doulas');
-    },
-    filename: (req, file, cb) => {
-      const safeName =
-        Date.now() +
-        '-' +
-        Math.round(Math.random() * 1e9) +
-        extname(file.originalname);
-      cb(null, safeName);
-    },
-  });
-}
-
+const maxSizeGallery = 50 * 1024 * 1024; // 50 MB
+const maxSize = 10 * 1024 * 1024; // 50MB per media
 @ApiTags('Zone Managers')
 @ApiBearerAuth()
 @Controller({
@@ -94,20 +60,13 @@ function multerStoragedoula() {
   version: '1',
 })
 export class ZoneManagerController {
-  constructor(private readonly service: ZoneManagerService) { }
+  constructor(private readonly service: ZoneManagerService, private readonly s3Service: S3Service) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Post()
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'profile_image', maxCount: 1 }], {
-      storage: multerStorage(),
-      limits: { fileSize: MAX_FILE_SIZE },
-      fileFilter: (req, file, cb) => {
-        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
-        else cb(new BadRequestException('Unsupported file type'), false);
-      },
-    }),
+    FileFieldsInterceptor([{ name: 'profile_image', maxCount: 1 }]),
   )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create Zone Manager' })
@@ -140,7 +99,7 @@ export class ZoneManagerController {
       }
     },
   })
-  create(
+  async create(
     @Body() dto: CreateZoneManagerDto,
     @UploadedFiles()
     files: {
@@ -154,22 +113,20 @@ export class ZoneManagerController {
 
     if (profileImage) {
       // double-check mimetype and size (extra safety)
-      if (!ALLOWED_IMAGE_TYPES.includes(profileImage.mimetype)) {
+      if (!allowedImageTypes.includes(profileImage.mimetype)) {
         // remove saved file (optional cleanup) and throw
         throw new BadRequestException('Unsupported image type.');
       }
-      if (profileImage.size > MAX_FILE_SIZE) {
+      if (!this.s3Service.validateFileSize(profileImage, maxSize)) {
         throw new BadRequestException(
-          'Profile image exceeds maximum size of 5 MB.',
+          'File is too large (max 10MB)',
         );
       }
-
-      // Construct a URL or a path to store in DB. Two options:
-      // 1) store relative path and serve with ServeStaticModule
-      // 2) store full public URL if hosted
-      // Here we store a relative path (uploads/doulas/<filename>)
-      profileImageUrl = `uploads/manager/${profileImage.filename}`;
+      const folder = "uploads/manager/profile"
+      profileImageUrl = await this.s3Service.uploadFile(profileImage, folder);
+      console.log("helo exited outside profileimage ")
     }
+
     return this.service.create(dto, profileImageUrl);
   }
 
@@ -826,24 +783,31 @@ export class ZoneManagerController {
   @Roles(Role.ZONE_MANAGER)
   @Post('doulas/gallery/images')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      storage: multerStoragedoula(),
-      limits: { fileSize: MAX_FILE_SIZE },
-      fileFilter: (req, file, cb) => {
-        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new BadRequestException('Unsupported file type'), false);
-        }
-      },
-    }),
+    FilesInterceptor('files', 10),
   )
   async addGalleryImages(
     @Req() req,
     @UploadedFiles() files: Express.Multer.File[],
     @Query('doulaId') doulaId: string,
   ) {
-    return this.service.addDoulaGalleryImages(doulaId, files, req.user.id);
+
+    const totalGallerySize = files.reduce(
+      (sum, file) => sum + file.size,
+      0,
+    );
+
+    if (totalGallerySize > maxSizeGallery) {
+      throw new BadRequestException(
+        'Total gallery image size must not exceed 50MB',
+      );
+    }
+    let galleryImages: any[] = [];
+    if (files) {
+      const folder = "uploads/doulas/gallery"
+      galleryImages = await this.s3Service.uploadMultipleFiles(files, folder);
+    }
+    const imagePayload = galleryImages.map((url) => ({ url }));
+    return this.service.addDoulaGalleryImages(doulaId, imagePayload, req.user.id);
   }
 
 

@@ -28,12 +28,13 @@ import {
   isDoulaOffOnShift,
 } from 'src/common/utility/service-utils';
 import { TimeShift } from '@prisma/client';
+import { S3Service } from 'src/s3/s3.service';
 
 const MAX_GALLERY_IMAGES = 5;
 
 @Injectable()
 export class DoulaService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService, private readonly s3Service: S3Service) { }
 
 
   private async buildDoulaProfileResponse(userId: string) {
@@ -1581,10 +1582,12 @@ export class DoulaService {
 
   async addDoulaGalleryImages(
     userId: string,
-    files: Express.Multer.File[],
+    images: {
+      url: string;
+    }[] = [],
     altText?: string,
   ) {
-    if (!files || files.length === 0) {
+    if (!images || images.length === 0) {
       throw new BadRequestException('At least one image is required');
     }
 
@@ -1596,9 +1599,9 @@ export class DoulaService {
       throw new NotFoundException('Doula profile not found');
     }
 
-    const galleryData = files.map((file) => ({
+    const galleryData = images.map((image) => ({
       doulaProfileId: doulaProfile.id,
-      url: `uploads/doulas/${file.filename}`,
+      url: image.url,
       altText,
     }));
 
@@ -1606,7 +1609,7 @@ export class DoulaService {
       data: galleryData,
     });
 
-    const images = await this.prisma.doulaGallery.findMany({
+    const galleryImages = await this.prisma.doulaGallery.findMany({
       where: {
         doulaProfileId: doulaProfile.id,
         url: {
@@ -1623,7 +1626,7 @@ export class DoulaService {
 
     return {
       message: 'Gallery images uploaded successfully',
-      data: images,
+      data: galleryImages,
     };
   }
 
@@ -1669,6 +1672,7 @@ export class DoulaService {
     if (!image || image.doulaProfileId !== doulaProfile.id) {
       throw new NotFoundException('Image not found');
     }
+    await this.s3Service.deleteFile(image.url);
 
     await this.prisma.doulaGallery.delete({
       where: { id: imageId },

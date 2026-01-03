@@ -1277,7 +1277,9 @@ export class ZoneManagerService {
 
   async addDoulaGalleryImages(
     doulaId: string,
-    files: Express.Multer.File[],
+    images: {
+      url: string;
+    }[] = [],
     userId: string,
   ) {
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
@@ -1288,9 +1290,10 @@ export class ZoneManagerService {
     if (!zoneManager) {
       throw new ForbiddenException('Zone manager profile not found');
     }
-    if (!files || files.length === 0) {
+    if (!images || images.length === 0) {
       throw new BadRequestException('At least one image is required');
     }
+
 
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
       where: { userId: doulaId, zoneManager: { some: { id: zoneManager.id } } },
@@ -1300,16 +1303,19 @@ export class ZoneManagerService {
       throw new NotFoundException('Doula profile not found');
     }
 
-    const galleryData = files.map((file) => ({
+
+    const galleryData = images.map((image) => ({
       doulaProfileId: doulaProfile.id,
-      url: `uploads/doulas/${file.filename}`,
+      url: image.url,
+      altText: "Doula Gallery Image",
     }));
 
     await this.prisma.doulaGallery.createMany({
       data: galleryData,
     });
 
-    const images = await this.prisma.doulaGallery.findMany({
+
+    const galleryImages = await this.prisma.doulaGallery.findMany({
       where: {
         doulaProfileId: doulaProfile.id,
         url: {
@@ -1326,7 +1332,7 @@ export class ZoneManagerService {
 
     return {
       message: 'Gallery images uploaded successfully',
-      data: images,
+      data: galleryImages,
     };
   }
 

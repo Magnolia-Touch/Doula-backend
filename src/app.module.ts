@@ -57,6 +57,7 @@ import { StripeModule } from './stripe/stripe.module';
     UserModule,
     ConfigModule.forRoot({
       isGlobal: true, // ✅ VERY IMPORTANT
+      envFilePath: '.env',
     }),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
@@ -64,29 +65,7 @@ import { StripeModule } from './stripe/stripe.module';
       serveStaticOptions: {
         index: false,
       },
-    }),
-
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com', // your SMTP host
-        port: 587,
-        secure: false,
-        auth: {
-          user: process.env.MAIL_USER,
-          pass: process.env.MAIL_PASS,
-        },
-      },
-      defaults: {
-        from: '"No Reply" <no-wishyougrowth@gmail.com>',
-      },
-      template: {
-        dir: join(process.cwd(), 'src/templates'), // ✅ absolute path
-        adapter: new PugAdapter(),
-        options: {
-          strict: true,
-        },
-      },
-    }),
+    })
   ],
   controllers: [AppController],
   providers: [AppService],

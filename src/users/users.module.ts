@@ -15,6 +15,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/common/strategies/jwt.strategy';
 import { UserController } from './users.controller';
+import { S3Module } from 'src/s3/s3.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UserController } from './users.controller';
     AdminModule,
     ZoneManagerModule,
     ClientModule,
+    S3Module,
     DoulaModule,
     ConfigModule,
     PassportModule,
@@ -42,4 +44,4 @@ import { UserController } from './users.controller';
   controllers: [UserController],
   exports: [UserService],
 })
-export class UserModule {}
+export class UserModule { }
