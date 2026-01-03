@@ -114,7 +114,7 @@ export class AuthService {
         });
         throw error; // <-- IMPORTANT: rethrow original error
       }
-      return { message: 'Otp Sent Succesfully' };
+      return { message: 'Otp Sent Succesfully', data: otp };
     } else {
       throw new Error('Invalid Role.');
     }
