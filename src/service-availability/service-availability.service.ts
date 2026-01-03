@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AvailableDoulasFilterDto, CreateDoulaServiceAvailabilityDto, ServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, ServiceStatus, TimeShift } from '@prisma/client';
 import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
 
 type AvailableDoulaResult = {
@@ -512,9 +512,6 @@ export class DoulaServiceAvailabilityService {
       message: 'Off day deleted successfully',
     };
   }
-
-
-
   async getAvailableDoulas(
     filters: AvailableDoulasFilterDto,
   ): Promise<{ status: string; data: AvailableDoulaResult[] }> {
@@ -526,54 +523,18 @@ export class DoulaServiceAvailabilityService {
       shift,
     } = filters;
 
-
-
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
 
-    console.log('RAW INPUT DATES', {
-      startDate,
-      endDate,
-      startParsed: start?.toISOString(),
-      endParsed: end?.toISOString(),
-    });
-    /* --------------------------------------------------
-     * 1. Fetch doulas + services + availability
-     * -------------------------------------------------- */
-    const doulas = await this.prisma.doulaProfile.findMany({
-      where: {
-        ...(regionId && {
-          Region: { some: { id: regionId } },
-        }),
-        ...(serviceId && {
-          ServicePricing: {
-            some: { serviceId },
-          },
-        }),
-      },
-      select: {
-        id: true,
-        user: {
-          select: { name: true },
-        },
-        ServicePricing: {
-          select: {
-            service: {
-              select: { name: true },
-            },
-          },
-        },
-        AvailableSlotsForService: {
-          select: {
-            date: true,
-            availability: true,
-          },
-        },
-      },
-    });
+    if (start && isNaN(start.getTime())) {
+      throw new BadRequestException('Invalid startDate');
+    }
+    if (end && isNaN(end.getTime())) {
+      throw new BadRequestException('Invalid endDate');
+    }
 
     /* --------------------------------------------------
-     * 2. Build date range
+     * 1. Build date range
      * -------------------------------------------------- */
     const dateList: string[] = [];
 
@@ -591,92 +552,158 @@ export class DoulaServiceAvailabilityService {
     }
 
     /* --------------------------------------------------
-     * 3. Map doulas → availability results
+     * 2. Fetch doulas + services
      * -------------------------------------------------- */
-    const mapped: (AvailableDoulaResult | null)[] = doulas.map(
-      (doula): AvailableDoulaResult | null => {
-        let unavailableDays = 0;
-        const availableShiftSet = new Set<string>();
-
-        const availabilityByDate = new Map<
-          string,
-          Record<string, boolean>
-        >(
-          doula.AvailableSlotsForService.map((slot) => {
-            const d = new Date(slot.date);
-            d.setHours(0, 0, 0, 0); // 🔥 CRITICAL FIX
-            return [
-              d.toISOString().split('T')[0],
-              slot.availability as Record<string, boolean>,
-            ];
-          }),
-        );
-
-        const hasDateRange = Boolean(start && end);
-
-        if (!hasDateRange) {
-          // No date filter → aggregate from all records
-          for (const availability of availabilityByDate.values()) {
-            Object.entries(availability)
-              .filter(([_, v]) => v === true)
-              .forEach(([k]) => availableShiftSet.add(k));
-          }
-        } else {
-          // Date range provided → strict availability logic
-          for (const date of dateList) {
-            const availability = availabilityByDate.get(date);
-
-            if (!availability) {
-              unavailableDays++;
-              continue;
-            }
-
-            const trueShifts = Object.entries(availability)
-              .filter(([_, value]) => value === true)
-              .map(([key]) => key);
-
-            if (trueShifts.length === 0) {
-              unavailableDays++;
-            } else {
-              trueShifts.forEach((s) => availableShiftSet.add(s));
-            }
-          }
-        }
-
-
-        let shifts = Array.from(availableShiftSet);
-
-        if (shift) {
-          shifts = shifts.filter((s) => s === shift);
-        }
-
-        if (shifts.length === 0) return null;
-
-        return {
-          doulaName: doula.user.name,
-          shift: shifts.map((s) => s.toLowerCase()),
-          noOfUnavailableDaysInThatPeriod: unavailableDays,
-          availableServices: [
-            ...new Set(
-              doula.ServicePricing.map(
-                (sp) => sp.service.name,
-              ),
-            ),
-          ],
-        };
+    const doulas = await this.prisma.doulaProfile.findMany({
+      where: {
+        ...(regionId && {
+          Region: { some: { id: regionId } },
+        }),
+        ...(serviceId && {
+          ServicePricing: {
+            some: { serviceId },
+          },
+        }),
       },
-    );
+      select: {
+        id: true,
+        user: { select: { name: true } },
+        ServicePricing: {
+          select: {
+            service: { select: { name: true } },
+          },
+        },
+      },
+    });
 
     /* --------------------------------------------------
-     * 4. Type-safe filtering (FIXES TS18047)
+     * 3. Fetch schedules (blocking source)
+     * -------------------------------------------------- */
+    const BLOCKING_STATUSES: ServiceStatus[] = [
+      ServiceStatus.PENDING,
+      ServiceStatus.IN_PROGRESS,
+    ];
+
+    const schedules = start && end
+      ? await this.prisma.schedules.findMany({
+        where: {
+          cancelledAt: null,
+          status: { in: BLOCKING_STATUSES },
+          date: {
+            gte: start,
+            lte: end,
+          },
+          doulaProfileId: {
+            in: doulas.map((d) => d.id),
+          },
+        },
+        select: {
+          doulaProfileId: true,
+          date: true,
+          timeshift: true,
+        },
+      })
+      : [];
+
+    /* --------------------------------------------------
+     * 4. Group schedules by doula → date → shifts
+     * -------------------------------------------------- */
+    const schedulesByDoula = new Map<
+      string,
+      Map<string, Set<TimeShift>>
+    >();
+
+    for (const s of schedules) {
+      const d = new Date(s.date);
+      d.setHours(0, 0, 0, 0);
+      const dateKey = d.toISOString().split('T')[0];
+
+      if (!schedulesByDoula.has(s.doulaProfileId)) {
+        schedulesByDoula.set(s.doulaProfileId, new Map());
+      }
+
+      const byDate = schedulesByDoula.get(s.doulaProfileId)!;
+
+      if (!byDate.has(dateKey)) {
+        byDate.set(dateKey, new Set());
+      }
+
+      byDate.get(dateKey)!.add(s.timeshift);
+    }
+
+    /* --------------------------------------------------
+     * 5. Map doulas → result
+     * -------------------------------------------------- */
+    const mapped: (AvailableDoulaResult | null)[] = doulas.map((doula) => {
+      let unavailableDays = 0;
+      const availableShiftSet = new Set<string>();
+
+      const doulaSchedules = schedulesByDoula.get(doula.id) ?? new Map();
+
+      if (start && end) {
+        for (const date of dateList) {
+          const blockedShifts = doulaSchedules.get(date);
+
+          if (!blockedShifts) {
+            // No booking → all shifts available
+            ['MORNING', 'NIGHT', 'FULLDAY'].forEach((s) =>
+              availableShiftSet.add(s),
+            );
+            continue;
+          }
+
+          // FULLDAY booking blocks entire day
+          if (blockedShifts.has(TimeShift.FULLDAY)) {
+            unavailableDays++;
+            continue;
+          }
+
+          if (!shift) {
+            // any booking blocks the day
+            unavailableDays++;
+            continue;
+          }
+
+          if (blockedShifts.has(shift)) {
+            unavailableDays++;
+          } else {
+            availableShiftSet.add(shift);
+          }
+        }
+      } else {
+        // No date range → availability not constrained by schedules
+        ['MORNING', 'NIGHT', 'FULLDAY'].forEach((s) =>
+          availableShiftSet.add(s),
+        );
+      }
+
+      let shifts = Array.from(availableShiftSet);
+
+      if (shift) {
+        shifts = shifts.filter((s) => s === shift);
+      }
+
+      if (shifts.length === 0) return null;
+
+      return {
+        doulaName: doula.user.name,
+        shift: shifts.map((s) => s.toLowerCase()),
+        noOfUnavailableDaysInThatPeriod: unavailableDays,
+        availableServices: [
+          ...new Set(
+            doula.ServicePricing.map((sp) => sp.service.name),
+          ),
+        ],
+      };
+    });
+
+    /* --------------------------------------------------
+     * 6. Filter + sort
      * -------------------------------------------------- */
     const filtered: AvailableDoulaResult[] = mapped.filter(
       (d): d is AvailableDoulaResult => d !== null,
     );
 
-    /* --------------------------------------------------
-     * 5. Sort by least unavailable days
-     * -------------------------------------------------- */
     filtered.sort(
       (a, b) =>
         a.noOfUnavailableDaysInThatPeriod -
@@ -684,12 +711,13 @@ export class DoulaServiceAvailabilityService {
     );
 
     /* --------------------------------------------------
-     * 6. Response
+     * 7. Response
      * -------------------------------------------------- */
     return {
       status: 'success',
       data: filtered,
     };
   }
+
 }
 
