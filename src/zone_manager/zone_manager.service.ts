@@ -1236,6 +1236,16 @@ export class ZoneManagerService {
             phone: true,
           },
         },
+        ServicePricing: {
+          select: {
+            service: {
+              select: {
+                name: true
+              }
+            },
+            price: true
+          }
+        }
       }
     })
     // 3. Shape response
@@ -1250,6 +1260,10 @@ export class ZoneManagerService {
       languages: doula.languages,
       specialities: doula.specialities,
       profileImage: doula.profile_image,
+      service: doula.ServicePricing.map((sp) => ({
+        name: sp.service.name,
+        price: sp.price
+      }))
     }));
 
     return {
