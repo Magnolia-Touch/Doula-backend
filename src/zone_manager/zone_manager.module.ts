@@ -5,8 +5,8 @@ import { ZoneManagerController } from './zone_manager.controller';
 import { S3Module } from 'src/s3/s3.module';
 
 @Module({
-  exports: [ZoneManagerService, S3Module],
-  imports: [PrismaModule],
+  exports: [ZoneManagerService],
+  imports: [PrismaModule, S3Module],
   controllers: [ZoneManagerController],
   providers: [ZoneManagerService],
 })
