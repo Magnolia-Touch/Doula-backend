@@ -106,46 +106,38 @@ export class ClientsService {
       where: { userId },
       include: {
         user: true,
-        Schedules: {
+        bookings: {
           include: {
-            serviceBooking: {
-              include: {
-                region: {
-                  select: {
-                    regionName: true,
-                  },
-                },
+            region: {
+              select: { regionName: true }
+            },
+            service: {
+              select: {
                 service: {
-                  include: {
-                    service: {
-                      select: {
-                        id: true,
-                        name: true,
-                      },
-                    },
+                  select: {
+                    name: true,
+                    id: true
+                  },
+                }
+              }
+            },
+            DoulaProfile: {
+              include: {
+                user: {
+                  select: {
+                    name: true, email: true
                   },
                 },
-                DoulaProfile: {
-                  include: {
-                    user: {
-                      select: {
-                        name: true, email: true
-                      },
-                    },
-                    DoulaGallery: {
-                      select: {
-                        url: true,
-                      },
-                      take: 1,
-                    },
+                DoulaGallery: {
+                  select: {
+                    url: true,
                   },
+                  take: 1,
                 },
               },
-            },
+            }
           },
-          orderBy: {
-            createdAt: 'desc',
-          },
+          orderBy: { createdAt: 'desc', }
         },
       },
     });
@@ -155,9 +147,7 @@ export class ClientsService {
     }
 
     // 2. Transform response (UNCHANGED STRUCTURE)
-    return clientProfile.Schedules.map((schedule) => {
-      const booking = schedule.serviceBooking;
-
+    return clientProfile.bookings.map((bk) => {
       return {
         // User details
         userId: clientProfile.user.id,
@@ -170,25 +160,25 @@ export class ClientsService {
         profileId: clientProfile.id,
 
         // Booking details
-        serviceBookingId: booking.id,
-        status: booking.status,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
+        serviceBookingId: bk.id,
+        status: bk.status,
+        startDate: bk.startDate,
+        endDate: bk.endDate,
 
         // Region
-        regionName: booking.region.regionName,
+        regionName: bk.region.regionName,
 
         // Service details
-        serviceId: booking.service.service.id,
-        servicePricingId: booking.servicePricingId,
-        service: booking.service.service.name,
+        serviceId: bk.service.service.id,
+        servicePricingId: bk.servicePricingId,
+        service: bk.service.service.name,
 
         // Doula details
-        doulaName: booking.DoulaProfile.user.name,
-        doulaProfileId: booking.DoulaProfile.id,
-        doulaUserId: booking.DoulaProfile.userId,
-        doulaEmail: booking.DoulaProfile.user.email,
-        mainDoulaImage: booking.DoulaProfile.profile_image,
+        doulaName: bk.DoulaProfile.user.name,
+        doulaProfileId: bk.DoulaProfile.id,
+        doulaUserId: bk.DoulaProfile.userId,
+        doulaEmail: bk.DoulaProfile.user.email,
+        mainDoulaImage: bk.DoulaProfile.profile_image,
       };
     });
   }
@@ -207,54 +197,49 @@ export class ClientsService {
     }
 
     // 2. Fetch schedule linked to booking & validate ownership
-    const schedule = await this.prisma.schedules.findFirst({
+    const booking = await this.prisma.serviceBooking.findFirst({
       where: {
-        bookingId: serviceBookingId,
+        id: serviceBookingId,
         clientId: clientProfile.id,
       },
       include: {
-        serviceBooking: {
+
+        region: {
+          select: {
+            regionName: true,
+          },
+        },
+        service: {
           include: {
-            region: {
-              select: {
-                regionName: true,
-              },
-            },
             service: {
-              include: {
-                service: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+              select: {
+                id: true,
+                name: true,
               },
             },
-            DoulaProfile: {
-              include: {
-                user: {
-                  select: {
-                    name: true, email: true
-                  },
-                },
-                DoulaGallery: {
-                  select: {
-                    url: true,
-                  },
-                  take: 1,
-                },
+          },
+        },
+        DoulaProfile: {
+          include: {
+            user: {
+              select: {
+                name: true, email: true
               },
+            },
+            DoulaGallery: {
+              select: {
+                url: true,
+              },
+              take: 1,
             },
           },
         },
       },
     });
 
-    if (!schedule) {
+    if (!booking) {
       throw new Error('Service booking not found');
     }
-
-    const booking = schedule.serviceBooking;
 
     // 3. Response mapping (UNCHANGED SHAPE)
     return {
