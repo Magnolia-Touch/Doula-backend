@@ -15,33 +15,33 @@ export declare class DoulaServiceAvailabilityController {
     findAll(req: any): Promise<{
         message: string;
         data: {
+            availability: import("@prisma/client/runtime/library").JsonValue;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            availability: import("@prisma/client/runtime/library").JsonValue;
             doulaId: string;
         }[];
     }>;
     findOne(id: string, req: any): Promise<{
         message: string;
         data: {
+            availability: import("@prisma/client/runtime/library").JsonValue;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            availability: import("@prisma/client/runtime/library").JsonValue;
             doulaId: string;
         };
     }>;
     update(id: string, req: any, dto: UpdateDoulaServiceAvailabilityDto): Promise<{
         message: string;
         data: {
+            availability: import("@prisma/client/runtime/library").JsonValue;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            availability: import("@prisma/client/runtime/library").JsonValue;
             doulaId: string;
         };
     }>;

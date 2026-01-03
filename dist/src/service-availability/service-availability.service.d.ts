@@ -26,33 +26,33 @@ export declare class DoulaServiceAvailabilityService {
     }): Promise<{
         message: string;
         data: {
+            availability: Prisma.JsonValue;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            availability: Prisma.JsonValue;
             doulaId: string;
         }[];
     }>;
     findOne(id: string, user: any): Promise<{
         message: string;
         data: {
+            availability: Prisma.JsonValue;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            availability: Prisma.JsonValue;
             doulaId: string;
         };
     }>;
     update(id: string, dto: UpdateDoulaServiceAvailabilityDto, user: any): Promise<{
         message: string;
         data: {
+            availability: Prisma.JsonValue;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             date: Date;
-            availability: Prisma.JsonValue;
             doulaId: string;
         };
     }>;

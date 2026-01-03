@@ -47,6 +47,7 @@ export declare class MeetingsService {
             serviceName: any;
             remarks: any;
             meeting_with: string | null;
+            enquiryId: any;
             client: {
                 clientId: any;
                 clientName: any;
@@ -87,6 +88,7 @@ export declare class MeetingsService {
         serviceName: string;
         remarks: string | null;
         meeting_with: string | null;
+        enquiryId: string | null;
         client: {
             clientId: string;
             clientName: string;

@@ -526,9 +526,17 @@ export class DoulaServiceAvailabilityService {
       shift,
     } = filters;
 
+
+
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
 
+    console.log('RAW INPUT DATES', {
+      startDate,
+      endDate,
+      startParsed: start?.toISOString(),
+      endParsed: end?.toISOString(),
+    });
     /* --------------------------------------------------
      * 1. Fetch doulas + services + availability
      * -------------------------------------------------- */
@@ -556,15 +564,6 @@ export class DoulaServiceAvailabilityService {
           },
         },
         AvailableSlotsForService: {
-          where: {
-            ...(start &&
-              end && {
-              date: {
-                gte: start,
-                lte: end,
-              },
-            }),
-          },
           select: {
             date: true,
             availability: true,
@@ -603,11 +602,16 @@ export class DoulaServiceAvailabilityService {
           string,
           Record<string, boolean>
         >(
-          doula.AvailableSlotsForService.map((slot) => [
-            slot.date.toISOString().split('T')[0],
-            slot.availability as Record<string, boolean>,
-          ]),
+          doula.AvailableSlotsForService.map((slot) => {
+            const d = new Date(slot.date);
+            d.setHours(0, 0, 0, 0); // 🔥 CRITICAL FIX
+            return [
+              d.toISOString().split('T')[0],
+              slot.availability as Record<string, boolean>,
+            ];
+          }),
         );
+
         const hasDateRange = Boolean(start && end);
 
         if (!hasDateRange) {

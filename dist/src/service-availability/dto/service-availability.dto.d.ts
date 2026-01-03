@@ -16,5 +16,5 @@ export declare class AvailableDoulasFilterDto {
     endDate?: string;
     regionId?: string;
     serviceId?: string;
-    shift?: 'MORNING' | 'NIGHT' | 'FULLDAY';
+    shift?: string;
 }

@@ -88,4 +88,29 @@ class AvailableDoulasFilterDto {
     shift;
 }
 exports.AvailableDoulasFilterDto = AvailableDoulasFilterDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], AvailableDoulasFilterDto.prototype, "startDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], AvailableDoulasFilterDto.prototype, "endDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], AvailableDoulasFilterDto.prototype, "regionId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], AvailableDoulasFilterDto.prototype, "serviceId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AvailableDoulasFilterDto.prototype, "shift", void 0);
 //# sourceMappingURL=service-availability.dto.js.map

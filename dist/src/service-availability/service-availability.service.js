@@ -350,6 +350,12 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
         const { startDate, endDate, regionId, serviceId, shift, } = filters;
         const start = startDate ? new Date(startDate) : undefined;
         const end = endDate ? new Date(endDate) : undefined;
+        console.log('RAW INPUT DATES', {
+            startDate,
+            endDate,
+            startParsed: start?.toISOString(),
+            endParsed: end?.toISOString(),
+        });
         const doulas = await this.prisma.doulaProfile.findMany({
             where: {
                 ...(regionId && {
@@ -374,15 +380,6 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
                     },
                 },
                 AvailableSlotsForService: {
-                    where: {
-                        ...(start &&
-                            end && {
-                            date: {
-                                gte: start,
-                                lte: end,
-                            },
-                        }),
-                    },
                     select: {
                         date: true,
                         availability: true,
@@ -404,10 +401,14 @@ let DoulaServiceAvailabilityService = class DoulaServiceAvailabilityService {
         const mapped = doulas.map((doula) => {
             let unavailableDays = 0;
             const availableShiftSet = new Set();
-            const availabilityByDate = new Map(doula.AvailableSlotsForService.map((slot) => [
-                slot.date.toISOString().split('T')[0],
-                slot.availability,
-            ]));
+            const availabilityByDate = new Map(doula.AvailableSlotsForService.map((slot) => {
+                const d = new Date(slot.date);
+                d.setHours(0, 0, 0, 0);
+                return [
+                    d.toISOString().split('T')[0],
+                    slot.availability,
+                ];
+            }));
             const hasDateRange = Boolean(start && end);
             if (!hasDateRange) {
                 for (const availability of availabilityByDate.values()) {

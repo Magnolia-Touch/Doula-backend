@@ -178,6 +178,7 @@ let MeetingsService = class MeetingsService {
                     serviceName: meeting.serviceName,
                     remarks: meeting.remarks,
                     meeting_with: meetingWith,
+                    enquiryId: meeting.enquiryId,
                     client: {
                         clientId: meeting.bookedBy?.id,
                         clientName: meeting.bookedBy?.user?.name,
@@ -302,6 +303,7 @@ let MeetingsService = class MeetingsService {
             serviceName: meeting.serviceName,
             remarks: meeting.remarks,
             meeting_with: meetingWith,
+            enquiryId: meeting.enquiryId,
             client: {
                 clientId: meeting.bookedBy?.id,
                 clientName: meeting.bookedBy?.user?.name,

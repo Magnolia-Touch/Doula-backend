@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WeekDays } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsBoolean, IsEnum, ValidateNested, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsEnum, ValidateNested, IsDateString, IsUUID } from 'class-validator';
 
 export class ServiceAvailabilityDto {
   @IsBoolean()
@@ -55,11 +55,23 @@ export class UpdateDoulaServiceAvailabilityDto {
 }
 
 export class AvailableDoulasFilterDto {
-  startDate?: string; // YYYY-MM-DD
-  endDate?: string;   // YYYY-MM-DD
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
 
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsUUID()
   regionId?: string;
+
+  @IsOptional()
+  @IsUUID()
   serviceId?: string;
 
-  shift?: 'MORNING' | 'NIGHT' | 'FULLDAY';
+  @IsOptional()
+  @IsString()
+  shift?: string;
 }
