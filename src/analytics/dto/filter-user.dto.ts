@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsNumberString, IsBoolean } from 'class-validator';
+import { IsEnum, IsOptional, IsNumberString, IsBoolean, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
@@ -40,4 +40,12 @@ export class FilterUserDto {
   @IsOptional()
   @IsNumberString()
   limit?: string;
+
+
+  @ApiPropertyOptional({
+    description: 'Search based on name, email, phone',
+  })
+  @IsOptional()
+  @IsString()
+  search: string;
 }

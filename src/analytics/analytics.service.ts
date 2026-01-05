@@ -5,27 +5,108 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { paginate } from 'src/common/utility/pagination.util';
-import { FilterUserDto } from './filter-user.dto';
+import { FilterUserDto } from './dto/filter-user.dto';
 import { Role } from '@prisma/client';
 import { format } from 'date-fns';
 import { startOfDay, endOfDay } from 'date-fns';
+import { UserCountDto } from './dto/user-count.dto';
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
-  async listUsers(query: FilterUserDto) {
-    const { role, is_active } = query;
+  async listUsers(query: FilterUserDto, userId: string, userRole: Role) {
+    const { role, is_active, search } = query;
+    const searchCondition =
+      search && search.trim()
+        ? {
+          OR: [
+            {
+              name: {
+                contains: search,
 
+              },
+            },
+            {
+              email: {
+                contains: search,
+
+              },
+            },
+            {
+              phone: {
+                contains: search,
+              },
+            },
+          ],
+        }
+        : null;
     // Pagination
     const page = query.page ? Number(query.page) : 1;
     const limit = query.limit ? Number(query.limit) : 10;
-
     const where: any = {};
 
     if (role) where.role = role;
     if (is_active !== undefined) {
       where.is_active = is_active;
+    }
+    if (searchCondition) {
+      where.AND = [...(where.AND || []), searchCondition];
+    }
+
+    if (userRole == Role.ZONE_MANAGER) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId }, include: { zonemanagerprofile: true }
+      })
+      if (!user?.zonemanagerprofile) {
+        throw new NotFoundException("Zone Manager Profile Not Found");
+      }
+
+      const finalWhere = {
+        ...where,
+        OR: [
+          // 1. Doulas under this Zone Manager
+          {
+            doulaProfile: {
+              zoneManager: {
+                some: {
+                  id: user.zonemanagerprofile.id,
+                },
+              },
+            },
+          },
+
+          // 2. Clients under those Doulas
+          {
+            clientProfile: {
+              bookings: {
+                some: {
+                  DoulaProfile: {
+                    zoneManager: {
+                      some: {
+                        id: user.zonemanagerprofile.id,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      };
+
+
+      return paginate({
+        prismaModel: this.prisma.user,
+        page,
+        limit,
+        where: finalWhere,
+        include: {
+          clientProfile: true,
+          doulaProfile: true
+        },
+        orderBy: { createdAt: 'desc' },
+      });
     }
 
     return paginate({
@@ -42,30 +123,141 @@ export class AnalyticsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+  async countUsersByRole(
+    query: UserCountDto,
+    userId: string,
+    userRole: Role
+  ) {
+    const { role, is_active, regionId } = query;
 
-  async countUsersByRole() {
-    const clients = await this.prisma.user.count({
-      where: { role: Role.CLIENT },
-    });
-    const doulas = await this.prisma.user.count({
-      where: { role: Role.DOULA },
-    });
-    const zonemanagers = await this.prisma.user.count({
-      where: { role: Role.ZONE_MANAGER },
-    });
-    const admins = await this.prisma.user.count({
-      where: { role: Role.ADMIN },
-    });
-    const total = await this.prisma.user.count();
+    const baseFilter: any = {};
+    if (is_active !== undefined) baseFilter.is_active = is_active;
 
-    return {
-      total,
-      clients,
-      doulas,
-      zonemanagers,
-      admins,
-    };
+    // helper to return uniform structure
+    const response = (
+      admins = 0,
+      zonemanagers = 0,
+      doulas = 0,
+      clients = 0
+    ) => ({
+      total: admins + zonemanagers + doulas + clients,
+      counts: {
+        admins,
+        zonemanagers,
+        doulas,
+        clients,
+      },
+    });
+
+    /* -------------------- ZONE MANAGER -------------------- */
+    if (userRole === Role.ZONE_MANAGER) {
+      const zmUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { zonemanagerprofile: true },
+      });
+
+      if (!zmUser?.zonemanagerprofile) {
+        throw new NotFoundException("Zone Manager Profile Not Found");
+      }
+
+      const zoneManagerId = zmUser.zonemanagerprofile.id;
+
+      const clients = await this.prisma.user.count({
+        where: {
+          role: Role.CLIENT,
+          ...baseFilter,
+          clientProfile: {
+            Meetings: {
+              some: { zoneManagerProfileId: zoneManagerId },
+            },
+          },
+        },
+      });
+
+      const doulas = await this.prisma.user.count({
+        where: {
+          role: Role.DOULA,
+          ...baseFilter,
+          doulaProfile: {
+            zoneManager: {
+              some: { id: zoneManagerId },
+            },
+          },
+        },
+      });
+
+      return response(0, 1, doulas, clients);
+    }
+
+    /* -------------------- ADMIN -------------------- */
+
+    // ADMIN + REGION FILTER
+    if (regionId) {
+      const [zonemanagers, doulas, clients] = await Promise.all([
+        this.prisma.user.count({
+          where: {
+            role: Role.ZONE_MANAGER,
+            ...baseFilter,
+            zonemanagerprofile: {
+              managingRegion: {
+                some: { id: regionId },
+              },
+            },
+          },
+        }),
+        this.prisma.user.count({
+          where: {
+            role: Role.DOULA,
+            ...baseFilter,
+            doulaProfile: {
+              Region: {
+                some: { id: regionId },
+              },
+            },
+          },
+        }),
+        this.prisma.user.count({
+          where: {
+            role: Role.CLIENT,
+            ...baseFilter,
+            clientProfile: {
+              region: regionId,
+            },
+          },
+        }),
+      ]);
+
+      return response(0, zonemanagers, doulas, clients);
+    }
+
+    // ADMIN + ROLE FILTER
+    if (role) {
+      const count = await this.prisma.user.count({
+        where: { role, ...baseFilter },
+      });
+
+      return response(
+        role === Role.ADMIN ? count : 0,
+        role === Role.ZONE_MANAGER ? count : 0,
+        role === Role.DOULA ? count : 0,
+        role === Role.CLIENT ? count : 0
+      );
+    }
+
+    // ADMIN + OVERALL (DEFAULT)
+    const [admins, zonemanagers, doulas, clients] =
+      await Promise.all([
+        this.prisma.user.count({ where: { role: Role.ADMIN, ...baseFilter } }),
+        this.prisma.user.count({
+          where: { role: Role.ZONE_MANAGER, ...baseFilter },
+        }),
+        this.prisma.user.count({ where: { role: Role.DOULA, ...baseFilter } }),
+        this.prisma.user.count({ where: { role: Role.CLIENT, ...baseFilter } }),
+      ]);
+
+    return response(admins, zonemanagers, doulas, clients);
   }
+
 
   async ActivecountUsersByRole() {
     const clients = await this.prisma.user.count({
@@ -115,51 +307,122 @@ export class AnalyticsService {
     };
   }
 
-  async getBookingStats() {
-    const totalBookings = await this.prisma.serviceBooking.groupBy({
+  async getBookingStats(
+    userId: string,
+    userRole: Role,
+    regionId?: string
+  ) {
+    let bookingWhere: any = {};
+
+    /* -------------------- ZONE MANAGER -------------------- */
+    if (userRole === Role.ZONE_MANAGER) {
+      console.log("i am here")
+      const zmUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { zonemanagerprofile: true },
+      });
+
+      if (!zmUser?.zonemanagerprofile) {
+        throw new NotFoundException("Zone Manager Profile Not Found");
+      }
+
+      bookingWhere = {
+        DoulaProfile: {
+          zoneManager: {
+            some: { id: zmUser.zonemanagerprofile.id },
+          },
+        },
+      };
+    }
+
+    /* -------------------- ADMIN + REGION -------------------- */
+    if (userRole === Role.ADMIN && regionId) {
+      bookingWhere = {
+        regionId,
+      };
+    }
+
+    const grouped = await this.prisma.serviceBooking.groupBy({
       by: ['status'],
-      _count: {
-        status: true,
-      },
-    });
-    const bookings = await this.prisma.serviceBooking.findMany({
-      select: { paymentDetails: true },
+      where: bookingWhere,
+      _count: { status: true },
     });
 
-    const totalRevenue = 0;
-
-    const FormattedCounts = {
+    const counts = {
       ACTIVE: 0,
       COMPLETED: 0,
       CANCELED: 0,
     };
-    totalBookings.forEach((item) => {
-      FormattedCounts[item.status] = item._count.status;
+
+    grouped.forEach((item) => {
+      counts[item.status] = item._count.status;
     });
+
     return {
-      FormattedCounts,
+      total: Object.values(counts).reduce((a, b) => a + b, 0),
+      counts,
     };
   }
 
-  async getMeetingstats() {
-    const totalMeetings = await this.prisma.meetings.groupBy({
+  async getMeetingStats(
+    userId: string,
+    userRole: Role,
+    regionId?: string
+  ) {
+    let meetingWhere: any = {};
+
+    /* -------------------- ZONE MANAGER -------------------- */
+    if (userRole === Role.ZONE_MANAGER) {
+      console.log("i am here")
+      const zmUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { zonemanagerprofile: true },
+      });
+
+      if (!zmUser?.zonemanagerprofile) {
+        throw new NotFoundException("Zone Manager Profile Not Found");
+      }
+
+      meetingWhere = {
+        ZoneManagerProfile: {
+          id: zmUser.zonemanagerprofile.id,
+        },
+      };
+    }
+
+    /* -------------------- ADMIN + REGION -------------------- */
+    if (userRole === Role.ADMIN && regionId) {
+      meetingWhere = {
+        ZoneManagerProfile: {
+          managingRegion: {
+            some: { id: regionId },
+          },
+        },
+      };
+    }
+
+    const grouped = await this.prisma.meetings.groupBy({
       by: ['status'],
-      _count: {
-        status: true,
-      },
+      where: meetingWhere,
+      _count: { status: true },
     });
 
-    const FormattedCounts = {
+    const counts = {
       SCHEDULED: 0,
       COMPLETED: 0,
       CANCELED: 0,
     };
 
-    totalMeetings.forEach((item) => {
-      FormattedCounts[item.status] = item._count.status;
+    grouped.forEach((item) => {
+      counts[item.status] = item._count.status;
     });
-    return FormattedCounts;
+
+    return {
+      total: Object.values(counts).reduce((a, b) => a + b, 0),
+      counts,
+    };
   }
+
 
   async getDailyActivity(startDate?: string, endDate?: string) {
     let start: Date | undefined;

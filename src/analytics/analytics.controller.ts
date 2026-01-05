@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
-import { FilterUserDto } from './filter-user.dto';
+import { FilterUserDto } from './dto/filter-user.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -13,6 +13,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
+import { UserCountDto } from './dto/user-count.dto';
 
 @ApiTags('Analytics')
 @Controller({
@@ -20,7 +21,7 @@ import { Role } from '@prisma/client';
   version: '1',
 })
 export class AnalyticsController {
-  constructor(private service: AnalyticsService) {}
+  constructor(private service: AnalyticsService) { }
 
   @ApiOperation({
     summary: 'List users (paginated + optional role filter)',
@@ -74,9 +75,13 @@ export class AnalyticsController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ZONE_MANAGER)
   @Get('user/list')
-  async listUsers(@Query() query: FilterUserDto) {
-    return this.service.listUsers(query);
+  async listUsers(@Query() query: FilterUserDto, @Req() req) {
+    console.log("id", req.user.id)
+    console.log("role", req.user.role)
+    return this.service.listUsers(query, req.user.id, req.user.role);
   }
 
   @ApiOperation({ summary: 'Get counts of users grouped by role' })
@@ -96,9 +101,11 @@ export class AnalyticsController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ZONE_MANAGER)
   @Get('counts/user')
-  async getCounts() {
-    return this.service.countUsersByRole();
+  async getCounts(@Query() query: UserCountDto, @Req() req) {
+    return this.service.countUsersByRole(query, req.user.id, req.user.role);
   }
 
   @ApiOperation({ summary: 'Get counts of Active users grouped by role' })
@@ -145,7 +152,7 @@ export class AnalyticsController {
     return this.service.inactivecountUsersByRole();
   }
 
-  @ApiOperation({ summary: 'Get booking statistics (aggregated)' })
+  @ApiOperation({ summary: 'Get booking statistics' })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
@@ -161,9 +168,15 @@ export class AnalyticsController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ZONE_MANAGER)
   @Get('counts/booking')
-  async getStats() {
-    return this.service.getBookingStats();
+  async getStats(
+    @Query('regionId') regionId: string,
+    @Req() req
+
+  ) {
+    return this.service.getBookingStats(req.user.id, req.user.role, regionId);
   }
 
   @ApiOperation({ summary: 'Get Meetings aggregated results' })
@@ -182,9 +195,13 @@ export class AnalyticsController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ZONE_MANAGER)
   @Get('counts/meeting')
-  async getMeetigStats() {
-    return this.service.getMeetingstats();
+  async getMeetigStats(
+    @Query('regionId') regionId: string,
+    @Req() req) {
+    return this.service.getMeetingStats(req.user.id, req.user.role, regionId);
   }
 
   @ApiOperation({ summary: 'Get Weekly / Daily Activity Analytics' })
