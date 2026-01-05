@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req, Delete } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Delete, Patch } from '@nestjs/common';
 import { UserService } from './users.service';
 import { UserRegistrationDto } from './dto/user-registration.dto';
 import {
@@ -13,6 +13,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { ChangeUserStatusDto } from './dto/change-user-status.dto';
 
 @ApiTags('User')
 @Controller({
@@ -20,7 +21,7 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
   version: '1',
 })
 export class UserController {
-  constructor(private readonly service: UserService) {}
+  constructor(private readonly service: UserService) { }
 
   // Register Admin - protected
   @ApiOperation({ summary: 'Send registration OTP' })
@@ -46,4 +47,18 @@ export class UserController {
   async deleteAll() {
     return this.service.deleteAll();
   }
+
+  @Patch('change/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async changeUserStatus(
+    @Body() dto: ChangeUserStatusDto,
+    @Req() req
+  ) {
+    return this.service.changeUserStatus(
+      dto,
+      req.user.role
+    );
+  }
+
 }

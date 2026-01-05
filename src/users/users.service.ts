@@ -16,6 +16,7 @@ import { Role } from '@prisma/client';
 import { generate6DigitOtp } from 'src/common/utility/utils';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserRegistrationDto } from './dto/user-registration.dto';
+import { ChangeUserStatusDto } from './dto/change-user-status.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -65,4 +66,46 @@ export class UserService {
   async deleteAll() {
     return this.prisma.schedules.deleteMany({});
   }
+
+  async changeUserStatus(
+    dto: ChangeUserStatusDto,
+    currentUserRole: Role
+  ) {
+    if (currentUserRole !== Role.ADMIN) {
+      throw new ForbiddenException('Only admin can change user status');
+    }
+
+    const { userId, is_active } = dto;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, is_active: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Optional safety rule
+    if (user.role === Role.ADMIN && is_active === false) {
+      throw new ForbiddenException('Admin user cannot be deactivated');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { is_active },
+      select: {
+        id: true,
+        role: true,
+        is_active: true,
+        updatedAt: true,
+      },
+    });
+
+    return {
+      message: `User ${is_active ? 'activated' : 'deactivated'} successfully`,
+      user: updatedUser,
+    };
+  }
+
 }
