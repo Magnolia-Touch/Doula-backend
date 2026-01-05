@@ -8,6 +8,7 @@ import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
+import { BookingFilterDto } from './dto/bookings-filter.dto';
 
 @ApiTags('Service Bookings')
 @Controller({
@@ -39,16 +40,22 @@ export class ServiceBookingController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Get()
-  async findAll(
-    @Query() query: { page?: string; limit?: string; status?: string },
-  ) {
+  async findAll(@Query() query: BookingFilterDto & { page?: string; limit?: string }) {
     return this.bookingService.findAll({
+      ...query,
       page: query.page ? Number(query.page) : undefined,
       limit: query.limit ? Number(query.limit) : undefined,
-      status: query.status,
+      isPaid:
+        query.isPaid !== undefined
+          ? (query.isPaid as any) === 'true'
+          : undefined,
     });
   }
+
+
 
   @ApiOperation({ summary: 'Get a booking by ID' })
   @ApiParam({ name: 'id', description: 'Booking UUID' })
@@ -80,6 +87,8 @@ export class ServiceBookingController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Get(':id')
   getBookingById(@Param('id') id: string) {
     return this.bookingService.findById(id);
@@ -87,7 +96,7 @@ export class ServiceBookingController {
 
   @Patch('schedules/:id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA, Role.ZONE_MANAGER)
+  @Roles(Role.DOULA, Role.ZONE_MANAGER, Role.ADMIN)
   async updateScheduleStatus(
     @Req() req,
     @Param('id') scheduleId: string,
@@ -103,7 +112,7 @@ export class ServiceBookingController {
 
   @Patch('bookings/:id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA, Role.ZONE_MANAGER)
+  @Roles(Role.DOULA, Role.ZONE_MANAGER, Role.ADMIN)
   async updateBookingStatus(
     @Req() req,
     @Param('id') bookingId: string,

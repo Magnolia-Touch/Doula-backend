@@ -4,18 +4,61 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
 import { Role, ServiceStatus } from '@prisma/client';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
+import { BookingFilterDto } from './dto/bookings-filter.dto';
 
 @Injectable()
 export class ServiceBookingService {
   constructor(private prisma: PrismaService) { }
 
-  async findAll(query: { page?: number; limit?: number; status?: any }) {
-    const page = query.page ? Number(query.page) : 1;
-    const limit = query.limit ? Number(query.limit) : 10;
+  async findAll(
+    query: BookingFilterDto & { page?: number; limit?: number },
+  ) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
 
     const where: any = {};
+
+    /** ---------------- BASIC FILTERS ---------------- */
     if (query.status) {
       where.status = query.status;
+    }
+
+    if (query.isPaid !== undefined) {
+      where.isPaid = query.isPaid;
+    }
+
+    if (query.regionId) {
+      where.regionId = query.regionId;
+    }
+
+    if (query.doulaId) {
+      where.doulaProfileId = query.doulaId;
+    }
+
+    if (query.clientId) {
+      where.clientId = query.clientId;
+    }
+
+    if (query.serviceTimeShift) {
+      where.timeshift = query.serviceTimeShift;
+    }
+
+    /** ---------------- DATE RANGE FILTER ---------------- */
+    if (query.startDate || query.endDate) {
+      where.startDate = {};
+      if (query.startDate) {
+        where.startDate.gte = new Date(query.startDate);
+      }
+      if (query.endDate) {
+        where.startDate.lte = new Date(query.endDate);
+      }
+    }
+
+    /** ---------------- SERVICE FILTER (Service.id) ---------------- */
+    if (query.serviceId) {
+      where.service = {
+        serviceId: query.serviceId, // ServicePricing → Service
+      };
     }
 
     const result = await paginate({
@@ -27,46 +70,27 @@ export class ServiceBookingService {
       include: {
         DoulaProfile: {
           include: {
-            user: true, // get doula user name and id
+            user: true,
           },
         },
         client: {
           include: {
-            user: true, // get client user name and id
+            user: true,
           },
         },
         service: {
           include: {
-            service: true, // to access Service.name
+            service: true, // <-- Service table
           },
         },
         region: true,
-        slot: true, // AvailableSlotsTimeForService[]
         AvailableSlotsForService: true,
       },
     });
 
-    const items = result.data || [];
-
-    const transformed = items.map((b: any) => {
+    const transformed = (result.data ?? []).map((b: any) => {
       const clientUser = b.client?.user;
       const doulaUser = b.DoulaProfile?.user;
-
-      // servicePricing -> service -> name
-      const serviceName = b.service?.service?.name ?? null;
-
-      // Booking date is start and end (as per your requirement)
-      const startDate = b.date;
-      const endDate = b.date;
-
-      // slots. You might want a specific time field from AvailableSlotsTimeForService
-      // Assuming structure has a "time" or "startTime" etc. Adjust as needed.
-      const timeSlots =
-        b.slot?.map((s: any) => ({
-          id: s.id,
-          startTime: s.startTime,
-          endTime: s.endTime,
-        })) ?? [];
 
       return {
         bookingId: b.id,
@@ -79,12 +103,17 @@ export class ServiceBookingService {
         doulaName: doulaUser?.name ?? null,
         doulaProfileId: b.DoulaProfile?.id ?? null,
 
+        regionId: b.region?.id ?? null,
         regionName: b.region?.regionName ?? null,
 
-        serviceName,
-        start_date: startDate,
-        end_date: endDate,
-        timeSlots,
+        serviceId: b.service?.service?.id ?? null,
+        serviceName: b.service?.service?.name ?? null,
+
+        start_date: b.startDate,
+        end_date: b.endDate,
+
+        timeShift: b.timeshift,
+        isPaid: b.isPaid,
         status: b.status,
         createdAt: b.createdAt,
       };
@@ -96,6 +125,7 @@ export class ServiceBookingService {
       data: transformed,
     };
   }
+
 
   async findById(id: string) {
     const booking = await this.prisma.serviceBooking.findUnique({
@@ -117,7 +147,24 @@ export class ServiceBookingService {
           },
         },
         region: true,
+
         AvailableSlotsForService: true,
+
+        schedules: {
+          include: {
+            client: {
+              include: { user: true },
+            },
+            DoulaProfile: {
+              include: { user: true },
+            },
+            ServicePricing: {
+              include: { service: true },
+            },
+          },
+        },
+
+        Payment: true,
       },
     });
 
@@ -144,14 +191,41 @@ export class ServiceBookingService {
       doulaName: doulaUser?.name ?? null,
       doulaProfileId: booking.DoulaProfile?.id ?? null,
 
+      regionId: booking.region?.id ?? null,
       regionName: booking.region?.regionName ?? null,
 
+      serviceId: booking.service?.service?.id ?? null,
       serviceName,
-      start_date: startDate,
-      end_date: endDate,
+
+      start_date: booking.startDate,
+      end_date: booking.endDate,
+      timeShift: booking.timeshift,
+
       status: booking.status,
+      isPaid: booking.isPaid,
+      totalAmount: booking.totalAmount,
+
+      slots: booking.AvailableSlotsForService ?? [],
+
+      schedules: booking.schedules?.map((s) => ({
+        scheduleId: s.id,
+        date: s.date,
+        timeshift: s.timeshift,
+        status: s.status,
+        cancelledAt: s.cancelledAt,
+
+        clientName: s.client?.user?.name ?? null,
+        doulaName: s.DoulaProfile?.user?.name ?? null,
+
+        serviceName: s.ServicePricing?.service?.name ?? null,
+      })) ?? [],
+
+      payments: booking.Payment ?? [],
+
       createdAt: booking.createdAt,
+      updatedAt: booking.updatedAt,
     };
+
 
     return {
       message: 'Booking fetched successfully',
@@ -170,7 +244,11 @@ export class ServiceBookingService {
 
 
     let schedule;
-
+    if (userRole === Role.ADMIN) {
+      schedule = await this.prisma.schedules.findUnique({
+        where: { id: scheduleId },
+      });
+    }
     /* ---------------------------------------
      * DOULA access
      * --------------------------------------- */
@@ -246,6 +324,11 @@ export class ServiceBookingService {
     /* ---------------------------------------
      * DOULA access
      * --------------------------------------- */
+    if (userRole === Role.ADMIN) {
+      booking = await this.prisma.serviceBooking.findUnique({
+        where: { id: bookingId },
+      });
+    }
     if (userRole === Role.DOULA) {
       const doulaProfile = await this.prisma.doulaProfile.findUnique({
         where: { userId },

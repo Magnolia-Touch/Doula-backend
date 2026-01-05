@@ -291,4 +291,25 @@ export class AnalyticsController {
   ) {
     return this.service.calenderSummary(req.user.id, startDate, endDate);
   }
+
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('revenue/total')
+  async getTotalRevenue(
+    @Query('doulaId') doulaId?: string,
+    @Query('regionId') regionId?: string,
+    @Query('serviceId') serviceId?: string, // Service table ID
+    @Query('date1') date1?: string,
+    @Query('date2') date2?: string,
+  ) {
+    return this.service.getTotalRevenue({
+      doulaId,
+      regionId,
+      serviceId,
+      date1,
+      date2,
+    });
+  }
+
 }

@@ -567,4 +567,75 @@ export class AnalyticsService {
 
     return { data: response };
   }
+
+  async getTotalRevenue(filters: {
+    doulaId?: string;
+    regionId?: string;
+    serviceId?: string;
+    date1?: string;
+    date2?: string;
+  }) {
+    const paymentWhere: any = {
+      status: 'SUCCESS', // adjust if enum differs
+    };
+
+    /** ---------------- DATE FILTER ---------------- */
+    if (filters.date1 && !filters.date2) {
+      paymentWhere.paidAt = {
+        gte: new Date(filters.date1),
+        lt: new Date(new Date(filters.date1).setDate(
+          new Date(filters.date1).getDate() + 1,
+        )),
+      };
+    }
+
+    if (filters.date1 && filters.date2) {
+      paymentWhere.paidAt = {
+        gte: new Date(filters.date1),
+        lte: new Date(filters.date2),
+      };
+    }
+
+    /** ---------------- BOOKING-LEVEL FILTERS ---------------- */
+    paymentWhere.ServiceBooking = {};
+
+    if (filters.doulaId) {
+      paymentWhere.ServiceBooking.doulaProfileId = filters.doulaId;
+    }
+
+    if (filters.regionId) {
+      paymentWhere.ServiceBooking.regionId = filters.regionId;
+    }
+
+    if (filters.serviceId) {
+      paymentWhere.ServiceBooking.service = {
+        serviceId: filters.serviceId, // ServicePricing → Service
+      };
+    }
+
+    const payments = await this.prisma.payment.findMany({
+      where: paymentWhere,
+      select: {
+        amount: true,
+        amountRefunded: true,
+      },
+    });
+
+    const totalRevenue = payments.reduce((sum, p) => {
+      return sum + (Number(p.amount) - Number(p.amountRefunded));
+    }, 0);
+
+    return {
+      message: 'Total revenue calculated successfully',
+      filtersApplied: {
+        doulaId: filters.doulaId ?? null,
+        regionId: filters.regionId ?? null,
+        serviceId: filters.serviceId ?? null,
+        date1: filters.date1 ?? null,
+        date2: filters.date2 ?? null,
+      },
+      totalRevenue,
+      currency: 'INR',
+    };
+  }
 }
