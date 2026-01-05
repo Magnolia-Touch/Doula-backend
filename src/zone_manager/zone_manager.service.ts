@@ -991,6 +991,7 @@ export class ZoneManagerService {
         clientId: meeting.bookedBy.id,
         clientName: meeting.bookedBy.user.name,
 
+
         doulaId: meeting.DoulaProfile?.id ?? null,
         doulaName: meeting.DoulaProfile?.user.name ?? null,
 
@@ -1000,6 +1001,8 @@ export class ZoneManagerService {
         startDate: meeting.startTime,
         endDate: meeting.endTime,
         status: meeting.status,
+        meetingDate: meeting.date,
+
       })),
       meta: result.meta,
     };
