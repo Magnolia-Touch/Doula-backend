@@ -834,8 +834,11 @@ export class ZoneManagerService {
     limit = 10,
     search?: string,
     status?: MeetingStatus,
+    serviceName?: string,
   ) {
-    // Fetch zone manager profile
+    // Fetch zone manager pro
+    // file
+    console.log('servicename', serviceName);
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
       where: { userId: userId },
       select: { id: true },
@@ -905,7 +908,28 @@ export class ZoneManagerService {
         ],
       });
     }
+    if (serviceName) {
+      where.AND.push({
+        OR: [
+          // Service name via relation
+          {
+            Service: {
+              name: {
+                contains: serviceName,
 
+              },
+            },
+          },
+          // Fallback serviceName stored in Meetings table
+          {
+            serviceName: {
+              contains: serviceName,
+
+            },
+          },
+        ],
+      });
+    }
     if (status) {
       where.AND.push({
         status: status,

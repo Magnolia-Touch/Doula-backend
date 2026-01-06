@@ -400,7 +400,7 @@ export class ServiceBookingService {
       status,
       date1,
       date2,
-      serviceName,
+      serviceId,
       regionId,
       zoneManagerId,
       meetingId,
@@ -418,11 +418,8 @@ export class ServiceBookingService {
       where.id = meetingId;
     }
 
-    if (serviceName) {
-      where.serviceName = {
-        contains: serviceName,
-        mode: 'insensitive',
-      };
+    if (serviceId) {
+      where.serviceId = serviceId;
     }
 
     if (zoneManagerId) {
@@ -478,12 +475,6 @@ export class ServiceBookingService {
           include: {
             user: true,
             managingRegion: true,
-          },
-        },
-        DoulaProfile: {
-          include: {
-            user: true,
-            regions: true, // FIXED: Region → regions (based on your schema)
           },
         },
         AdminProfile: true,
@@ -573,7 +564,12 @@ export class ServiceBookingService {
     if (timeshift) where.timeshift = timeshift;
     if (status) where.status = status;
     if (doulaId) where.doulaProfileId = doulaId;
-    if (serviceId) where.serviceId = serviceId;
+
+    if (serviceId) {
+      where.ServicePricing = {
+        serviceId,
+      };
+    }
 
     if (regionId) {
       where.serviceBooking = {

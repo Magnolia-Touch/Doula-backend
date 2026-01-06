@@ -18,7 +18,7 @@ export class GetMeetingsQueryDto {
 
     @IsOptional()
     @IsString()
-    serviceName?: string;
+    serviceId?: string;
 
     @IsOptional()
     @IsString()

@@ -602,6 +602,7 @@ export class ZoneManagerController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('status') status?: MeetingStatus,
+    @Query('serviceName') serviceName?: string,
   ) {
     return this.service.getZoneManagerMeetings(
       req.user.id,
@@ -609,6 +610,7 @@ export class ZoneManagerController {
       Number(limit) || 10,
       search?.trim(),
       status,
+      serviceName
     );
   }
 
@@ -697,7 +699,7 @@ export class ZoneManagerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('meetings/list/:id')
-  async getMeetingById(@Req() req: any, @Param('id') id: string) {
+  async getMeetingById(@Req() req: any, @Param('id') id: string,) {
     return this.service.getZoneManagerMeetingById(req.user.id, id);
   }
 
