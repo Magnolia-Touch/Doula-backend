@@ -48,4 +48,9 @@ export class FilterUserDto {
   @IsOptional()
   @IsString()
   search: string;
+
+  @IsOptional()
+  @IsString()
+  regionId?: string;
 }
+

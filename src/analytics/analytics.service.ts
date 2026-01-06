@@ -16,7 +16,7 @@ export class AnalyticsService {
   constructor(private prisma: PrismaService) { }
 
   async listUsers(query: FilterUserDto, userId: string, userRole: Role) {
-    const { role, is_active, search } = query;
+    const { role, is_active, search, regionId } = query;
     const searchCondition =
       search && search.trim()
         ? {
@@ -52,6 +52,39 @@ export class AnalyticsService {
     }
     if (searchCondition) {
       where.AND = [...(where.AND || []), searchCondition];
+    }
+
+    if (regionId) {
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            // Zone Managers managing this region
+            {
+              role: Role.ZONE_MANAGER,
+              zonemanagerprofile: {
+                managingRegion: {
+                  some: {
+                    id: regionId,
+                  },
+                },
+              },
+            },
+
+            // Doulas mapped to this region
+            {
+              role: Role.DOULA,
+              doulaProfile: {
+                Region: {
+                  some: {
+                    id: regionId,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ];
     }
 
     if (userRole == Role.ZONE_MANAGER) {
@@ -123,6 +156,8 @@ export class AnalyticsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+
   async countUsersByRole(
     query: UserCountDto,
     userId: string,
