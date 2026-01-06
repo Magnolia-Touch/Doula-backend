@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
@@ -22,6 +23,7 @@ import { StripeService } from 'src/stripe/stripe.service';
 import { Console } from 'console';
 import { formatDate } from 'date-fns/format';
 import { Attachment } from 'nodemailer/lib/mailer';
+import path from 'path';
 type IntakeFormWithRelations = Prisma.IntakeFormGetPayload<{
   include: {
     region: { select: { regionName: true } };
@@ -56,6 +58,8 @@ type IntakeFormWithRelations = Prisma.IntakeFormGetPayload<{
 
 @Injectable()
 export class IntakeFormService {
+  private readonly logger = new Logger(IntakeFormService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
@@ -132,8 +136,8 @@ export class IntakeFormService {
       where: { doula: { some: { id: doulaProfileId } } },
       include: { zoneManager: { include: { user: true } } },
     });
-
-    if (!region || region.zoneManager == null || region.zoneManager.user == null) {
+    console.log("helo", region)
+    if (!region) {
       throw new BadRequestException('Region not listed for doula');
     }
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -311,10 +315,26 @@ export class IntakeFormService {
       return { intake, booking };
     });
 
+    console.log("helo", region.zoneManager, region.zoneManager?.user)
+    if (region.zoneManager == null || region.zoneManager.user == null) {
+      throw new BadRequestException('Region not listed for doula');
+    }
     //mail to doula like from zone manager
 
     //mail to doula like from client
+    // ---------------- MAIL DEBUGGING START ----------------
+    this.logger.log(
+      `[IntakeMail] Starting email notifications | booking=${result.booking.id}`,
+    );
+
     try {
+      /* ----------------------------------------------------
+       * Zone Manager Email
+       * -------------------------------------------------- */
+      this.logger.log(
+        `[IntakeMail] Sending email to ZONE MANAGER | to=${region.zoneManager.user.email}`,
+      );
+
       await this.mail.sendMail({
         to: region.zoneManager.user.email,
         subject: 'New Booking Confirmed – Region Notification',
@@ -322,42 +342,44 @@ export class IntakeFormService {
         context: {
           appName: 'Bambini Doula',
           year: new Date().getFullYear(),
-
           serviceTimeShift,
-
           clientName: clientProfile.user.name,
           clientEmail: clientProfile.user.email,
           clientPhone: clientProfile.user.phone,
-
-          doulaName: doula?.user.name,
-          doulaEmail: doula?.user.email,
-          doulaPhone: doula?.user.phone,
-
+          doulaName: doula.user.name,
+          doulaEmail: doula.user.email,
+          doulaPhone: doula.user.phone,
           serviceName: servicePricing.service.name,
           serviceStartDate: formatDate(new Date(startDate), 'yyyy-MM-dd'),
           serviceEndDate: formatDate(new Date(endDate), 'yyyy-MM-dd'),
           timeShift: serviceTimeShift,
-
           regionName: region.regionName,
           totalAmount,
         },
       });
+
+      this.logger.log(
+        `[IntakeMail] Zone Manager email SENT successfully`,
+      );
+
       const commonContext = {
         appName: 'Bambini Doula',
         year: new Date().getFullYear(),
-
         serviceName: servicePricing.service.name,
         region: region.regionName,
         timeShift: serviceTimeShift,
         serviceStartDate: formatDate(new Date(seviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
-
         totalAmountPaid: totalAmount,
       };
 
       /* ----------------------------------------------------
-       * Mail to Doula (NO attachments)
+       * Doula Email
        * -------------------------------------------------- */
+      this.logger.log(
+        `[IntakeMail] Sending email to DOULA | to=${doula.user.email}`,
+      );
+
       await this.mail.sendMail({
         to: doula.user.email,
         subject: 'New Booking Assigned – Bambini Doula',
@@ -370,12 +392,26 @@ export class IntakeFormService {
         },
       });
 
+      this.logger.log(
+        `[IntakeMail] Doula email SENT successfully`,
+      );
+
       /* ----------------------------------------------------
-       * Mail to Client (WITH conditional attachments)
+       * Client Email
        * -------------------------------------------------- */
-      const attachments = this.getServiceAttachments(servicePricing.service.name);
+      const attachments = this.getServiceAttachments(
+        servicePricing.service.name,
+      );
+
+      this.logger.log(
+        `[IntakeMail] Client email | to=${clientProfile.user.email} | attachments=${attachments.length}`,
+      );
 
       if (attachments.length > 0) {
+        this.logger.log(
+          `[IntakeMail] Sending client email WITH attachments`,
+        );
+
         await this.mail.sendMailWithAttachments({
           to: clientProfile.user.email,
           subject: 'Your Booking is Confirmed – Bambini Doula',
@@ -389,8 +425,15 @@ export class IntakeFormService {
           },
           attachments,
         });
+
+        this.logger.log(
+          `[IntakeMail] Client email (with attachments) SENT successfully`,
+        );
       } else {
-        // fallback (no attachment)
+        this.logger.log(
+          `[IntakeMail] Sending client email WITHOUT attachments`,
+        );
+
         await this.mail.sendMail({
           to: clientProfile.user.email,
           subject: 'Your Booking is Confirmed – Bambini Doula',
@@ -403,13 +446,23 @@ export class IntakeFormService {
             doulaPhone: doula.user.phone,
           },
         });
-      }
 
+        this.logger.log(
+          `[IntakeMail] Client email (no attachments) SENT successfully`,
+        );
+      }
     } catch (error) {
+      this.logger.error(
+        `[IntakeMail] EMAIL FAILURE | booking=${result.booking.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+
       throw new InternalServerErrorException(
         'Booking completed, but confirmation email failed. Please contact support.',
       );
     }
+    // ---------------- MAIL DEBUGGING END ----------------
+
     /* ----------------------------------------------------
      * 8. Response
      * -------------------------------------------------- */
@@ -1157,24 +1210,27 @@ export class IntakeFormService {
 
 
 
+
   private getServiceAttachments(serviceName: string): Attachment[] {
     const normalized = serviceName.trim().toLowerCase();
+
+    const basePath = path.join(process.cwd(), 'assets');
 
     if (normalized === 'birth doula') {
       return [
         {
-          filename: 'Birth-Doula-Service-Guide.pdf',
-          path: '/files/birth-doula-guide.pdf',
+          filename: 'Birth-Doula-Contract.pdf',
+          path: path.join(basePath, 'Birth-Doula-Contract.pdf'),
           contentType: 'application/pdf',
         },
       ];
     }
 
-    if (normalized === 'postpartum doulas') {
+    if (normalized === 'post partum doula' || normalized === 'postpartum doula') {
       return [
         {
-          filename: 'Postpartum-Doula-Service-Guide.pdf',
-          path: '/files/postpartum-doula-guide.pdf',
+          filename: 'Postpartum-Contract.pdf',
+          path: path.join(basePath, 'Postpartum-Contract.pdf'),
           contentType: 'application/pdf',
         },
       ];
@@ -1182,5 +1238,4 @@ export class IntakeFormService {
 
     return [];
   }
-
 }

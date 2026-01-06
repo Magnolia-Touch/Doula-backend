@@ -9,6 +9,8 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { BookingFilterDto } from './dto/bookings-filter.dto';
+import { GetMeetingsQueryDto } from './dto/get-meetings.query.dto';
+import { GetSchedulesQueryDto } from './dto/get-schedules.query.dto';
 
 @ApiTags('Service Bookings')
 @Controller({
@@ -126,64 +128,31 @@ export class ServiceBookingController {
     );
   }
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ZONE_MANAGER)
-  // @Get('schedules/list')
-  // async getSchedules(
-  //   @Req() req: any,
-  //   @Query('page') page?: string,
-  //   @Query('limit') limit?: string,
-  //   @Query('status') status?: ServiceStatus,
-  //   @Query('search') search?: string,
-  //   @Query('date') date?: string,
-  //   @Query('serviceName') serviceName?: string,
 
-  // ) {
-  //   return this.bookingService.getZoneManagerSchedules(
-  //     req.user.id,
-  //     Number(page) || 1,
-  //     Number(limit) || 10,
-  //     {
-  //       serviceName,
-  //       status,
-  //       search,
-  //       date,
-  //     },
-  //   );
-  // }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('meetings/list/admin')
+  async getAllMeetings(@Query() query: GetMeetingsQueryDto) {
+    return this.bookingService.getAllMeetings(query);
+  }
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ZONE_MANAGER)
-  // @Get('meetings/list')
-  // async getZoneManagerMeetings(
-  //   @Req() req: any,
-  //   @Query('page') page?: string,
-  //   @Query('limit') limit?: string,
-  //   @Query('search') search?: string,
-  //   @Query('status') status?: MeetingStatus,
-  // ) {
-  //   return this.service.getZoneManagerMeetings(
-  //     req.user.id,
-  //     Number(page) || 1,
-  //     Number(limit) || 10,
-  //     search?.trim(),
-  //     status,
-  //   );
-  // }
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('meetings/list/admin/:id')
+  async getMeetingById(@Param('id') id: string) {
+    return this.bookingService.getMeetingById(id);
+  }
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ZONE_MANAGER)
-  // @Get('schedules/list/:id')
-  // async getScheduleById(@Req() req: any, @Param('id') id: string) {
-  //   return this.service.getZoneManagerScheduleById(req.user.id, id);
-  // }
+  @Get("schedules/list/admin")
+  getAllSchedules(@Query() query: GetSchedulesQueryDto) {
+    return this.bookingService.getAllSchedules(query);
+  }
 
-
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ZONE_MANAGER)
-  // @Get('meetings/list/:id')
-  // async getMeetingById(@Req() req: any, @Param('id') id: string) {
-  //   return this.service.getZoneManagerMeetingById(req.user.id, id);
-  // }
-
+  /* ----------------------------------------------------
+   * GET /schedules/:id
+   * -------------------------------------------------- */
+  @Get('schedules/list/admin/:id')
+  getScheduleById(@Param('id') id: string) {
+    return this.bookingService.getScheduleById(id);
+  }
 }

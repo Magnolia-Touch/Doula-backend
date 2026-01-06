@@ -6,6 +6,7 @@ import { BookingStatus, PaymentStatus } from '@prisma/client';
 import { MailService } from 'src/mail/mail.service';
 import { formatDate } from 'date-fns';
 import { Attachment } from 'nodemailer/lib/mailer';
+import path from 'path';
 
 @Injectable()
 export class WebhookService {
@@ -83,9 +84,13 @@ export class WebhookService {
   private async handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session,
   ) {
+    this.logger.log(
+      `[StripeWebhook] handleCheckoutSessionCompleted triggered | session=${session.id}`,
+    );
+
     if (session.payment_status !== 'paid') {
       this.logger.warn(
-        `Checkout session ${session.id} completed but not paid`,
+        `[StripeWebhook] Session completed but NOT PAID | session=${session.id}`,
       );
       return { received: true };
     }
@@ -94,23 +99,33 @@ export class WebhookService {
 
     if (!bookingId || !paymentId) {
       this.logger.error(
-        `Missing metadata in checkout session ${session.id}`,
+        `[StripeWebhook] Missing metadata | session=${session.id} | metadata=${JSON.stringify(session.metadata)}`,
       );
       return { received: true };
     }
 
-    console.log("hI devanand")
+    this.logger.log(
+      `[StripeWebhook] Metadata OK | booking=${bookingId} | payment=${paymentId}`,
+    );
+
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
     });
 
-    // Idempotency guard
-    if (!payment || payment.status === PaymentStatus.SUCCESS) {
-      this.logger.log(
-        `Payment ${paymentId} already processed, skipping`,
+    if (!payment) {
+      this.logger.error(
+        `[StripeWebhook] Payment not found | payment=${paymentId}`,
       );
       return { received: true };
     }
+
+    if (payment.status === PaymentStatus.SUCCESS) {
+      this.logger.warn(
+        `[StripeWebhook] Payment already processed | payment=${paymentId}`,
+      );
+      return { received: true };
+    }
+
     const {
       visitDates,
       serviceTimeShift,
@@ -123,27 +138,30 @@ export class WebhookService {
       doulaName,
       doulaEmail,
       doulaPhone,
-
-      // Service details
       serviceName,
       serviceStartDate,
       serviceEndDate,
       timeShift,
       regionId,
       regionName,
-      // Payment details
       totalAmount,
-      currency
-
+      currency,
     } = payment.metadata as any;
 
-
+    this.logger.log(
+      `[StripeWebhook] Payment metadata parsed | client=${clientEmail} | doula=${doulaEmail}`,
+    );
 
     await this.prisma.$transaction(async (tx) => {
+      this.logger.log(
+        `[DB] Starting booking/payment transaction | booking=${bookingId}`,
+      );
+
       await tx.serviceBooking.update({
         where: { id: bookingId },
-        data: { status: BookingStatus.PENDING, }
-      })
+        data: { status: BookingStatus.PENDING },
+      });
+
       await tx.schedules.createMany({
         data: visitDates.map((date: string) => ({
           date: new Date(date),
@@ -152,7 +170,6 @@ export class WebhookService {
           serviceId: servicePricingId,
           clientId,
           bookingId,
-
         })),
       });
 
@@ -172,26 +189,36 @@ export class WebhookService {
           status: BookingStatus.ACTIVE,
         },
       });
+
+      this.logger.log(
+        `[DB] Transaction completed | booking=${bookingId} | payment=${paymentId}`,
+      );
     });
 
-    //
+    /**
+     * ---------------- EMAIL DEBUGGING ----------------
+     */
+    this.logger.log(
+      `[Email] Preparing booking confirmation emails | booking=${bookingId}`,
+    );
+
     try {
       const commonContext = {
         appName: 'Bambini Doula',
         year: new Date().getFullYear(),
-
         serviceName,
         region: regionName,
         timeShift,
         serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
-
         totalAmountPaid: totalAmount,
       };
 
-      /* ----------------------------------------------------
-       * Mail to Doula (NO attachments)
-       * -------------------------------------------------- */
+      /** -------- Doula Mail -------- */
+      this.logger.log(
+        `[Email] Sending email to DOULA | to=${doulaEmail}`,
+      );
+
       await this.mail.sendMail({
         to: doulaEmail,
         subject: 'New Booking Assigned – Bambini Doula',
@@ -205,12 +232,22 @@ export class WebhookService {
         },
       });
 
-      /* ----------------------------------------------------
-       * Mail to Client (WITH conditional attachments)
-       * -------------------------------------------------- */
+      this.logger.log(
+        `[Email] Doula email SENT successfully | to=${doulaEmail}`,
+      );
+
+      /** -------- Client Mail -------- */
       const attachments = this.getServiceAttachments(serviceName);
 
+      this.logger.log(
+        `[Email] Client email | to=${clientEmail} | attachments=${attachments.length}`,
+      );
+
       if (attachments.length > 0) {
+        this.logger.log(
+          `[Email] Sending client email WITH attachments | service=${serviceName}`,
+        );
+
         await this.mail.sendMailWithAttachments({
           to: clientEmail,
           subject: 'Your Booking is Confirmed – Bambini Doula',
@@ -224,8 +261,15 @@ export class WebhookService {
           },
           attachments,
         });
+
+        this.logger.log(
+          `[Email] Client email (with attachments) SENT | to=${clientEmail}`,
+        );
       } else {
-        // fallback (no attachment)
+        this.logger.log(
+          `[Email] Sending client email WITHOUT attachments`,
+        );
+
         await this.mail.sendMail({
           to: clientEmail,
           subject: 'Your Booking is Confirmed – Bambini Doula',
@@ -238,11 +282,14 @@ export class WebhookService {
             doulaPhone,
           },
         });
-      }
 
+        this.logger.log(
+          `[Email] Client email (no attachments) SENT | to=${clientEmail}`,
+        );
+      }
     } catch (error) {
       this.logger.error(
-        'Booking confirmation email failed',
+        `[Email] Booking confirmation email FAILED | booking=${bookingId}`,
         error instanceof Error ? error.stack : String(error),
       );
 
@@ -251,13 +298,13 @@ export class WebhookService {
       );
     }
 
-
     this.logger.log(
-      `Payment SUCCESS | booking=${bookingId} | payment=${paymentId}`,
+      `[StripeWebhook] SUCCESS | booking=${bookingId} | payment=${paymentId}`,
     );
 
     return { received: true };
   }
+
 
   /* ----------------------------------------------------
    * Checkout session EXPIRED
@@ -325,21 +372,23 @@ export class WebhookService {
   private getServiceAttachments(serviceName: string): Attachment[] {
     const normalized = serviceName.trim().toLowerCase();
 
+    const basePath = path.join(process.cwd(), 'assets');
+
     if (normalized === 'birth doula') {
       return [
         {
-          filename: 'Birth-Doula-Service-Guide.pdf',
-          path: '/files/birth-doula-guide.pdf',
+          filename: 'Birth-Doula-Contract.pdf',
+          path: path.join(basePath, 'Birth-Doula-Contract.pdf'),
           contentType: 'application/pdf',
         },
       ];
     }
 
-    if (normalized === 'postpartum doulas') {
+    if (normalized === 'post partum doula' || normalized === 'postpartum doula') {
       return [
         {
-          filename: 'Postpartum-Doula-Service-Guide.pdf',
-          path: '/files/postpartum-doula-guide.pdf',
+          filename: 'Postpartum-Contract.pdf',
+          path: path.join(basePath, 'Postpartum-Contract.pdf'),
           contentType: 'application/pdf',
         },
       ];
@@ -347,4 +396,5 @@ export class WebhookService {
 
     return [];
   }
+
 }

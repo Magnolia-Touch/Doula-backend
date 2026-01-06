@@ -17,39 +17,27 @@ export class AnalyticsService {
 
   async listUsers(query: FilterUserDto, userId: string, userRole: Role) {
     const { role, is_active, search, regionId } = query;
+
     const searchCondition =
       search && search.trim()
         ? {
           OR: [
-            {
-              name: {
-                contains: search,
-
-              },
-            },
-            {
-              email: {
-                contains: search,
-
-              },
-            },
-            {
-              phone: {
-                contains: search,
-              },
-            },
+            { name: { contains: search } },
+            { email: { contains: search } },
+            { phone: { contains: search } },
           ],
         }
         : null;
+
     // Pagination
     const page = query.page ? Number(query.page) : 1;
     const limit = query.limit ? Number(query.limit) : 10;
+
     const where: any = {};
 
     if (role) where.role = role;
-    if (is_active !== undefined) {
-      where.is_active = is_active;
-    }
+    if (is_active !== undefined) where.is_active = is_active;
+
     if (searchCondition) {
       where.AND = [...(where.AND || []), searchCondition];
     }
@@ -64,9 +52,7 @@ export class AnalyticsService {
               role: Role.ZONE_MANAGER,
               zonemanagerprofile: {
                 managingRegion: {
-                  some: {
-                    id: regionId,
-                  },
+                  some: { id: regionId },
                 },
               },
             },
@@ -76,9 +62,7 @@ export class AnalyticsService {
               role: Role.DOULA,
               doulaProfile: {
                 Region: {
-                  some: {
-                    id: regionId,
-                  },
+                  some: { id: regionId },
                 },
               },
             },
@@ -87,38 +71,39 @@ export class AnalyticsService {
       ];
     }
 
-    if (userRole == Role.ZONE_MANAGER) {
+    /* ----------------------------------------------------
+     * ZONE MANAGER VIEW
+     * -------------------------------------------------- */
+    if (userRole === Role.ZONE_MANAGER) {
       const user = await this.prisma.user.findUnique({
-        where: { id: userId }, include: { zonemanagerprofile: true }
-      })
+        where: { id: userId },
+        include: { zonemanagerprofile: true },
+      });
+
       if (!user?.zonemanagerprofile) {
-        throw new NotFoundException("Zone Manager Profile Not Found");
+        throw new NotFoundException('Zone Manager Profile Not Found');
       }
 
       const finalWhere = {
         ...where,
         OR: [
-          // 1. Doulas under this Zone Manager
+          // Doulas under this Zone Manager
           {
             doulaProfile: {
               zoneManager: {
-                some: {
-                  id: user.zonemanagerprofile.id,
-                },
+                some: { id: user.zonemanagerprofile.id },
               },
             },
           },
 
-          // 2. Clients under those Doulas
+          // Clients under those Doulas
           {
             clientProfile: {
               bookings: {
                 some: {
                   DoulaProfile: {
                     zoneManager: {
-                      some: {
-                        id: user.zonemanagerprofile.id,
-                      },
+                      some: { id: user.zonemanagerprofile.id },
                     },
                   },
                 },
@@ -128,7 +113,6 @@ export class AnalyticsService {
         ],
       };
 
-
       return paginate({
         prismaModel: this.prisma.user,
         page,
@@ -136,12 +120,25 @@ export class AnalyticsService {
         where: finalWhere,
         include: {
           clientProfile: true,
-          doulaProfile: true
+
+          doulaProfile: {
+            include: {
+              Region: {
+                select: {
+                  id: true,
+                  regionName: true,
+                },
+              },
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       });
     }
 
+    /* ----------------------------------------------------
+     * ADMIN / OTHER ROLES
+     * -------------------------------------------------- */
     return paginate({
       prismaModel: this.prisma.user,
       page,
@@ -149,14 +146,34 @@ export class AnalyticsService {
       where,
       include: {
         clientProfile: true,
-        doulaProfile: true,
-        zonemanagerprofile: true,
+
+        doulaProfile: {
+          include: {
+            Region: {
+              select: {
+                id: true,
+                regionName: true,
+              },
+            },
+          },
+        },
+
+        zonemanagerprofile: {
+          include: {
+            managingRegion: {
+              select: {
+                id: true,
+                regionName: true,
+              },
+            },
+          },
+        },
+
         adminProfile: true,
       },
       orderBy: { createdAt: 'desc' },
     });
   }
-
 
   async countUsersByRole(
     query: UserCountDto,

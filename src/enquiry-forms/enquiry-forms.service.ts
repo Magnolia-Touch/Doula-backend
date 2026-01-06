@@ -94,7 +94,7 @@ export class EnquiryService {
             this.prisma,
             region.zoneManagerId,
         );
-
+        console.log(weekday)
         // 2. Validate Slot
         const slot = await findSlotOrThrow(this.prisma, {
             ownerRole: Role.ZONE_MANAGER,
