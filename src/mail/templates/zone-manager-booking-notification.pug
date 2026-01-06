@@ -1,0 +1,141 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title New Booking Notification
+    style.
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(180deg, #EAF2FB, #FFFFFF);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, Helvetica, Arial, sans-serif;
+        color: #0F172A;
+      }
+      table { border-collapse: collapse; }
+      .wrapper {
+        width: 100%;
+        padding: 40px 16px;
+      }
+      .card {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #FFFFFF;
+        border-radius: 14px;
+        padding: 32px 28px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      }
+      .logo {
+        text-align: center;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 24px;
+      }
+      .title {
+        font-size: 22px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      .subtitle {
+        font-size: 14px;
+        color: #64748B;
+        text-align: center;
+        margin-bottom: 28px;
+        line-height: 1.6;
+      }
+      .section {
+        margin-bottom: 24px;
+      }
+      .section-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .info-box {
+        background: #F8FAFC;
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #334155;
+      }
+      .row {
+        margin-bottom: 6px;
+      }
+      .label {
+        color: #64748B;
+      }
+      .footer {
+        margin-top: 32px;
+        font-size: 12px;
+        color: #94A3B8;
+        text-align: center;
+      }
+
+  body
+    table.wrapper(width="100%" role="presentation")
+      tr
+        td(align="center")
+          .card
+            .logo #{appName}
+
+            .title New Booking Confirmed
+            .subtitle
+              | A new booking has been confirmed in your region.
+              br
+              | Please review the details below.
+
+            .section
+              .section-title Service Details
+              .info-box
+                .row
+                  span.label Service:
+                  |  #{serviceName}
+                .row
+                  span.label Region:
+                  |  #{regionName}
+                .row
+                  span.label Time Shift:
+                  |  #{timeShift}
+                .row
+                  span.label Visit Shift:
+                  |  #{serviceTimeShift}
+                .row
+                  span.label Start Date:
+                  |  #{serviceStartDate}
+                .row
+                  span.label End Date:
+                  |  #{serviceEndDate}
+                .row
+                  span.label Total Amount:
+                  |  ₹#{totalAmount}
+
+            .section
+              .section-title Client Details
+              .info-box
+                .row
+                  span.label Name:
+                  |  #{clientName}
+                .row
+                  span.label Email:
+                  |  #{clientEmail}
+                .row
+                  span.label Phone:
+                  |  #{clientPhone}
+
+            .section
+              .section-title Assigned Doula
+              .info-box
+                .row
+                  span.label Name:
+                  |  #{doulaName}
+                .row
+                  span.label Email:
+                  |  #{doulaEmail}
+                .row
+                  span.label Phone:
+                  |  #{doulaPhone}
+
+            .footer
+              | © #{year} #{appName}. All rights reserved.

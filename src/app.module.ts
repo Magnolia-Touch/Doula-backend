@@ -28,6 +28,7 @@ import { DeviceTokenModule } from './token/device-token.module';
 import { UserModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { StripeModule } from './stripe/stripe.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -65,7 +66,12 @@ import { StripeModule } from './stripe/stripe.module';
       serveStaticOptions: {
         index: false,
       },
-    })
+    }),
+    BullModule.forRoot({
+      connection: {
+        url: process.env.REDIS_URL,
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

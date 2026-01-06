@@ -3,7 +3,7 @@ import { ServiceBookingService } from './service-booking.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from '@prisma/client';
+import { Role, ServiceStatus } from '@prisma/client';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -125,5 +125,65 @@ export class ServiceBookingController {
       dto,
     );
   }
+
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ZONE_MANAGER)
+  // @Get('schedules/list')
+  // async getSchedules(
+  //   @Req() req: any,
+  //   @Query('page') page?: string,
+  //   @Query('limit') limit?: string,
+  //   @Query('status') status?: ServiceStatus,
+  //   @Query('search') search?: string,
+  //   @Query('date') date?: string,
+  //   @Query('serviceName') serviceName?: string,
+
+  // ) {
+  //   return this.bookingService.getZoneManagerSchedules(
+  //     req.user.id,
+  //     Number(page) || 1,
+  //     Number(limit) || 10,
+  //     {
+  //       serviceName,
+  //       status,
+  //       search,
+  //       date,
+  //     },
+  //   );
+  // }
+
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ZONE_MANAGER)
+  // @Get('meetings/list')
+  // async getZoneManagerMeetings(
+  //   @Req() req: any,
+  //   @Query('page') page?: string,
+  //   @Query('limit') limit?: string,
+  //   @Query('search') search?: string,
+  //   @Query('status') status?: MeetingStatus,
+  // ) {
+  //   return this.service.getZoneManagerMeetings(
+  //     req.user.id,
+  //     Number(page) || 1,
+  //     Number(limit) || 10,
+  //     search?.trim(),
+  //     status,
+  //   );
+  // }
+
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ZONE_MANAGER)
+  // @Get('schedules/list/:id')
+  // async getScheduleById(@Req() req: any, @Param('id') id: string) {
+  //   return this.service.getZoneManagerScheduleById(req.user.id, id);
+  // }
+
+
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ZONE_MANAGER)
+  // @Get('meetings/list/:id')
+  // async getMeetingById(@Req() req: any, @Param('id') id: string) {
+  //   return this.service.getZoneManagerMeetingById(req.user.id, id);
+  // }
 
 }

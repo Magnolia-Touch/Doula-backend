@@ -6,6 +6,7 @@ import { WebhookService } from './webhook.service';
 import { WebhookErrorHandlerService } from './webhook-error-handler.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { ServiceBookingModule } from 'src/service-bookings/service-booking.module';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({})
 export class StripeModule {
@@ -14,7 +15,7 @@ export class StripeModule {
       module: StripeModule,
       controllers: [StripeController],
       exports: [StripeService],
-      imports: [ServiceBookingModule, PrismaModule, ConfigModule], // NOT forRoot
+      imports: [ServiceBookingModule, PrismaModule, ConfigModule, MailModule], // NOT forRoot
       providers: [
         StripeService,
         WebhookService,

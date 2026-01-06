@@ -68,9 +68,14 @@ export class EnquiryService {
         const client = await getOrcreateClent(this.prisma, data);
         const profile = await this.prisma.clientProfile.findUnique({
             where: { userId: client.id },
+            include: { user: true },
         });
         if (!profile) {
             throw new NotFoundException('profile not found');
+        }
+
+        if (profile.user.role !== Role.CLIENT) {
+            throw new NotFoundException('User is not a client');
         }
 
         // weekday is taken from Date

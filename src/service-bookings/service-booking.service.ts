@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { paginate } from 'src/common/utility/pagination.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
-import { Role, ServiceStatus } from '@prisma/client';
+import { MeetingStatus, Role, ServiceStatus } from '@prisma/client';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { BookingFilterDto } from './dto/bookings-filter.dto';
 
@@ -311,6 +311,8 @@ export class ServiceBookingService {
   }
 
 
+
+
   async updateBookingStatus(
     userId: string,
     userRole: Role,
@@ -389,5 +391,562 @@ export class ServiceBookingService {
       status: updatedBooking.status,
     };
   }
+
+
+  // async getAllMeetings(
+  //   userId: string,
+  //   page = 1,
+  //   limit = 10,
+  //   search?: string,
+  //   status?: MeetingStatus,
+  // ) {
+  //   // Fetch zone manager profile
+  //   const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+  //     where: { userId: userId },
+  //     select: { id: true },
+  //   });
+
+  //   if (!zoneManager) {
+  //     throw new ForbiddenException('Zone manager profile not found');
+  //   }
+
+  //   /**
+  //    * Fetch all doula IDs under this zone manager
+  //    */
+  //   const doulas = await this.prisma.doulaProfile.findMany({
+  //     where: {
+  //       zoneManager: {
+  //         some: {
+  //           id: zoneManager.id,
+  //         },
+  //       },
+  //     },
+  //     select: { id: true },
+  //   });
+
+  //   const doulaIds = doulas.map((d) => d.id);
+
+  //   /**
+  //    * WHERE condition:
+  //    * 1. Meetings of zone manager
+  //    * 2. Meetings of doulas under zone manager
+  //    */
+  //   const where: Prisma.MeetingsWhereInput = {
+  //     OR: [
+  //       { zoneManagerProfileId: zoneManager.id },
+  //       { doulaProfileId: { in: doulaIds } },
+  //     ],
+  //   };
+  //   where.AND = [];
+  //   if (search) {
+  //     where.AND.push({
+  //       OR: [
+  //         // Client name search
+  //         {
+  //           bookedBy: {
+  //             user: {
+  //               name: {
+  //                 contains: search.toLowerCase(),
+  //               },
+  //             },
+  //           },
+  //         },
+
+  //         // Service name via Service relation
+  //         {
+  //           Service: {
+  //             name: {
+  //               contains: search.toLowerCase(),
+  //             },
+  //           },
+  //         },
+
+  //         // Fallback serviceName stored in Meetings table
+  //         {
+  //           serviceName: {
+  //             contains: search.toLowerCase(),
+  //           },
+  //         },
+  //       ],
+  //     });
+  //   }
+
+  //   if (status) {
+  //     where.AND.push({
+  //       status: status,
+  //     });
+  //   }
+
+  //   const result = await paginate({
+  //     prismaModel: this.prisma.meetings,
+  //     page,
+  //     limit,
+  //     where,
+  //     include: {
+  //       bookedBy: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true,
+  //               name: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       DoulaProfile: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true,
+  //               name: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       Service: {
+  //         select: {
+  //           id: true,
+  //           name: true,
+  //         },
+  //       },
+  //     },
+  //     orderBy: {
+  //       date: 'desc',
+  //     },
+  //   });
+
+  //   type ZoneManagerMeeting = Prisma.MeetingsGetPayload<{
+  //     include: {
+  //       bookedBy: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true;
+  //               name: true;
+  //             };
+  //           };
+  //         };
+  //       };
+  //       DoulaProfile: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true;
+  //               name: true;
+  //             };
+  //           };
+  //         };
+  //       };
+  //       Service: {
+  //         select: {
+  //           id: true;
+  //           name: true;
+  //         };
+  //       };
+  //     };
+  //   }>;
+
+  //   const meetings = result.data as ZoneManagerMeeting[];
+
+  //   return {
+  //     success: true,
+  //     message: 'Zone manager meetings fetched successfully',
+  //     data: meetings.map((meeting) => ({
+  //       meetingId: meeting.id,
+  //       clientId: meeting.bookedBy.id,
+  //       clientName: meeting.bookedBy.user.name,
+
+
+  //       doulaId: meeting.DoulaProfile?.id ?? null,
+  //       doulaName: meeting.DoulaProfile?.user.name ?? null,
+
+  //       servicePricingId: meeting.serviceId ?? null,
+  //       serviceName: meeting.Service?.name ?? meeting.serviceName,
+
+  //       startDate: meeting.startTime,
+  //       endDate: meeting.endTime,
+  //       status: meeting.status,
+  //       meetingDate: meeting.date,
+
+  //     })),
+  //     meta: result.meta,
+  //   };
+  // }
+
+
+  // async getZoneManagerSchedules(
+  //   userId: string,
+  //   page = 1,
+  //   limit = 10,
+  //   filters?: {
+  //     serviceName?: string;
+  //     status?: ServiceStatus;
+  //     search?: string;
+  //     date?: string;
+  //   },
+  // ) {
+  //   console.log('user', userId);
+  //   // Fetch zone manager profile
+  //   const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+  //     where: { userId: userId },
+  //     select: { id: true },
+  //   });
+
+  //   if (!zoneManager) {
+  //     throw new ForbiddenException('Zone manager profile not found');
+  //   }
+
+  //   /**
+  //    * Build WHERE clause
+  //    */
+  //   const where: Prisma.SchedulesWhereInput = {
+  //     DoulaProfile: {
+  //       zoneManager: {
+  //         some: {
+  //           id: zoneManager.id,
+  //         },
+  //       },
+  //     },
+  //   };
+  //   const AND: Prisma.SchedulesWhereInput[] = [];
+  //   /* Service Status */
+  //   if (filters?.status) {
+  //     where.status = filters.status;
+  //   }
+
+  //   /* Date filter (@db.Date) */
+  //   if (filters?.date) {
+  //     where.date = new Date(filters.date);
+  //   }
+
+  //   if (filters?.serviceName) {
+  //     AND.push({
+  //       ServicePricing: {
+  //         service: {
+  //           name: {
+  //             contains: filters.serviceName
+  //           }
+  //         }
+  //       }
+  //     })
+
+  //   }
+  //   /* Service Name */
+  //   if (filters?.search) {
+  //     const search = filters.search.trim();
+
+  //     AND.push({
+  //       OR: [
+  //         /* Service Name */
+  //         /* Client Name */
+  //         {
+  //           client: {
+  //             user: {
+  //               name: {
+  //                 contains: search,
+
+  //               },
+  //             },
+  //           },
+  //         },
+
+  //         /* Client Email */
+  //         {
+  //           client: {
+  //             user: {
+  //               email: {
+  //                 contains: search,
+
+  //               },
+  //             },
+  //           },
+  //         },
+
+  //         /* Doula Name */
+  //         {
+  //           DoulaProfile: {
+  //             user: {
+  //               name: {
+  //                 contains: search,
+  //               },
+  //             },
+  //           },
+  //         },
+
+  //         /* Doula Email */
+  //         {
+  //           DoulaProfile: {
+  //             user: {
+  //               email: {
+  //                 contains: search,
+
+  //               },
+  //             },
+  //           },
+  //         },
+  //       ],
+  //     });
+  //   }
+
+  //   if (AND.length > 0) {
+  //     where.AND = AND;
+  //   }
+
+
+  //   const result = await paginate({
+  //     prismaModel: this.prisma.schedules,
+  //     page,
+  //     limit,
+  //     where,
+  //     include: {
+  //       client: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true,
+  //               name: true,
+  //               email: true
+  //             },
+  //           },
+  //         },
+  //       },
+  //       DoulaProfile: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true,
+  //               name: true,
+  //               email: true
+  //             },
+  //           },
+  //         },
+  //       },
+  //       ServicePricing: {
+  //         include: {
+  //           service: {
+  //             select: {
+  //               name: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     orderBy: {
+  //       date: 'desc',
+  //     },
+  //   });
+
+  //   type ZoneManagerSchedule = Prisma.SchedulesGetPayload<{
+  //     include: {
+  //       client: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true;
+  //               name: true;
+  //               email: true
+  //             };
+  //           };
+  //         };
+  //       };
+  //       DoulaProfile: {
+  //         include: {
+  //           user: {
+  //             select: {
+  //               id: true;
+  //               name: true;
+  //               email: true
+  //             };
+  //           };
+  //         };
+  //       };
+  //       ServicePricing: {
+  //         include: {
+  //           service: {
+  //             select: {
+  //               name: true;
+  //             };
+  //           };
+  //         };
+  //       };
+  //     };
+  //   }>;
+
+  //   const schedules = result.data as ZoneManagerSchedule[];
+
+  //   return {
+  //     success: true,
+  //     message: 'Schedules fetched successfully',
+  //     data: schedules.map((schedule) => {
+  //       // const durationMs =
+  //       //   schedule.endTime.getTime() - schedule.startTime.getTime();
+
+  //       // const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+  //       // const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
+
+  //       return {
+  //         scheduleId: schedule.id,
+  //         serviceName: schedule.ServicePricing.service.name,
+  //         serviceTimeshift: schedule.timeshift,
+  //         scheduleDate: schedule.date,
+  //         status: schedule.status,
+
+  //         clientId: schedule.client.id,
+  //         clientName: schedule.client.user.name,
+  //         clientEmail: schedule.client.user.email,
+  //         doulaId: schedule.DoulaProfile.id,
+  //         doulaName: schedule.DoulaProfile.user.name,
+  //         doulaEmail: schedule.DoulaProfile.user.email,
+
+  //       };
+  //     }),
+  //     meta: result.meta,
+  //   };
+  // }
+
+
+  // async getZoneManagerMeetingById(userId: string, meetingId: string) {
+  //   const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+  //     where: { userId },
+  //     select: { id: true },
+  //   });
+
+  //   if (!zoneManager) {
+  //     throw new ForbiddenException('Zone manager profile not found');
+  //   }
+
+  //   const doulas = await this.prisma.doulaProfile.findMany({
+  //     where: {
+  //       zoneManager: {
+  //         some: { id: zoneManager.id },
+  //       },
+  //     },
+  //     select: { id: true },
+  //   });
+
+  //   const doulaIds = doulas.map((d) => d.id);
+
+  //   const meeting = await this.prisma.meetings.findFirst({
+  //     where: {
+  //       id: meetingId,
+  //       OR: [
+  //         { zoneManagerProfileId: zoneManager.id },
+  //         { doulaProfileId: { in: doulaIds } },
+  //       ],
+  //     },
+  //     include: {
+  //       bookedBy: {
+  //         include: {
+  //           user: { select: { id: true, name: true } },
+  //         },
+  //       },
+  //       DoulaProfile: {
+  //         include: {
+  //           user: { select: { id: true, name: true } },
+  //         },
+  //       },
+  //       Service: {
+  //         select: {
+  //           id: true,
+  //           name: true,
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   if (!meeting) {
+  //     throw new NotFoundException('Meeting not found');
+  //   }
+
+  //   return {
+  //     success: true,
+  //     message: 'Meeting fetched successfully',
+  //     data: {
+  //       meetingId: meeting.id,
+  //       clientId: meeting.bookedBy.id,
+  //       clientName: meeting.bookedBy.user.name,
+
+  //       doulaId: meeting.DoulaProfile?.id ?? null,
+  //       doulaName: meeting.DoulaProfile?.user.name ?? null,
+
+  //       servicePricingId: meeting.serviceId ?? null,
+  //       serviceName: meeting.Service?.name ?? meeting.serviceName,
+
+  //       startDate: meeting.startTime,
+  //       endDate: meeting.endTime,
+  //       status: meeting.status,
+  //     },
+  //   };
+  // }
+
+
+
+  // async getZoneManagerScheduleById(userId: string, scheduleId: string) {
+  //   const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+  //     where: { userId },
+  //     select: { id: true },
+  //   });
+
+  //   if (!zoneManager) {
+  //     throw new ForbiddenException('Zone manager profile not found');
+  //   }
+
+  //   const schedule = await this.prisma.schedules.findFirst({
+  //     where: {
+  //       id: scheduleId,
+  //       DoulaProfile: {
+  //         zoneManager: {
+  //           some: { id: zoneManager.id },
+  //         },
+  //       },
+  //     },
+  //     include: {
+  //       client: {
+  //         include: {
+  //           user: { select: { id: true, name: true, email: true } },
+  //         },
+  //       },
+  //       DoulaProfile: {
+  //         include: {
+  //           user: { select: { id: true, name: true, email: true } },
+  //         },
+  //       },
+  //       ServicePricing: {
+  //         include: {
+  //           service: { select: { name: true } },
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   if (!schedule) {
+  //     throw new NotFoundException('Schedule not found');
+  //   }
+
+  //   // const durationMs =
+  //   //   schedule.endTime.getTime() - schedule.startTime.getTime();
+
+  //   // const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+  //   // const durationMinutes = (durationMs % (1000 * 60 * 60)) / (1000 * 60);
+
+  //   return {
+  //     success: true,
+  //     message: 'Schedule fetched successfully',
+  //     data: {
+  //       scheduleId: schedule.id,
+  //       serviceName: schedule.ServicePricing.service.name,
+  //       serviceTimeshift: schedule.timeshift,
+  //       scheduleDate: schedule.date,
+  //       status: schedule.status,
+
+  //       clientId: schedule.client.id,
+  //       clientName: schedule.client.user.name,
+  //       clientEmail: schedule.client.user.email,
+  //       doulaId: schedule.DoulaProfile.id,
+  //       doulaName: schedule.DoulaProfile.user.name,
+  //       doulaEmail: schedule.DoulaProfile.user.email,
+  //     },
+  //   };
+  // }
 
 }

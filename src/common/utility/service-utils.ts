@@ -598,4 +598,6 @@ export function getPriceForShift(
     default:
       throw new BadRequestException('Invalid time shift');
   }
+
+
 }

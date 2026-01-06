@@ -19,7 +19,7 @@ import { RegistrationDto } from './dto/registration.dto';
 import { LoginDto } from './dto/login.dto';
 import { OtpVerifyDto } from './dto/otp-verify.dto';
 import { MailService } from 'src/mail/mail.service';
-
+import { EmailProducer } from 'src/mail-queue/email.producer';
 @Injectable()
 export class AuthService {
   constructor(
@@ -30,6 +30,7 @@ export class AuthService {
     private readonly doula: DoulaService,
     private readonly jwtService: JwtService,
     private readonly mail: MailService,
+    private readonly mailqueue: EmailProducer,
   ) { }
 
   //make this to just a create admin funtion without otp

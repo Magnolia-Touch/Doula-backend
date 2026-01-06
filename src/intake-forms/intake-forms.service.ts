@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
@@ -15,10 +16,12 @@ import {
   isDoulaOffOnShift,
   isOverlapping,
 } from 'src/common/utility/service-utils';
-import { MailerService } from '@nestjs-modules/mailer';
+import { MailService } from 'src/mail/mail.service';
 import { BookingStatus, PaymentProvider, PaymentStatus, Prisma, TimeShift, WeekDays } from '@prisma/client';
 import { StripeService } from 'src/stripe/stripe.service';
 import { Console } from 'console';
+import { formatDate } from 'date-fns/format';
+import { Attachment } from 'nodemailer/lib/mailer';
 type IntakeFormWithRelations = Prisma.IntakeFormGetPayload<{
   include: {
     region: { select: { regionName: true } };
@@ -55,7 +58,7 @@ type IntakeFormWithRelations = Prisma.IntakeFormGetPayload<{
 export class IntakeFormService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly mail: MailerService,
+    private readonly mail: MailService,
     private stripeService: StripeService,
   ) { }
 
@@ -114,22 +117,41 @@ export class IntakeFormService {
       phone,
     });
 
-    const clientProfile = await this.prisma.clientProfile.update({
+    const clientProfile = await this.prisma.clientProfile.findUnique({
       where: { userId: clientUser.id },
-      data: { address },
+      include: { user: true },
     });
+    if (!clientProfile) {
+      throw new NotFoundException('Client profile not found');
+    }
 
     /* ----------------------------------------------------
      * 2. Validate region
      * -------------------------------------------------- */
     const region = await this.prisma.region.findFirst({
       where: { doula: { some: { id: doulaProfileId } } },
+      include: { zoneManager: { include: { user: true } } },
     });
 
-    if (!region) {
+    if (!region || region.zoneManager == null || region.zoneManager.user == null) {
       throw new BadRequestException('Region not listed for doula');
     }
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { id: doulaProfileId },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+            phone: true,
+          },
+        },
+      },
+    });
 
+    if (!doula) {
+      throw new NotFoundException('Doula profile not found');
+    }
     /* ----------------------------------------------------
      * 3. Validate service pricing
      * -------------------------------------------------- */
@@ -137,6 +159,7 @@ export class IntakeFormService {
       where: { id: serviceId },
       select: {
         id: true,
+        price: true,
         service: { select: { name: true } },
       },
     });
@@ -214,6 +237,33 @@ export class IntakeFormService {
         );
       }
     }
+    let totalAmount = 0;
+
+    if (servicePricing.service.name === 'Birth Doula') {
+      const perDayPrice = getPriceForShift(
+        servicePricing.price,
+        TimeShift.FULLDAY,
+      );
+      console.log(perDayPrice)
+      console.log(visitDates.length)
+      totalAmount = perDayPrice * (visitDates.length - (2 * buffer))
+    } else if (servicePricing.service.name === 'Post Partum Doula') {
+      const perDayPrice = getPriceForShift(
+        servicePricing.price,
+        serviceTimeShift,
+      );
+      console.log(perDayPrice)
+      console.log(visitDates.length)
+      totalAmount = (perDayPrice * visitDates.length)
+    }
+
+    if (totalAmount <= 0) {
+      throw new BadRequestException('Invalid total amount');
+    }
+
+    // const half = totalAmount / 2;
+    // totalAmount = Math.min(half, 1000);
+    // totalAmount = Math.round(totalAmount * 100) / 100;
 
     /* ----------------------------------------------------
      * 7. Create intake + booking + schedules (transaction)
@@ -261,6 +311,105 @@ export class IntakeFormService {
       return { intake, booking };
     });
 
+    //mail to doula like from zone manager
+
+    //mail to doula like from client
+    try {
+      await this.mail.sendMail({
+        to: region.zoneManager.user.email,
+        subject: 'New Booking Confirmed – Region Notification',
+        template: 'so-manager-booking-notification',
+        context: {
+          appName: 'Bambini Doula',
+          year: new Date().getFullYear(),
+
+          serviceTimeShift,
+
+          clientName: clientProfile.user.name,
+          clientEmail: clientProfile.user.email,
+          clientPhone: clientProfile.user.phone,
+
+          doulaName: doula?.user.name,
+          doulaEmail: doula?.user.email,
+          doulaPhone: doula?.user.phone,
+
+          serviceName: servicePricing.service.name,
+          serviceStartDate: formatDate(new Date(startDate), 'yyyy-MM-dd'),
+          serviceEndDate: formatDate(new Date(endDate), 'yyyy-MM-dd'),
+          timeShift: serviceTimeShift,
+
+          regionName: region.regionName,
+          totalAmount,
+        },
+      });
+      const commonContext = {
+        appName: 'Bambini Doula',
+        year: new Date().getFullYear(),
+
+        serviceName: servicePricing.service.name,
+        region: region.regionName,
+        timeShift: serviceTimeShift,
+        serviceStartDate: formatDate(new Date(seviceStartDate), 'yyyy-MM-dd'),
+        serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
+
+        totalAmountPaid: totalAmount,
+      };
+
+      /* ----------------------------------------------------
+       * Mail to Doula (NO attachments)
+       * -------------------------------------------------- */
+      await this.mail.sendMail({
+        to: doula.user.email,
+        subject: 'New Booking Assigned – Bambini Doula',
+        template: 'doula-booking-confirmation',
+        context: {
+          ...commonContext,
+          clientName: clientProfile.user.name,
+          clientEmail: clientProfile.user.email,
+          clientPhone: clientProfile.user.phone,
+        },
+      });
+
+      /* ----------------------------------------------------
+       * Mail to Client (WITH conditional attachments)
+       * -------------------------------------------------- */
+      const attachments = this.getServiceAttachments(servicePricing.service.name);
+
+      if (attachments.length > 0) {
+        await this.mail.sendMailWithAttachments({
+          to: clientProfile.user.email,
+          subject: 'Your Booking is Confirmed – Bambini Doula',
+          template: 'client-booking-confirmation',
+          context: {
+            ...commonContext,
+            clientName: clientProfile.user.name,
+            doulaName: doula.user.name,
+            doulaEmail: doula.user.email,
+            doulaPhone: doula.user.phone,
+          },
+          attachments,
+        });
+      } else {
+        // fallback (no attachment)
+        await this.mail.sendMail({
+          to: clientProfile.user.email,
+          subject: 'Your Booking is Confirmed – Bambini Doula',
+          template: 'client-booking-confirmation',
+          context: {
+            ...commonContext,
+            clientName: clientProfile.user.name,
+            doulaName: doula.user.name,
+            doulaEmail: doula.user.email,
+            doulaPhone: doula.user.phone,
+          },
+        });
+      }
+
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Booking completed, but confirmation email failed. Please contact support.',
+      );
+    }
     /* ----------------------------------------------------
      * 8. Response
      * -------------------------------------------------- */
@@ -765,6 +914,19 @@ export class IntakeFormService {
       throw new BadRequestException('Region not listed for doula');
     }
 
+
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { id: doulaProfileId },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+            phone: true,
+          },
+        },
+      },
+    });
     /* ----------------------------------------------------
      * 3. Validate service pricing
      * -------------------------------------------------- */
@@ -891,6 +1053,9 @@ export class IntakeFormService {
       throw new BadRequestException('Invalid total amount');
     }
 
+    const half = totalAmount / 2;
+    totalAmount = Math.min(half, 1000);
+    totalAmount = Math.round(totalAmount * 100) / 100;
 
     /* ----------------------------------------------------
      * 10. Create booking + payment (transaction)
@@ -918,12 +1083,38 @@ export class IntakeFormService {
           status: PaymentStatus.PENDING,
           provider: PaymentProvider.STRIPE,
           metadata: {
-            visitDates,
-            serviceTimeShift,
-            doulaProfileId,
+            // Booking identifiers
+            bookingId: booking.id,
             servicePricingId: servicePricing.id,
+            doulaProfileId,
             clientId: clientProfile.id,
-          },
+
+            // Client details
+            clientName: user.name,
+            clientEmail: user.email,
+            clientPhone: user.phone,
+
+            // Service details
+            serviceName: servicePricing.service.name,
+            serviceStartDate: startDate.toISOString(),
+            serviceEndDate: endDate.toISOString(),
+            timeShift: serviceTimeShift,
+            visitDates: visitDates.map(d => d.toISOString()),
+
+            // Region details
+            regionId: region.id,
+            regionName: region.regionName,
+
+            // Doula details
+            doulaName: doula?.user.name,
+            doulaEmail: doula?.user?.email,
+            doulaPhone: doula?.user.phone,
+
+            // Payment details
+            totalAmount: totalAmount,
+            currency: 'USD',
+          }
+
         },
       });
 
@@ -948,6 +1139,7 @@ export class IntakeFormService {
       data: { checkoutSessionId: checkoutSession.id },
     });
 
+
     /* ----------------------------------------------------
      * 12. Response
      * -------------------------------------------------- */
@@ -961,6 +1153,34 @@ export class IntakeFormService {
       successUrl: successUrl,
       cancelUrl: cancelUrl
     };
+  }
+
+
+
+  private getServiceAttachments(serviceName: string): Attachment[] {
+    const normalized = serviceName.trim().toLowerCase();
+
+    if (normalized === 'birth doula') {
+      return [
+        {
+          filename: 'Birth-Doula-Service-Guide.pdf',
+          path: '/files/birth-doula-guide.pdf',
+          contentType: 'application/pdf',
+        },
+      ];
+    }
+
+    if (normalized === 'postpartum doulas') {
+      return [
+        {
+          filename: 'Postpartum-Doula-Service-Guide.pdf',
+          path: '/files/postpartum-doula-guide.pdf',
+          contentType: 'application/pdf',
+        },
+      ];
+    }
+
+    return [];
   }
 
 }

@@ -17,7 +17,7 @@ export class ContactFormService {
 
     // Send email to admin
     await this.mailService.sendMail({
-      to: process.env.MAIL_USER,
+      to: "sona@palqar.cloud", //process.env.MAIL_USER
       subject: `New Enquiry from ${Name}`,
       template: 'welcome', // looks for src/templates/welcome.pug
       context: {

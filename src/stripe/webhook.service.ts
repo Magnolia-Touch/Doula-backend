@@ -1,8 +1,11 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
+import { MailService } from 'src/mail/mail.service';
+import { formatDate } from 'date-fns';
+import { Attachment } from 'nodemailer/lib/mailer';
 
 @Injectable()
 export class WebhookService {
@@ -12,6 +15,7 @@ export class WebhookService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly mail: MailService,
   ) {
     this.stripe = new Stripe(
       this.configService.get<string>('STRIPE_SECRET_KEY')!,
@@ -110,11 +114,29 @@ export class WebhookService {
     const {
       visitDates,
       serviceTimeShift,
-      doulaProfileId,
       servicePricingId,
       clientId,
+      clientName,
+      clientEmail,
+      clientPhone,
+      doulaProfileId,
+      doulaName,
+      doulaEmail,
+      doulaPhone,
+
+      // Service details
+      serviceName,
+      serviceStartDate,
+      serviceEndDate,
+      timeShift,
+      regionId,
+      regionName,
+      // Payment details
+      totalAmount,
+      currency
 
     } = payment.metadata as any;
+
 
 
     await this.prisma.$transaction(async (tx) => {
@@ -130,6 +152,7 @@ export class WebhookService {
           serviceId: servicePricingId,
           clientId,
           bookingId,
+
         })),
       });
 
@@ -150,6 +173,84 @@ export class WebhookService {
         },
       });
     });
+
+    //
+    try {
+      const commonContext = {
+        appName: 'Bambini Doula',
+        year: new Date().getFullYear(),
+
+        serviceName,
+        region: regionName,
+        timeShift,
+        serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
+        serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
+
+        totalAmountPaid: totalAmount,
+      };
+
+      /* ----------------------------------------------------
+       * Mail to Doula (NO attachments)
+       * -------------------------------------------------- */
+      await this.mail.sendMail({
+        to: doulaEmail,
+        subject: 'New Booking Assigned – Bambini Doula',
+        template: 'doula-booking-confirmation',
+        context: {
+          ...commonContext,
+          doulaName,
+          doulaEmail,
+          doulaPhone,
+          clientName,
+        },
+      });
+
+      /* ----------------------------------------------------
+       * Mail to Client (WITH conditional attachments)
+       * -------------------------------------------------- */
+      const attachments = this.getServiceAttachments(serviceName);
+
+      if (attachments.length > 0) {
+        await this.mail.sendMailWithAttachments({
+          to: clientEmail,
+          subject: 'Your Booking is Confirmed – Bambini Doula',
+          template: 'client-booking-confirmation',
+          context: {
+            ...commonContext,
+            clientName,
+            doulaName,
+            doulaEmail,
+            doulaPhone,
+          },
+          attachments,
+        });
+      } else {
+        // fallback (no attachment)
+        await this.mail.sendMail({
+          to: clientEmail,
+          subject: 'Your Booking is Confirmed – Bambini Doula',
+          template: 'client-booking-confirmation',
+          context: {
+            ...commonContext,
+            clientName,
+            doulaName,
+            doulaEmail,
+            doulaPhone,
+          },
+        });
+      }
+
+    } catch (error) {
+      this.logger.error(
+        'Booking confirmation email failed',
+        error instanceof Error ? error.stack : String(error),
+      );
+
+      throw new InternalServerErrorException(
+        'Booking completed, but confirmation email failed. Please contact support.',
+      );
+    }
+
 
     this.logger.log(
       `Payment SUCCESS | booking=${bookingId} | payment=${paymentId}`,
@@ -218,5 +319,32 @@ export class WebhookService {
     );
 
     return { received: true };
+  }
+
+
+  private getServiceAttachments(serviceName: string): Attachment[] {
+    const normalized = serviceName.trim().toLowerCase();
+
+    if (normalized === 'birth doula') {
+      return [
+        {
+          filename: 'Birth-Doula-Service-Guide.pdf',
+          path: '/files/birth-doula-guide.pdf',
+          contentType: 'application/pdf',
+        },
+      ];
+    }
+
+    if (normalized === 'postpartum doulas') {
+      return [
+        {
+          filename: 'Postpartum-Doula-Service-Guide.pdf',
+          path: '/files/postpartum-doula-guide.pdf',
+          contentType: 'application/pdf',
+        },
+      ];
+    }
+
+    return [];
   }
 }
