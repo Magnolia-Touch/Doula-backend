@@ -494,10 +494,11 @@ export class DoulaService {
         date: true,
       },
     });
-
+    console.log("scheduls", schedules)
     /* ----------------------------------------------------
      * 10. Build schedule lookup
      * -------------------------------------------------- */
+    //what is this for?
     const scheduleMap = new Map<string, Date[]>();
 
     for (const s of schedules) {
@@ -506,7 +507,7 @@ export class DoulaService {
       }
       scheduleMap.get(s.doulaProfileId)!.push(s.date);
     }
-
+    console.log("scheduleMap", scheduleMap)
     /* ----------------------------------------------------
      * 11. Transform response
      * -------------------------------------------------- */
@@ -516,6 +517,7 @@ export class DoulaService {
         if (!profile) return null;
 
         const bookedDates = scheduleMap.get(profile.id) ?? [];
+        console.log("bookedDates", bookedDates)
 
         const services =
           profile.ServicePricing?.map((p) => {
@@ -543,7 +545,7 @@ export class DoulaService {
 
         const available =
           rangeStart && rangeEnd ? bookedDates.length === 0 : null;
-
+        console.log("available", available)
         if (typeof isAvailable === 'boolean' && available !== isAvailable) {
           return null;
         }

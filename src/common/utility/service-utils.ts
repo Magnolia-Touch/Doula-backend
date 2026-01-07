@@ -555,6 +555,12 @@ export async function isDoulaOffOnShift(
   return offtime[timeShift] === true;
 }
 
+export function formatTimeOnly(date: Date | string | null): string | null {
+  if (!date) return null;
+
+  const d = new Date(date);
+  return d.toISOString().substring(11, 16); // HH:mm
+}
 
 
 export function generateOrderId(): string {
@@ -598,6 +604,7 @@ export function getPriceForShift(
     default:
       throw new BadRequestException('Invalid time shift');
   }
+
 
 
 }

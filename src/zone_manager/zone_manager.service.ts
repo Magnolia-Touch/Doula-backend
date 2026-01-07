@@ -56,6 +56,9 @@ export class ZoneManagerService {
     if (regions.length != dto.regionIds.length) {
       throw new NotFoundException('One or more region IDs are invalid');
     }
+    if (regions.some((r) => r.zoneManagerId !== null)) {
+      throw new BadRequestException('One or more regions are already assigned to another Zone Manager');
+    }
 
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');

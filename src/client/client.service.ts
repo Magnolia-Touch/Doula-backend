@@ -9,6 +9,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { BookingStatus, MeetingStatus, Role, ServiceStatus } from '@prisma/client';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { S3Service } from 'src/s3/s3.service';
+import { formatTimeOnly } from 'src/common/utility/service-utils';
 
 
 @Injectable()
@@ -582,6 +583,7 @@ export class ClientsService {
     };
   }
 
+
   async Meetings(userId: string) {
     // 1️⃣ Fetch client profile with meetings
     const clientProfile = await this.prisma.clientProfile.findUnique({
@@ -652,8 +654,8 @@ export class ClientsService {
 
         meetingDate: meeting.date,
         weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
-        startTime: meeting.startTime,
-        endTime: meeting.endTime,
+        startTime: formatTimeOnly(meeting.startTime),
+        endTime: formatTimeOnly(meeting.endTime),
 
         link: meeting.link,
         serviceName: meeting.serviceName,
@@ -742,8 +744,8 @@ export class ClientsService {
 
       meetingDate: meeting.date,
       weekday: meeting.AvailableSlotsForMeeting?.weekday ?? null,
-      startTime: meeting.startTime,
-      endTime: meeting.endTime,
+      startTime: formatTimeOnly(meeting.startTime),
+      endTime: formatTimeOnly(meeting.endTime),
 
       link: meeting.link,
       serviceName: meeting.serviceName,
