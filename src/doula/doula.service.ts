@@ -429,7 +429,7 @@ export class DoulaService {
     }
 
     /* ----------------------------------------------------
-     * 7. Fetch doulas (NO date logic here)
+     * 7. Fetch doulas
      * -------------------------------------------------- */
     const result = await paginate({
       prismaModel: this.prisma.user,
@@ -443,8 +443,7 @@ export class DoulaService {
             ServicePricing: { include: { service: true } },
             Testimonials: true,
             DoulaGallery: true,
-            Certificates: true
-
+            Certificates: true,
           },
         },
       },
@@ -471,7 +470,7 @@ export class DoulaService {
     if (rangeEnd) rangeEnd.setHours(0, 0, 0, 0);
 
     /* ----------------------------------------------------
-     * 9. Fetch schedules for returned doulas
+     * 9. Fetch schedules
      * -------------------------------------------------- */
     const doulaProfileIds = users
       .map((u: any) => u.doulaProfile?.id)
@@ -480,6 +479,7 @@ export class DoulaService {
     const schedules = await this.prisma.schedules.findMany({
       where: {
         doulaProfileId: { in: doulaProfileIds },
+        cancelledAt: null,
         ...(rangeStart || rangeEnd
           ? {
             date: {
@@ -494,11 +494,30 @@ export class DoulaService {
         date: true,
       },
     });
-    console.log("scheduls", schedules)
+
     /* ----------------------------------------------------
-     * 10. Build schedule lookup
+     * 9.1 Fetch available slots
      * -------------------------------------------------- */
-    //what is this for?
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const availableSlots =
+      await this.prisma.availableSlotsForService.findMany({
+        where: {
+          doulaId: { in: doulaProfileIds },
+          date: { gte: today },
+        },
+        select: {
+          doulaId: true,
+          date: true,
+          availability: true,
+        },
+        orderBy: { date: 'asc' },
+      });
+
+    /* ----------------------------------------------------
+     * 10. Build lookups
+     * -------------------------------------------------- */
     const scheduleMap = new Map<string, Date[]>();
 
     for (const s of schedules) {
@@ -507,7 +526,47 @@ export class DoulaService {
       }
       scheduleMap.get(s.doulaProfileId)!.push(s.date);
     }
-    console.log("scheduleMap", scheduleMap)
+
+    const availabilityMap = new Map<
+      string,
+      { date: Date; availability: Record<string, boolean> }[]
+    >();
+
+    for (const slot of availableSlots) {
+      if (!availabilityMap.has(slot.doulaId)) {
+        availabilityMap.set(slot.doulaId, []);
+      }
+      availabilityMap.get(slot.doulaId)!.push({
+        date: slot.date,
+        availability: slot.availability as Record<string, boolean>,
+      });
+    }
+
+    /* ----------------------------------------------------
+     * 10.1 Helpers
+     * -------------------------------------------------- */
+    const normalizeDate = (d: Date) => {
+      const n = new Date(d);
+      n.setHours(0, 0, 0, 0);
+      return n.getTime();
+    };
+
+    function isDateAvailable(
+      date: Date,
+      availability: Record<string, boolean>,
+      bookedDates: Date[],
+    ) {
+      // Any shift false → unavailable
+      if (Object.values(availability).some((v) => v === false)) {
+        return false;
+      }
+
+      // All shifts true → must not be booked
+      return !bookedDates.some(
+        (d) => normalizeDate(d) === normalizeDate(date),
+      );
+    }
+
     /* ----------------------------------------------------
      * 11. Transform response
      * -------------------------------------------------- */
@@ -517,38 +576,49 @@ export class DoulaService {
         if (!profile) return null;
 
         const bookedDates = scheduleMap.get(profile.id) ?? [];
-        console.log("bookedDates", bookedDates)
+        const slotEntries = availabilityMap.get(profile.id) ?? [];
 
-        const services =
-          profile.ServicePricing?.map((p) => {
-            if (!p.service) return null;
-            return {
-              servicePricingId: p.id, // ✅ FIX
-              serviceId: p.service.id,
-              serviceName: p.service.name,
-              price: p.price,
-            };
-          }).filter(Boolean) ?? [];
+        let nextAvailableDate: Date | null = null;
 
-        const regions =
-          profile.Region?.map((r) => ({
-            id: r.id,
-            name: r.regionName,
-          })) ?? [];
-        const testimonials = profile.Testimonials ?? [];
-        const reviewCount = testimonials.length;
-
-        const avgRating =
-          reviewCount > 0
-            ? testimonials.reduce((s, t) => s + t.ratings, 0) / reviewCount
-            : null;
+        for (const slot of slotEntries) {
+          if (
+            isDateAvailable(
+              slot.date,
+              slot.availability,
+              bookedDates,
+            )
+          ) {
+            nextAvailableDate = slot.date;
+            break;
+          }
+        }
 
         const available =
-          rangeStart && rangeEnd ? bookedDates.length === 0 : null;
-        console.log("available", available)
+          rangeStart && rangeEnd
+            ? slotEntries.some((slot) =>
+              isDateAvailable(
+                slot.date,
+                slot.availability,
+                bookedDates,
+              ),
+            )
+            : null;
+
         if (typeof isAvailable === 'boolean' && available !== isAvailable) {
           return null;
         }
+
+        const services =
+          profile.ServicePricing?.map((p) =>
+            p.service
+              ? {
+                servicePricingId: p.id,
+                serviceId: p.service.id,
+                serviceName: p.service.name,
+                price: p.price,
+              }
+              : null,
+          ).filter(Boolean) ?? [];
 
         return {
           userId: user.id,
@@ -561,17 +631,24 @@ export class DoulaService {
           profile_image: profile.profile_image,
 
           serviceNames: services,
-          regionNames: regions,
+          regionNames:
+            profile.Region?.map((r) => ({
+              id: r.id,
+              name: r.regionName,
+            })) ?? [],
 
-          ratings: avgRating,
-          reviewsCount: reviewCount,
+          ratings:
+            profile.Testimonials?.length > 0
+              ? profile.Testimonials.reduce(
+                (s, t) => s + t.ratings,
+                0,
+              ) / profile.Testimonials.length
+              : null,
 
+          reviewsCount: profile.Testimonials?.length ?? 0,
           isAvailable: available,
-          nextImmediateAvailabilityDate: bookedDates.length
-            ? bookedDates[0]
-            : null,
+          nextImmediateAvailabilityDate: nextAvailableDate,
 
-          // ✅ ADD THIS
           images:
             profile.DoulaGallery?.map((img) => ({
               id: img.id,
@@ -584,17 +661,19 @@ export class DoulaService {
               id: cert.id,
               name: cert.name,
               issuedBy: cert.issuedBy,
-              year: cert.year
+              year: cert.year,
             })) ?? [],
         };
       })
       .filter(Boolean);
+
     return {
       message: 'Doulas fetched successfully',
       ...result,
       data: transformed,
     };
   }
+
 
 
   async getById(id: string) {
@@ -618,7 +697,7 @@ export class DoulaService {
               },
             },
             DoulaGallery: true,
-            Certificates: true
+            Certificates: true,
           },
         },
       },
@@ -629,53 +708,110 @@ export class DoulaService {
     }
 
     const profile = doula.doulaProfile;
+    if (!profile) {
+      throw new NotFoundException('Doula profile not found');
+    }
 
     /* ----------------------------------------------------
      * Services & Regions
      * -------------------------------------------------- */
     const services =
-      profile?.ServicePricing?.map((p) => {
-        if (!p.service) return null;
-        return {
-          servicePricingId: p.id, // ✅ FIX
-          serviceId: p.service.id,
-          serviceName: p.service.name,
-          price: p.price,
-        };
-      }).filter(Boolean) ?? [];
+      profile.ServicePricing?.map((p) =>
+        p.service
+          ? {
+            servicePricingId: p.id,
+            serviceId: p.service.id,
+            serviceName: p.service.name,
+            price: p.price,
+          }
+          : null,
+      ).filter(Boolean) ?? [];
 
     const regions =
-      profile?.Region?.map((r) => ({
+      profile.Region?.map((r) => ({
         id: r.id,
         name: r.regionName,
       })) ?? [];
+
     /* ----------------------------------------------------
      * Ratings
      * -------------------------------------------------- */
-    const testimonials = profile?.Testimonials ?? [];
+    const testimonials = profile.Testimonials ?? [];
     const reviewsCount = testimonials.length;
 
     const avgRating =
       reviewsCount > 0
-        ? testimonials.reduce((sum, t) => sum + t.ratings, 0) / reviewsCount
+        ? testimonials.reduce((sum, t) => sum + t.ratings, 0) /
+        reviewsCount
         : null;
 
     /* ----------------------------------------------------
-     * Next availability (computed from weekday)
+     * Next availability (SAME LOGIC as get())
      * -------------------------------------------------- */
-    /* ----------------------------------------------------
-  * Next availability (from schedules – SAME as get())
-  * -------------------------------------------------- */
-    const nextSchedule = await this.prisma.schedules.findFirst({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const schedules = await this.prisma.schedules.findMany({
       where: {
-        doulaProfileId: profile?.id,
-        date: { gte: new Date() },
+        doulaProfileId: profile.id,
+        date: { gte: today },
+        cancelledAt: null,
       },
-      orderBy: { date: 'asc' },
       select: { date: true },
     });
 
-    const nextImmediateAvailabilityDate = nextSchedule?.date ?? null;
+    const bookedDates = schedules.map((s) => s.date);
+
+    const availableSlots =
+      await this.prisma.availableSlotsForService.findMany({
+        where: {
+          doulaId: profile.id,
+          date: { gte: today },
+        },
+        select: {
+          date: true,
+          availability: true,
+        },
+        orderBy: { date: 'asc' },
+      });
+
+    const normalizeDate = (d: Date) => {
+      const n = new Date(d);
+      n.setHours(0, 0, 0, 0);
+      return n.getTime();
+    };
+
+    function isDateAvailable(
+      date: Date,
+      availability: Record<string, boolean>,
+      bookedDates: Date[],
+    ) {
+      // Any shift false → unavailable
+      if (Object.values(availability).some((v) => v === false)) {
+        return false;
+      }
+
+      // All shifts true → must not be booked
+      return !bookedDates.some(
+        (d) => normalizeDate(d) === normalizeDate(date),
+      );
+    }
+
+    let nextImmediateAvailabilityDate: Date | null = null;
+
+    for (const slot of availableSlots) {
+      if (
+        isDateAvailable(
+          slot.date,
+          slot.availability as Record<string, boolean>,
+          bookedDates,
+        )
+      ) {
+        nextImmediateAvailabilityDate = slot.date;
+        break;
+      }
+    }
+
     /* ----------------------------------------------------
      * Final Response
      * -------------------------------------------------- */
@@ -684,14 +820,13 @@ export class DoulaService {
       name: doula.name,
       email: doula.email,
 
-      profileId: profile?.id ?? null,
-      yoe: profile?.yoe ?? null,
-      specialities: profile?.specialities,
+      profileId: profile.id,
+      yoe: profile.yoe ?? null,
+      specialities: profile.specialities,
 
-      description: profile?.description ?? null,
-      // achievements: profile?.achievements ?? null,
-      qualification: profile?.qualification ?? null,
-      profileImage: profile?.profile_image ?? null,
+      description: profile.description ?? null,
+      qualification: profile.qualification ?? null,
+      profileImage: profile.profile_image ?? null,
 
       serviceNames: services,
       regionNames: regions,
@@ -701,20 +836,19 @@ export class DoulaService {
 
       nextImmediateAvailabilityDate,
 
-      // ✅ ADD THIS
       galleryImages:
-        profile?.DoulaGallery?.map((img) => ({
+        profile.DoulaGallery?.map((img) => ({
           id: img.id,
           url: img.url,
           createdAt: img.createdAt,
         })) ?? [],
 
       certificates:
-        profile?.Certificates?.map((cert) => ({
+        profile.Certificates?.map((cert) => ({
           id: cert.id,
           name: cert.name,
           issuedBy: cert.issuedBy,
-          year: cert.year
+          year: cert.year,
         })) ?? [],
 
       testimonials: testimonials.map((t) => ({
@@ -733,6 +867,7 @@ export class DoulaService {
       data: transformed,
     };
   }
+
 
   async delete(id: string) {
     // 1. find user
