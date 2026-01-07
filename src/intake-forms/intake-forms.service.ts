@@ -1030,6 +1030,7 @@ export class IntakeFormService {
         )
       ) {
         throw new BadRequestException(
+          console.log("visitDate", visitDate),
           `Doula is off on ${visitDate.toISOString().split('T')[0]}`,
         );
       }

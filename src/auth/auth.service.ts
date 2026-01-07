@@ -93,10 +93,10 @@ export class AuthService {
       try {
         await this.mail.sendMail({
           to: email,
-          subject: 'Your OTP Code – Doula Care Hub',
+          subject: 'Your OTP Code – Bambini Doula',
           template: 'otp',
           context: {
-            appName: 'Doula Care Hub',
+            appName: 'Bambini Doula',
             otp,
             expiryMinutes: 10,
             year: new Date().getFullYear(),

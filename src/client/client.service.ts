@@ -112,6 +112,7 @@ export class ClientsService {
       include: {
         user: true,
         bookings: {
+          where: { status: { not: BookingStatus.PENDING } },
           include: {
             region: {
               select: { regionName: true }
