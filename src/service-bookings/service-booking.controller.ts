@@ -11,6 +11,7 @@ import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { BookingFilterDto } from './dto/bookings-filter.dto';
 import { GetMeetingsQueryDto } from './dto/get-meetings.query.dto';
 import { GetSchedulesQueryDto } from './dto/get-schedules.query.dto';
+import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 
 @ApiTags('Service Bookings')
 @Controller({
@@ -154,5 +155,15 @@ export class ServiceBookingController {
   @Get('schedules/list/admin/:id')
   getScheduleById(@Param('id') id: string) {
     return this.bookingService.getScheduleById(id);
+  }
+
+  @Get('testimonials/list/admin/')
+  async getTestimonials(@Query() query: GetTestimonialsDto) {
+    return this.bookingService.getAllTestimonial(query);
+  }
+
+  @Get('testimonials/list/admin/:id')
+  async getById(@Param('id') id: string) {
+    return this.bookingService.getById(id);
   }
 }

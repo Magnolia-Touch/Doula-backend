@@ -2,11 +2,12 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { paginate } from 'src/common/utility/pagination.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
-import { MeetingStatus, Role, ServiceStatus } from '@prisma/client';
+import { MeetingStatus, Prisma, Role, ServiceStatus } from '@prisma/client';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { BookingFilterDto } from './dto/bookings-filter.dto';
 import { GetMeetingsQueryDto } from './dto/get-meetings.query.dto';
 import { GetSchedulesQueryDto } from './dto/get-schedules.query.dto';
+import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 
 @Injectable()
 export class ServiceBookingService {
@@ -628,7 +629,139 @@ export class ServiceBookingService {
 
     return schedule;
   }
+
+
+
+  async getAllTestimonial(dto: GetTestimonialsDto) {
+    const {
+      doulaId,
+      serviceId,
+      regionId,
+      ratings,
+      date1,
+      date2,
+      page,
+      limit,
+    } = dto;
+
+    const where: Prisma.TestimonialsWhereInput = {};
+
+    /* -----------------------------------------
+     * Direct Filters
+     * --------------------------------------- */
+    if (doulaId) {
+      where.doulaProfileId = doulaId;
+    }
+
+    if (ratings) {
+      where.ratings = ratings;
+    }
+
+    /* -----------------------------------------
+     * Service Filter (IMPORTANT)
+     * Testimonials.serviceId → ServicePricing.id
+     * ServicePricing.serviceId → Service.id
+     * --------------------------------------- */
+    if (serviceId) {
+      where.ServicePricing = {
+        serviceId,
+      };
+    }
+
+    /* -----------------------------------------
+     * Region Filter (via DoulaProfile)
+     * --------------------------------------- */
+    if (regionId) {
+      where.DoulaProfile = {
+        Region: {
+          some: {
+            id: regionId,
+          },
+        },
+      };
+    }
+
+    /* -----------------------------------------
+     * Date Filters
+     * --------------------------------------- */
+    if (date1 && !date2) {
+      const start = new Date(date1);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(date1);
+      end.setHours(23, 59, 59, 999);
+
+      where.createdAt = {
+        gte: start,
+        lte: end,
+      };
+    }
+
+    if (date1 && date2) {
+      where.createdAt = {
+        gte: new Date(date1),
+        lte: new Date(date2),
+      };
+    }
+
+    /* -----------------------------------------
+     * Pagination
+     * --------------------------------------- */
+    return paginate({
+      prismaModel: this.prisma.testimonials,
+      page,
+      limit,
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        client: {
+          include: {
+            user: true,
+          },
+        },
+        DoulaProfile: {
+          include: {
+            user: true,
+            Region: true,
+          },
+        },
+        ServicePricing: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getById(id: string) {
+    const testimonial = await this.prisma.testimonials.findUnique({
+      where: { id },
+      include: {
+        client: {
+          include: {
+            user: true,
+          },
+        },
+        DoulaProfile: {
+          include: {
+            user: true,
+            Region: true,
+          },
+        },
+        ServicePricing: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    if (!testimonial) {
+      throw new NotFoundException('Testimonial not found');
+    }
+
+    return testimonial;
+  }
+
 }
-
-
-
