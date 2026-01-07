@@ -151,7 +151,7 @@ export class AuthController {
     return this.authService.Profile(userId);
   }
 
-  @Post('verify/otp/admin')
+  @Post('verify/otp')
   async verifyAdminOtp(@Body() dto: OtpVerifyDto) {
     return this.authService.verifyOtpAdmin(dto);
   }

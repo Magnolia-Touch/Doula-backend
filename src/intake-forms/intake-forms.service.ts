@@ -264,6 +264,12 @@ export class IntakeFormService {
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
+    if (totalAmount >= 1000) {
+      const half = totalAmount / 2;
+      totalAmount = Math.min(half, 1000);
+    }
+
+    totalAmount = Math.round(totalAmount * 100) / 100;
 
     // const half = totalAmount / 2;
     // totalAmount = Math.min(half, 1000);
@@ -1021,6 +1027,7 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 6. Availability validation
      * -------------------------------------------------- */
+    console.log("visitdates", visitDates)
     for (const visitDate of visitDates) {
       if (
         await isDoulaOffOnShift(
@@ -1107,8 +1114,11 @@ export class IntakeFormService {
       throw new BadRequestException('Invalid total amount');
     }
 
-    const half = totalAmount / 2;
-    totalAmount = Math.min(half, 1000);
+    if (totalAmount >= 1000) {
+      const half = totalAmount / 2;
+      totalAmount = Math.min(half, 1000);
+    }
+
     totalAmount = Math.round(totalAmount * 100) / 100;
 
     /* ----------------------------------------------------
