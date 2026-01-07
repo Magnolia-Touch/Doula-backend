@@ -276,7 +276,7 @@ export class ZoneManagerService {
       throw new NotFoundException('Zone Manager not found');
     }
 
-    await this.prisma.user.delete({ where: { id } });
+    await this.prisma.user.update({ where: { id }, data: { is_active: false } });
 
     return { message: 'Zone Manager deleted successfully', data: null };
   }
