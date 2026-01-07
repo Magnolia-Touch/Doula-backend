@@ -583,7 +583,7 @@ export class ServiceBookingService {
       limit,
       where,
       include: {
-        DoulaProfile: true,
+        DoulaProfile: { include: { user: true } },
         ServicePricing: {
           include: {
             service: true,
@@ -594,7 +594,7 @@ export class ServiceBookingService {
             region: true,
           },
         },
-        client: true,
+        client: { include: { user: true } },
       },
       orderBy: { date: 'desc' },
     });
@@ -607,7 +607,7 @@ export class ServiceBookingService {
     const schedule = await this.prisma.schedules.findUnique({
       where: { id: scheduleId },
       include: {
-        DoulaProfile: true,
+        DoulaProfile: { include: { user: true } },
         ServicePricing: {
           include: {
             service: true,
@@ -618,7 +618,7 @@ export class ServiceBookingService {
             region: true,
           },
         },
-        client: true,
+        client: { include: { user: true } },
       },
     });
 

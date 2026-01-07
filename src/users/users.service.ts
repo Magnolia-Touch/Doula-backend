@@ -52,14 +52,14 @@ export class UserService {
         clientProfile: { create: { is_verified: false } },
       },
     });
-    // await this.mailerService.sendMail({
-    //     to: dto.email,
-    //     subject: 'Login OTP',
-    //     template: 'authentication', // ✅ refers to authentication.pug
-    //     context: {
-    //         otp, // ✅ available inside the template
-    //     },
-    // });
+    await this.mailerService.sendMail({
+      to: dto.email,
+      subject: 'Login OTP',
+      template: 'authentication', // ✅ refers to authentication.pug
+      context: {
+        otp, // ✅ available inside the template
+      },
+    });
     return { message: 'Otp Sent Succesfully', data: created };
   }
 

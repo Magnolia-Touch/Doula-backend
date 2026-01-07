@@ -225,10 +225,9 @@ export class WebhookService {
         template: 'doula-booking-confirmation',
         context: {
           ...commonContext,
-          doulaName,
-          doulaEmail,
-          doulaPhone,
           clientName,
+          clientEmail,
+          clientPhone,
         },
       });
 
