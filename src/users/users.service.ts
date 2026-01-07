@@ -14,7 +14,7 @@ import { ZoneManagerService } from 'src/zone_manager/zone_manager.service';
 import { AdminService } from 'src/admin/admin.service';
 import { Role } from '@prisma/client';
 import { generate6DigitOtp } from 'src/common/utility/utils';
-import { MailerService } from '@nestjs-modules/mailer';
+import { MailService } from 'src/mail/mail.service';
 import { UserRegistrationDto } from './dto/user-registration.dto';
 import { ChangeUserStatusDto } from './dto/change-user-status.dto';
 @Injectable()
@@ -26,7 +26,8 @@ export class UserService {
     private readonly zonemanager: ZoneManagerService,
     private readonly doula: DoulaService,
     private readonly jwtService: JwtService,
-    private readonly mailerService: MailerService,
+
+    private readonly mail: MailService,
   ) { }
 
   //make this to just a create admin funtion without otp
@@ -52,15 +53,31 @@ export class UserService {
         clientProfile: { create: { is_verified: false } },
       },
     });
-    await this.mailerService.sendMail({
-      to: dto.email,
-      subject: 'Login OTP',
-      template: 'authentication', // ✅ refers to authentication.pug
-      context: {
-        otp, // ✅ available inside the template
-      },
-    });
-    return { message: 'Otp Sent Succesfully', data: created };
+    try {
+      await this.mail.sendMail({
+        to: email,
+        subject: 'Your OTP Code – Bambini Doula',
+        template: 'otp',
+        context: {
+          appName: 'Bambini Doula',
+          otp,
+          expiryMinutes: 10,
+          year: new Date().getFullYear(),
+        },
+      });
+    } catch (error) {
+
+      await this.prisma.user.update({
+        where: { email },
+        data: {
+          otp: null,
+          otpExpiresAt: null,
+        },
+      });
+
+      throw error; // <-- IMPORTANT: rethrow original error
+    }
+    return { message: 'Otp Sent Succesfully', data: otp };
   }
 
   async deleteAll() {

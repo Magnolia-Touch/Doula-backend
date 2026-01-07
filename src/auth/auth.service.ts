@@ -52,7 +52,7 @@ export class AuthService {
         role: Role.ADMIN,
       },
     });
-    return { message: 'Otp Sent Succesfully', data: created };
+    return { message: 'Admin Created Successfully', data: created };
   }
 
   async LoginOtp(dto: LoginDto) {
@@ -125,7 +125,7 @@ export class AuthService {
     const { email, otp } = dto;
     if (dto.email == 'bambini@test.com' && dto.otp == '123456') {
       const user = await this.prisma.user.findUnique({ where: { email } });
-      if (!user) {
+      if (!user || user.role != Role.DOULA) {
         throw new UnauthorizedException('User not found');
       }
       return {
@@ -141,7 +141,7 @@ export class AuthService {
     // 1️⃣ Find the user by email
     const user = await this.prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
+    if (!user || user.role != Role.DOULA) {
       throw new UnauthorizedException('User not found');
     }
     // 2️⃣ Check if OTP and expiry exist
@@ -333,4 +333,175 @@ export class AuthService {
         throw new BadRequestException('Unknown role or profile not assigned');
     }
   }
+
+
+  async verifyOtpZoneManager(dto: OtpVerifyDto) {
+    const { email, otp } = dto;
+    // if (dto.email == 'zonemanager@test.com' && dto.otp == '123456') {
+    //   const user = await this.prisma.user.findUnique({ where: { email } });
+    //   if (!user || user.role != Role.ZONE_MANAGER) {
+    //     throw new UnauthorizedException('User not found');
+    //   }
+    //   return {
+    //     user: user,
+    //     accessToken: this.jwtService.sign({
+    //       sub: user.id,
+    //       email: user.email,
+    //     }),
+    //     message: 'User Verified Successfully',
+    //     status: 200,
+    //   };
+    // }
+    // 1️⃣ Find the user by email
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user || user.role != Role.ZONE_MANAGER) {
+      throw new UnauthorizedException('User not found');
+    }
+    // 2️⃣ Check if OTP and expiry exist
+    if (!user.otp || !user.otpExpiresAt) {
+      throw new UnauthorizedException('No OTP found for this user');
+    }
+
+    // 3️⃣ Validate OTP and expiry
+    const isOtpValid = user.otp === otp;
+    const isOtpNotExpired = user.otpExpiresAt > new Date();
+
+    if (!isOtpValid || !isOtpNotExpired) {
+      throw new UnauthorizedException('Invalid OTP or OTP has expired');
+    }
+
+    // 5️⃣ Clear OTP fields (optional but recommended for security)
+    await this.prisma.user.update({
+      where: { email },
+      data: { otp: null, otpExpiresAt: null },
+    });
+
+    // 6️⃣ Return response with JWT token
+    return {
+      user: user,
+      accessToken: this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+      }),
+      message: 'User Verified Successfully',
+      status: 200,
+    };
+  }
+
+
+  async verifyOtpAdmin(dto: OtpVerifyDto) {
+    const { email, otp } = dto;
+    // if (dto.email == 'admin@test.com' && dto.otp == '123456') {
+    //   const user = await this.prisma.user.findUnique({ where: { email } });
+    //   if (!user || user.role != Role.ADMIN) {
+    //     throw new UnauthorizedException('User not found');
+    //   }
+    //   return {
+    //     user: user,
+    //     accessToken: this.jwtService.sign({
+    //       sub: user.id,
+    //       email: user.email,
+    //     }),
+    //     message: 'User Verified Successfully',
+    //     status: 200,
+    //   };
+    // }
+    // 1️⃣ Find the user by email
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user || user.role != Role.ADMIN) {
+      throw new UnauthorizedException('User not found');
+    }
+    // 2️⃣ Check if OTP and expiry exist
+    if (!user.otp || !user.otpExpiresAt) {
+      throw new UnauthorizedException('No OTP found for this user');
+    }
+
+    // 3️⃣ Validate OTP and expiry
+    const isOtpValid = user.otp === otp;
+    const isOtpNotExpired = user.otpExpiresAt > new Date();
+
+    if (!isOtpValid || !isOtpNotExpired) {
+      throw new UnauthorizedException('Invalid OTP or OTP has expired');
+    }
+
+    // 5️⃣ Clear OTP fields (optional but recommended for security)
+    await this.prisma.user.update({
+      where: { email },
+      data: { otp: null, otpExpiresAt: null },
+    });
+
+    // 6️⃣ Return response with JWT token
+    return {
+      user: user,
+      accessToken: this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+      }),
+      message: 'User Verified Successfully',
+      status: 200,
+    };
+  }
+
+
+  async verifyOtpClient(dto: OtpVerifyDto) {
+    const { email, otp } = dto;
+    // if (dto.email == 'client@test.com' && dto.otp == '123456') {
+    //   const user = await this.prisma.user.findUnique({ where: { email } });
+    //   if (!user || user.role != Role.CLIENT) {
+    //     throw new UnauthorizedException('User not found');
+    //   }
+    //   return {
+    //     user: user,
+    //     accessToken: this.jwtService.sign({
+    //       sub: user.id,
+    //       email: user.email,
+    //     }),
+    //     message: 'User Verified Successfully',
+    //     status: 200,
+    //   };
+    // }
+    // 1️⃣ Find the user by email
+    const user = await this.prisma.user.findUnique({ where: { email }, include: { clientProfile: true } });
+
+    if (!user || user.role != Role.CLIENT) {
+      throw new UnauthorizedException('User not found');
+    }
+    // 2️⃣ Check if OTP and expiry exist
+    if (!user.otp || !user.otpExpiresAt) {
+      throw new UnauthorizedException('No OTP found for this user');
+    }
+    // 3️⃣ Validate OTP and expiry
+    const isOtpValid = user.otp === otp;
+    const isOtpNotExpired = user.otpExpiresAt > new Date();
+
+    if (!isOtpValid || !isOtpNotExpired) {
+      throw new UnauthorizedException('Invalid OTP or OTP has expired');
+    }
+
+    // 5️⃣ Clear OTP fields (optional but recommended for security)
+    await this.prisma.user.update({
+      where: { email },
+      data: { otp: null, otpExpiresAt: null },
+    });
+
+    if (user.clientProfile && !user.clientProfile.is_verified) {
+      await this.prisma.clientProfile.update({
+        where: { userId: user.id },
+        data: { is_verified: true },
+      });
+    }
+    // 6️⃣ Return response with JWT token
+    return {
+      user: user,
+      accessToken: this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+      }),
+      message: 'User Verified Successfully',
+      status: 200,
+    };
+  }
+
 }

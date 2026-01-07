@@ -81,7 +81,7 @@ export class AuthController {
       },
     },
   })
-  @Post('verify/otp')
+  @Post('verify/otp/doula')
   async verifyOtp(@Body() dto: OtpVerifyDto) {
     return this.authService.verifyOtp(dto);
   }
@@ -149,6 +149,22 @@ export class AuthController {
   async myProfile(@Req() req: any) {
     const userId = req.user.id; // from JWT token
     return this.authService.Profile(userId);
+  }
+
+  @Post('verify/otp/admin')
+  async verifyAdminOtp(@Body() dto: OtpVerifyDto) {
+    return this.authService.verifyOtpAdmin(dto);
+  }
+
+
+  @Post('verify/otp/client')
+  async verifyOtpClient(@Body() dto: OtpVerifyDto) {
+    return this.authService.verifyOtpClient(dto);
+  }
+
+  @Post('verify/otp/zonemanager')
+  async verifyOtpZoneManager(@Body() dto: OtpVerifyDto) {
+    return this.authService.verifyOtpZoneManager(dto);
   }
 
 }

@@ -16,6 +16,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/common/strategies/jwt.strategy';
 import { UserController } from './users.controller';
 import { S3Module } from 'src/s3/s3.module';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { S3Module } from 'src/s3/s3.module';
     ClientModule,
     S3Module,
     DoulaModule,
+    MailModule,
     ConfigModule,
     PassportModule,
     JwtModule.register({
