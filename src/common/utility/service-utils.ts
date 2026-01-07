@@ -528,6 +528,10 @@ export async function isDoulaOffOnShift(
   timeShift: TimeShift,
 ): Promise<boolean> {
   // Normalize date
+  // Prevents mismatches like:
+  // 2026-01-07 09:30
+  // vs
+  // 2026-01-07 00:00
   const normalizedDate = new Date(date);
   normalizedDate.setHours(0, 0, 0, 0);
 

@@ -83,7 +83,7 @@ export class AuthController {
   })
   @Post('verify/otp/doula')
   async verifyOtp(@Body() dto: OtpVerifyDto) {
-    return this.authService.verifyOtp(dto);
+    return this.authService.verifyOtpDoula(dto);
   }
 
   // Authenticated user's own profile

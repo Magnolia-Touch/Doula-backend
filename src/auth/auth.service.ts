@@ -121,7 +121,7 @@ export class AuthService {
     }
   }
 
-  async verifyOtp(dto: OtpVerifyDto) {
+  async verifyOtpDoula(dto: OtpVerifyDto) {
     const { email, otp } = dto;
     if (dto.email == 'bambini@test.com' && dto.otp == '123456') {
       const user = await this.prisma.user.findUnique({ where: { email } });

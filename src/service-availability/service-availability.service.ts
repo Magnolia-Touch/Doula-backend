@@ -263,7 +263,7 @@ export class DoulaServiceAvailabilityService {
     }
 
     /**
-     * 3. Fetch service availability for validation
+     * 3. Fetch service availability
      */
     const availabilities =
       await this.prisma.availableSlotsForService.findMany({
@@ -311,59 +311,16 @@ export class DoulaServiceAvailabilityService {
     if (invalidDates.length) {
       throw new BadRequestException({
         message:
-          'Off days can only be marked on dates with active service availability',
+          'Selected dates do not have matching active service availability',
         invalidDates,
       });
     }
 
     /**
-     * 5. Remove already existing off-days
-     */
-    const existing = await this.prisma.doulaOffDays.findMany({
-      where: {
-        doulaProfileId: doula.id,
-        date: { in: dates },
-      },
-      select: { date: true },
-    });
-
-    const existingSet = new Set(
-      existing.map((d) => d.date.toISOString()),
-    );
-
-    const offtimeJson: Prisma.InputJsonValue = {
-      MORNING: offtime.MORNING,
-      NIGHT: offtime.NIGHT,
-      FULLDAY: offtime.FULLDAY,
-    };
-
-    const recordsToCreate: Prisma.DoulaOffDaysCreateManyInput[] =
-      dates
-        .filter((d) => !existingSet.has(d.toISOString()))
-        .map((date) => ({
-          date,
-          offtime: offtimeJson,
-          doulaProfileId: doula.id,
-        }));
-
-    if (!recordsToCreate.length) {
-      throw new BadRequestException(
-        'Off days already exist for the selected date(s)',
-      );
-    }
-
-    /**
-     * 6. TRANSACTION:
-     *    - Create off-days
-     *    - Mark service availability as false
+     * 5. TRANSACTION:
+     *    - Update service availability only
      */
     await this.prisma.$transaction(async (tx) => {
-      // 6.1 Create off-days
-      await tx.doulaOffDays.createMany({
-        data: recordsToCreate,
-      });
-
-      // 6.2 Update service availability → force false
       for (const date of dates) {
         const record = availabilityMap.get(date.toISOString());
         if (!record) continue;
@@ -372,9 +329,9 @@ export class DoulaServiceAvailabilityService {
           where: { id: record.id },
           data: {
             availability: {
-              MORNING: false,
-              NIGHT: false,
-              FULLDAY: false,
+              MORNING: offtime.MORNING ? false : record.availability.MORNING,
+              NIGHT: offtime.NIGHT ? false : record.availability.NIGHT,
+              FULLDAY: offtime.FULLDAY ? false : record.availability.FULLDAY,
             },
           },
         });
@@ -382,17 +339,15 @@ export class DoulaServiceAvailabilityService {
     });
 
     return {
-      message:
-        'Off days created and service availability disabled successfully',
+      message: 'Service availability updated successfully',
       data: {
-        totalCreated: recordsToCreate.length,
         from: startDate,
         to: endDate,
         offtime,
+        totalCreated: dates.length,
       },
     };
   }
-
 
 
   async getOffDays(user: any) {
