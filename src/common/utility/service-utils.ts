@@ -464,11 +464,12 @@ export async function generateVisitDatesforPostPartumDoula(
 
   let current = new Date(startDate.getTime());
 
+  const stepDays = interval + 1; // ✅ key fix
   while (current.getTime() <= endDate.getTime()) {
     dates.push(new Date(current.getTime()));
 
     // ✅ ALWAYS use UTC when dates are UTC-normalized
-    current.setUTCDate(current.getUTCDate() + interval);
+    current.setUTCDate(current.getUTCDate() + stepDays);
   }
 
   return dates;
@@ -515,7 +516,7 @@ export async function isDoulaAvailableForShift(
   >;
 
   // FULLDAY overrides all
-  if (availability.FULLDAY === true) {
+  if (availability.FULLDAY === true && availability.MORNING === true && availability.NIGHT === true) {
     return true;
   }
 
