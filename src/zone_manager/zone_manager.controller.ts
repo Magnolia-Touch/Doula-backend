@@ -172,9 +172,18 @@ export class ZoneManagerController {
     @Query('page') page = 1,
     @Query('limit') limit = 3,
     @Query('search') search?: string,
+    @Query('regionId') regionId?: string,
+    @Query('is_active') is_active?: string,
   ) {
-    return this.service.get(Number(page), Number(limit), search);
+    return this.service.get(
+      Number(page),
+      Number(limit),
+      search,
+      regionId,
+      typeof is_active === 'string' ? is_active === 'true' : undefined,
+    );
   }
+
 
   @Get(':id')
   @ApiOperation({ summary: 'Get Zone Manager by ID' })

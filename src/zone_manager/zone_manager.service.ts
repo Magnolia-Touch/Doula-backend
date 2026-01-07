@@ -84,27 +84,48 @@ export class ZoneManagerService {
     return { message: 'Zone Manager created successfully', data: zoneManager };
   }
 
-  async get(page = 1, limit = 10, search?: string) {
-    const where = {
+  async get(
+    page = 1,
+    limit = 10,
+    search?: string,
+    regionId?: string,
+    is_active?: boolean,
+  ) {
+    const where: Prisma.UserWhereInput = {
       role: Role.ZONE_MANAGER,
-      OR: search
-        ? [
-          { name: { contains: search.toLowerCase() } },
-          { email: { contains: search.toLowerCase() } },
-          { phone: { contains: search.toLowerCase() } },
+
+      ...(typeof is_active === 'boolean' && {
+        is_active,
+      }),
+
+      ...(regionId && {
+        zonemanagerprofile: {
+          managingRegion: {
+            some: {
+              id: regionId,
+            },
+          },
+        },
+      }),
+
+      ...(search && {
+        OR: [
+          { name: { contains: search } },
+          { email: { contains: search } },
+          { phone: { contains: search } },
           {
             zonemanagerprofile: {
               managingRegion: {
                 some: {
                   regionName: {
-                    contains: search.toLowerCase(),
+                    contains: search,
                   },
                 },
               },
             },
           },
-        ]
-        : undefined,
+        ],
+      }),
     };
 
     const result = await paginate({
@@ -165,8 +186,7 @@ export class ZoneManagerService {
         profileId: user.zonemanagerprofile?.id ?? null,
 
         regions:
-          user.zonemanagerprofile?.managingRegion.map((r) => r.regionName) ??
-          [],
+          user.zonemanagerprofile?.managingRegion.map((r) => r.regionName) ?? [],
 
         doulas:
           user.zonemanagerprofile?.doulas
@@ -181,6 +201,7 @@ export class ZoneManagerService {
       meta: result.meta,
     };
   }
+
 
   async getById(id: string) {
     const zoneManager = await this.prisma.user.findUnique({
