@@ -359,7 +359,7 @@ export class AvailableSlotsController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('delete/:timeslotId')
-  async deleteTimeSlotAvailability(@Param('slotId') slotId: string, @Req() req) {
-    return this.service.deleteTimeSlotAvailability(slotId);
+  async deleteTimeSlotAvailability(@Param('timeslotId') timeslotId: string, @Req() req) {
+    return this.service.deleteTimeSlotAvailability(timeslotId);
   }
 }
