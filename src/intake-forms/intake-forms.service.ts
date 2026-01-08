@@ -133,6 +133,10 @@ export class IntakeFormService {
     if (!clientProfile) {
       throw new NotFoundException('Client profile not found');
     }
+    if (!clientProfile.user.is_active === false) {
+      throw new BadRequestException('Client profile is inactive');
+    }
+
 
     /* ----------------------------------------------------
      * 2. Validate region
@@ -156,6 +160,7 @@ export class IntakeFormService {
             email: true,
             name: true,
             phone: true,
+            is_active: true
           },
         },
       },
@@ -163,6 +168,9 @@ export class IntakeFormService {
 
     if (!doula) {
       throw new NotFoundException('Doula profile not found');
+    }
+    if (doula.user.is_active === false) {
+      throw new BadRequestException('Doula is inactive');
     }
     /* ----------------------------------------------------
      * 3. Validate service pricing
@@ -961,11 +969,15 @@ export class IntakeFormService {
      * -------------------------------------------------- */
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, phone: true },
+      select: { id: true, email: true, name: true, phone: true, is_active: true },
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (user.is_active === false) {
+      throw new BadRequestException('User is inactive');
     }
 
     const clientProfile = await this.prisma.clientProfile.findUnique({
@@ -998,12 +1010,16 @@ export class IntakeFormService {
             email: true,
             name: true,
             phone: true,
+            is_active: true
           },
         },
       },
     });
     if (!doula) {
       throw new NotFoundException('Doula profile not found');
+    }
+    if (doula.user.is_active === false) {
+      throw new BadRequestException('Doula is inactive');
     }
     /* ----------------------------------------------------
      * 3. Validate service pricing
