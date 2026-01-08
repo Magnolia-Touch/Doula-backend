@@ -378,7 +378,7 @@ model IntakeForm {
 model ServiceBooking {
   id             String        @id @default(uuid())
   startDate      DateTime      @default(now())
-  endDate        DateTime      @default(now())
+  endDate        DateTime?
   timeshift      TimeShift     @default(FULLDAY)
   paymentDetails Json?
   status         BookingStatus @default(PENDING)
