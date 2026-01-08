@@ -131,8 +131,9 @@ export class RegionService {
 
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.region.delete({
+    return this.prisma.region.update({
       where: { id },
+      data: { is_active: false },
     });
   }
 
