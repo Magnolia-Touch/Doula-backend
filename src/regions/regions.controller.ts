@@ -105,12 +105,17 @@ export class RegionController {
   })
   @Get()
   findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
     @Query('search') search?: string,
   ) {
-    return this.regionService.findAll(+page, +limit, search);
+    return this.regionService.findAll(
+      page ? +page : undefined,
+      limit ? +limit : undefined,
+      search,
+    );
   }
+
 
   @ApiOperation({ summary: 'Get region by ID' })
   @ApiParam({ name: 'id' })

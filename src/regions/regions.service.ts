@@ -13,28 +13,8 @@ export class RegionService {
     });
   }
 
-  async findAll(page: number = 1, limit: number = 10, search?: string) {
-    const where = search
-      ? {
-        OR: [
-          { regionName: { contains: search.toLowerCase() } },
-          { district: { contains: search.toLowerCase() } },
-          { state: { contains: search.toLowerCase() } },
-          { country: { contains: search.toLowerCase() } },
-        ],
-      }
-      : undefined;
-
-    const result = await paginate({
-      prismaModel: this.prisma.region,
-      page,
-      limit,
-      where,
-      include: { zoneManager: true },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const data = result.data.map((region) => ({
+  private mapRegion(region: any) {
+    return {
       regionId: region.id,
       regionName: region.regionName,
       pincode: region.pincode,
@@ -45,14 +25,61 @@ export class RegionService {
       longitude: region.longitude,
       is_active: region.is_active,
       zoneManagerId: region.zoneManagerId,
-    }));
+    };
+  }
+
+  async findAll(
+    page?: number,
+    limit?: number,
+    search?: string,
+  ) {
+    const where = search
+      ? {
+        OR: [
+          { regionName: { contains: search, mode: 'insensitive' } },
+          { district: { contains: search, mode: 'insensitive' } },
+          { state: { contains: search, mode: 'insensitive' } },
+          { country: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+      : undefined;
+
+    // ✅ NO pagination → fetch all
+    if (!page || !limit) {
+      const regions = await this.prisma.region.findMany({
+        where,
+        include: { zoneManager: true },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return {
+        message: 'Regions fetched successfully',
+        data: regions.map(this.mapRegion),
+        meta: {
+          total: regions.length,
+          page: null,
+          limit: null,
+        },
+      };
+    }
+
+    // ✅ Pagination applied
+    const result = await paginate({
+      prismaModel: this.prisma.region,
+      page,
+      limit,
+      where,
+      include: { zoneManager: true },
+      orderBy: { createdAt: 'desc' },
+    });
 
     return {
       message: 'Regions fetched successfully',
-      data,
+      data: result.data.map(this.mapRegion),
       meta: result.meta,
     };
   }
+
 
   async findOne(id: string) {
     const region = await this.prisma.region.findUnique({

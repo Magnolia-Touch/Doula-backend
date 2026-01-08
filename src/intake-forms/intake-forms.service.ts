@@ -1009,6 +1009,7 @@ export class IntakeFormService {
       throw new NotFoundException('Service not found');
     }
 
+    // end date is optinal
     /* ----------------------------------------------------
      * 4. Normalize dates
      * -------------------------------------------------- */
@@ -1022,6 +1023,7 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 5. Generate visit dates
      * -------------------------------------------------- */
+    // visitdaets calculate if end date is availble
     const visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
