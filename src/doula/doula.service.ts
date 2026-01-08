@@ -2982,7 +2982,7 @@ export class DoulaService {
             : getPriceForShift(servicePricing.price, serviceTimeShift),
         totalAmount,
         payableAmount,
-        currency: 'INR',
+        currency: 'USD',
         priceBreakdown: servicePricing.price,
       },
     };

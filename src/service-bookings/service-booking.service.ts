@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { paginate } from 'src/common/utility/pagination.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
-import { MeetingStatus, Prisma, Role, ServiceStatus } from '@prisma/client';
+import { BookingStatus, MeetingStatus, Prisma, Role, ServiceStatus } from '@prisma/client';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { BookingFilterDto } from './dto/bookings-filter.dto';
 import { GetMeetingsQueryDto } from './dto/get-meetings.query.dto';
@@ -245,16 +245,22 @@ export class ServiceBookingService {
   ) {
     const { status } = dto;
 
-
+    // -----------------------------
+    // 1. Resolve schedule with access control
+    // -----------------------------
     let schedule;
+
     if (userRole === Role.ADMIN) {
       schedule = await this.prisma.schedules.findUnique({
         where: { id: scheduleId },
+        include: {
+          ServicePricing: {
+            include: { service: true },
+          },
+        },
       });
     }
-    /* ---------------------------------------
-     * DOULA access
-     * --------------------------------------- */
+
     if (userRole === Role.DOULA) {
       const doulaProfile = await this.prisma.doulaProfile.findUnique({
         where: { userId },
@@ -269,6 +275,11 @@ export class ServiceBookingService {
         where: {
           id: scheduleId,
           doulaProfileId: doulaProfile.id,
+        },
+        include: {
+          ServicePricing: {
+            include: { service: true },
+          },
         },
       });
     }
@@ -288,10 +299,13 @@ export class ServiceBookingService {
           id: scheduleId,
           DoulaProfile: {
             zoneManager: {
-              some: {
-                id: zoneManager.id,
-              },
+              some: { id: zoneManager.id },
             },
+          },
+        },
+        include: {
+          ServicePricing: {
+            include: { service: true },
           },
         },
       });
@@ -301,18 +315,79 @@ export class ServiceBookingService {
       throw new NotFoundException('Schedule not found or access denied');
     }
 
-    const updatedSchedule = await this.prisma.schedules.update({
-      where: { id: scheduleId },
-      data: { status },
+    const serviceName = schedule.ServicePricing.service.name;
+    const bookingId = schedule.bookingId;
+
+    // -----------------------------
+    // 2. Transactional updates
+    // -----------------------------
+    await this.prisma.$transaction(async (tx) => {
+      // Update current schedule
+      await tx.schedules.update({
+        where: { id: scheduleId },
+        data: {
+          status,
+          cancelledAt: status === ServiceStatus.CANCELED ? new Date() : null,
+        },
+      });
+
+      /**
+       * ====================================
+       * BIRTH DOULA LOGIC
+       * ====================================
+       */
+      if (serviceName === 'Birth Doula') {
+        if (status === ServiceStatus.COMPLETED || status === ServiceStatus.CANCELED) {
+          await tx.schedules.updateMany({
+            where: { bookingId },
+            data: {
+              status,
+              cancelledAt: status === ServiceStatus.CANCELED ? new Date() : null,
+            },
+          });
+
+          await tx.serviceBooking.update({
+            where: { id: bookingId },
+            data: {
+              status: status === ServiceStatus.COMPLETED ? ServiceStatus.COMPLETED : ServiceStatus.CANCELED,
+              cancelledAt: status === ServiceStatus.CANCELED ? new Date() : null,
+            },
+          });
+        }
+      }
+
+      /**
+       * ====================================
+       * POST PARTUM DOULA LOGIC
+       * ====================================
+       */
+      if (serviceName === 'Post Partum Doula') {
+        if (status === 'COMPLETED') {
+          const remaining = await tx.schedules.count({
+            where: {
+              bookingId,
+              status: { not: ServiceStatus.CANCELED },
+            },
+          });
+
+          // If this was the last pending schedule
+          if (remaining === 0) {
+            await tx.serviceBooking.update({
+              where: { id: bookingId },
+              data: { status: ServiceStatus.COMPLETED },
+            });
+          }
+        }
+        // ❌ No parent cancellation for Post Partum Doula
+      }
     });
 
     return {
       message: 'Schedule status updated successfully',
-      scheduleId: updatedSchedule.id,
-      status: updatedSchedule.status,
+      scheduleId,
+      status,
     };
   }
-
 
 
 
@@ -327,13 +402,14 @@ export class ServiceBookingService {
     let booking;
 
     /* ---------------------------------------
-     * DOULA access
+     * ACCESS CONTROL
      * --------------------------------------- */
     if (userRole === Role.ADMIN) {
       booking = await this.prisma.serviceBooking.findUnique({
         where: { id: bookingId },
       });
     }
+
     if (userRole === Role.DOULA) {
       const doulaProfile = await this.prisma.doulaProfile.findUnique({
         where: { userId },
@@ -352,9 +428,6 @@ export class ServiceBookingService {
       });
     }
 
-    /* ---------------------------------------
-     * ZONE MANAGER access
-     * --------------------------------------- */
     if (userRole === Role.ZONE_MANAGER) {
       const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
         where: { userId },
@@ -370,9 +443,7 @@ export class ServiceBookingService {
           id: bookingId,
           DoulaProfile: {
             zoneManager: {
-              some: {
-                id: zoneManager.id,
-              },
+              some: { id: zoneManager.id },
             },
           },
         },
@@ -383,17 +454,55 @@ export class ServiceBookingService {
       throw new NotFoundException('Booking not found or access denied');
     }
 
-    const updatedBooking = await this.prisma.serviceBooking.update({
-      where: { id: bookingId },
-      data: { status },
+    /* ---------------------------------------
+     * TRANSACTION: BOOKING + SCHEDULES
+     * --------------------------------------- */
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Update booking
+      await tx.serviceBooking.update({
+        where: { id: bookingId },
+        data: {
+          status,
+          cancelledAt: status === BookingStatus.CANCELED ? new Date() : null,
+        },
+      });
+
+      // 2. Update schedules based on booking status
+      if (status === BookingStatus.COMPLETED) {
+        await tx.schedules.updateMany({
+          where: {
+            bookingId,
+            status: {
+              in: [ServiceStatus.PENDING, ServiceStatus.IN_PROGRESS],
+            },
+          },
+          data: {
+            status: ServiceStatus.COMPLETED,
+          },
+        });
+      }
+
+      if (status === BookingStatus.CANCELED) {
+        await tx.schedules.updateMany({
+          where: {
+            bookingId,
+            status: ServiceStatus.PENDING,
+          },
+          data: {
+            status: ServiceStatus.CANCELED,
+            cancelledAt: new Date(),
+          },
+        });
+      }
     });
 
     return {
-      message: 'Booking status updated successfully',
-      bookingId: updatedBooking.id,
-      status: updatedBooking.status,
+      message: 'Booking and associated schedules updated successfully',
+      bookingId,
+      status,
     };
   }
+
 
 
   async getAllMeetings(query: GetMeetingsQueryDto) {
