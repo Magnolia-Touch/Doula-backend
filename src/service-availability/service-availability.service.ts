@@ -114,7 +114,7 @@ export class DoulaServiceAvailabilityService {
   //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
   async findAll(
     user: any,
-    query?: { fromDate?: string; toDate?: string },
+    query?: { date1?: string; date2?: string },
   ) {
     const doula = await this.getDoulaProfile(user.id);
 
@@ -122,16 +122,19 @@ export class DoulaServiceAvailabilityService {
       doulaId: doula.id,
     };
 
-    if (query?.fromDate || query?.toDate) {
+    if (query?.date1 && query?.date2) {
+      // Date range (inclusive)
       where.date = {
-        ...(query.fromDate && {
-          gte: new Date(`${query.fromDate}T00:00:00.000Z`),
-        }),
-        ...(query.toDate && {
-          lte: new Date(`${query.toDate}T00:00:00.000Z`),
-        }),
+        gte: new Date(`${query.date1}T00:00:00.000Z`),
+        lte: new Date(`${query.date2}T23:59:59.999Z`),
+      };
+    } else if (query?.date1) {
+      // Single date
+      where.date = {
+        equals: new Date(`${query.date1}T00:00:00.000Z`),
       };
     }
+    // else → no date filter applied
 
     const slots = await this.prisma.availableSlotsForService.findMany({
       where,
@@ -143,6 +146,7 @@ export class DoulaServiceAvailabilityService {
       data: slots,
     };
   }
+
 
 
   async findOne(id: string, user: any) {

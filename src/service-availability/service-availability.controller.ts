@@ -47,13 +47,17 @@ export class DoulaServiceAvailabilityController {
   async createAvailability(@Body() dto: CreateDoulaServiceAvailabilityDto, @Req() req) {
     return this.service.createAvailability(dto, req.user);
   }
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
   @Get()
-  async findAll(@Req() req) {
-    return this.service.findAll(req.user);
+  async findAll(
+    @Req() req,
+    @Query('date1') date1?: string,
+    @Query('date2') date2?: string,
+  ) {
+    return this.service.findAll(req.user, { date1, date2 });
   }
+
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
