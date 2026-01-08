@@ -2847,7 +2847,16 @@ export class DoulaService {
     // Validate doula profile
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
       where: { id: doulaProfileId },
-      select: { id: true },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+            phone: true,
+            is_active: true
+          },
+        },
+      },
     });
 
     if (!doulaProfile) {
@@ -2874,15 +2883,16 @@ export class DoulaService {
         'Service pricing does not belong to the specified doula',
       );
     }
-
     const startDate = this.toUtcMidnight(serviceStartDate);
-    const endDate = this.toUtcMidnight(servicEndDate);
+    const endDate = servicEndDate ? this.toUtcMidnight(servicEndDate) : undefined
 
-    if (startDate > endDate) {
+    if (endDate && startDate > endDate) {
       throw new BadRequestException('Invalid service date range');
     }
 
-    const visitDates =
+    let visitDates: Date[];
+
+    visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
           startDate,
@@ -2891,19 +2901,12 @@ export class DoulaService {
         )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 
-    for (const visitDate of visitDates) {
-      if (
-        await isDoulaOffOnShift(
-          doulaProfileId,
-          visitDate,
-          serviceTimeShift,
-        )
-      ) {
-        throw new BadRequestException(
-          `Doula is off on ${visitDate.toISOString().split('T')[0]}`,
-        );
-      }
 
+    if (!visitDates.length) {
+      throw new BadRequestException('No valid visit dates generated');
+    }
+
+    for (const visitDate of visitDates) {
       if (
         !(await isDoulaAvailableForShift(
           doulaProfileId,
@@ -2932,24 +2935,33 @@ export class DoulaService {
     }
 
     let totalAmount = 0;
-
+    let payableAmount = 0
     if (servicePricing.service.name === 'Birth Doula') {
-      totalAmount = getPriceForShift(
+      const perDayPrice = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
+      totalAmount = perDayPrice
+
     } else if (servicePricing.service.name === 'Post Partum Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = perDayPrice * visitDates.length;
+      totalAmount = (perDayPrice * visitDates.length)
     }
 
+    console.log("servicename", servicePricing.service.name)
+    console.log("totalamount", totalAmount)
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
-
+    payableAmount = totalAmount
+    if (totalAmount >= 1000) {
+      const half = totalAmount / 2;
+      payableAmount = Math.min(half, 1000);
+    }
+    payableAmount = Math.round(payableAmount * 100) / 100;
     // All dates are available, return pricing
     return {
       success: true,
@@ -2960,7 +2972,7 @@ export class DoulaService {
         servicePricingId,
         serviceName: servicePricing.service.name,
         startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
+        endDate: endDate?.toISOString().split('T')[0],
         visitDates: visitDates.map((date) => date.toISOString().split('T')[0]),
         numberOfVisits: visitDates.length,
         timeShift: serviceTimeShift,
@@ -2969,6 +2981,7 @@ export class DoulaService {
             ? totalAmount
             : getPriceForShift(servicePricing.price, serviceTimeShift),
         totalAmount,
+        payableAmount,
         currency: 'INR',
         priceBreakdown: servicePricing.price,
       },
