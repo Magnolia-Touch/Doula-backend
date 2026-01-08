@@ -77,7 +77,7 @@ export class IntakeFormDto {
     description: 'Visit Frequency for Services (e.g., twice a week)',
   })
   @IsInt()
-  visitFrequency: number = 1;
+  visitFrequency: number = 0;
 
   @ApiProperty({
     example: TimeShift.MORNING,
@@ -164,7 +164,7 @@ export class BookDoulaDto {
   })
   @IsOptional()
   @IsInt()
-  visitFrequency: number = 1;
+  visitFrequency: number = 0;
 
   @ApiProperty({
     example: TimeShift.MORNING,
