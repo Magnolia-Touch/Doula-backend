@@ -1025,24 +1025,20 @@ export class IntakeFormService {
      * -------------------------------------------------- */
     // visitdaets calculate if end date is availble
     let visitDates: Date[];
-    if (endDate) {
-      visitDates =
-        servicePricing.service.name === 'Post Partum Doula'
-          ? await generateVisitDatesforPostPartumDoula(
-            startDate,
-            endDate,
-            visitFrequency,
-          )
-          : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
+    visitDates =
+      servicePricing.service.name === 'Post Partum Doula'
+        ? await generateVisitDatesforPostPartumDoula(
+          startDate,
+          endDate,
+          visitFrequency,
+        )
+        : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
 
 
-      if (!visitDates.length) {
-        throw new BadRequestException('No valid visit dates generated');
-      }
+    if (!visitDates.length) {
+      throw new BadRequestException('No valid visit dates generated');
     }
-    else {
-      visitDates = [startDate]
-    }
+
 
     /* ----------------------------------------------------
      * 6. Availability validation

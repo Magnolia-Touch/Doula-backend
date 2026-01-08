@@ -412,14 +412,18 @@ export async function isOverlapping(
   return aStart < bEnd && bStart < aEnd;
 }
 
-
 export function generateVisitDatesforBirthDoula(
   start: Date,
-  end: Date,
+  end?: Date,
   buffer = 0,
 ): Date[] {
   if (buffer < 0) {
     throw new Error('Buffer cannot be negative');
+  }
+
+  // ✅ Single-date case
+  if (!end || start.getTime() === end.getTime()) {
+    return [new Date(start.getTime())];
   }
 
   const dates: Date[] = [];
@@ -431,31 +435,31 @@ export function generateVisitDatesforBirthDoula(
   const final = new Date(end.getTime());
   final.setUTCDate(final.getUTCDate() + buffer);
 
-  // Safety guard (prevents future infinite loops)
   let guard = 0;
 
   while (cursor.getTime() <= final.getTime()) {
     dates.push(new Date(cursor.getTime()));
-
-    // ✅ CRITICAL: move cursor forward by 1 day
     cursor.setUTCDate(cursor.getUTCDate() + 1);
 
     if (++guard > 400) {
-      throw new Error('Infinite loop protection triggered in generateVisitDatesforBirthDoula');
+      throw new Error(
+        'Infinite loop protection triggered in generateVisitDatesforBirthDoula',
+      );
     }
   }
 
   return dates;
 }
-
-
-
-//continue from here
 export async function generateVisitDatesforPostPartumDoula(
   startDate: Date,
-  endDate: Date,
-  interval: number,
+  endDate?: Date,
+  interval = 0,
 ): Promise<Date[]> {
+  // ✅ Single-date case
+  if (!endDate || startDate.getTime() === endDate.getTime()) {
+    return [new Date(startDate.getTime())];
+  }
+
   if (interval <= 0) {
     throw new BadRequestException('Interval must be greater than 0');
   }
@@ -463,12 +467,10 @@ export async function generateVisitDatesforPostPartumDoula(
   const dates: Date[] = [];
 
   let current = new Date(startDate.getTime());
+  const stepDays = interval + 1;
 
-  const stepDays = interval + 1; // ✅ key fix
   while (current.getTime() <= endDate.getTime()) {
     dates.push(new Date(current.getTime()));
-
-    // ✅ ALWAYS use UTC when dates are UTC-normalized
     current.setUTCDate(current.getUTCDate() + stepDays);
   }
 
