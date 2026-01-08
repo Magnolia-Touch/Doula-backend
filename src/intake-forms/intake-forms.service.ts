@@ -1014,9 +1014,9 @@ export class IntakeFormService {
      * 4. Normalize dates
      * -------------------------------------------------- */
     const startDate = this.toUtcMidnight(serviceStartDate);
-    const endDate = this.toUtcMidnight(servicEndDate);
+    const endDate = servicEndDate ? this.toUtcMidnight(servicEndDate) : undefined
 
-    if (startDate > endDate) {
+    if (endDate && startDate > endDate) {
       throw new BadRequestException('Invalid service date range');
     }
 
@@ -1024,37 +1024,31 @@ export class IntakeFormService {
      * 5. Generate visit dates
      * -------------------------------------------------- */
     // visitdaets calculate if end date is availble
-    const visitDates =
-      servicePricing.service.name === 'Post Partum Doula'
-        ? await generateVisitDatesforPostPartumDoula(
-          startDate,
-          endDate,
-          visitFrequency,
-        )
-        : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
+    let visitDates: Date[];
+    if (endDate) {
+      visitDates =
+        servicePricing.service.name === 'Post Partum Doula'
+          ? await generateVisitDatesforPostPartumDoula(
+            startDate,
+            endDate,
+            visitFrequency,
+          )
+          : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
 
 
-    if (!visitDates.length) {
-      throw new BadRequestException('No valid visit dates generated');
+      if (!visitDates.length) {
+        throw new BadRequestException('No valid visit dates generated');
+      }
     }
+    else {
+      visitDates = [startDate]
+    }
+
     /* ----------------------------------------------------
      * 6. Availability validation
      * -------------------------------------------------- */
     console.log("visitdates", visitDates)
     for (const visitDate of visitDates) {
-      // if (
-      //   await isDoulaOffOnShift(
-      //     doulaProfileId,
-      //     visitDate,
-      //     serviceTimeShift,
-      //   )
-      // ) {
-      //   throw new BadRequestException(
-      //     console.log("visitDate", visitDate),
-      //     `Doula is off on ${visitDate.toISOString().split('T')[0]}`,
-      //   );
-      // }
-
       if (
         !(await isDoulaAvailableForShift(
           doulaProfileId,
@@ -1109,16 +1103,13 @@ export class IntakeFormService {
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      console.log(perDayPrice)
-      console.log(visitDates.length)
-      totalAmount = perDayPrice * (visitDates.length - (2 * buffer))
+      totalAmount = perDayPrice
+
     } else if (servicePricing.service.name === 'Post Partum Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      console.log(perDayPrice)
-      console.log(visitDates.length)
       totalAmount = (perDayPrice * visitDates.length)
     }
 
@@ -1174,7 +1165,7 @@ export class IntakeFormService {
             // Service details
             serviceName: servicePricing.service.name,
             serviceStartDate: startDate.toISOString(),
-            serviceEndDate: endDate.toISOString(),
+            serviceEndDate: endDate?.toISOString(),
             timeShift: serviceTimeShift,
             visitDates: visitDates.map(d => d.toISOString()),
 

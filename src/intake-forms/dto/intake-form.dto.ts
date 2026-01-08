@@ -154,6 +154,7 @@ export class BookDoulaDto {
     description: 'Service End Date (ISO format)',
   })
   @IsString()
+  @IsOptional()
   servicEndDate: string;
 
   //set defalut 0.
