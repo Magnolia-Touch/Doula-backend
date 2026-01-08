@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 import {
+  daysBetween,
   generateVisitDatesforBirthDoula,
   generateVisitDatesforPostPartumDoula,
   getOrcreateClent,
@@ -112,6 +113,10 @@ export class IntakeFormService {
       serviceTimeShift,
     } = dto;
 
+    const diffDays = daysBetween(new Date(seviceStartDate), new Date(serviceEndDate));
+    if (diffDays - 1 < visitFrequency) {
+      throw new BadRequestException("Interval choosen too large")
+    }
     /* ----------------------------------------------------
      * 1. Get or create client
      * -------------------------------------------------- */
@@ -185,14 +190,15 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 5. Generate visit dates (same as BookDoula)
      * -------------------------------------------------- */
-    const visitDates =
+    let visitDates: Date[];
+    visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
           startDate,
           endDate,
           visitFrequency,
         )
-        : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
+        : await generateVisitDatesforBirthDoula(startDate, buffer);
 
     if (!visitDates.length) {
       throw new BadRequestException('No valid visit dates generated');
@@ -248,9 +254,8 @@ export class IntakeFormService {
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      console.log(perDayPrice)
-      console.log(visitDates.length)
-      totalAmount = perDayPrice * (visitDates.length - (2 * buffer))
+      totalAmount = perDayPrice
+
     } else if (servicePricing.service.name === 'Post Partum Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
@@ -264,6 +269,7 @@ export class IntakeFormService {
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
+    payableAmount = totalAmount
     if (totalAmount >= 1000) {
       const half = totalAmount / 2;
       payableAmount = Math.min(half, 1000);
@@ -271,11 +277,6 @@ export class IntakeFormService {
 
     payableAmount = Math.round(payableAmount * 100) / 100;
 
-    totalAmount = Math.round(totalAmount * 100) / 100;
-    console.log(totalAmount, "total amount")
-    const half = totalAmount / 2;
-    totalAmount = Math.min(half, 1000);
-    totalAmount = Math.round(totalAmount * 100) / 100;
 
     /* ----------------------------------------------------
      * 7. Create intake + booking + schedules (transaction)
@@ -348,7 +349,7 @@ export class IntakeFormService {
       await this.mail.sendMail({
         to: region.zoneManager.user.email,
         subject: 'New Booking Confirmed – Region Notification',
-        template: 'so-manager-booking-notification',
+        template: 'zone-manager-booking-notification',
         context: {
           appName: 'Bambini Doula',
           year: new Date().getFullYear(),
@@ -365,6 +366,7 @@ export class IntakeFormService {
           timeShift: serviceTimeShift,
           regionName: region.regionName,
           totalAmount,
+          payableAmount
         },
       });
 
@@ -380,7 +382,8 @@ export class IntakeFormService {
         timeShift: serviceTimeShift,
         serviceStartDate: formatDate(new Date(seviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
-        totalAmountPaid: totalAmount,
+        AmountPaid: payableAmount,
+        TotalAmount: totalAmount
       };
 
       /* ----------------------------------------------------
@@ -946,6 +949,10 @@ export class IntakeFormService {
       cancelUrl,
     } = dto;
 
+    const diffDays = daysBetween(new Date(serviceStartDate), new Date(servicEndDate));
+    if (diffDays - 1 < visitFrequency) {
+      throw new BadRequestException("Interval choosen too large")
+    }
     /* ----------------------------------------------------
      * 1. Fetch user & client profile
      * -------------------------------------------------- */
@@ -1009,6 +1016,9 @@ export class IntakeFormService {
       throw new NotFoundException('Service not found');
     }
 
+    if (servicePricing.service.name == 'Birth Doula' && servicEndDate) {
+      throw new BadRequestException("Deselect ServiceEnd Date for Birth Doula")
+    }
     // end date is optinal
     /* ----------------------------------------------------
      * 4. Normalize dates
@@ -1033,7 +1043,7 @@ export class IntakeFormService {
           endDate,
           visitFrequency,
         )
-        : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
+        : await generateVisitDatesforBirthDoula(startDate, buffer);
 
 
     if (!visitDates.length) {
@@ -1115,14 +1125,16 @@ export class IntakeFormService {
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
-
+    payableAmount = totalAmount
     if (totalAmount >= 1000) {
       const half = totalAmount / 2;
       payableAmount = Math.min(half, 1000);
     }
 
     payableAmount = Math.round(payableAmount * 100) / 100;
-
+    console.log(payableAmount)
+    console.log("payable type", typeof payableAmount)
+    console.log("totalamoutn type", typeof totalAmount)
     /* ----------------------------------------------------
      * 10. Create booking + payment (transaction)
      * -------------------------------------------------- */
@@ -1189,6 +1201,7 @@ export class IntakeFormService {
       return { booking, payment };
     });
 
+    console.log("hi deva, i am here")
     /* ----------------------------------------------------
      * 11. Create Stripe checkout (OUTSIDE transaction)
      * -------------------------------------------------- */

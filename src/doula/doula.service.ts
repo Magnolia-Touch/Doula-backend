@@ -2889,7 +2889,7 @@ export class DoulaService {
           endDate,
           visitFrequency,
         )
-        : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
+        : await generateVisitDatesforBirthDoula(startDate, buffer);
 
     for (const visitDate of visitDates) {
       if (

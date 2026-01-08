@@ -414,31 +414,28 @@ export async function isOverlapping(
 
 export function generateVisitDatesforBirthDoula(
   start: Date,
-  end?: Date,
   buffer = 0,
 ): Date[] {
   if (buffer < 0) {
     throw new Error('Buffer cannot be negative');
   }
 
-  // ✅ Single-date case
-  if (!end || start.getTime() === end.getTime()) {
-    return [new Date(start.getTime())];
-  }
-
   const dates: Date[] = [];
 
-  // Clone and expand range (UTC-safe)
+  // Start from (startDate - buffer)
   const cursor = new Date(start.getTime());
   cursor.setUTCDate(cursor.getUTCDate() - buffer);
 
-  const final = new Date(end.getTime());
+  // End at (startDate + buffer)
+  const final = new Date(start.getTime());
   final.setUTCDate(final.getUTCDate() + buffer);
 
   let guard = 0;
 
   while (cursor.getTime() <= final.getTime()) {
     dates.push(new Date(cursor.getTime()));
+
+    // Move forward one day (UTC-safe)
     cursor.setUTCDate(cursor.getUTCDate() + 1);
 
     if (++guard > 400) {
@@ -450,6 +447,8 @@ export function generateVisitDatesforBirthDoula(
 
   return dates;
 }
+
+
 export async function generateVisitDatesforPostPartumDoula(
   startDate: Date,
   endDate?: Date,
@@ -571,6 +570,24 @@ export function formatTimeOnly(date: Date | string | null): string | null {
   return d.toISOString().substring(11, 16); // HH:mm
 }
 
+export function daysBetween(start: Date, end: Date): number {
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+  const startUtc = Date.UTC(
+    start.getUTCFullYear(),
+    start.getUTCMonth(),
+    start.getUTCDate(),
+  );
+
+  const endUtc = Date.UTC(
+    end.getUTCFullYear(),
+    end.getUTCMonth(),
+    end.getUTCDate(),
+  );
+
+  return Math.floor((endUtc - startUtc) / MS_PER_DAY);
+}
+
 
 export function generateOrderId(): string {
   const now = new Date();
@@ -613,6 +630,7 @@ export function getPriceForShift(
     default:
       throw new BadRequestException('Invalid time shift');
   }
+
 
 
 
