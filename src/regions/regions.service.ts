@@ -38,10 +38,10 @@ export class RegionService {
     // 🔍 Search filter
     if (search) {
       where.OR = [
-        { regionName: { contains: search, mode: 'insensitive' } },
-        { district: { contains: search, mode: 'insensitive' } },
-        { state: { contains: search, mode: 'insensitive' } },
-        { country: { contains: search, mode: 'insensitive' } },
+        { regionName: { contains: search } },
+        { district: { contains: search } },
+        { state: { contains: search } },
+        { country: { contains: search } },
       ];
     }
 
@@ -120,6 +120,7 @@ export class RegionService {
       country: region.country,
       latitude: region.latitude,
       longitude: region.longitude,
+      is_active: region.is_active,
 
       zoneManagerId: region.zoneManager?.id ?? null,
       zonemanagerName: region.zoneManager?.user?.name ?? null,
