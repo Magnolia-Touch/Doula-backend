@@ -64,30 +64,30 @@ export class MeetingsService {
         remarks: Form.additionalNotes,
         bookedById: clientId,
         availableSlotsForMeetingId: slotParentId,
-        enquiryId: enquiryId,
+        enquiryId,
         ...profileData,
-
       },
     });
-    await this.prisma.meetings.update({
+
+    const updatedMeeting = await this.prisma.meetings.update({
       where: { id: meeting.id },
       data: {
         link: `${meetLink}/${meeting.id}`,
-      }
-    })
-    console.log('meeting created succesfull');
-    // 8. Send Mail
+      },
+    });
+
     await this.mail.sendMail({
       to: Form.email,
       subject: `Confirmation of your Meeting with ${role} for Service ${Form.name}`,
       template: 'meetings',
       context: {
         date: Form.date,
-        time: meeting.startTime + ' - ' + meeting.endTime,
-        meetLink: meetLink,
+        time: `${updatedMeeting.startTime} - ${updatedMeeting.endTime}`,
+        meetLink: updatedMeeting.link,
       },
     });
-    return meeting;
+
+    return updatedMeeting;
   }
 
   // Get meetings with optional date and status filters
