@@ -145,6 +145,9 @@ export class IntakeFormService {
     if (!region) {
       throw new BadRequestException('Region not listed for doula');
     }
+    if (region.is_active === false) {
+      throw new BadRequestException('Region is inactive');
+    }
     const doula = await this.prisma.doulaProfile.findUnique({
       where: { id: doulaProfileId },
       include: {
@@ -984,7 +987,9 @@ export class IntakeFormService {
       throw new BadRequestException('Region not listed for doula');
     }
 
-
+    if (region.is_active === false) {
+      throw new BadRequestException('Region is inactive');
+    }
     const doula = await this.prisma.doulaProfile.findUnique({
       where: { id: doulaProfileId },
       include: {
