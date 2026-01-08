@@ -11,6 +11,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import {
   findServiceOrThrowwithId,
   findSlotOrThrow,
+  formatTimeOnly,
   getWeekdayFromDate,
   isMeetingExists,
 } from 'src/common/utility/service-utils';
@@ -82,7 +83,7 @@ export class MeetingsService {
       template: 'meetings',
       context: {
         date: Form.date,
-        time: `${updatedMeeting.startTime} - ${updatedMeeting.endTime}`,
+        time: `${formatTimeOnly(updatedMeeting.startTime)} - ${formatTimeOnly(updatedMeeting.endTime)}`,
         meetLink: updatedMeeting.link,
       },
     });
