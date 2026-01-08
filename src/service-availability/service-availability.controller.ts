@@ -54,9 +54,17 @@ export class DoulaServiceAvailabilityController {
     @Req() req,
     @Query('date1') date1?: string,
     @Query('date2') date2?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.service.findAll(req.user, { date1, date2 });
+    return this.service.findAll(req.user, {
+      date1,
+      date2,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
   }
+
 
 
   @UseGuards(JwtAuthGuard, RolesGuard)

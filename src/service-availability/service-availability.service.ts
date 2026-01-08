@@ -8,6 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { AvailableDoulasFilterDto, CreateDoulaServiceAvailabilityDto, ServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
 import { Prisma, Role, ServiceStatus, TimeShift } from '@prisma/client';
 import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
+import { paginate } from 'src/common/utility/pagination.util';
 
 type AvailableDoulaResult = {
   doulaName: string;
@@ -114,7 +115,12 @@ export class DoulaServiceAvailabilityService {
   //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
   async findAll(
     user: any,
-    query?: { date1?: string; date2?: string },
+    query?: {
+      date1?: string;
+      date2?: string;
+      page?: number;
+      limit?: number;
+    },
   ) {
     const doula = await this.getDoulaProfile(user.id);
 
@@ -134,18 +140,21 @@ export class DoulaServiceAvailabilityService {
         equals: new Date(`${query.date1}T00:00:00.000Z`),
       };
     }
-    // else → no date filter applied
 
-    const slots = await this.prisma.availableSlotsForService.findMany({
+    const result = await paginate({
+      prismaModel: this.prisma.availableSlotsForService,
+      page: query?.page ?? 1,
+      limit: query?.limit ?? 10,
       where,
       orderBy: { date: 'asc' },
     });
 
     return {
       message: 'Service availability fetched successfully',
-      data: slots,
+      ...result,
     };
   }
+
 
 
 
