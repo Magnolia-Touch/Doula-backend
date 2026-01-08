@@ -1025,6 +1025,7 @@ export class IntakeFormService {
      * -------------------------------------------------- */
     // visitdaets calculate if end date is availble
     let visitDates: Date[];
+
     visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
@@ -1109,6 +1110,8 @@ export class IntakeFormService {
       totalAmount = (perDayPrice * visitDates.length)
     }
 
+    console.log("servicename", servicePricing.service.name)
+    console.log("totalamount", totalAmount)
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
