@@ -38,7 +38,8 @@ export class MeetingsService {
   ) {
     // Generate meet link placeholder (replace with Google Calendar flow later)
     const meetCode = Math.random().toString(36).slice(2, 10);
-    const meetLink = `https://meet.google.com/${meetCode}`;
+    // const meetLink = `https://meet.google.com/${meetCode}`;
+    const meetLink = `https://bambinidoulas.com/joinmeeting/`;
     // Dynamically decide which profile field to set
     const profileData: any = {};
 
@@ -68,6 +69,12 @@ export class MeetingsService {
 
       },
     });
+    await this.prisma.meetings.update({
+      where: { id: meeting.id },
+      data: {
+        link: `${meetLink}/${meeting.id}`,
+      }
+    })
     console.log('meeting created succesfull');
     // 8. Send Mail
     await this.mail.sendMail({
