@@ -108,13 +108,16 @@ export class RegionController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('search') search?: string,
+    @Query('is_active') is_active?: string,
   ) {
     return this.regionService.findAll(
       page ? +page : undefined,
       limit ? +limit : undefined,
       search,
+      is_active !== undefined ? is_active === 'true' : undefined,
     );
   }
+
 
 
   @ApiOperation({ summary: 'Get region by ID' })

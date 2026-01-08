@@ -27,27 +27,33 @@ export class RegionService {
       zoneManagerId: region.zoneManagerId,
     };
   }
-
   async findAll(
     page?: number,
     limit?: number,
     search?: string,
+    is_active?: boolean,
   ) {
-    const where = search
-      ? {
-        OR: [
-          { regionName: { contains: search, mode: 'insensitive' } },
-          { district: { contains: search, mode: 'insensitive' } },
-          { state: { contains: search, mode: 'insensitive' } },
-          { country: { contains: search, mode: 'insensitive' } },
-        ],
-      }
-      : undefined;
+    const where: any = {};
+
+    // 🔍 Search filter
+    if (search) {
+      where.OR = [
+        { regionName: { contains: search, mode: 'insensitive' } },
+        { district: { contains: search, mode: 'insensitive' } },
+        { state: { contains: search, mode: 'insensitive' } },
+        { country: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // ✅ Active / Inactive filter
+    if (is_active !== undefined) {
+      where.is_active = is_active;
+    }
 
     // ✅ NO pagination → fetch all
     if (!page || !limit) {
       const regions = await this.prisma.region.findMany({
-        where,
+        where: Object.keys(where).length ? where : undefined,
         include: { zoneManager: true },
         orderBy: { createdAt: 'desc' },
       });
@@ -79,6 +85,7 @@ export class RegionService {
       meta: result.meta,
     };
   }
+
 
 
   async findOne(id: string) {
