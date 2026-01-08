@@ -18,6 +18,7 @@ import { paginate } from 'src/common/utility/pagination.util';
 import {
   findRegionOrThrow,
   findZoneManagerOrThrowWithId,
+  formatTimeOnly,
 } from 'src/common/utility/service-utils';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
@@ -1046,8 +1047,8 @@ export class ZoneManagerService {
         servicePricingId: meeting.serviceId ?? null,
         serviceName: meeting.Service?.name ?? meeting.serviceName,
 
-        startDate: meeting.startTime,
-        endDate: meeting.endTime,
+        startDate: formatTimeOnly(meeting.startTime),
+        endDate: formatTimeOnly(meeting.endTime),
         status: meeting.status,
         meetingDate: meeting.date,
 
@@ -1254,8 +1255,8 @@ export class ZoneManagerService {
         servicePricingId: meeting.serviceId ?? null,
         serviceName: meeting.Service?.name ?? meeting.serviceName,
 
-        startDate: meeting.startTime,
-        endDate: meeting.endTime,
+        startDate: formatTimeOnly(meeting.startTime),
+        endDate: formatTimeOnly(meeting.endTime),
         status: meeting.status,
       },
     };
