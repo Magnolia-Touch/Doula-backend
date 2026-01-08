@@ -356,4 +356,10 @@ export class AvailableSlotsController {
   async splitTimeslots(@Query('regionId') regionId: string, @Query() dto: GetAvailabilityDto) {
     return this.service.splitTimeslots(regionId, dto);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete/:timeslotId')
+  async deleteTimeSlotAvailability(@Param('slotId') slotId: string, @Req() req) {
+    return this.service.deleteTimeSlotAvailability(slotId);
+  }
 }

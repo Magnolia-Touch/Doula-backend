@@ -189,67 +189,6 @@ export class AvailableSlotsService {
   }
 
 
-  async getMyAvailabilities(userId: string) {
-    // 1. Fetch user role
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // 2. Resolve profileId based on role
-    const whereClause: any = {};
-
-    if (user.role === Role.DOULA) {
-      const doulaProfile = await this.prisma.doulaProfile.findUnique({
-        where: { userId },
-        select: { id: true },
-      });
-
-      if (!doulaProfile) {
-        throw new NotFoundException('Doula profile not found');
-      }
-
-      whereClause.doulaId = doulaProfile.id;
-    } else if (user.role === Role.ZONE_MANAGER) {
-      const zoneManagerProfile =
-        await this.prisma.zoneManagerProfile.findUnique({
-          where: { userId },
-          select: { id: true },
-        });
-
-      if (!zoneManagerProfile) {
-        throw new NotFoundException('Zone Manager profile not found');
-      }
-
-      whereClause.zoneManagerId = zoneManagerProfile.id;
-    } else {
-      throw new ForbiddenException('This role has no availability');
-    }
-
-    // 3. Fetch availability with time slots
-    const availabilities = await this.prisma.availableSlotsForMeeting.findMany({
-      where: whereClause,
-      orderBy: { weekday: 'asc' },
-      include: {
-        AvailableSlotsTimeForMeeting: {
-          orderBy: { startTime: 'asc' },
-          select: {
-            id: true,
-            startTime: true,
-            endTime: true,
-            availabe: true,
-            isBooked: true,
-          },
-        },
-      },
-    });
-
-    return availabilities;
-  }
 
   //continue from here. booked or unbooked filter not needed on slots.
   //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
@@ -503,6 +442,22 @@ export class AvailableSlotsService {
       },
     });
     return { message: 'Slot Updated Successfully' };
+  }
+
+
+  async deleteTimeSlotAvailability(
+    id: string,
+  ) {
+    const slot = await this.prisma.availableSlotsTimeForMeeting.findUnique({
+      where: { id: id, },
+    });
+    if (!slot) {
+      throw new NotFoundException('Slot Not Found');
+    }
+    await this.prisma.availableSlotsTimeForMeeting.delete({
+      where: { id: id },
+    });
+    return { message: 'Time Slot Deleted Successfully' };
   }
 
   async findall(
@@ -1097,6 +1052,69 @@ export class AvailableSlotsService {
       message: 'Request successful',
       data: response,
     };
+  }
+
+
+  async getMyAvailabilities(userId: string) {
+    // 1. Fetch user role
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // 2. Resolve profileId based on role
+    const whereClause: any = {};
+
+    if (user.role === Role.DOULA) {
+      const doulaProfile = await this.prisma.doulaProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (!doulaProfile) {
+        throw new NotFoundException('Doula profile not found');
+      }
+
+      whereClause.doulaId = doulaProfile.id;
+    } else if (user.role === Role.ZONE_MANAGER) {
+      const zoneManagerProfile =
+        await this.prisma.zoneManagerProfile.findUnique({
+          where: { userId },
+          select: { id: true },
+        });
+
+      if (!zoneManagerProfile) {
+        throw new NotFoundException('Zone Manager profile not found');
+      }
+
+      whereClause.zoneManagerId = zoneManagerProfile.id;
+    } else {
+      throw new ForbiddenException('This role has no availability');
+    }
+
+    // 3. Fetch availability with time slots
+    const availabilities = await this.prisma.availableSlotsForMeeting.findMany({
+      where: whereClause,
+      orderBy: { weekday: 'asc' },
+      include: {
+        AvailableSlotsTimeForMeeting: {
+          orderBy: { startTime: 'asc' },
+          select: {
+            id: true,
+            startTime: true,
+            endTime: true,
+            availabe: true,
+            isBooked: true,
+          },
+        },
+      },
+    });
+
+    return availabilities;
   }
 
 }
