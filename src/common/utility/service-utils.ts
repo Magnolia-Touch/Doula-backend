@@ -459,9 +459,9 @@ export async function generateVisitDatesforPostPartumDoula(
     return [new Date(startDate.getTime())];
   }
 
-  if (interval <= 0) {
-    throw new BadRequestException('Interval must be greater than 0');
-  }
+  // if (interval <= 0) {
+  //   throw new BadRequestException('Interval must be greater than 0');
+  // }
 
   const dates: Date[] = [];
 
