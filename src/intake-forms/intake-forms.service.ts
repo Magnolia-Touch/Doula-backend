@@ -242,7 +242,7 @@ export class IntakeFormService {
       }
     }
     let totalAmount = 0;
-
+    let payableAmount = 0
     if (servicePricing.service.name === 'Birth Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
@@ -266,8 +266,10 @@ export class IntakeFormService {
     }
     if (totalAmount >= 1000) {
       const half = totalAmount / 2;
-      totalAmount = Math.min(half, 1000);
+      payableAmount = Math.min(half, 1000);
     }
+
+    payableAmount = Math.round(payableAmount * 100) / 100;
 
     totalAmount = Math.round(totalAmount * 100) / 100;
     console.log(totalAmount, "total amount")
@@ -304,6 +306,8 @@ export class IntakeFormService {
           clientId: clientProfile.id,
           status: BookingStatus.ACTIVE,
           isPaid: true, // IMPORTANT: intake flow assumes confirmed booking
+          totalAmount: String(totalAmount),
+          amountPaid: String(payableAmount),
         },
       });
 
@@ -1097,7 +1101,7 @@ export class IntakeFormService {
      * 8. Price calculation
      * -------------------------------------------------- */
     let totalAmount = 0;
-
+    let payableAmount = 0
     if (servicePricing.service.name === 'Birth Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
@@ -1122,10 +1126,10 @@ export class IntakeFormService {
 
     if (totalAmount >= 1000) {
       const half = totalAmount / 2;
-      totalAmount = Math.min(half, 1000);
+      payableAmount = Math.min(half, 1000);
     }
 
-    totalAmount = Math.round(totalAmount * 100) / 100;
+    payableAmount = Math.round(payableAmount * 100) / 100;
 
     /* ----------------------------------------------------
      * 10. Create booking + payment (transaction)
@@ -1142,13 +1146,14 @@ export class IntakeFormService {
           status: BookingStatus.PENDING,
           isPaid: false,
           totalAmount: String(totalAmount),
+          amountPaid: String(payableAmount),
         },
       });
       const payment = await tx.payment.create({
         data: {
           bookingId: booking.id,
           clientId: clientProfile.id,
-          amount: totalAmount,
+          amount: payableAmount,
           currency: 'USD',
           status: PaymentStatus.PENDING,
           provider: PaymentProvider.STRIPE,
@@ -1218,6 +1223,7 @@ export class IntakeFormService {
       bookingId: booking.id,
       paymentId: payment.id,
       amount: totalAmount,
+      payableAmount: payableAmount,
       currency: 'USD',
       checkout_url: checkoutSession.url,
       successUrl: successUrl,
