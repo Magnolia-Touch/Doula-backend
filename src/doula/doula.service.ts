@@ -479,7 +479,6 @@ export class DoulaService {
     const schedules = await this.prisma.schedules.findMany({
       where: {
         doulaProfileId: { in: doulaProfileIds },
-        cancelledAt: null,
         status: { not: MeetingStatus.CANCELED },
         ...(rangeStart || rangeEnd
           ? {
