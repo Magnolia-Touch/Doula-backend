@@ -1426,6 +1426,7 @@ export class ZoneManagerService {
         languages: true,
         specialities: true,
         profile_image: true,
+
         user: {
           select: {
             id: true,
@@ -1435,6 +1436,20 @@ export class ZoneManagerService {
             is_active: true,
           },
         },
+
+        Region: {
+          select: {
+            id: true,
+            regionName: true,
+            pincode: true,
+            district: true,
+            state: true,
+            country: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+
         ServicePricing: {
           select: {
             price: true,
@@ -1445,27 +1460,131 @@ export class ZoneManagerService {
         },
       },
     });
+    const doulaProfileIds = doulas.map((d) => d.id);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const schedules = await this.prisma.schedules.findMany({
+      where: {
+        doulaProfileId: { in: doulaProfileIds },
+        status: { not: MeetingStatus.CANCELED },
+      },
+      select: {
+        doulaProfileId: true,
+        date: true,
+      },
+    });
+    const availableSlots =
+      await this.prisma.availableSlotsForService.findMany({
+        where: {
+          doulaId: { in: doulaProfileIds },
+          date: { gte: today },
+        },
+        select: {
+          doulaId: true,
+          date: true,
+          availability: true,
+        },
+        orderBy: { date: 'asc' },
+      });
+    const scheduleMap = new Map<string, Date[]>();
+
+    for (const s of schedules) {
+      if (!scheduleMap.has(s.doulaProfileId)) {
+        scheduleMap.set(s.doulaProfileId, []);
+      }
+      scheduleMap.get(s.doulaProfileId)!.push(s.date);
+    }
+
+    const availabilityMap = new Map<
+      string,
+      { date: Date; availability: Record<string, boolean> }[]
+    >();
+
+    for (const slot of availableSlots) {
+      if (!availabilityMap.has(slot.doulaId)) {
+        availabilityMap.set(slot.doulaId, []);
+      }
+      availabilityMap.get(slot.doulaId)!.push({
+        date: slot.date,
+        availability: slot.availability as Record<string, boolean>,
+      });
+    }
+    const normalizeDate = (d: Date) => {
+      const n = new Date(d);
+      n.setHours(0, 0, 0, 0);
+      return n.getTime();
+    };
+
+    function isDateAvailable(
+      date: Date,
+      availability: Record<string, boolean>,
+      bookedDates: Date[],
+    ) {
+      if (Object.values(availability).some((v) => v === false)) {
+        return false;
+      }
+
+      return !bookedDates.some(
+        (d) => normalizeDate(d) === normalizeDate(date),
+      );
+    }
+
+
 
     /* -------------------------------
        Response shaping
     --------------------------------*/
-    const formattedDoulas = doulas.map((doula) => ({
-      userId: doula.user.id,
-      profileId: doula.id,
-      name: doula.user.name,
-      email: doula.user.email,
-      phone: doula.user.phone,
-      is_active: doula.user.is_active,
-      yoe: doula.yoe,
-      qualification: doula.qualification,
-      languages: doula.languages,
-      specialities: doula.specialities,
-      profileImage: doula.profile_image,
-      services: doula.ServicePricing.map((sp) => ({
-        name: sp.service.name,
-        price: sp.price,
-      })),
-    }));
+    const formattedDoulas = doulas.map((doula) => {
+      const bookedDates = scheduleMap.get(doula.id) ?? [];
+      const slotEntries = availabilityMap.get(doula.id) ?? [];
+
+      let nextAvailableDate: Date | null = null;
+
+      for (const slot of slotEntries) {
+        if (
+          isDateAvailable(
+            slot.date,
+            slot.availability,
+            bookedDates,
+          )
+        ) {
+          nextAvailableDate = slot.date;
+          break;
+        }
+      }
+
+      return {
+        userId: doula.user.id,
+        profileId: doula.id,
+        name: doula.user.name,
+        email: doula.user.email,
+        phone: doula.user.phone,
+        is_active: doula.user.is_active,
+
+        yoe: doula.yoe,
+        qualification: doula.qualification,
+        languages: doula.languages,
+        specialities: doula.specialities,
+        profileImage: doula.profile_image,
+
+        regions: doula.Region.map((r) => ({
+          id: r.id,
+          name: r.regionName,
+          district: r.district,
+          state: r.state,
+          country: r.country,
+        })),
+
+        services: doula.ServicePricing.map((sp) => ({
+          name: sp.service.name,
+          price: sp.price,
+        })),
+
+        nextImmediateAvailabilityDate: nextAvailableDate,
+      };
+    });
+
 
     return {
       status: 'success',
