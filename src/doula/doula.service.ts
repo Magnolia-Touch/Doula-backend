@@ -2544,114 +2544,101 @@ export class DoulaService {
     endDate: string,
     visitFrequency: number,
   ) {
+    /* ------------------ Validate Doula ------------------ */
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { id: doulaId },
+      select: { id: true },
+    });
 
-    // Validate doula exists
-    // const doula = await this.prisma.doulaProfile.findUnique({
-    //   where: { id: doulaId },
-    //   select: { id: true },
-    // });
+    if (!doula) {
+      throw new NotFoundException('Doula not found');
+    }
 
-    // if (!doula) {
-    //   throw new NotFoundException('Doula not found');
-    // }
+    /* ------------------ Normalize Dates ------------------ */
+    const start = this.toUtcMidnight(startDate);
+    const end = this.toUtcMidnight(endDate);
 
-    // // Parse dates
-    // const start = this.toUtcMidnight(startDate);
-    // const end = this.toUtcMidnight(endDate);
-    // start.setHours(0, 0, 0, 0);
-    // end.setHours(0, 0, 0, 0);
+    if (start > end) {
+      throw new BadRequestException('Start date must be before end date');
+    }
 
-    // // Validate date range
-    // if (start > end) {
-    //   throw new BadRequestException('Start date must be before end date');
-    // }
+    /* ------------------ Generate Visit Dates ------------------ */
+    const visitDates = await generateVisitDatesforPostPartumDoula(
+      start,
+      end,
+      visitFrequency,
+    );
 
-    // //visitdates 
-    // //check if every every visit date have timeshift true
-    // //if any visit date have any one timeshift false, then show the Not avaible message as response of the api
+    /* ------------------ Check Schedule Conflicts ------------------ */
+    const conflictingSchedules = await this.prisma.schedules.findMany({
+      where: {
+        doulaProfileId: doulaId,
+        date: { in: visitDates },
+      },
+      select: { date: true },
+    });
 
-    // // Calculate visit dates based on frequency
-    // let visitDates: Date[];
-    // visitDates = await generateVisitDatesforPostPartumDoula(
-    //   start,
-    //   end,
-    //   visitFrequency,
-    // )
-    // for (const visitDate of visitDates) {
-    //   const existingSchedule = await this.prisma.schedules.findFirst({
-    //     where: {
-    //       doulaProfileId: doulaId,
-    //       date: visitDate,
-    //     },
-    //   });
+    if (conflictingSchedules.length > 0) {
+      const conflictDates = conflictingSchedules.map(
+        (s) => s.date.toISOString().split('T')[0],
+      );
 
-    //   if (existingSchedule) {
-    //     throw new BadRequestException(
-    //       `Doula already booked on ${visitDate.toISOString().split('T')[0]}`,
-    //     );
-    //   }
-    // }
+      throw new BadRequestException(
+        `Doula already booked on: ${conflictDates.join(', ')}`,
+      );
+    }
 
-    // // Create a map for quick lookup of booked timeshifts by date
-    // const bookedShifts = new Map<string, Set<string>>();
+    /* ------------------ Fetch Availability ------------------ */
+    const availabilityRows =
+      await this.prisma.availableSlotsForService.findMany({
+        where: {
+          doulaId,
+          date: { in: visitDates },
+        },
+        select: {
+          date: true,
+          availability: true,
+        },
+      });
 
-    // schedules.forEach((schedule) => {
-    //   const dateKey = schedule.date.toISOString().split('T')[0];
-    //   if (!bookedShifts.has(dateKey)) {
-    //     bookedShifts.set(dateKey, new Set());
-    //   }
-    //   bookedShifts.get(dateKey)!.add(schedule.timeshift);
-    // });
+    /* ------------------ Build Date Map ------------------ */
+    const availabilityByDate = new Map<string, any>();
 
-    // // Create a map for off days
-    // const offDaysMap = new Map<string, any>();
-    // offDays.forEach((offDay) => {
-    //   const dateKey = offDay.date.toISOString().split('T')[0];
-    //   offDaysMap.set(dateKey, offDay.offtime);
-    // });
+    availabilityRows.forEach((row) => {
+      availabilityByDate.set(
+        row.date.toISOString().split('T')[0],
+        row.availability,
+      );
+    });
 
-    // // Check availability for all three shifts
-    // let morningAvailable = true;
-    // let nightAvailable = true;
-    // let fulldayAvailable = true;
+    /* ------------------ Aggregate Shift Availability ------------------ */
+    let morningAvailable = true;
+    let nightAvailable = true;
+    let fulldayAvailable = true;
 
-    // for (const visitDate of visitDates) {
-    //   const dateKey = visitDate.toISOString().split('T')[0];
-    //   const bookedOnDate = bookedShifts.get(dateKey) || new Set();
-    //   const offTimeOnDate = offDaysMap.get(dateKey);
+    for (const date of visitDates) {
+      const key = date.toISOString().split('T')[0];
+      const availability = availabilityByDate.get(key);
 
-    //   // Check if MORNING is unavailable
-    //   if (
-    //     bookedOnDate.has('MORNING') ||
-    //     bookedOnDate.has('FULLDAY') ||
-    //     (offTimeOnDate && offTimeOnDate.morning === false)
-    //   ) {
-    //     morningAvailable = false;
-    //   }
+      // If no availability record for a visit date → NOT AVAILABLE
+      if (!availability) {
+        morningAvailable = false;
+        nightAvailable = false;
+        fulldayAvailable = false;
+        break;
+      }
 
-    //   // Check if NIGHT is unavailable
-    //   if (
-    //     bookedOnDate.has('NIGHT') ||
-    //     bookedOnDate.has('FULLDAY') ||
-    //     (offTimeOnDate && offTimeOnDate.night === false)
-    //   ) {
-    //     nightAvailable = false;
-    //   }
+      if (availability.MORNING !== true) morningAvailable = false;
+      if (availability.NIGHT !== true) nightAvailable = false;
+      if (availability.FULLDAY !== true) fulldayAvailable = false;
 
-    //   // Check if FULLDAY is unavailable
-    //   if (
-    //     bookedOnDate.has('FULLDAY') ||
-    //     bookedOnDate.has('MORNING') ||
-    //     bookedOnDate.has('NIGHT') ||
-    //     (offTimeOnDate &&
-    //       (offTimeOnDate.fullday === false ||
-    //         offTimeOnDate.morning === false ||
-    //         offTimeOnDate.night === false))
-    //   ) {
-    //     fulldayAvailable = false;
-    //   }
-    // }
+      // Early exit optimization
+      if (!morningAvailable && !nightAvailable && !fulldayAvailable) {
+        break;
+      }
+    }
 
+    /* ------------------ Response ------------------ */
     return {
       success: true,
       message: 'Available shifts fetched successfully',
@@ -2660,15 +2647,18 @@ export class DoulaService {
         startDate,
         endDate,
         visitFrequency,
-        // visitDates: visitDates.map((d) => d.toISOString().split('T')[0]),
-        // availability: {
-        //   morning: morningAvailable,
-        //   night: nightAvailable,
-        //   fullday: fulldayAvailable,
-        // },
+        visitDates: visitDates.map((d) =>
+          d.toISOString().split('T')[0],
+        ),
+        availability: {
+          MORNING: morningAvailable,
+          NIGHT: nightAvailable,
+          FULLDAY: fulldayAvailable,
+        },
       },
     };
   }
+
 
 
   async getShiftsByDoula(doulaId: string, page = 1, limit = 10) {
