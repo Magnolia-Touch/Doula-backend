@@ -45,6 +45,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 import { S3Service } from 'src/s3/s3.service';
+import { GetDoulasQueryDto } from './dto/doula-under-zm-query.dto';
 const allowedImageTypes = [
   'image/jpeg',
   'image/png',
@@ -738,9 +739,13 @@ export class ZoneManagerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Get('doulas/list')
-  async getDoulasUnderZm(@Req() req: any) {
-    return this.service.getDoulasUnderZm(req.user.id);
+  async getDoulasUnderZm(
+    @Req() req: any,
+    @Query() query: GetDoulasQueryDto,
+  ) {
+    return this.service.getDoulasUnderZm(req.user.id, query);
   }
+
 
 
 

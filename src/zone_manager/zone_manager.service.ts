@@ -22,6 +22,7 @@ import {
 } from 'src/common/utility/service-utils';
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
+import { GetDoulasQueryDto } from './dto/doula-under-zm-query.dto';
 
 type ZoneManagerRecentActivity = {
   id: string;                // activity id (derived from source record)
@@ -1263,7 +1264,24 @@ export class ZoneManagerService {
   }
 
 
-  async getDoulasUnderZm(userId: string) {
+  async getDoulasUnderZm(
+    userId: string,
+    query: GetDoulasQueryDto,
+  ) {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      serviceName,
+      isAvailable,
+      startDate,
+      endDate,
+      minExperience,
+      isActive,
+      regionId,
+      serviceId,
+    } = query;
+
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
       where: { userId },
       select: { id: true },
@@ -1272,10 +1290,118 @@ export class ZoneManagerService {
     if (!zoneManager) {
       throw new ForbiddenException('Zone manager profile not found');
     }
+
+    const skip = (page - 1) * limit;
+
+    /* -------------------------------
+       Base where condition
+    --------------------------------*/
+    const where: any = {
+      zoneManager: {
+        some: { id: zoneManager.id },
+      },
+    };
+
+    /* -------------------------------
+       User search & active filter
+    --------------------------------*/
+    if (search || typeof isActive === 'boolean') {
+      where.user = {
+        ...(search && {
+          OR: [
+            { name: { contains: search } },
+            { email: { contains: search } },
+            { phone: { contains: search } },
+          ],
+        }),
+        ...(typeof isActive === 'boolean' && { is_active: isActive }),
+      };
+    }
+
+    /* -------------------------------
+       Experience filter
+    --------------------------------*/
+    if (minExperience) {
+      where.yoe = { gte: Number(minExperience) };
+    }
+
+    /* -------------------------------
+       Region filter
+    --------------------------------*/
+    if (regionId) {
+      where.Region = {
+        some: { id: regionId },
+      };
+    }
+
+    /* -------------------------------
+       Service filter (by id or name)
+    --------------------------------*/
+    if (serviceId || serviceName) {
+      where.ServicePricing = {
+        some: {
+          ...(serviceId && { serviceId }),
+          ...(serviceName && {
+            service: {
+              name: { contains: serviceName },
+            },
+          }),
+        },
+      };
+    }
+
+    /* -------------------------------
+       Availability filter
+    --------------------------------*/
+    if (isAvailable && startDate) {
+      const start = new Date(startDate);
+      const end = endDate ? new Date(endDate) : start;
+
+      where.AND = [
+        // 1️⃣ No schedules in date range
+        {
+          NOT: {
+            Schedules: {
+              some: {
+                date: {
+                  gte: start,
+                  lte: end,
+                },
+              },
+            },
+          },
+        },
+
+        // 2️⃣ Has availability with at least one shift = true
+        {
+          AvailableSlotsForService: {
+            some: {
+              date: {
+                gte: start,
+                lte: end,
+              },
+              OR: [
+                { availability: { path: ['MORNING'], equals: true } },
+                { availability: { path: ['NIGHT'], equals: true } },
+                { availability: { path: ['FULLDAY'], equals: true } },
+              ],
+            },
+          },
+        },
+      ];
+    }
+
+    /* -------------------------------
+       Fetch doulas
+    --------------------------------*/
     const doulas = await this.prisma.doulaProfile.findMany({
-      where: { zoneManager: { some: { id: zoneManager.id } } },
+      where,
+      skip,
+      take: Number(limit),
+      orderBy: { createdAt: 'desc' },
       select: {
-        id: true, yoe: true,
+        id: true,
+        yoe: true,
         qualification: true,
         languages: true,
         specialities: true,
@@ -1290,20 +1416,21 @@ export class ZoneManagerService {
         },
         ServicePricing: {
           select: {
+            price: true,
             service: {
-              select: {
-                name: true
-              }
+              select: { name: true },
             },
-            price: true
-          }
-        }
-      }
-    })
-    // 3. Shape response
+          },
+        },
+      },
+    });
+
+    /* -------------------------------
+       Response shaping
+    --------------------------------*/
     const formattedDoulas = doulas.map((doula) => ({
       userId: doula.user.id,
-      profileid: doula.id,
+      profileId: doula.id,
       name: doula.user.name,
       email: doula.user.email,
       phone: doula.user.phone,
@@ -1312,18 +1439,21 @@ export class ZoneManagerService {
       languages: doula.languages,
       specialities: doula.specialities,
       profileImage: doula.profile_image,
-      service: doula.ServicePricing.map((sp) => ({
+      services: doula.ServicePricing.map((sp) => ({
         name: sp.service.name,
-        price: sp.price
-      }))
+        price: sp.price,
+      })),
     }));
 
     return {
       status: 'success',
-      message: 'Doulas fetched successfully',
+      page: Number(page),
+      limit: Number(limit),
+      count: formattedDoulas.length,
       data: formattedDoulas,
     };
   }
+
 
 
 
