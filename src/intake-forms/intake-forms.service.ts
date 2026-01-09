@@ -320,6 +320,7 @@ export class IntakeFormService {
           isPaid: true, // IMPORTANT: intake flow assumes confirmed booking
           totalAmount: String(totalAmount),
           amountPaid: String(payableAmount),
+          timeshift: serviceTimeShift,
         },
       });
 
@@ -1172,6 +1173,7 @@ export class IntakeFormService {
           isPaid: false,
           totalAmount: String(totalAmount),
           amountPaid: String(payableAmount),
+          timeshift: serviceTimeShift,
         },
       });
       const payment = await tx.payment.create({
