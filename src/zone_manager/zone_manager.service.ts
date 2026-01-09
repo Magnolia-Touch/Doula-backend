@@ -835,6 +835,7 @@ export class ZoneManagerService {
 
       data: bookings.map((booking) => ({
         bookingId: booking.id,
+
         clientId: booking.client.id,
         clientName: booking.client.user.name,
         clientEmail: booking.client.user.email,
@@ -849,6 +850,7 @@ export class ZoneManagerService {
         startDate: booking.startDate,
         endDate: booking.endDate,
         status: booking.status,
+        timeshift: booking.timeshift
       })),
       meta: result.meta,
     };
@@ -1204,6 +1206,7 @@ export class ZoneManagerService {
         startDate: booking.startDate,
         endDate: booking.endDate,
         status: booking.status,
+        timeshift: booking.timeshift
       },
     };
   }

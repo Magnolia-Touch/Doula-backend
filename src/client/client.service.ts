@@ -185,6 +185,7 @@ export class ClientsService {
         doulaUserId: bk.DoulaProfile.userId,
         doulaEmail: bk.DoulaProfile.user.email,
         mainDoulaImage: bk.DoulaProfile.profile_image,
+        timeshift: bk.timeshift
       };
     });
   }
@@ -279,6 +280,7 @@ export class ClientsService {
       doulaUserId: booking.DoulaProfile.userId,
       doulaEmail: booking.DoulaProfile.user.email,
       mainDoulaImage: booking.DoulaProfile.profile_image,
+      timeshift: booking.timeshift
     };
   }
 
