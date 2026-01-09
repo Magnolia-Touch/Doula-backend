@@ -19,7 +19,7 @@ import {
   isOverlapping,
 } from 'src/common/utility/service-utils';
 import { MailService } from 'src/mail/mail.service';
-import { BookingStatus, PaymentProvider, PaymentStatus, Prisma, TimeShift, WeekDays } from '@prisma/client';
+import { BookingStatus, PaymentProvider, PaymentStatus, Prisma, ServiceStatus, TimeShift, WeekDays } from '@prisma/client';
 import { StripeService } from 'src/stripe/stripe.service';
 import { Console } from 'console';
 import { formatDate } from 'date-fns/format';
@@ -249,6 +249,7 @@ export class IntakeFormService {
           doulaProfileId,
           date: visitDate,
           timeshift: serviceTimeShift,
+          status: { not: ServiceStatus.CANCELED },
         },
       });
 
@@ -1097,6 +1098,7 @@ export class IntakeFormService {
         where: {
           doulaProfileId,
           date: visitDate,
+          status: { not: ServiceStatus.CANCELED },
         },
       });
 
