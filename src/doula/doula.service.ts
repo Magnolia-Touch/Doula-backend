@@ -2651,9 +2651,9 @@ export class DoulaService {
           d.toISOString().split('T')[0],
         ),
         availability: {
-          morning: morningAvailable,
-          night: nightAvailable,
-          fullday: fulldayAvailable,
+          MORNING: morningAvailable,
+          NIGHT: nightAvailable,
+          FULLDAY: fulldayAvailable,
         },
       },
     };
