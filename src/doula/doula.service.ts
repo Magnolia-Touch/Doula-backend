@@ -480,6 +480,7 @@ export class DoulaService {
       where: {
         doulaProfileId: { in: doulaProfileIds },
         cancelledAt: null,
+        status: { not: MeetingStatus.CANCELED },
         ...(rangeStart || rangeEnd
           ? {
             date: {
