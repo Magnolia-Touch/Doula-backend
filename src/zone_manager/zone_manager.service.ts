@@ -1455,6 +1455,7 @@ export class ZoneManagerService {
 
         ServicePricing: {
           select: {
+            id: true,
             price: true,
             service: {
               select: { name: true },
@@ -1587,6 +1588,7 @@ export class ZoneManagerService {
 
 
         services: doula.ServicePricing.map((sp) => ({
+          id: sp.id,
           name: sp.service.name,
           price: sp.price,
         })),
