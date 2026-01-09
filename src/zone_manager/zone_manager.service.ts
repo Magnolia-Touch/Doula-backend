@@ -1282,6 +1282,7 @@ export class ZoneManagerService {
       serviceId,
     } = query;
 
+    console.log('query', query);
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
       where: { userId },
       select: { id: true },
@@ -1412,6 +1413,7 @@ export class ZoneManagerService {
             name: true,
             email: true,
             phone: true,
+            is_active: true,
           },
         },
         ServicePricing: {
@@ -1434,6 +1436,7 @@ export class ZoneManagerService {
       name: doula.user.name,
       email: doula.user.email,
       phone: doula.user.phone,
+      is_active: doula.user.is_active,
       yoe: doula.yoe,
       qualification: doula.qualification,
       languages: doula.languages,
