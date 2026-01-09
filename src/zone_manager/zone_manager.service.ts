@@ -747,7 +747,7 @@ export class ZoneManagerService {
       where.AND = AND;
     }
 
-
+    where.status = { not: BookingStatus.PENDING };
     const result = await paginate({
       prismaModel: this.prisma.serviceBooking,
       page,
@@ -1441,6 +1441,9 @@ export class ZoneManagerService {
           select: {
             id: true,
             regionName: true,
+            is_active: true,
+            createdAt: true,
+            updatedAt: true,
             pincode: true,
             district: true,
             state: true,
@@ -1568,13 +1571,20 @@ export class ZoneManagerService {
         specialities: doula.specialities,
         profileImage: doula.profile_image,
 
-        regions: doula.Region.map((r) => ({
-          id: r.id,
-          name: r.regionName,
-          district: r.district,
-          state: r.state,
-          country: r.country,
+        regions: doula.Region.map((region) => ({
+          id: region.id,
+          regionName: region.regionName,
+          pincode: region.pincode,
+          district: region.district,
+          state: region.state,
+          country: region.country,
+          latitude: region.latitude,
+          longitude: region.longitude,
+          is_active: region.is_active,
+          createdAt: region.createdAt,
+          updatedAt: region.updatedAt,
         })),
+
 
         services: doula.ServicePricing.map((sp) => ({
           name: sp.service.name,

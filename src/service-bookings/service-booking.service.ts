@@ -63,6 +63,7 @@ export class ServiceBookingService {
         serviceId: query.serviceId, // ServicePricing → Service
       };
     }
+    where.status = { not: BookingStatus.PENDING };
 
     const result = await paginate({
       prismaModel: this.prisma.serviceBooking,

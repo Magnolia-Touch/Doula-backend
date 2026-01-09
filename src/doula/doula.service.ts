@@ -8,7 +8,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
-import { MeetingStatus, Prisma, Role } from '@prisma/client';
+import { BookingStatus, MeetingStatus, Prisma, Role } from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
 import { checkUserExistorNot } from 'src/common/utility/service-utils';
 import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
@@ -2313,6 +2313,7 @@ export class DoulaService {
           take: limit,
           where: {
             doulaProfileId: doula.id,
+            status: { not: BookingStatus.PENDING },
           },
           orderBy: {
             startDate: 'desc',
