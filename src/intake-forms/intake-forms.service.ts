@@ -331,7 +331,7 @@ export class IntakeFormService {
       await tx.schedules.createMany({
         data: visitDates.map((date) => ({
           date,
-          timeshift: serviceTimeShift,
+          timeshift: resolvedTimeShift,
           doulaProfileId,
           serviceId: servicePricing.id,
           clientId: clientProfile.id,
@@ -1210,7 +1210,7 @@ export class IntakeFormService {
             serviceName: servicePricing.service.name,
             serviceStartDate: startDate.toISOString(),
             serviceEndDate: endDate?.toISOString(),
-            timeShift: serviceTimeShift,
+            timeShift: resolvedTimeShift,
             visitDates: visitDates.map(d => d.toISOString()),
 
             // Region details
