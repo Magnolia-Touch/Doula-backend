@@ -861,7 +861,10 @@ export class ZoneManagerService {
     search?: string,
     status?: MeetingStatus,
     serviceName?: string,
+    date1?: string,
+    date2?: string,
   ) {
+
     // Fetch zone manager pro
     // file
     console.log('servicename', serviceName);
@@ -959,6 +962,22 @@ export class ZoneManagerService {
     if (status) {
       where.AND.push({
         status: status,
+      });
+    }
+
+    /* ---------------- Date filter ---------------- */
+    if (date1) {
+      const start = new Date(date1);
+      start.setHours(0, 0, 0, 0);
+
+      const end = date2 ? new Date(date2) : new Date(date1);
+      end.setHours(23, 59, 59, 999);
+
+      where.AND.push({
+        date: {
+          gte: start,
+          lte: end,
+        },
       });
     }
 

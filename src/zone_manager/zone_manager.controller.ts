@@ -613,6 +613,8 @@ export class ZoneManagerController {
     @Query('search') search?: string,
     @Query('status') status?: MeetingStatus,
     @Query('serviceName') serviceName?: string,
+    @Query('date1') date1?: string,
+    @Query('date2') date2?: string,
   ) {
     return this.service.getZoneManagerMeetings(
       req.user.id,
@@ -620,9 +622,12 @@ export class ZoneManagerController {
       Number(limit) || 10,
       search?.trim(),
       status,
-      serviceName
+      serviceName,
+      date1,
+      date2,
     );
   }
+
 
   @ApiOperation({ description: "Retrieve each Schedules using uuid" })
   @ApiBearerAuth('access-token')
