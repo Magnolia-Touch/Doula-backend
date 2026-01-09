@@ -165,7 +165,7 @@ export class WebhookService {
       await tx.schedules.createMany({
         data: visitDates.map((date: string) => ({
           date: new Date(date),
-          timeshift: resolvedTimeShift,
+          timeshift: timeShift,
           doulaProfileId,
           serviceId: servicePricingId,
           clientId,
@@ -208,7 +208,7 @@ export class WebhookService {
         year: new Date().getFullYear(),
         serviceName,
         region: regionName,
-        timeShift: resolvedTimeShift,
+        timeShift: timeShift,
         serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
         totalAmountPaid: totalAmount,
