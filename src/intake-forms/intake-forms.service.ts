@@ -369,7 +369,7 @@ export class IntakeFormService {
         context: {
           appName: 'Bambini Doula',
           year: new Date().getFullYear(),
-          serviceTimeShift,
+          resolvedTimeShift,
           clientName: clientProfile.user.name,
           clientEmail: clientProfile.user.email,
           clientPhone: clientProfile.user.phone,
@@ -379,7 +379,7 @@ export class IntakeFormService {
           serviceName: servicePricing.service.name,
           serviceStartDate: formatDate(new Date(startDate), 'yyyy-MM-dd'),
           serviceEndDate: formatDate(new Date(endDate), 'yyyy-MM-dd'),
-          timeShift: serviceTimeShift,
+          timeShift: resolvedTimeShift,
           regionName: region.regionName,
           totalAmount,
           payableAmount
@@ -395,7 +395,7 @@ export class IntakeFormService {
         year: new Date().getFullYear(),
         serviceName: servicePricing.service.name,
         region: region.regionName,
-        timeShift: serviceTimeShift,
+        timeShift: resolvedTimeShift,
         serviceStartDate: formatDate(new Date(seviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
         AmountPaid: payableAmount,
