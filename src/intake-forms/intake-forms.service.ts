@@ -288,7 +288,10 @@ export class IntakeFormService {
 
     payableAmount = Math.round(payableAmount * 100) / 100;
 
-
+    const resolvedTimeShift: TimeShift =
+      servicePricing.service.name === 'Post Partum Doula'
+        ? serviceTimeShift
+        : TimeShift.FULLDAY;
     /* ----------------------------------------------------
      * 7. Create intake + booking + schedules (transaction)
      * -------------------------------------------------- */
@@ -320,7 +323,7 @@ export class IntakeFormService {
           isPaid: true, // IMPORTANT: intake flow assumes confirmed booking
           totalAmount: String(totalAmount),
           amountPaid: String(payableAmount),
-          timeshift: serviceTimeShift,
+          timeshift: resolvedTimeShift,
         },
       });
 
@@ -1160,6 +1163,11 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 10. Create booking + payment (transaction)
      * -------------------------------------------------- */
+    const resolvedTimeShift: TimeShift =
+      servicePricing.service.name === 'Post Partum Doula'
+        ? serviceTimeShift
+        : TimeShift.FULLDAY;
+
     const { booking, payment } = await this.prisma.$transaction(async (tx) => {
       const booking = await tx.serviceBooking.create({
         data: {
@@ -1173,7 +1181,7 @@ export class IntakeFormService {
           isPaid: false,
           totalAmount: String(totalAmount),
           amountPaid: String(payableAmount),
-          timeshift: serviceTimeShift,
+          timeshift: resolvedTimeShift,
         },
       });
       const payment = await tx.payment.create({
