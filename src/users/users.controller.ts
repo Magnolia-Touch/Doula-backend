@@ -24,10 +24,18 @@ export class UserController {
   constructor(private readonly service: UserService) { }
 
   // Register Admin - protected
-  @ApiOperation({ summary: 'Send registration OTP' })
-  @ApiBody({ type: UserRegistrationDto })
+  @Post('register/user')
+  @ApiOperation({
+    summary: 'Send registration OTP',
+    description:
+      'Sends an OTP to the user email for registration verification',
+  })
+  @ApiBody({
+    type: UserRegistrationDto,
+  })
   @ApiResponse({
     status: 200,
+    description: 'OTP sent successfully',
     type: SwaggerResponseDto,
     schema: {
       example: {
@@ -37,13 +45,26 @@ export class UserController {
       },
     },
   })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid registration payload',
+  })
   @ApiBearerAuth('bearer')
-  @Post('register/user')
   async RegisterUser(@Body() dto: UserRegistrationDto) {
     return this.service.RegisterUser(dto);
   }
 
   @Delete('delete')
+  @ApiOperation({
+    summary: 'Delete all users',
+    description:
+      'Deletes all users from the system (intended for internal or maintenance use)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'All users deleted successfully',
+    type: SwaggerResponseDto,
+  })
   async deleteAll() {
     return this.service.deleteAll();
   }
@@ -51,14 +72,34 @@ export class UserController {
   @Patch('change/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Change user status',
+    description:
+      'Allows admin to activate or deactivate a user account',
+  })
+  @ApiBody({
+    type: ChangeUserStatusDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User status updated successfully',
+    type: SwaggerResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden – only admins can change user status',
+  })
+  @ApiBearerAuth('bearer')
   async changeUserStatus(
     @Body() dto: ChangeUserStatusDto,
-    @Req() req
+    @Req() req,
   ) {
     return this.service.changeUserStatus(
       dto,
-      req.user.role
+      req.user.role,
     );
   }
 
 }
+
+

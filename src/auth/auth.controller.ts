@@ -40,10 +40,10 @@ export class AuthController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: "success",
-        message: "Otp Sent Succesfully",
-        data: "815007",
-      },
+        "status": "success",
+        "data": "651336",
+        "message": "Otp Sent Succesfully"
+      }
     },
   })
   @Post('send/otp')
@@ -52,33 +52,33 @@ export class AuthController {
   }
 
   // Verify OTP and login/register
-  @ApiOperation({ summary: 'Verify Authentication OTP' })
+  @ApiOperation({ summary: 'Verify Authentication OTP OF DOULA' })
   @ApiBody({ type: OtpVerifyDto })
   @ApiResponse({
     status: 200,
     type: SwaggerResponseDto,
     schema: {
       example: {
-        success: "success",
-        message: "User Verified Successfully",
-        data: {
+        "status": "success",
+        "data": {
           "user": {
-            "id": "a0f185ed-8c28-4316-ac07-dbdc7dce8f38",
-            "name": "Anita Sharma",
-            "email": "doula@test.com",
-            "phone": "+919876543342",
-            "otp": "563893",
-            "otpExpiresAt": "2025-12-31T04:22:39.695Z",
+            "id": "d630583a-74ad-4a76-9105-f3147556e2bb",
+            "name": "Devanand J",
+            "email": "devanandjoly@gmail.com",
+            "phone": "8921856638",
+            "otp": "862773",
+            "otpExpiresAt": "2025-11-25T05:54:15.843Z",
             "role": "DOULA",
             "is_active": true,
-            "createdAt": "2025-12-27T12:27:47.513Z",
-            "updatedAt": "2025-12-31T04:12:39.696Z"
+            "createdAt": "2025-11-25T05:33:18.093Z",
+            "updatedAt": "2025-11-25T05:44:15.844Z"
           },
-          "accessToken": "user uuid",
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNjMwNTgzYS03NGFkLTRhNzYtOTEwNS1mMzE0NzU1NmUyYmIiLCJlbWFpbCI6ImRldmFuYW5kam9seUBnbWFpbC5jb20iLCJpYXQiOjE3NjQwNDk0NzYsImV4cCI6MTc2NDY1NDI3Nn0.9v3yqkfA6JwGRP1Qwl4PLGV3Vgd0WRXMGBjHORuQGTA",
           "message": "User Verified Successfully",
           "status": 200
         },
-      },
+        "message": "User Verified Successfully"
+      }
     },
   })
   @Post('verify/otp/doula')
@@ -151,17 +151,113 @@ export class AuthController {
     return this.authService.Profile(userId);
   }
 
+
+
+  // Verify OTP and login/register
+  @ApiOperation({ summary: 'Verify Authentication OTP OF ADMIN' })
+  @ApiBody({ type: OtpVerifyDto })
+  @ApiResponse({
+    status: 200,
+    type: SwaggerResponseDto,
+    schema: {
+      example: {
+        "status": "success",
+        "data": {
+          "user": {
+            "id": "d630583a-74ad-4a76-9105-f3147556e2bb",
+            "name": "Devanand J",
+            "email": "devanandjoly@gmail.com",
+            "phone": "8921856638",
+            "otp": "862773",
+            "otpExpiresAt": "2025-11-25T05:54:15.843Z",
+            "role": "ADMIN",
+            "is_active": true,
+            "createdAt": "2025-11-25T05:33:18.093Z",
+            "updatedAt": "2025-11-25T05:44:15.844Z"
+          },
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNjMwNTgzYS03NGFkLTRhNzYtOTEwNS1mMzE0NzU1NmUyYmIiLCJlbWFpbCI6ImRldmFuYW5kam9seUBnbWFpbC5jb20iLCJpYXQiOjE3NjQwNDk0NzYsImV4cCI6MTc2NDY1NDI3Nn0.9v3yqkfA6JwGRP1Qwl4PLGV3Vgd0WRXMGBjHORuQGTA",
+          "message": "User Verified Successfully",
+          "status": 200
+        },
+        "message": "User Verified Successfully"
+      }
+    },
+  })
   @Post('verify/otp')
   async verifyAdminOtp(@Body() dto: OtpVerifyDto) {
     return this.authService.verifyOtpAdmin(dto);
   }
 
 
+
+
+  // Verify OTP and login/register
+  @ApiOperation({ summary: 'Verify Authentication OTP OF CLIENT' })
+  @ApiBody({ type: OtpVerifyDto })
+  @ApiResponse({
+    status: 200,
+    type: SwaggerResponseDto,
+    schema: {
+      example: {
+        "status": "success",
+        "data": {
+          "user": {
+            "id": "d630583a-74ad-4a76-9105-f3147556e2bb",
+            "name": "Devanand J",
+            "email": "devanandjoly@gmail.com",
+            "phone": "8921856638",
+            "otp": "862773",
+            "otpExpiresAt": "2025-11-25T05:54:15.843Z",
+            "role": "CLIENT",
+            "is_active": true,
+            "createdAt": "2025-11-25T05:33:18.093Z",
+            "updatedAt": "2025-11-25T05:44:15.844Z"
+          },
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNjMwNTgzYS03NGFkLTRhNzYtOTEwNS1mMzE0NzU1NmUyYmIiLCJlbWFpbCI6ImRldmFuYW5kam9seUBnbWFpbC5jb20iLCJpYXQiOjE3NjQwNDk0NzYsImV4cCI6MTc2NDY1NDI3Nn0.9v3yqkfA6JwGRP1Qwl4PLGV3Vgd0WRXMGBjHORuQGTA",
+          "message": "User Verified Successfully",
+          "status": 200
+        },
+        "message": "User Verified Successfully"
+      }
+    },
+  })
   @Post('verify/otp/client')
   async verifyOtpClient(@Body() dto: OtpVerifyDto) {
     return this.authService.verifyOtpClient(dto);
   }
 
+
+
+  // Verify OTP and login/register
+  @ApiOperation({ summary: 'Verify Authentication OTP OF ZONE MANAGER' })
+  @ApiBody({ type: OtpVerifyDto })
+  @ApiResponse({
+    status: 200,
+    type: SwaggerResponseDto,
+    schema: {
+      example: {
+        "status": "success",
+        "data": {
+          "user": {
+            "id": "d630583a-74ad-4a76-9105-f3147556e2bb",
+            "name": "Devanand J",
+            "email": "devanandjoly@gmail.com",
+            "phone": "8921856638",
+            "otp": "862773",
+            "otpExpiresAt": "2025-11-25T05:54:15.843Z",
+            "role": "ZONE_MANAGER",
+            "is_active": true,
+            "createdAt": "2025-11-25T05:33:18.093Z",
+            "updatedAt": "2025-11-25T05:44:15.844Z"
+          },
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNjMwNTgzYS03NGFkLTRhNzYtOTEwNS1mMzE0NzU1NmUyYmIiLCJlbWFpbCI6ImRldmFuYW5kam9seUBnbWFpbC5jb20iLCJpYXQiOjE3NjQwNDk0NzYsImV4cCI6MTc2NDY1NDI3Nn0.9v3yqkfA6JwGRP1Qwl4PLGV3Vgd0WRXMGBjHORuQGTA",
+          "message": "User Verified Successfully",
+          "status": 200
+        },
+        "message": "User Verified Successfully"
+      }
+    },
+  })
   @Post('verify/otp/zonemanager')
   async verifyOtpZoneManager(@Body() dto: OtpVerifyDto) {
     return this.authService.verifyOtpZoneManager(dto);

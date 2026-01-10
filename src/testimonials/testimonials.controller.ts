@@ -39,13 +39,18 @@ export class TestimonialsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CLIENT)
   @Post()
-  @ApiOperation({ summary: 'Create testimonial' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CLIENT)
+  @ApiOperation({
+    summary: 'Create testimonial',
+    description: 'Allows a client to create a testimonial for a completed service',
+  })
   @ApiBody({
     type: CreateTestimonialDto,
     schema: {
       example: {
-        doulaProfileId: 'uuid',
-        serviceId: 'uuid',
+        doulaProfileId: 'doula-uuid',
+        serviceId: 'service-uuid',
         ratings: 5,
         reviews: 'Excellent service!',
       },
@@ -56,26 +61,41 @@ export class TestimonialsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all testimonials with filters' })
-  @ApiQuery({ name: 'doulaId', required: false })
-  @ApiQuery({ name: 'serviceId', required: false })
-  @ApiQuery({ name: 'page', required: false })
-  @ApiQuery({ name: 'limit', required: false })
+  @ApiOperation({
+    summary: 'Get all testimonials',
+    description: 'Fetch testimonials with optional filters and pagination',
+  })
+  @ApiQuery({ name: 'doulaId', required: false, description: 'Filter by doula ID' })
+  @ApiQuery({ name: 'serviceId', required: false, description: 'Filter by service ID' })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 10 })
   findAll(@Query() query: FilterTestimonialsDto) {
     return this.service.findAll(query);
   }
-
   @Get(':id')
-  @ApiOperation({ summary: 'Get testimonial by ID' })
-  @ApiParam({ name: 'id' })
+  @ApiOperation({
+    summary: 'Get testimonial by ID',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Testimonial UUID',
+  })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
+  @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CLIENT)
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update testimonial' })
+  @ApiOperation({
+    summary: 'Update testimonial',
+    description: 'Allows client to update their own testimonial',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Testimonial UUID',
+  })
+  @ApiBody({ type: UpdateTestimonialDto })
   update(
     @Param('id') id: string,
     @Body() dto: UpdateTestimonialDto,
@@ -84,18 +104,31 @@ export class TestimonialsController {
     return this.service.update(id, dto, req.user.id);
   }
 
+  @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CLIENT)
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete testimonial' })
+  @ApiOperation({
+    summary: 'Delete testimonial',
+    description: 'Allows client to delete their own testimonial',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Testimonial UUID',
+  })
   remove(@Param('id') id: string, @Req() req) {
     return this.service.remove(id, req.user.id);
   }
 
+
+  @Get('recent/testimonials')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
-  @Get('recent/testimonials')
-  @ApiOperation({ summary: 'Recent testimonial' })
+  @ApiOperation({
+    summary: 'Get recent testimonials (Zone Manager)',
+    description: 'Returns recent testimonials related to the zone manager',
+  })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 10 })
   async getTestimonials(
     @Req() req,
     @Query('page') page = 1,
@@ -108,10 +141,16 @@ export class TestimonialsController {
     );
   }
 
+
+  @Get('all/testimonials')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
-  @Get('all/testimonials')
-  @ApiOperation({ summary: 'Recent testimonial' })
+  @ApiOperation({
+    summary: 'Get all testimonials (Zone Manager)',
+    description: 'Fetch all testimonials with advanced filters and pagination',
+  })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 10 })
   async getAllzmTestimonial(
     @Req() req,
     @Query('page') page = 1,
@@ -127,9 +166,13 @@ export class TestimonialsController {
     );
   }
 
+  @Get('all/summary')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
-  @Get('all/summary')
+  @ApiOperation({
+    summary: 'Get testimonial summary (Zone Manager)',
+    description: 'Returns aggregated testimonial statistics for the zone manager',
+  })
   async getZmTestimonialSummary(
     @Req() req,
   ) {

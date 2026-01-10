@@ -97,7 +97,24 @@ export class ServiceBookingController {
     return this.bookingService.findById(id);
   }
 
+
   @Patch('schedules/:id/status')
+  @ApiOperation({
+    summary: 'Update schedule status',
+    description:
+      'Allows Doula, Zone Manager, or Admin to update the status of a specific schedule',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Schedule UUID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule status updated successfully',
+    type: SwaggerResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid status update' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA, Role.ZONE_MANAGER, Role.ADMIN)
   async updateScheduleStatus(
@@ -113,7 +130,25 @@ export class ServiceBookingController {
     );
   }
 
+
+
   @Patch('bookings/:id/status')
+  @ApiOperation({
+    summary: 'Update booking status',
+    description:
+      'Allows Doula, Zone Manager, or Admin to update the status of a booking',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Booking UUID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Booking status updated successfully',
+    type: SwaggerResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid status update' })
+  @ApiResponse({ status: 404, description: 'Booking not found' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA, Role.ZONE_MANAGER, Role.ADMIN)
   async updateBookingStatus(
@@ -130,6 +165,16 @@ export class ServiceBookingController {
   }
 
 
+  @Get('meetings/list/admin')
+  @ApiOperation({
+    summary: 'Get all meetings (Admin)',
+    description: 'Returns paginated list of all meetings across the system',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Meetings fetched successfully',
+    type: SwaggerResponseDto,
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get('meetings/list/admin')
@@ -137,6 +182,20 @@ export class ServiceBookingController {
     return this.bookingService.getAllMeetings(query);
   }
 
+  @Get('meetings/list/admin/:id')
+  @ApiOperation({
+    summary: 'Get meeting by ID (Admin)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Meeting UUID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Meeting fetched successfully',
+    type: SwaggerResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Meeting not found' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get('meetings/list/admin/:id')
@@ -144,7 +203,16 @@ export class ServiceBookingController {
     return this.bookingService.getMeetingById(id);
   }
 
-  @Get("schedules/list/admin")
+  @Get('schedules/list/admin')
+  @ApiOperation({
+    summary: 'Get all schedules (Admin)',
+    description: 'Returns all schedules with optional filters',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedules fetched successfully',
+    type: SwaggerResponseDto,
+  })
   getAllSchedules(@Query() query: GetSchedulesQueryDto) {
     return this.bookingService.getAllSchedules(query);
   }
@@ -153,16 +221,51 @@ export class ServiceBookingController {
    * GET /schedules/:id
    * -------------------------------------------------- */
   @Get('schedules/list/admin/:id')
+  @ApiOperation({
+    summary: 'Get schedule by ID (Admin)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Schedule UUID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule fetched successfully',
+    type: SwaggerResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
   getScheduleById(@Param('id') id: string) {
     return this.bookingService.getScheduleById(id);
   }
 
   @Get('testimonials/list/admin/')
+  @ApiOperation({
+    summary: 'Get all testimonials (Admin)',
+    description: 'Returns paginated list of all testimonials',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Testimonials fetched successfully',
+    type: SwaggerResponseDto,
+  })
   async getTestimonials(@Query() query: GetTestimonialsDto) {
     return this.bookingService.getAllTestimonial(query);
   }
 
   @Get('testimonials/list/admin/:id')
+  @ApiOperation({
+    summary: 'Get testimonial by ID (Admin)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Testimonial UUID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Testimonial fetched successfully',
+    type: SwaggerResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Testimonial not found' })
   async getById(@Param('id') id: string) {
     return this.bookingService.getById(id);
   }

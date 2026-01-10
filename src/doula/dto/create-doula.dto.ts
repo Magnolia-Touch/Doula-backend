@@ -14,15 +14,23 @@ import { CreateCertificateDto } from './certificate.dto';
 import { BadRequestException } from '@nestjs/common';
 
 export class CreateDoulaDto {
+  @ApiProperty({ example: 'Jane Doe' })
   @IsString()
   name: string;
 
+  @ApiProperty({ example: 'jane@example.com' })
   @IsEmail()
   email: string;
 
+  @ApiProperty({ example: '+919876543210' })
   @IsString()
   phone: string;
 
+  @ApiProperty({
+    type: [String],
+    example: ['region-id-1', 'region-id-2'],
+    description: 'Region IDs (array or comma-separated string)',
+  })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       try {
@@ -37,29 +45,39 @@ export class CreateDoulaDto {
   @IsString({ each: true })
   regionIds: string[];
 
+  @ApiProperty({ example: 'Experienced doula specializing in prenatal care' })
   @IsString()
   description: string;
 
+  @ApiPropertyOptional({ example: 'Awarded Best Doula 2023' })
   @IsString()
   @IsOptional()
   achievements: string;
 
+  @ApiProperty({ example: 'Certified Birth Doula' })
   @IsString()
   qualification: string;
 
-  // yoe comes as "4" → convert to number
+  @ApiProperty({
+    example: 4,
+    description: 'Years of experience',
+  })
   @Transform(({ value }) => Number(value))
   @IsNumber()
   yoe: number;
 
-  // languages also from string → convert to array
+  @ApiProperty({
+    type: [String],
+    example: ['English', 'Hindi'],
+    description: 'Languages known (array or comma-separated string)',
+  })
   @Transform(({ value }) => {
     if (!value) return [];
     if (typeof value === 'string') {
       try {
         return JSON.parse(value);
       } catch {
-        return value.split(','); // support comma separated
+        return value.split(',');
       }
     }
     return value;
@@ -68,14 +86,18 @@ export class CreateDoulaDto {
   @IsString({ each: true })
   languages: string[];
 
-  // languages also from string → convert to array
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['Postnatal care', 'Lactation support'],
+    description: 'Specialities (array or comma-separated string)',
+  })
   @Transform(({ value }) => {
     if (!value) return [];
     if (typeof value === 'string') {
       try {
         return JSON.parse(value);
       } catch {
-        return value.split(','); // support comma separated
+        return value.split(',');
       }
     }
     return value;
@@ -90,6 +112,12 @@ export class CreateDoulaDto {
   // Certificates (DTO1 inside DTO2)
   // ----------------------------------------
   // ⛔ accept as string ONLY
+  @ApiPropertyOptional({
+    type: 'string',
+    example:
+      '[{"title":"Birth Doula","issuer":"ABC Institute","year":2022}]',
+    description: 'Certificates as JSON string',
+  })
   @IsOptional()
   @IsString()
   certificates?: string;
@@ -127,8 +155,4 @@ export class CreateDoulaDto {
     description: 'Gallery images (jpg, jpeg, png). Max 5 files.',
   })
   gallery_image?: any[];
-
-
-
-
 }
