@@ -24,7 +24,8 @@
     "tree": "tree -I node_modules",
     "create:admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts",
     "seed": "prisma db seed",
-    "seed:testimonial": "ts-node prisma/seed-testimonial.ts"
+    "seed:testimonial": "ts-node prisma/seed-testimonial.ts",
+    "seed:doula-user": "ts-node prisma/seed-doula-user.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.962.0",
