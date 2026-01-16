@@ -20,6 +20,7 @@ import { LoginDto } from './dto/login.dto';
 import { OtpVerifyDto } from './dto/otp-verify.dto';
 import { MailService } from 'src/mail/mail.service';
 import { EmailProducer } from 'src/mail-queue/email.producer';
+import { generateClientContract } from 'src/common/utility/contract.util';
 @Injectable()
 export class AuthService {
   constructor(
@@ -445,63 +446,150 @@ export class AuthService {
   }
 
 
+  // async verifyOtpClient(dto: OtpVerifyDto) {
+  //   const { email, otp } = dto;
+  //   // if (dto.email == 'client@test.com' && dto.otp == '123456') {
+  //   //   const user = await this.prisma.user.findUnique({ where: { email } });
+  //   //   if (!user || user.role != Role.CLIENT) {
+  //   //     throw new UnauthorizedException('User not found');
+  //   //   }
+  //   //   return {
+  //   //     user: user,
+  //   //     accessToken: this.jwtService.sign({
+  //   //       sub: user.id,
+  //   //       email: user.email,
+  //   //     }),
+  //   //     message: 'User Verified Successfully',
+  //   //     status: 200,
+  //   //   };
+  //   // }
+  //   // 1️⃣ Find the user by email
+  //   const user = await this.prisma.user.findUnique({ where: { email }, include: { clientProfile: true } });
+
+  //   if (!user || user.role != Role.CLIENT) {
+  //     throw new UnauthorizedException('User not found');
+  //   }
+  //   // 2️⃣ Check if OTP and expiry exist
+  //   if (!user.otp || !user.otpExpiresAt) {
+  //     throw new UnauthorizedException('No OTP found for this user');
+  //   }
+  //   // 3️⃣ Validate OTP and expiry
+  //   const isOtpValid = user.otp === otp;
+  //   const isOtpNotExpired = user.otpExpiresAt > new Date();
+
+  //   if (!isOtpValid || !isOtpNotExpired) {
+  //     throw new UnauthorizedException('Invalid OTP or OTP has expired');
+  //   }
+
+  //   // 5️⃣ Clear OTP fields (optional but recommended for security)
+  //   await this.prisma.user.update({
+  //     where: { email },
+  //     data: { otp: null, otpExpiresAt: null },
+  //   });
+
+  //   if (user.clientProfile && !user.clientProfile.is_verified) {
+  //     await this.prisma.clientProfile.update({
+  //       where: { userId: user.id },
+  //       data: { is_verified: true },
+  //     });
+  //   }
+  //   // 6️⃣ Return response with JWT token
+  //   return {
+  //     user: user,
+  //     accessToken: this.jwtService.sign({
+  //       sub: user.id,
+  //       email: user.email,
+  //     }),
+  //     message: 'User Verified Successfully',
+  //     status: 200,
+  //   };
+  // }
+
+
   async verifyOtpClient(dto: OtpVerifyDto) {
     const { email, otp } = dto;
-    // if (dto.email == 'client@test.com' && dto.otp == '123456') {
-    //   const user = await this.prisma.user.findUnique({ where: { email } });
-    //   if (!user || user.role != Role.CLIENT) {
-    //     throw new UnauthorizedException('User not found');
-    //   }
-    //   return {
-    //     user: user,
-    //     accessToken: this.jwtService.sign({
-    //       sub: user.id,
-    //       email: user.email,
-    //     }),
-    //     message: 'User Verified Successfully',
-    //     status: 200,
-    //   };
-    // }
-    // 1️⃣ Find the user by email
-    const user = await this.prisma.user.findUnique({ where: { email }, include: { clientProfile: true } });
 
-    if (!user || user.role != Role.CLIENT) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { clientProfile: true },
+    });
+
+    if (!user || user.role !== Role.CLIENT) {
       throw new UnauthorizedException('User not found');
     }
-    // 2️⃣ Check if OTP and expiry exist
+
     if (!user.otp || !user.otpExpiresAt) {
       throw new UnauthorizedException('No OTP found for this user');
     }
-    // 3️⃣ Validate OTP and expiry
+
     const isOtpValid = user.otp === otp;
     const isOtpNotExpired = user.otpExpiresAt > new Date();
 
     if (!isOtpValid || !isOtpNotExpired) {
-      throw new UnauthorizedException('Invalid OTP or OTP has expired');
+      throw new UnauthorizedException('Invalid OTP or OTP expired');
     }
 
-    // 5️⃣ Clear OTP fields (optional but recommended for security)
+    // Capture PREVIOUS verification state
+    const wasVerified = user.clientProfile?.is_verified === true;
+
+    // Clear OTP
     await this.prisma.user.update({
       where: { email },
-      data: { otp: null, otpExpiresAt: null },
+      data: {
+        otp: null,
+        otpExpiresAt: null,
+      },
     });
 
-    if (user.clientProfile && !user.clientProfile.is_verified) {
+    // Mark verified if not already
+    if (user.clientProfile && !wasVerified) {
       await this.prisma.clientProfile.update({
         where: { userId: user.id },
         data: { is_verified: true },
       });
     }
-    // 6️⃣ Return response with JWT token
+
+    // ====================================
+    // SEND CONTRACT ONLY FOR NEW USERS
+    // ====================================
+    if (!wasVerified) {
+      const now = new Date();
+
+      const contractPath = await generateClientContract({
+        clientName: user.name,
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString(),
+      });
+
+      await this.mail.sendMailWithAttachments({
+        to: user.email,
+        subject: 'Your Service Agreement – Bambini Doula',
+        template: 'contract-mail',
+        context: {
+          clientName: user.name,
+          year: now.getFullYear(),
+        },
+        attachments: [
+          {
+            filename: 'Service-Agreement.docx',
+            path: contractPath,
+          },
+        ],
+      });
+    }
+
     return {
-      user: user,
+      user,
       accessToken: this.jwtService.sign({
         sub: user.id,
         email: user.email,
       }),
-      message: 'User Verified Successfully',
+      message: wasVerified
+        ? 'Login successful'
+        : 'Registration completed successfully',
       status: 200,
     };
   }
+
 
 }
