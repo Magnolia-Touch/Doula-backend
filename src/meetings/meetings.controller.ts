@@ -30,6 +30,7 @@ import { cancelDto } from './dto/cancel.dto';
 import { RescheduleDto } from './dto/reschedule.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
+import { CreateMeetingDto } from './dto/create-meeting.dto';
 
 @ApiTags('Meetings')
 @ApiBearerAuth('bearer')
@@ -378,5 +379,15 @@ export class MeetingsController {
   @Get(':id')
   async getMeetingById(@Param('id') id: string, @Req() req) {
     return this.service.getMeetingById(id, req.user);
+  }
+
+
+  @Post("schedule/doula-client")
+  @Roles(Role.DOULA)
+  async createMeeting(
+    @Body() dto: CreateMeetingDto,
+    @Req() req,
+  ) {
+    return this.service.createMeetingForClientAndDoula(dto, req.user.id);
   }
 }
