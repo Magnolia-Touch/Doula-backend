@@ -195,7 +195,7 @@ model EnquiryForm {
   meetingsTimeSlots String
   seviceStartDate   DateTime?
   serviceEndDate    DateTime?
-  VisitFrequency    Int?
+  visitDays         Json?
   serviceTimeSlots  String?
   serviceName       String
 

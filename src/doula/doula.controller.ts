@@ -43,7 +43,7 @@ import {
   FileInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
-import { Role } from '@prisma/client';
+import { Role, WeekDays } from '@prisma/client';
 import { AddDoulaImageDto } from './dto/add-doula-image.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
 import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
@@ -1559,13 +1559,13 @@ export class DoulaController {
     @Param('id') doulaId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
-    @Query('visitFrequency') visitFrequency: string,
+    @Query('visitDays') visitDays: WeekDays[],
   ) {
     return this.service.getAvailableShifts(
       doulaId,
       startDate,
       endDate,
-      Number(visitFrequency),
+      visitDays,
     );
   }
 

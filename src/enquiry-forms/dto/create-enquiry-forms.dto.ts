@@ -1,5 +1,6 @@
-import { IsDateString, IsInt, IsOptional, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ArrayNotEmpty, IsArray, IsDateString, IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { WeekDays } from '@prisma/client';
 
 export class EnquiryFormDto {
   @ApiProperty({ example: 'John Doe' })
@@ -51,14 +52,17 @@ export class EnquiryFormDto {
   serviceEndDate: string;
 
   //set defalut 0.
-  @ApiProperty({
-    example: 2,
-    description: 'Visit Frequency for Services (e.g., twice a week)',
+  @ApiPropertyOptional({
+    example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
+    description: 'Weekdays when the service should occur',
+    enum: WeekDays,
+    isArray: true,
   })
   @IsOptional()
-  @IsInt()
-  @IsOptional()
-  visitFrequency: number = 1;
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsEnum(WeekDays, { each: true })
+  visitDays?: WeekDays[];
 
   @ApiProperty({
     example: '09:00-11:00',

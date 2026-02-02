@@ -448,33 +448,54 @@ export function generateVisitDatesforBirthDoula(
   return dates;
 }
 
+type Weekday =
+  | 'SUNDAY'
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY';
+
+const WEEKDAY_MAP: Record<Weekday, number> = {
+  SUNDAY: 0,
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+};
 
 export async function generateVisitDatesforPostPartumDoula(
   startDate: Date,
   endDate?: Date,
-  interval = 0,
+  visitDays: Weekday[] = [],
 ): Promise<Date[]> {
-  // ✅ Single-date case
+  // ✅ Single-date case (unchanged behavior)
   if (!endDate || startDate.getTime() === endDate.getTime()) {
     return [new Date(startDate.getTime())];
   }
 
-  // if (interval <= 0) {
-  //   throw new BadRequestException('Interval must be greater than 0');
-  // }
-
   const dates: Date[] = [];
+  const requiredDays = new Set(visitDays.map(day => WEEKDAY_MAP[day]));
 
   let current = new Date(startDate.getTime());
-  const stepDays = interval + 1;
+  current.setHours(0, 0, 0, 0);
 
-  while (current.getTime() <= endDate.getTime()) {
-    dates.push(new Date(current.getTime()));
-    current.setUTCDate(current.getUTCDate() + stepDays);
+  const end = new Date(endDate.getTime());
+  end.setHours(0, 0, 0, 0);
+
+  while (current.getTime() <= end.getTime()) {
+    if (requiredDays.has(current.getDay())) {
+      dates.push(new Date(current.getTime()));
+    }
+    current.setUTCDate(current.getUTCDate() + 1);
   }
 
   return dates;
 }
+
 
 
 
@@ -523,6 +544,41 @@ export async function isDoulaAvailableForShift(
 
   return availability[timeShift] === true;
 }
+
+
+
+
+export function areWeekdaysPresentBetweenDates(
+  startDate: Date,
+  endDate: Date,
+  weekdays: Weekday[],
+): boolean {
+  if (startDate > endDate) return false;
+
+  const requiredDays = new Set(weekdays.map(day => WEEKDAY_MAP[day]));
+  const foundDays = new Set<number>();
+
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (current <= end) {
+    const day = current.getDay();
+    if (requiredDays.has(day)) {
+      foundDays.add(day);
+      if (foundDays.size === requiredDays.size) {
+        return true; // early exit optimization
+      }
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return false;
+}
+
+
 /**
  * Returns TRUE if doula is OFF on the given date & time shift
  */
@@ -630,7 +686,6 @@ export function getPriceForShift(
     default:
       throw new BadRequestException('Invalid time shift');
   }
-
 
 
 

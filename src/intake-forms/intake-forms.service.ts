@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { BookDoulaDto, IntakeFormDto } from './dto/intake-form.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 import {
+  areWeekdaysPresentBetweenDates,
   daysBetween,
   generateVisitDatesforBirthDoula,
   generateVisitDatesforPostPartumDoula,
@@ -109,13 +110,15 @@ export class IntakeFormService {
       buffer = 0,
       seviceStartDate,
       serviceEndDate,
-      visitFrequency,
+      visitDays,
       serviceTimeShift,
     } = dto;
 
-    const diffDays = daysBetween(new Date(seviceStartDate), new Date(serviceEndDate));
-    if (diffDays - 1 < visitFrequency) {
-      throw new BadRequestException("Interval choosen too large")
+    if (visitDays) {
+      const diffDays = areWeekdaysPresentBetweenDates(new Date(seviceStartDate), new Date(serviceEndDate), visitDays);
+      if (!diffDays) {
+        throw new BadRequestException("Weekday Selected not available within the dates choosen")
+      }
     }
     /* ----------------------------------------------------
      * 1. Get or create client
@@ -207,7 +210,7 @@ export class IntakeFormService {
         ? await generateVisitDatesforPostPartumDoula(
           startDate,
           endDate,
-          visitFrequency,
+          visitDays,
         )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 
@@ -958,17 +961,20 @@ export class IntakeFormService {
       serviceId,
       serviceStartDate,
       servicEndDate,
-      visitFrequency,
+      visitDays,
       serviceTimeShift,
       buffer,
       successUrl,
       cancelUrl,
     } = dto;
 
-    const diffDays = daysBetween(new Date(serviceStartDate), new Date(servicEndDate));
-    if (diffDays - 1 < visitFrequency) {
-      throw new BadRequestException("Interval choosen too large")
+    if (visitDays) {
+      const diffDays = areWeekdaysPresentBetweenDates(new Date(serviceStartDate), new Date(servicEndDate), visitDays);
+      if (!diffDays) {
+        throw new BadRequestException("Weekday Selected not available within the dates choosen")
+      }
     }
+
     /* ----------------------------------------------------
      * 1. Fetch user & client profile
      * -------------------------------------------------- */
@@ -1067,7 +1073,7 @@ export class IntakeFormService {
         ? await generateVisitDatesforPostPartumDoula(
           startDate,
           endDate,
-          visitFrequency,
+          visitDays,
         )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 

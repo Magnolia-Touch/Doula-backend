@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TimeShift } from '@prisma/client';
+import { TimeShift, WeekDays } from '@prisma/client';
 import {
   IsString,
   IsNotEmpty,
@@ -8,6 +8,8 @@ import {
   IsOptional,
   IsInt,
   Min,
+  IsArray,
+  ArrayNotEmpty,
 } from 'class-validator';
 
 export class CalculatePricingDto {
@@ -43,14 +45,18 @@ export class CalculatePricingDto {
   @IsNotEmpty()
   servicEndDate: string;
 
-  //set defalut 0.
-  @ApiProperty({
-    example: 2,
-    description: 'Visit Frequency for Services (e.g., twice a week)',
+  @ApiPropertyOptional({
+    example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
+    description: 'Weekdays when the service should occur',
+    enum: WeekDays,
+    isArray: true,
   })
   @IsOptional()
-  @IsInt()
-  visitFrequency: number = 1;
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsEnum(WeekDays, { each: true })
+  visitDays?: WeekDays[];
+
 
   @ApiProperty({
     example: TimeShift.MORNING,
