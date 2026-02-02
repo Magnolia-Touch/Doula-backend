@@ -19,6 +19,7 @@ import { RescheduleDto } from './dto/reschedule.dto';
 import { cancelDto } from './dto/cancel.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ScheduleDoulaDto, UpdateClientDoulaEnquiryDto } from './dto/schedule-doula.dto';
+import { CreateMeetingDto } from './dto/create-meeting.dto';
 
 @Injectable()
 export class MeetingsService {
@@ -863,6 +864,70 @@ export class MeetingsService {
       notes: enquiry.notes,
       status: enquiry.status,
       serviceName: enquiry.serviceName
+    };
+  }
+
+  //---------------------------------------------
+  // update - 1
+  //---------------------------------------------
+
+  async createMeetingForClientAndDoula(dto: CreateMeetingDto, doulaUserId: string) {
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { id: dto.clientProfileId },
+      include: { user: true },
+    });
+
+    if (!clientProfile) {
+      throw new BadRequestException('Client profile not found');
+    }
+
+    const doulaProfile = await this.prisma.doulaProfile.findUnique({
+      where: { userId: doulaUserId },
+      include: { user: true },
+    });
+
+    if (!doulaProfile) {
+      throw new BadRequestException('Doula profile not found');
+    }
+
+    const date = new Date(dto.date);
+
+    const startTime = new Date(`${dto.date}T${dto.startTime}:00`);
+    const endTime = new Date(`${dto.date}T${dto.endTime}:00`);
+
+    const meeting = await this.prisma.meetings.create({
+      data: {
+        date,
+        startTime,
+        endTime,
+        status: MeetingStatus.SCHEDULED,
+        serviceName: dto.serviceName,
+        remarks: dto.remarks,
+        bookedById: clientProfile.id,
+        doulaProfileId: doulaProfile.id,
+        link: 'https://meet.yourplatform.com/' + crypto.randomUUID(),
+      },
+    });
+
+    /** SEND MAIL TO CLIENT */
+    await this.mail.sendMail({
+      to: clientProfile.user.email,
+      subject: 'Your Meeting Has Been Scheduled',
+      template: 'meeting-scheduled',
+      context: {
+        clientName: clientProfile.user.name,
+        doulaName: doulaProfile.user.name,
+        serviceName: dto.serviceName,
+        date: date.toDateString(),
+        startTime: dto.startTime,
+        endTime: dto.endTime,
+        meetingLink: meeting.link,
+      },
+    });
+
+    return {
+      message: 'Meeting created successfully',
+      meeting,
     };
   }
 
