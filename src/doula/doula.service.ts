@@ -8,7 +8,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
-import { BookingStatus, MeetingStatus, Prisma, Role } from '@prisma/client';
+import { BookingStatus, MeetingStatus, Prisma, Role, WeekDays } from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
 import { checkUserExistorNot } from 'src/common/utility/service-utils';
 import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
@@ -2543,7 +2543,8 @@ export class DoulaService {
     doulaId: string,
     startDate: string,
     endDate: string,
-    visitFrequency: number,
+    visitDays?: WeekDays[]
+
   ) {
     /* ------------------ Validate Doula ------------------ */
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -2567,7 +2568,7 @@ export class DoulaService {
     const visitDates = await generateVisitDatesforPostPartumDoula(
       start,
       end,
-      visitFrequency,
+      visitDays,
     );
 
     /* ------------------ Check Schedule Conflicts ------------------ */
@@ -2647,7 +2648,7 @@ export class DoulaService {
         doulaId,
         startDate,
         endDate,
-        visitFrequency,
+        visitDays,
         visitDates: visitDates.map((d) =>
           d.toISOString().split('T')[0],
         ),
@@ -2821,7 +2822,7 @@ export class DoulaService {
       servicePricingId,
       serviceStartDate,
       servicEndDate,
-      visitFrequency,
+      visitDays,
       serviceTimeShift,
       buffer = 0,
     } = dto;
@@ -2879,7 +2880,7 @@ export class DoulaService {
         ? await generateVisitDatesforPostPartumDoula(
           startDate,
           endDate,
-          visitFrequency,
+          visitDays,
         )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 
