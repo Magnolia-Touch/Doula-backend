@@ -2,6 +2,10 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MeetingStatus, Role, TimeShift, WeekDays } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 // utils/meeting.util.ts
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
 
 export async function findSlotOrThrow(
   prisma: PrismaService,
@@ -466,30 +470,36 @@ const WEEKDAY_MAP: Record<Weekday, number> = {
   FRIDAY: 5,
   SATURDAY: 6,
 };
-
 export async function generateVisitDatesforPostPartumDoula(
   startDate: Date,
   endDate?: Date,
   visitDays: Weekday[] = [],
 ): Promise<Date[]> {
-  // ✅ Single-date case (unchanged behavior)
+  // Single-date case
   if (!endDate || startDate.getTime() === endDate.getTime()) {
-    return [new Date(startDate.getTime())];
+    const d = new Date(startDate.getTime());
+    d.setUTCHours(0, 0, 0, 0);
+    return [d];
   }
 
   const dates: Date[] = [];
-  const requiredDays = new Set(visitDays.map(day => WEEKDAY_MAP[day]));
+  const requiredDays = new Set(
+    visitDays.map(day => WEEKDAY_MAP[day]), // 0–6 (Sun–Sat)
+  );
 
-  let current = new Date(startDate.getTime());
-  current.setHours(0, 0, 0, 0);
+  const current = new Date(startDate.getTime());
+  current.setUTCHours(0, 0, 0, 0);
 
   const end = new Date(endDate.getTime());
-  end.setHours(0, 0, 0, 0);
+  end.setUTCHours(0, 0, 0, 0);
 
   while (current.getTime() <= end.getTime()) {
-    if (requiredDays.has(current.getDay())) {
+    // ✅ UTC weekday check
+    if (requiredDays.has(current.getUTCDay())) {
       dates.push(new Date(current.getTime()));
     }
+
+    // ✅ UTC-safe increment
     current.setUTCDate(current.getUTCDate() + 1);
   }
 
@@ -497,12 +507,6 @@ export async function generateVisitDatesforPostPartumDoula(
 }
 
 
-
-
-
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 /**
  * Checks if a doula is available for a given date and time shift
@@ -527,7 +531,7 @@ export async function isDoulaAvailableForShift(
         availability: true,
       },
     });
-
+  console.log("availabilityRecord", availabilityRecord);
   if (!availabilityRecord) {
     return false;
   }
@@ -556,6 +560,7 @@ export function areWeekdaysPresentBetweenDates(
   if (startDate > endDate) return false;
 
   const requiredDays = new Set(weekdays.map(day => WEEKDAY_MAP[day]));
+  console.log("requiredDays", requiredDays);
   const foundDays = new Set<number>();
 
   const current = new Date(startDate);
@@ -563,7 +568,7 @@ export function areWeekdaysPresentBetweenDates(
 
   const end = new Date(endDate);
   end.setHours(0, 0, 0, 0);
-
+  console.log(foundDays, "foundDays");
   while (current <= end) {
     const day = current.getDay();
     if (requiredDays.has(day)) {
