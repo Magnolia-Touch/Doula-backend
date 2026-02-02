@@ -233,10 +233,12 @@ model Region {
 
   zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id], onDelete: SetNull)
 
-  doula          DoulaProfile[]   @relation("regions")
-  EnquiryForm    EnquiryForm[]
-  ServiceBooking ServiceBooking[]
-  IntakeForm     IntakeForm[]
+  doula              DoulaProfile[]    @relation("regions")
+  EnquiryForm        EnquiryForm[]
+  ServiceBooking     ServiceBooking[]
+  IntakeForm         IntakeForm[]
+  DoulaJoinEnquiry   DoulaJoinEnquiry? @relation(fields: [doulaJoinEnquiryId], references: [id])
+  doulaJoinEnquiryId String?
 }
 
 // Notes
@@ -607,4 +609,15 @@ model ClientDoulaEnquiries {
 
   ClientProfile ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
   DoulaProfile  DoulaProfile  @relation(fields: [doulaProfileId], references: [id], onDelete: Cascade)
+}
+
+model DoulaJoinEnquiry {
+  id     String   @id @default(uuid())
+  name   String
+  email  String
+  phone  String?
+  Region Region[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

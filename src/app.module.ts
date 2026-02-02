@@ -29,6 +29,7 @@ import { UserModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { StripeModule } from './stripe/stripe.module';
 import { BullModule } from '@nestjs/bullmq';
+import { DoulaJoinEnquiryModule } from './doula-join-enquiry/doula-join-enquiry.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { BullModule } from '@nestjs/bullmq';
     ContactFormModule,
     ServiceBookingModule,
     UserModule,
+    DoulaJoinEnquiryModule,
     ConfigModule.forRoot({
       isGlobal: true, // ✅ VERY IMPORTANT
       envFilePath: '.env',
