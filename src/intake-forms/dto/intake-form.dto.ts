@@ -1,4 +1,6 @@
 import {
+  ArrayNotEmpty,
+  IsArray,
   IsDateString,
   IsEnum,
   IsInt,
@@ -6,8 +8,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { TimeShift } from '@prisma/client';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TimeShift, WeekDays } from '@prisma/client';
 
 export class IntakeFormDto {
   @ApiProperty({
@@ -71,14 +73,18 @@ export class IntakeFormDto {
   @IsDateString()
   serviceEndDate: string;
 
-  //set defalut 0.
-  @ApiProperty({
-    example: 2,
-    description: 'Visit Frequency for Services (e.g., twice a week)',
+  @ApiPropertyOptional({
+    example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
+    description: 'Weekdays when the service should occur',
+    enum: WeekDays,
+    isArray: true,
   })
-  @IsInt()
   @IsOptional()
-  visitFrequency: number = 0;
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsEnum(WeekDays, { each: true })
+  visitDays?: WeekDays[];
+
 
   @ApiProperty({
     example: TimeShift.MORNING,
@@ -150,6 +156,7 @@ export class BookDoulaDto {
   @IsString()
   serviceStartDate: string;
 
+
   @ApiProperty({
     example: '2025-12-10',
     description: 'Service End Date (ISO format)',
@@ -158,15 +165,19 @@ export class BookDoulaDto {
   @IsOptional()
   servicEndDate: string;
 
-  //set defalut 0.
-  @ApiProperty({
-    example: 2,
-    description: 'Visit Frequency for Services (e.g., twice a week)',
+
+  @ApiPropertyOptional({
+    example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
+    description: 'Weekdays when the service should occur',
+    enum: WeekDays,
+    isArray: true,
   })
   @IsOptional()
-  @IsInt()
-  @IsOptional()
-  visitFrequency: number = 0;
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsEnum(WeekDays, { each: true })
+  visitDays?: WeekDays[];
+
 
   @ApiProperty({
     example: TimeShift.MORNING,
@@ -178,9 +189,11 @@ export class BookDoulaDto {
   })
   serviceTimeShift: TimeShift;
 
+
   @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
   @IsNumber()
   buffer: number = 1;
+
 
   @IsOptional()
   @IsString()
