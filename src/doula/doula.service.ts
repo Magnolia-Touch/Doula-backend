@@ -2970,4 +2970,126 @@ export class DoulaService {
       },
     };
   }
+
+
+
+  //--------------------------------------------------------------
+  // Update 1
+  //--------------------------------------------------------------
+
+  async getBookedDatesInRange(
+    doulaId: string,
+    startDate: string,
+    endDate: string,
+  ) {
+    /* ------------------ Validate Doula ------------------ */
+    const doula = await this.prisma.doulaProfile.findUnique({
+      where: { id: doulaId },
+      select: { id: true },
+    });
+
+    if (!doula) {
+      throw new NotFoundException('Doula not found');
+    }
+
+    /* ------------------ Normalize Dates ------------------ */
+    const start = this.toUtcMidnight(startDate);
+    const end = this.toUtcMidnight(endDate);
+
+    if (start > end) {
+      throw new BadRequestException('Start date must be before end date');
+    }
+
+    /* ------------------ Generate ALL dates in range ------------------ */
+    const allDates: Date[] = [];
+    let current = new Date(start.getTime());
+
+    while (current <= end) {
+      allDates.push(new Date(current.getTime()));
+      current.setUTCDate(current.getUTCDate() + 1);
+    }
+
+    /* ------------------ Fetch Schedule Conflicts ------------------ */
+    const schedules = await this.prisma.schedules.findMany({
+      where: {
+        doulaProfileId: doulaId,
+        date: { in: allDates },
+      },
+      select: { date: true },
+    });
+
+    const scheduledDates = new Set(
+      schedules.map((s) => s.date.toISOString().split('T')[0]),
+    );
+
+    /* ------------------ Fetch Service Availability ------------------ */
+    const availabilityRows =
+      await this.prisma.availableSlotsForService.findMany({
+        where: {
+          doulaId,
+          date: { in: allDates },
+        },
+        select: {
+          date: true,
+          availability: true,
+        },
+      });
+
+    const availabilityByDate = new Map<
+      string,
+      { MORNING?: boolean; NIGHT?: boolean; FULLDAY?: boolean }
+    >();
+
+    availabilityRows.forEach((row) => {
+      if (row.availability) {
+        availabilityByDate.set(
+          row.date.toISOString().split('T')[0],
+          row.availability as { MORNING?: boolean; NIGHT?: boolean; FULLDAY?: boolean },
+        );
+      }
+    });
+
+    /* ------------------ Compute Booked / Unavailable Dates ------------------ */
+    const bookedDates: string[] = [];
+
+    for (const date of allDates) {
+      const key = date.toISOString().split('T')[0];
+
+      // 1️⃣ Already scheduled
+      if (scheduledDates.has(key)) {
+        bookedDates.push(key);
+        continue;
+      }
+
+      // 2️⃣ No availability record at all
+      const availability = availabilityByDate.get(key);
+      if (!availability) {
+        bookedDates.push(key);
+        continue;
+      }
+
+      // 3️⃣ All shifts unavailable
+      const noShiftAvailable =
+        availability.MORNING !== true &&
+        availability.NIGHT !== true &&
+        availability.FULLDAY !== true;
+
+      if (noShiftAvailable) {
+        bookedDates.push(key);
+      }
+    }
+
+    /* ------------------ Response ------------------ */
+    return {
+      success: true,
+      message: 'Booked dates fetched successfully',
+      data: {
+        doulaId,
+        startDate,
+        endDate,
+        bookedDates,
+      },
+    };
+  }
+
 }
