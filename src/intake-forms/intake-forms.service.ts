@@ -1082,6 +1082,7 @@ export class IntakeFormService {
       throw new BadRequestException('No valid visit dates generated');
     }
 
+    console.log("visitDates", visitDates);
 
     /* ----------------------------------------------------
      * 6. Availability validation
