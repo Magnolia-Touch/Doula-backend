@@ -1755,4 +1755,49 @@ export class DoulaController {
   async calculatePricing(@Body() dto: CalculatePricingDto) {
     return this.service.calculatePricing(dto);
   }
+
+
+
+  //--------------------------------------------------------------
+  // Update 1
+  //--------------------------------------------------------------
+
+  @Get(':doulaId/booked-dates')
+  @ApiOperation({
+    summary: 'Get booked dates for a doula within a date range',
+  })
+  @ApiParam({
+    name: 'doulaId',
+    type: String,
+    description: 'Doula ID',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    type: String,
+    example: '2026-02-01',
+    description: 'Start date (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    type: String,
+    example: '2026-02-10',
+    description: 'End date (YYYY-MM-DD)',
+  })
+  async getBookedDates(
+    @Param('doulaId') doulaId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    if (!startDate || !endDate) {
+      throw new BadRequestException(
+        'startDate and endDate are required',
+      );
+    }
+
+    return this.service.getBookedDatesInRange(
+      doulaId,
+      startDate,
+      endDate,
+    );
+  }
 }
