@@ -383,6 +383,7 @@ export class MeetingsController {
 
 
   @Post("schedule/doula-client")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
   async createMeeting(
     @Body() dto: CreateMeetingDto,
