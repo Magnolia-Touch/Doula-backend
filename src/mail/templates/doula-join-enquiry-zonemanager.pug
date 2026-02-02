@@ -1,0 +1,26 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    title New Doula Join Enquiry
+  body
+    h2 New Doula Join Enquiry Received
+
+    p A new doula has submitted a join enquiry for your region(s).
+
+    ul
+      li
+        strong Name:
+        |  #{name}
+      li
+        strong Email:
+        |  #{email}
+      if phone
+        li
+          strong Phone:
+          |  #{phone}
+      li
+        strong Regions:
+        |  #{regions}
+
+    p Please log in to the admin panel to review and take action.
