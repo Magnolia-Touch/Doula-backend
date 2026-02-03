@@ -4,6 +4,7 @@ import { CreateDoulaJoinEnquiryDto } from './dto/create-doula-join-enquiry.dto';
 import { UpdateDoulaJoinEnquiryDto } from './dto/update-doula-join-enquiry.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 import { MailerService } from '@nestjs-modules/mailer';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class DoulaJoinEnquiryService {
@@ -18,46 +19,35 @@ export class DoulaJoinEnquiryService {
                 name: dto.name,
                 email: dto.email,
                 phone: dto.phone,
-                Region: {
-                    connect: dto.regionIds.map((id) => ({ id })),
-                },
-            },
-            include: {
-                Region: {
-                    include: {
-                        zoneManager: {
-                            include: {
-                                user: true,
-                            },
-                        },
-                    },
-                },
+                // Region connect if applicable
             },
         });
 
-        // 2. Collect unique zone manager emails
-        const zoneManagerEmails = Array.from(
-            new Set(
-                enquiry.Region
-                    .map((region) => region.zoneManager?.user?.email)
-                    .filter(Boolean),
-            ),
-        );
+        // 2. Fetch admins
+        const admins = await this.prisma.user.findMany({
+            where: { role: Role.ADMIN },
+            select: { email: true },
+        });
 
-        // 3. Send mail to zone managers (non-blocking)
-        for (const email of zoneManagerEmails) {
-            await this.mail.sendMail({
-                to: email,
-                subject: 'New Doula Join Enquiry',
-                template: 'doula-join-enquiry-zonemanager',
-                context: {
-                    name: enquiry.name,
-                    email: enquiry.email,
-                    phone: enquiry.phone,
-                    regions: enquiry.Region.map((r) => r.regionName).join(', '),
-                },
-            });
-        }
+        // 3. Send mails in parallel (non-blocking)
+        Promise.all(
+            admins.map(admin =>
+                this.mail.sendMail({
+                    to: admin.email,
+                    subject: 'New Doula Join Enquiry',
+                    template: 'doula-join-enquiry-zonemanager',
+                    context: {
+                        name: enquiry.name,
+                        email: enquiry.email,
+                        phone: enquiry.phone,
+
+                    },
+                }),
+            ),
+        ).catch(err => {
+            // log but don't fail API
+            console.error('Failed to send admin emails', err);
+        });
 
         return enquiry;
     }
@@ -85,7 +75,6 @@ export class DoulaJoinEnquiryService {
     async findOne(id: string) {
         const enquiry = await this.prisma.doulaJoinEnquiry.findUnique({
             where: { id },
-            include: { Region: true },
         });
 
         if (!enquiry) {
@@ -104,14 +93,6 @@ export class DoulaJoinEnquiryService {
                 name: dto.name,
                 email: dto.email,
                 phone: dto.phone,
-                ...(dto.regionIds && {
-                    Region: {
-                        set: dto.regionIds.map((regionId) => ({ id: regionId })),
-                    },
-                }),
-            },
-            include: {
-                Region: true,
             },
         });
     }

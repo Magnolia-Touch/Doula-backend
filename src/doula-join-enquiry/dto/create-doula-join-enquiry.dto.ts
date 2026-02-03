@@ -18,9 +18,4 @@ export class CreateDoulaJoinEnquiryDto {
     @IsOptional()
     @IsPhoneNumber()
     phone?: string;
-
-    @IsArray()
-    @ArrayNotEmpty()
-    @IsUUID('all', { each: true })
-    regionIds: string[];
 }

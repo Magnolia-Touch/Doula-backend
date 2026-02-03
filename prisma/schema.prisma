@@ -237,8 +237,8 @@ model Region {
   EnquiryForm        EnquiryForm[]
   ServiceBooking     ServiceBooking[]
   IntakeForm         IntakeForm[]
-  DoulaJoinEnquiry   DoulaJoinEnquiry? @relation(fields: [doulaJoinEnquiryId], references: [id])
-  doulaJoinEnquiryId String?
+
+
 }
 
 // Notes
@@ -612,12 +612,12 @@ model ClientDoulaEnquiries {
 }
 
 model DoulaJoinEnquiry {
-  id     String   @id @default(uuid())
-  name   String
-  email  String
-  phone  String?
-  Region Region[]
+  id    String  @id @default(uuid())
+  name  String
+  email String
+  phone String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
 }
