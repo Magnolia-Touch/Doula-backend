@@ -1073,6 +1073,7 @@ export class ZoneManagerService {
         endDate: formatTimeOnly(meeting.endTime),
         status: meeting.status,
         meetingDate: meeting.date,
+        createdby: meeting.createdby,
 
       })),
       meta: result.meta,
@@ -1281,6 +1282,7 @@ export class ZoneManagerService {
         startDate: formatTimeOnly(meeting.startTime),
         endDate: formatTimeOnly(meeting.endTime),
         status: meeting.status,
+        createdby: meeting.createdby,
       },
     };
   }

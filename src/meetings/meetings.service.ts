@@ -236,6 +236,7 @@ export class MeetingsService {
 
           meeting_with: meetingWith,
           enquiryId: meeting.enquiryId,
+          createdby: meeting.createdby,
 
           // ===== CLIENT =====
           client: {
@@ -353,6 +354,7 @@ export class MeetingsService {
 
       meeting_with: meetingWith,
       enquiryId: meeting.enquiryId,
+      createdby: meeting.createdby,
 
       // ===== CLIENT =====
       client: {

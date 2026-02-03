@@ -326,7 +326,7 @@ model Meetings {
   serviceId                  String?
   enquiryId                  String? @unique
 
-  createdby Role @default(ZONE_MANAGER)
+  createdby Role?
 
   AvailableSlotsForMeeting     AvailableSlotsForMeeting?      @relation(fields: [availableSlotsForMeetingId], references: [id], onDelete: Cascade)
   ZoneManagerProfile           ZoneManagerProfile?            @relation(fields: [zoneManagerProfileId], references: [id], onDelete: Cascade)
