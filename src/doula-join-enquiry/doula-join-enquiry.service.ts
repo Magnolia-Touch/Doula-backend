@@ -58,13 +58,6 @@ export class DoulaJoinEnquiryService {
             prismaModel: this.prisma.doulaJoinEnquiry,
             page,
             limit,
-            include: {
-                Region: {
-                    include: {
-                        zoneManager: true,
-                    },
-                },
-            },
             orderBy: {
                 createdAt: 'desc',
             },
