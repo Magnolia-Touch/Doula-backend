@@ -878,10 +878,34 @@ export class ZoneManagerService {
     if (!zoneManager) {
       throw new ForbiddenException('Zone manager profile not found');
     }
-    const where: Prisma.MeetingsWhereInput = {
-      zoneManagerProfileId: zoneManager.id,
-    };
 
+    /**
+     * Fetch all doula IDs under this zone manager
+     */
+    const doulas = await this.prisma.doulaProfile.findMany({
+      where: {
+        zoneManager: {
+          some: {
+            id: zoneManager.id,
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    const doulaIds = doulas.map((d) => d.id);
+
+    /**
+     * WHERE condition:
+     * 1. Meetings of zone manager
+     * 2. Meetings of doulas under zone manager
+     */
+    const where: Prisma.MeetingsWhereInput = {
+      OR: [
+        { zoneManagerProfileId: zoneManager.id },
+        { doulaProfileId: { in: doulaIds } },
+      ],
+    };
     where.AND = [];
     if (search) {
       where.AND.push({
