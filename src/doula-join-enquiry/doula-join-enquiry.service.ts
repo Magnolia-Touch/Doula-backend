@@ -86,7 +86,9 @@ export class DoulaJoinEnquiryService {
                 name: dto.name,
                 email: dto.email,
                 phone: dto.phone,
+                status: dto.status,
             },
+
         });
     }
 

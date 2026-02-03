@@ -1,0 +1,60 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Meeting Scheduled Notification
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f6f8fa;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 8px;
+      }
+      .btn {
+        display: inline-block;
+        padding: 12px 20px;
+        background: #4f46e5;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 6px;
+        margin-top: 16px;
+      }
+
+  body
+    .container
+      h2 Hello Zone Manager,
+      p A meeting has been scheduled between a client and a doula. Below are the meeting details:
+
+      ul
+        li
+          strong Client Name:
+          |  #{clientName}
+        li
+          strong Service:
+          |  #{serviceName}
+        li
+          strong Doula:
+          |  #{doulaName}
+        li
+          strong Date:
+          |  #{date}
+        li
+          strong Time:
+          |  #{startTime} – #{endTime}
+
+      p You may join or monitor the meeting using the link below:
+      a.btn(href=meetingLink target="_blank") View / Join Meeting
+
+      p(style="margin-top:24px")
+        | This is an informational notification. No action is required unless necessary.
+
+      p
+        | Regards,
+        br
+        strong Bambini Doulas Team
