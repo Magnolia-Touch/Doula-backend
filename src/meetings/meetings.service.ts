@@ -276,34 +276,12 @@ export class MeetingsService {
     // 1️⃣ Resolve profile based on role
     let profile: any = null;
 
-    if (user.role === Role.ZONE_MANAGER) {
-      profile = await this.prisma.zoneManagerProfile.findUnique({
-        where: { userId: user.id },
-      });
-    } else if (user.role === Role.DOULA) {
-      profile = await this.prisma.doulaProfile.findUnique({
-        where: { userId: user.id },
-      });
-    } else if (user.role === Role.ADMIN) {
-      profile = await this.prisma.adminProfile.findUnique({
-        where: { userId: user.id },
-      });
-    }
-
     if (!profile) {
       throw new NotFoundException('Profile Not Found');
     }
 
     // 2️⃣ Build access-controlled WHERE clause
     const where: any = { id };
-
-    if (user.role === Role.ZONE_MANAGER) {
-      where.zoneManagerProfileId = profile.id;
-    } else if (user.role === Role.DOULA) {
-      where.doulaProfileId = profile.id;
-    } else if (user.role === Role.ADMIN) {
-      where.adminProfileId = profile.id;
-    }
 
     // 3️⃣ Fetch meeting
     const meeting = await this.prisma.meetings.findFirst({
