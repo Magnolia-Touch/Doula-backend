@@ -273,19 +273,9 @@ export class MeetingsService {
   }
 
   async getMeetingById(id: string, user: any) {
-    // 1️⃣ Resolve profile based on role
-    let profile: any = null;
-
-    if (!profile) {
-      throw new NotFoundException('Profile Not Found');
-    }
-
-    // 2️⃣ Build access-controlled WHERE clause
-    const where: any = { id };
-
-    // 3️⃣ Fetch meeting
+    // 1️⃣ Fetch meeting by ID only (no role / access restriction)
     const meeting = await this.prisma.meetings.findFirst({
-      where,
+      where: { id },
       include: {
         AvailableSlotsForMeeting: {
           select: { weekday: true },
@@ -337,16 +327,17 @@ export class MeetingsService {
     });
 
     if (!meeting) {
-      throw new NotFoundException('Meeting Not Found or Access Denied');
+      throw new NotFoundException('Meeting Not Found');
     }
 
-    // 4️⃣ Inline response mapping
+    // 2️⃣ Determine meeting owner (unchanged logic)
     const meetingWith = meeting.doulaProfileId
       ? 'DOULA'
       : meeting.zoneManagerProfileId
         ? 'ZONE_MANAGER'
         : null;
 
+    // 3️⃣ Response mapping (UNCHANGED)
     return {
       // ===== MEETING =====
       meetingId: meeting.id,
@@ -394,6 +385,7 @@ export class MeetingsService {
           : null,
     };
   }
+
 
   // Reschedule meeting to new slot
   //any meeting can be cancelled by admin
