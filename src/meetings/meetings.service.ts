@@ -881,6 +881,15 @@ export class MeetingsService {
       throw new BadRequestException('Client profile not found');
     }
 
+    const enquiry = await this.prisma.enquiryForm.findUnique({
+      where: { id: dto.enquiryId },
+      include: { region: { include: { zoneManager: { include: { user: true } } } } },
+    });
+
+    if (!enquiry) {
+      throw new BadRequestException('enquiry not found');
+    }
+
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
       where: { userId: doulaUserId },
       include: { user: true },
@@ -909,21 +918,39 @@ export class MeetingsService {
       },
     });
 
-    /** SEND MAIL TO CLIENT */
-    await this.mail.sendMail({
-      to: clientProfile.user.email,
-      subject: 'Your Meeting Has Been Scheduled',
-      template: 'meeting-scheduled',
-      context: {
-        clientName: clientProfile.user.name,
-        doulaName: doulaProfile.user.name,
-        serviceName: dto.serviceName,
-        date: date.toDateString(),
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-        meetingLink: meeting.link,
-      },
-    });
+    await Promise.all([
+      /** SEND MAIL TO CLIENT */
+      this.mail.sendMail({
+        to: clientProfile.user.email,
+        subject: 'Your Meeting Has Been Scheduled',
+        template: 'meeting-scheduled-to-client',
+        context: {
+          clientName: clientProfile.user.name,
+          doulaName: doulaProfile.user.name,
+          serviceName: dto.serviceName,
+          date: date.toDateString(),
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+          meetingLink: meeting.link,
+        },
+      }),
+
+      /** SEND MAIL TO ZONE MANAGER */
+      this.mail.sendMail({
+        to: enquiry.region.zoneManager?.user?.email,
+        subject: 'Meeting Scheduled: Client & Doula',
+        template: 'meeting-scheduled-to-zm',
+        context: {
+          clientName: clientProfile.user.name,
+          serviceName: dto.serviceName,
+          doulaName: doulaProfile.user.name,
+          date: date.toDateString(),
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+          meetingLink: meeting.link,
+        },
+      }),
+    ]);
 
     return {
       message: 'Meeting created successfully',

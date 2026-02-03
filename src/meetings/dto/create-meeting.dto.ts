@@ -5,6 +5,9 @@ export class CreateMeetingDto {
     @IsUUID()
     clientProfileId: string;
 
+    @IsUUID()
+    enquiryId: string;
+
     @IsDateString()
     date: string; // YYYY-MM-DD
 

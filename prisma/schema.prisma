@@ -73,6 +73,13 @@ enum PaymentProvider {
   MANUAL
 }
 
+enum JoinEnquiryStatus {
+  PENDING
+  IN_REVIEW
+  ACCEPTED
+  REJECTED
+}
+
 //User Model
 model User {
   id           String    @id @default(uuid())
@@ -233,12 +240,10 @@ model Region {
 
   zoneManager ZoneManagerProfile? @relation(fields: [zoneManagerId], references: [id], onDelete: SetNull)
 
-  doula              DoulaProfile[]    @relation("regions")
-  EnquiryForm        EnquiryForm[]
-  ServiceBooking     ServiceBooking[]
-  IntakeForm         IntakeForm[]
-
-
+  doula          DoulaProfile[]   @relation("regions")
+  EnquiryForm    EnquiryForm[]
+  ServiceBooking ServiceBooking[]
+  IntakeForm     IntakeForm[]
 }
 
 // Notes
@@ -617,7 +622,8 @@ model DoulaJoinEnquiry {
   email String
   phone String?
 
+  status JoinEnquiryStatus @default(PENDING)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 }
