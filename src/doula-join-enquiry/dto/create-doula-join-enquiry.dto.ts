@@ -16,6 +16,6 @@ export class CreateDoulaJoinEnquiryDto {
     email: string;
 
     @IsOptional()
-    @IsPhoneNumber()
+    @IsString()
     phone?: string;
 }
