@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    title New Enquiry Assigned
+  body
+    h2 New Enquiry Received
+
+    p A new enquiry has been assigned to you.
+
+    h3 Client Details
+    ul
+      li
+        strong Client Name:
+        |  #{clientName}
+
+    h3 Meeting Details
+    ul
+      li
+        strong Service:
+        |  #{serviceName}
+      li
+        strong Meeting Date:
+        |  #{meetingDate}
+      li
+        strong Meeting Time:
+        |  #{meetingTime}
+
+    if additionalNotes && additionalNotes !== 'None'
+      p
+        strong Additional Notes:
+        |  #{additionalNotes}
+
+    br
+    p Please login to dashboard for further actions.

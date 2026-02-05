@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-
+findZoneManagerOrThrowWithId
 
 export async function findSlotOrThrow(
   prisma: PrismaService,
@@ -71,6 +71,7 @@ export async function findZoneManagerOrThrowWithId(
 ) {
   const zoneManager = await prisma.zoneManagerProfile.findUnique({
     where: { id: zoneManagerId },
+    include: { user: true }
   });
 
   if (!zoneManager) {

@@ -175,6 +175,54 @@ export class EnquiryService {
             },
         });
 
+        /**
+ * ========================
+ * MAIL SECTION
+ * ========================
+ */
+
+        const mailContext = {
+            clientName: name,
+            meetingDate: meetingsDate,
+            meetingTime: meetingsTimeSlots,
+            serviceName: service.name,
+            additionalNotes: additionalNotes || 'None',
+            zoneManagerName: zoneManager.user?.name || 'Zone Manager',
+        };
+
+        if (!zoneManager.user) {
+            console.error(
+                `Zone Manager with ID ${zoneManager.id} does not have an email address.`,
+            );
+            return {
+                message: 'Enquiry submitted successfully',
+                enquiry: fullEnquiry,
+            };
+        }
+
+        (async () => {
+            try {
+                await Promise.all([
+                    // Mail to Client
+                    this.mail.sendMail({
+                        to: email,
+                        subject: 'Enquiry Confirmation',
+                        template: 'enquiry-confirmation',
+                        context: mailContext,
+                    }),
+
+                    // Mail to Zone Manager
+                    this.mail.sendMail({
+                        to: zoneManager.user?.email,
+                        subject: 'New Enquiry Assigned',
+                        template: 'enquiry-zone-manager',
+                        context: mailContext,
+                    }),
+                ]);
+            } catch (error) {
+                console.error('Mail sending failed:', error);
+            }
+        })();
         return {
             message: 'Enquiry submitted successfully',
             enquiry: fullEnquiry,

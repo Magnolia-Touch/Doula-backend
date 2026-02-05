@@ -5,10 +5,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { MeetingsModule } from 'src/meetings/meetings.module';
 import { MeetingsService } from 'src/meetings/meetings.service';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [MeetingsModule],
+  imports: [MeetingsModule, MailModule],
   controllers: [EnquiryController],
   providers: [EnquiryService, PrismaService, MeetingsService],
 })
-export class EnquiryModule {}
+export class EnquiryModule { }
