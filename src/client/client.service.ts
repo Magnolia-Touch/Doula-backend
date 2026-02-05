@@ -329,7 +329,7 @@ export class ClientsService {
             },
           },
           orderBy: {
-            createdAt: 'desc',
+            date: 'desc',
           },
         },
       },
