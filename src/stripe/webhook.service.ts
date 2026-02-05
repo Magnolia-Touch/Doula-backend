@@ -211,7 +211,7 @@ export class WebhookService {
         timeShift: timeShift,
         serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
-        totalAmountPaid: totalAmount,
+        totalAmount: totalAmount,
       };
 
       /** -------- Doula Mail -------- */
