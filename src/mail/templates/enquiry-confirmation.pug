@@ -1,0 +1,33 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    title Enquiry Confirmation
+  body
+    h2 Hello #{clientName},
+
+    p Your enquiry has been successfully submitted.
+
+    h3 Meeting Details
+    ul
+      li
+        strong Service:
+        |  #{serviceName}
+      li
+        strong Meeting Date:
+        |  #{meetingDate}
+      li
+        strong Meeting Time:
+        |  #{meetingTime}
+
+    if additionalNotes && additionalNotes !== 'None'
+      p
+        strong Additional Notes:
+        |  #{additionalNotes}
+
+    br
+    p Our Zone Manager #{zoneManagerName} will contact you soon.
+
+    br
+    p Regards,
+    p Support Team
