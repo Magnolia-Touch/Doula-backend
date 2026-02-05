@@ -4,7 +4,7 @@ import { CreateDoulaJoinEnquiryDto } from './dto/create-doula-join-enquiry.dto';
 import { UpdateDoulaJoinEnquiryDto } from './dto/update-doula-join-enquiry.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 import { MailerService } from '@nestjs-modules/mailer';
-import { Role } from '@prisma/client';
+import { JoinEnquiryStatus, Role } from '@prisma/client';
 
 @Injectable()
 export class DoulaJoinEnquiryService {
@@ -53,11 +53,18 @@ export class DoulaJoinEnquiryService {
     }
 
 
-    async findAll(page = 1, limit = 10) {
+    async findAll(
+        page = 1,
+        limit = 10,
+        status?: JoinEnquiryStatus,
+    ) {
         return paginate({
             prismaModel: this.prisma.doulaJoinEnquiry,
             page,
             limit,
+            where: {
+                ...(status && { status }),
+            },
             orderBy: {
                 createdAt: 'desc',
             },
