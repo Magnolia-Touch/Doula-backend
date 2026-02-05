@@ -11,6 +11,7 @@ import {
 import { DoulaJoinEnquiryService } from './doula-join-enquiry.service';
 import { CreateDoulaJoinEnquiryDto } from './dto/create-doula-join-enquiry.dto';
 import { UpdateDoulaJoinEnquiryDto } from './dto/update-doula-join-enquiry.dto';
+import { JoinEnquiryStatus } from '@prisma/client';
 
 @Controller({
     path: 'doula-join-enquiries',
@@ -26,14 +27,18 @@ export class DoulaJoinEnquiryController {
         return this.doulaJoinEnquiryService.create(dto);
     }
 
+
+
     @Get()
     findAll(
         @Query('page') page?: number,
         @Query('limit') limit?: number,
+        @Query('status') status?: JoinEnquiryStatus,
     ) {
         return this.doulaJoinEnquiryService.findAll(
             Number(page) || 1,
             Number(limit) || 10,
+            status,
         );
     }
 
