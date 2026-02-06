@@ -1033,7 +1033,7 @@ export class MeetingsService {
 
   private includeRelations() {
     return {
-      ClientProfile: {
+      bookedBy: {
         include: {
           user: {
             select: {
