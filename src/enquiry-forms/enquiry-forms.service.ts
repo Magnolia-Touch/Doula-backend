@@ -203,13 +203,13 @@ export class EnquiryService {
         (async () => {
             try {
                 await Promise.all([
-                    // Mail to Client
-                    this.mail.sendMail({
-                        to: email,
-                        subject: 'Enquiry Confirmation',
-                        template: 'enquiry-confirmation',
-                        context: mailContext,
-                    }),
+                    // // Mail to Client
+                    // this.mail.sendMail({
+                    //     to: email,
+                    //     subject: 'Enquiry Confirmation',
+                    //     template: 'enquiry-confirmation',
+                    //     context: mailContext,
+                    // }),
 
                     // Mail to Zone Manager
                     this.mail.sendMail({
