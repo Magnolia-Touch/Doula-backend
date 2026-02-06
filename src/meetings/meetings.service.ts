@@ -1270,15 +1270,6 @@ export class MeetingsService {
   //---------------------------------------------
 
   async createMeetingForClientAndDoula(dto: CreateMeetingDto, doulaUserId: string) {
-    const clientProfile = await this.prisma.clientProfile.findUnique({
-      where: { id: dto.clientProfileId },
-      include: { user: true },
-    });
-
-    if (!clientProfile) {
-      throw new BadRequestException('Client profile not found');
-    }
-
     const enquiry = await this.prisma.enquiryForm.findUnique({
       where: { id: dto.enquiryId },
       include: { region: { include: { zoneManager: { include: { user: true } } } } },
@@ -1286,6 +1277,15 @@ export class MeetingsService {
 
     if (!enquiry) {
       throw new BadRequestException('enquiry not found');
+    }
+
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { id: enquiry.clientId },
+      include: { user: true },
+    });
+
+    if (!clientProfile) {
+      throw new BadRequestException('Client profile not found');
     }
 
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
