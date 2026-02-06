@@ -20,12 +20,16 @@ import { cancelDto } from './dto/cancel.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ScheduleDoulaDto, UpdateClientDoulaEnquiryDto } from './dto/schedule-doula.dto';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class MeetingsService {
+  private readonly logger = new Logger(MeetingsService.name)
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailerService,
+
+
   ) { }
 
   //common function. used inside enquiry and doula meeting scheduling.
@@ -567,10 +571,91 @@ export class MeetingsService {
   // };
 
 
+  // async doulasMeetingSchedule(dto: ScheduleDoulaDto, user: any) {
+  //   const { enquiryId, date, time, doulaIds } = dto;
+
+  //   // 1️⃣ Fetch enquiry (source of truth)
+  //   const enquiry = await this.prisma.enquiryForm.findUnique({
+  //     where: { id: enquiryId },
+  //     select: {
+  //       id: true,
+  //       additionalNotes: true,
+  //       serviceName: true,
+  //       clientProfile: {
+  //         select: {
+  //           id: true,
+  //           user: {
+  //             select: { name: true, email: true, phone: true },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   if (!enquiry) {
+  //     throw new ForbiddenException('enquiry not found');
+  //   }
+
+  //   const meetingDate = new Date(date);
+  //   const startTime = new Date(`1970-01-01T${time}Z`);
+
+  //   // ⏱️ TEMP: default 30-min meeting (adjust later if slot system exists)
+  //   const endTime = new Date(startTime);
+  //   endTime.setMinutes(endTime.getMinutes() + 30);
+  //   const meetLink = `https://bambinidoulas.com/joinmeeting/`;
+  //   // 2️⃣ Create Meetings instead of ClientDoulaEnquiries
+  //   const meetings = await this.prisma.$transaction(
+  //     doulaIds.map((doulaId) =>
+  //       this.prisma.meetings.create({
+  //         data: {
+  //           enquiryId: enquiry.id,
+
+  //           bookedById: enquiry.clientProfile.id,
+  //           doulaProfileId: doulaId,
+
+  //           date: meetingDate,
+  //           startTime,
+  //           endTime,
+
+  //           serviceName: dto.serviceName ?? enquiry.serviceName,
+  //           remarks: dto.notes ?? enquiry.additionalNotes,
+  //           status: MeetingStatus.SCHEDULED,
+  //           createdby: Role.ZONE_MANAGER,
+
+  //           // Required non-null column
+  //           link: meetLink, // can be populated later when meeting is confirmed
+  //         },
+  //         include: this.includeRelations(), // unchanged → response safe
+  //       }),
+  //     ),
+  //   );
+
+  //   const updatedMeetings = await this.prisma.$transaction(
+  //     meetings.map((meeting) =>
+  //       this.prisma.meetings.update({
+  //         where: { id: meeting.id },
+  //         data: {
+  //           link: `${meetLink}/${meeting.id}`,
+  //         },
+  //       }),
+  //     ),
+  //   );
+
+  //   // 3️⃣ Keep response identical
+  //   return updatedMeetings.map((meeting) => this.formatResponse(meeting));
+  // }
+
+
   async doulasMeetingSchedule(dto: ScheduleDoulaDto, user: any) {
     const { enquiryId, date, time, doulaIds } = dto;
 
-    // 1️⃣ Fetch enquiry (source of truth)
+    this.logger.log(
+      `[ScheduleMeeting] START | enquiryId=${enquiryId} | doulaCount=${doulaIds?.length}`,
+    );
+
+    // ---------------------------------------------------
+    // 1️⃣ Fetch enquiry
+    // ---------------------------------------------------
     const enquiry = await this.prisma.enquiryForm.findUnique({
       where: { id: enquiryId },
       select: {
@@ -588,44 +673,80 @@ export class MeetingsService {
       },
     });
 
+    this.logger.debug(
+      `[ScheduleMeeting] Enquiry fetched: ${JSON.stringify({
+        enquiryId: enquiry?.id,
+        clientProfileId: enquiry?.clientProfile?.id,
+        clientUser: enquiry?.clientProfile?.user?.email,
+      })}`,
+    );
+
     if (!enquiry) {
+      this.logger.error(
+        `[ScheduleMeeting] Enquiry not found | enquiryId=${enquiryId}`,
+      );
       throw new ForbiddenException('enquiry not found');
+    }
+
+    if (!enquiry.clientProfile) {
+      this.logger.error(
+        `[ScheduleMeeting] clientProfile missing in enquiry`,
+      );
+      throw new Error('ClientProfile missing in enquiry');
     }
 
     const meetingDate = new Date(date);
     const startTime = new Date(`1970-01-01T${time}Z`);
-
-    // ⏱️ TEMP: default 30-min meeting (adjust later if slot system exists)
     const endTime = new Date(startTime);
     endTime.setMinutes(endTime.getMinutes() + 30);
+
     const meetLink = `https://bambinidoulas.com/joinmeeting/`;
-    // 2️⃣ Create Meetings instead of ClientDoulaEnquiries
+
+    this.logger.debug(
+      `[ScheduleMeeting] Creating meetings | date=${meetingDate.toISOString()} | start=${startTime.toISOString()}`
+    );
+
+    // ---------------------------------------------------
+    // 2️⃣ Create meetings
+    // ---------------------------------------------------
     const meetings = await this.prisma.$transaction(
-      doulaIds.map((doulaId) =>
-        this.prisma.meetings.create({
+      doulaIds.map((doulaId) => {
+        this.logger.debug(
+          `[ScheduleMeeting] Creating meeting for doula=${doulaId}`,
+        );
+
+        return this.prisma.meetings.create({
           data: {
             enquiryId: enquiry.id,
-
             bookedById: enquiry.clientProfile.id,
             doulaProfileId: doulaId,
-
             date: meetingDate,
             startTime,
             endTime,
-
             serviceName: dto.serviceName ?? enquiry.serviceName,
             remarks: dto.notes ?? enquiry.additionalNotes,
             status: MeetingStatus.SCHEDULED,
             createdby: Role.ZONE_MANAGER,
-
-            // Required non-null column
-            link: meetLink, // can be populated later when meeting is confirmed
+            link: meetLink,
           },
-          include: this.includeRelations(), // unchanged → response safe
-        }),
-      ),
+          include: this.includeRelations(),
+        });
+      }),
     );
 
+    this.logger.debug(
+      `[ScheduleMeeting] Meetings created: ${meetings.length}`,
+    );
+
+    meetings.forEach((m) => {
+      this.logger.debug(
+        `[ScheduleMeeting] Created meeting relations | id=${m.id} | bookedBy=${!!m.bookedBy} | doula=${!!m.DoulaProfile}`,
+      );
+    });
+
+    // ---------------------------------------------------
+    // 3️⃣ Update links
+    // ---------------------------------------------------
     const updatedMeetings = await this.prisma.$transaction(
       meetings.map((meeting) =>
         this.prisma.meetings.update({
@@ -637,8 +758,20 @@ export class MeetingsService {
       ),
     );
 
-    // 3️⃣ Keep response identical
-    return updatedMeetings.map((meeting) => this.formatResponse(meeting));
+    this.logger.debug(
+      `[ScheduleMeeting] Links updated for meetings`,
+    );
+
+    // ---------------------------------------------------
+    // 4️⃣ Format response
+    // ---------------------------------------------------
+    return updatedMeetings.map((meeting) => {
+      this.logger.debug(
+        `[ScheduleMeeting] Formatting meeting | id=${meeting.id} | bookedByExists=${!!meeting.bookedById}`,
+      );
+
+      return this.formatResponse(meeting);
+    });
   }
 
 
