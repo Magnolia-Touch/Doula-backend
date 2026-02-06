@@ -3,6 +3,7 @@ import { IsUUID, IsDateString, IsString, IsOptional } from 'class-validator';
 
 export class CreateMeetingDto {
     @IsUUID()
+    @IsOptional()
     clientProfileId: string;
 
     @IsUUID()
