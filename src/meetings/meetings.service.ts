@@ -754,6 +754,7 @@ export class MeetingsService {
           data: {
             link: `${meetLink}/${meeting.id}`,
           },
+          include: this.includeRelations(),
         }),
       ),
     );
@@ -762,16 +763,25 @@ export class MeetingsService {
       `[ScheduleMeeting] Links updated for meetings`,
     );
 
-    // ---------------------------------------------------
-    // 4️⃣ Format response
-    // ---------------------------------------------------
     return updatedMeetings.map((meeting) => {
       this.logger.debug(
-        `[ScheduleMeeting] Formatting meeting | id=${meeting.id} | bookedByExists=${!!meeting.bookedById}`,
+        `[ScheduleMeeting] Formatting meeting | id=${meeting.id} | bookedByExists=${!!meeting.bookedBy}`,
       );
 
-      return this.formatResponse(meeting);
+      // adapt new relation structure → old formatter expectation
+      const adaptedMeeting = {
+        ...meeting,
+        ClientProfile: meeting.bookedBy
+          ? {
+            ...meeting.bookedBy,
+            user: meeting.bookedBy.user,
+          }
+          : null,
+      };
+
+      return this.formatResponse(adaptedMeeting);
     });
+
   }
 
 
@@ -1211,6 +1221,21 @@ export class MeetingsService {
       serviceName: enquiry.serviceName
     };
   }
+
+  private mapMeetingToLegacyFormat(meeting: any) {
+    return {
+      ...meeting,
+
+      // adapt new relation name → old expected name
+      ClientProfile: meeting.bookedBy
+        ? {
+          ...meeting.bookedBy,
+          user: meeting.bookedBy.user,
+        }
+        : null,
+    };
+  }
+
 
   //---------------------------------------------
   // update - 1
