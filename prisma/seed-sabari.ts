@@ -1,95 +1,84 @@
-import { PrismaClient, Role, WeekDays, MeetingStatus } from '@prisma/client';
+import {
+    PrismaClient,
+    Role,
+    WeekDays,
+    MeetingStatus
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+const ZONE_MANAGER_ID =
+    "47e356d8-cee3-40df-9fd9-94a5ca806955";
 
 async function main() {
 
     /*
      -----------------------------------
-     1. ZONE MANAGERS
+     1. FIND REGION UNDER SONA
      -----------------------------------
     */
-    const zmUsers = await Promise.all(
-        Array.from({ length: 2 }).map((_, i) =>
-            prisma.user.create({
-                data: {
-                    name: `Zone Manager ${i + 1}`,
-                    email: `zm${i + 1}@test.com`,
-                    role: Role.ZONE_MANAGER,
-                },
-            })
-        )
-    );
 
-    const zoneManagers = await Promise.all(
-        zmUsers.map(u =>
-            prisma.zoneManagerProfile.create({
-                data: { userId: u.id },
-            })
-        )
-    );
+    const region = await prisma.region.findFirst({
+        where: {
+            zoneManagerId: ZONE_MANAGER_ID
+        }
+    });
+
+    if (!region) {
+        throw new Error("No region mapped to Sona zone manager");
+    }
 
     /*
      -----------------------------------
-     2. REGIONS
+     2. FIND SERVICE
      -----------------------------------
     */
-    const regions = await Promise.all([
-        prisma.region.create({
-            data: {
-                regionName: "Kochi",
-                pincode: "682001",
-                district: "Ernakulam",
-                state: "Kerala",
-                country: "India",
-                latitude: "9.9312",
-                longitude: "76.2673",
-                zoneManagerId: zoneManagers[0].id,
-            },
-        }),
-        prisma.region.create({
-            data: {
-                regionName: "Thrissur",
-                pincode: "680001",
-                district: "Thrissur",
-                state: "Kerala",
-                country: "India",
-                latitude: "10.5276",
-                longitude: "76.2144",
-                zoneManagerId: zoneManagers[1].id,
-            },
-        }),
-    ]);
+
+    const service = await prisma.service.findFirst();
+
+    if (!service) {
+        throw new Error("Service not found");
+    }
 
     /*
      -----------------------------------
-     3. SERVICES
+     3. SLOT (MONDAY example)
      -----------------------------------
     */
-    const services = await Promise.all([
-        prisma.service.create({ data: { name: "Postnatal Care" } }),
-        prisma.service.create({ data: { name: "Prenatal Care" } }),
-        prisma.service.create({ data: { name: "Lactation Support" } }),
-    ]);
+
+    const slot = await prisma.availableSlotsForMeeting.findFirst({
+        where: {
+            zoneManagerId: ZONE_MANAGER_ID,
+            ownerRole: Role.ZONE_MANAGER,
+        }
+    });
+
+    if (!slot) {
+        throw new Error("Available slot not found");
+    }
 
     /*
      -----------------------------------
-     4. CLIENTS
+     4. CREATE CLIENTS
      -----------------------------------
     */
-    const clients: typeof zoneManagers = [];
+
+    const clients: Awaited<ReturnType<typeof prisma.clientProfile.create>>[] = [];
 
     for (let i = 0; i < 5; i++) {
+
         const user = await prisma.user.create({
             data: {
-                name: `Client ${i + 1}`,
-                email: `client${i + 1}@test.com`,
-                role: Role.CLIENT,
-            },
+                name: `Test Client ${i}`,
+                email: `sona-client${i}@mail.com`,
+                role: Role.CLIENT
+            }
         });
 
         const profile = await prisma.clientProfile.create({
-            data: { userId: user.id },
+            data: {
+                userId: user.id
+            }
         });
 
         clients.push(profile);
@@ -97,45 +86,23 @@ async function main() {
 
     /*
      -----------------------------------
-     5. AVAILABLE SLOTS (MONDAY-SUNDAY)
-     -----------------------------------
-    */
-    const weekdays = Object.values(WeekDays);
-
-    const slots = await Promise.all(
-        weekdays.map(day =>
-            prisma.availableSlotsForMeeting.create({
-                data: {
-                    weekday: day,
-                    ownerRole: Role.ZONE_MANAGER,
-                    zoneManagerId: zoneManagers[0].id,
-                },
-            })
-        )
-    );
-
-    /*
-     -----------------------------------
-     6. CREATE 15 ENQUIRIES
+     5. CREATE 15 ENQUIRIES
      -----------------------------------
     */
 
     for (let i = 0; i < 15; i++) {
 
         const client = clients[i % clients.length];
-        const region = regions[i % regions.length];
-        const service = services[i % services.length];
-        const slot = slots[i % slots.length];
 
         const meetingDate = new Date();
         meetingDate.setDate(meetingDate.getDate() + i);
 
         const enquiry = await prisma.enquiryForm.create({
             data: {
-                name: `Enquiry ${i + 1}`,
-                email: `enquiry${i}@mail.com`,
+                name: `Client ${i}`,
+                email: `sona-enquiry${i}@mail.com`,
                 phone: `99999999${i}`,
-                additionalNotes: `Test enquiry ${i}`,
+                additionalNotes: `Enquiry for Sona ${i}`,
                 meetingsDate: meetingDate,
                 meetingsTimeSlots: "10:00-11:00",
                 serviceName: service.name,
@@ -143,25 +110,25 @@ async function main() {
                 slotId: slot.id,
                 serviceId: service.id,
                 clientId: client.id,
-            },
+            }
         });
 
         await prisma.meetings.create({
             data: {
-                link: "https://meet.test.com/abc",
+                link: "https://meet.test.com/sona",
                 status: MeetingStatus.SCHEDULED,
                 startTime: new Date(`${meetingDate.toISOString().split('T')[0]}T10:00:00`),
                 endTime: new Date(`${meetingDate.toISOString().split('T')[0]}T11:00:00`),
                 date: meetingDate,
                 serviceName: service.name,
                 bookedById: client.id,
-                zoneManagerProfileId: region.zoneManagerId!,
-                enquiryId: enquiry.id,
-            },
+                zoneManagerProfileId: ZONE_MANAGER_ID,
+                enquiryId: enquiry.id
+            }
         });
     }
 
-    console.log("✅ 15 enquiry records created");
+    console.log("✅ 15 enquiries created under Sona Sasikumar");
 }
 
 main()
