@@ -219,7 +219,7 @@ model EnquiryForm {
   service       Service                  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   clientProfile ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade) //remove this line
 
-  Meetings Meetings?
+  Meetings Meetings[]
 }
 
 // Regions
@@ -324,7 +324,7 @@ model Meetings {
   doulaProfileId             String?
   adminProfileId             String?
   serviceId                  String?
-  enquiryId                  String? @unique
+  enquiryId                  String?
 
   createdby Role?
 
