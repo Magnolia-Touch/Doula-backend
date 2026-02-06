@@ -763,24 +763,10 @@ export class MeetingsService {
       `[ScheduleMeeting] Links updated for meetings`,
     );
 
-    return updatedMeetings.map((meeting) => {
-      this.logger.debug(
-        `[ScheduleMeeting] Formatting meeting | id=${meeting.id} | bookedByExists=${!!meeting.bookedBy}`,
-      );
+    return updatedMeetings.map((meeting) =>
+      this.formatMeetingResponse(meeting),
+    );
 
-      // adapt new relation structure → old formatter expectation
-      const adaptedMeeting = {
-        ...meeting,
-        ClientProfile: meeting.bookedBy
-          ? {
-            ...meeting.bookedBy,
-            user: meeting.bookedBy.user,
-          }
-          : null,
-      };
-
-      return this.formatResponse(adaptedMeeting);
-    });
 
   }
 
@@ -1222,20 +1208,57 @@ export class MeetingsService {
     };
   }
 
-  private mapMeetingToLegacyFormat(meeting: any) {
+  private formatMeetingResponse(meeting: any) {
     return {
-      ...meeting,
+      id: meeting.id,
 
-      // adapt new relation name → old expected name
-      ClientProfile: meeting.bookedBy
-        ? {
-          ...meeting.bookedBy,
-          user: meeting.bookedBy.user,
-        }
-        : null,
+      // --- Meeting core ---
+      link: meeting.link,
+      status: meeting.status,
+      date: meeting.date,
+      startTime: meeting.startTime,
+      endTime: meeting.endTime,
+      serviceName: meeting.serviceName,
+      remarks: meeting.remarks,
+
+      createdBy: meeting.createdby,
+      createdAt: meeting.createdAt,
+      updatedAt: meeting.updatedAt,
+      cancelledAt: meeting.cancelledAt,
+      rescheduledAt: meeting.rescheduledAt,
+
+      // --- Enquiry ---
+      enquiryId: meeting.enquiryId,
+
+      // --- Client ---
+      clientId: meeting.bookedBy?.id ?? null,
+      clientName: meeting.bookedBy?.user?.name ?? null,
+      clientEmail: meeting.bookedBy?.user?.email ?? null,
+      clientPhone: meeting.bookedBy?.user?.phone ?? null,
+      clientAddress: meeting.bookedBy?.address ?? null,
+
+      // --- Doula ---
+      doulaId: meeting.DoulaProfile?.id ?? null,
+      doulaName: meeting.DoulaProfile?.user?.name ?? null,
+      doulaEmail: meeting.DoulaProfile?.user?.email ?? null,
+
+      // --- Zone Manager ---
+      zoneManagerId: meeting.ZoneManagerProfile?.id ?? null,
+      zoneManagerName:
+        meeting.ZoneManagerProfile?.user?.name ?? null,
+
+      // --- Admin ---
+      adminId: meeting.AdminProfile?.id ?? null,
+      adminName: meeting.AdminProfile?.user?.name ?? null,
+
+      // --- Service ---
+      serviceId: meeting.Service?.id ?? null,
+      serviceTitle: meeting.Service?.title ?? null,
+
+      // --- Slot ---
+      availableSlotId: meeting.availableSlotsForMeetingId ?? null,
     };
   }
-
 
   //---------------------------------------------
   // update - 1
