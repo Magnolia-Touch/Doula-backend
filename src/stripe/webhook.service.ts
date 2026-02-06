@@ -81,7 +81,18 @@ export class WebhookService {
   /* ----------------------------------------------------
    * Checkout session SUCCESS
    * -------------------------------------------------- */
+
+  private safeFormatDate(date: any, pattern: string) {
+    if (!date) return 'N/A';
+
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return 'N/A';
+
+    return formatDate(d, pattern);
+  }
+
   private async handleCheckoutSessionCompleted(
+
     session: Stripe.Checkout.Session,
   ) {
     this.logger.log(
@@ -209,8 +220,9 @@ export class WebhookService {
         serviceName,
         region: regionName,
         timeShift: timeShift,
-        serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
-        serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
+        serviceStartDate: this.safeFormatDate(serviceStartDate, 'yyyy-MM-dd'),
+        serviceEndDate: this.safeFormatDate(serviceEndDate, 'yyyy-MM-dd'),
+
         totalAmount: totalAmount,
       };
 
@@ -303,6 +315,8 @@ export class WebhookService {
 
     return { received: true };
   }
+
+
 
 
   /* ----------------------------------------------------
