@@ -902,10 +902,21 @@ export class ZoneManagerService {
      */
     const where: Prisma.MeetingsWhereInput = {
       OR: [
-        { zoneManagerProfileId: zoneManager.id },
-        { doulaProfileId: { in: doulaIds } },
+        // ✅ Zone manager's own meetings
+        {
+          zoneManagerProfileId: zoneManager.id,
+        },
+
+        // ✅ Meetings created by DOULA under this zone manager
+        {
+          AND: [
+            { doulaProfileId: { in: doulaIds } },
+            { createdby: Role.DOULA },
+          ],
+        },
       ],
     };
+
     where.AND = [];
     if (search) {
       where.AND.push({
