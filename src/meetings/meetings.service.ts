@@ -1187,6 +1187,7 @@ export class MeetingsService {
           },
         },
       },
+      enquiry: true,
     };
   }
 
