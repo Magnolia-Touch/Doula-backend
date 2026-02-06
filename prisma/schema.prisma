@@ -19,6 +19,7 @@ enum MeetingStatus {
   SCHEDULED
   COMPLETED
   CANCELED
+  CONTACTED
 }
 
 enum BookingStatus {

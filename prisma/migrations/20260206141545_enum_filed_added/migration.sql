@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE `ClientDoulaEnquiries` MODIFY `status` ENUM('SCHEDULED', 'COMPLETED', 'CANCELED', 'CONTACTED') NOT NULL DEFAULT 'SCHEDULED';
+
+-- AlterTable
+ALTER TABLE `Meetings` MODIFY `status` ENUM('SCHEDULED', 'COMPLETED', 'CANCELED', 'CONTACTED') NOT NULL;
+
+-- AddForeignKey
+ALTER TABLE `Meetings` ADD CONSTRAINT `Meetings_enquiryId_fkey` FOREIGN KEY (`enquiryId`) REFERENCES `EnquiryForm`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
