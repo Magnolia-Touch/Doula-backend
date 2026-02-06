@@ -144,6 +144,7 @@ export class MeetingsController {
     return this.service.getMeetings(params, req.user);
   }
 
+
   // USE LESS API
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
