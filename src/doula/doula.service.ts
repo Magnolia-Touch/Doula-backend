@@ -594,16 +594,52 @@ export class DoulaService {
           }
         }
 
-        const available =
-          rangeStart && rangeEnd
-            ? slotEntries.some((slot) =>
-              isDateAvailable(
-                slot.date,
-                slot.availability,
-                bookedDates,
-              ),
-            )
-            : null;
+        let available: boolean | null = null;
+        let noOfUnavailableDays: number | null = null;
+        let noOfAvailableDays: number | null = null;
+
+        if (rangeStart && rangeEnd) {
+          const availableDateSet = new Set<number>();
+          const bookedDateSet = new Set(
+            bookedDates.map((d) => normalizeDate(d)),
+          );
+
+          for (const slot of slotEntries) {
+            const slotTime = normalizeDate(slot.date);
+
+            if (
+              slotTime >= rangeStart.getTime() &&
+              slotTime <= rangeEnd.getTime()
+            ) {
+              if (
+                isDateAvailable(
+                  slot.date,
+                  slot.availability,
+                  bookedDates,
+                )
+              ) {
+                availableDateSet.add(slotTime);
+              }
+            }
+          }
+
+          // count schedules
+          noOfUnavailableDays = bookedDateSet.size;
+
+          // available days = available slots - schedules
+          noOfAvailableDays =
+            availableDateSet.size - noOfUnavailableDays;
+
+          if (noOfAvailableDays < 0) {
+            noOfAvailableDays = 0;
+          }
+
+          available = noOfAvailableDays > 0;
+        }
+
+        if (rangeStart && rangeEnd && !available) {
+          return null;
+        }
 
         if (typeof isAvailable === 'boolean' && available !== isAvailable) {
           return null;
@@ -620,8 +656,6 @@ export class DoulaService {
               }
               : null,
           ).filter(Boolean) ?? [];
-
-        let noOfAvailableDays: number | null = null;
 
         if (rangeStart && rangeEnd) {
           const availableDateSet = new Set<number>();
@@ -674,6 +708,7 @@ export class DoulaService {
           isAvailable: available,
           nextImmediateAvailabilityDate: nextAvailableDate,
           noOfAvailableDays,
+          noOfUnavailableDays,
           images:
             profile.DoulaGallery?.map((img) => ({
               id: img.id,
