@@ -345,6 +345,361 @@ export class DoulaService {
   }
 
 
+  // async get(
+  //   page = 1,
+  //   limit = 10,
+  //   search?: string,
+  //   serviceId?: string,
+  //   isAvailable?: boolean,
+  //   isActive?: boolean,
+  //   regionName?: string,
+  //   minExperience?: number,
+  //   serviceName?: string,
+  //   startDate?: string,
+  //   endDate?: string,
+  // ) {
+  //   /* ----------------------------------------------------
+  //    * 1. Base user filter
+  //    * -------------------------------------------------- */
+  //   const where: any = {
+  //     role: Role.DOULA,
+  //   };
+
+  //   /* ----------------------------------------------------
+  //    * 2. Search filters
+  //    * -------------------------------------------------- */
+  //   if (search) {
+  //     const q = search.toLowerCase();
+  //     where.OR = [
+  //       { name: { contains: q } },
+  //       { email: { contains: q } },
+  //       { phone: { contains: q } },
+  //       {
+  //         doulaProfile: {
+  //           Region: { some: { regionName: { contains: q } } },
+  //         },
+  //       },
+  //     ];
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 3. Region filter
+  //    * -------------------------------------------------- */
+  //   if (regionName) {
+  //     where.doulaProfile = {
+  //       ...(where.doulaProfile || {}),
+  //       Region: {
+  //         some: { regionName: { contains: regionName.toLowerCase() } },
+  //       },
+  //     };
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 4. Minimum experience
+  //    * -------------------------------------------------- */
+  //   if (typeof minExperience === 'number') {
+  //     where.doulaProfile = {
+  //       ...(where.doulaProfile || {}),
+  //       yoe: { gte: minExperience },
+  //     };
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 5. Service filters
+  //    * -------------------------------------------------- */
+  //   const servicePricingConditions: any = {};
+  //   if (serviceId) servicePricingConditions.serviceId = serviceId;
+  //   if (serviceName) {
+  //     servicePricingConditions.service = {
+  //       name: { contains: serviceName.toLowerCase() },
+  //     };
+  //   }
+
+  //   if (Object.keys(servicePricingConditions).length) {
+  //     where.doulaProfile = {
+  //       ...(where.doulaProfile || {}),
+  //       ServicePricing: { some: servicePricingConditions },
+  //     };
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 6. Active filter
+  //    * -------------------------------------------------- */
+  //   if (typeof isActive === 'boolean') {
+  //     where.is_active = isActive;
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 7. Fetch doulas
+  //    * -------------------------------------------------- */
+  //   const result = await paginate({
+  //     prismaModel: this.prisma.user,
+  //     page,
+  //     limit,
+  //     where,
+  //     include: {
+  //       doulaProfile: {
+  //         include: {
+  //           Region: true,
+  //           ServicePricing: { include: { service: true } },
+  //           Testimonials: true,
+  //           DoulaGallery: true,
+  //           Certificates: true,
+  //         },
+  //       },
+  //     },
+  //     orderBy: { createdAt: 'desc' },
+  //   });
+
+  //   const users = result.data ?? [];
+
+  //   if (!users.length) {
+  //     return {
+  //       message: 'Doulas fetched successfully',
+  //       ...result,
+  //       data: [],
+  //     };
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 8. Prepare date range
+  //    * -------------------------------------------------- */
+  //   const rangeStart = startDate ? new Date(startDate) : null;
+  //   const rangeEnd = endDate ? new Date(endDate) : null;
+
+  //   if (rangeStart) rangeStart.setHours(0, 0, 0, 0);
+  //   if (rangeEnd) rangeEnd.setHours(0, 0, 0, 0);
+
+  //   /* ----------------------------------------------------
+  //    * 9. Fetch schedules
+  //    * -------------------------------------------------- */
+  //   const doulaProfileIds = users
+  //     .map((u: any) => u.doulaProfile?.id)
+  //     .filter(Boolean);
+
+  //   const schedules = await this.prisma.schedules.findMany({
+  //     where: {
+  //       doulaProfileId: { in: doulaProfileIds },
+  //       status: { not: MeetingStatus.CANCELED },
+  //       ...(rangeStart || rangeEnd
+  //         ? {
+  //           date: {
+  //             ...(rangeStart && { gte: rangeStart }),
+  //             ...(rangeEnd && { lte: rangeEnd }),
+  //           },
+  //         }
+  //         : {}),
+  //     },
+  //     select: {
+  //       doulaProfileId: true,
+  //       date: true,
+  //     },
+  //   });
+
+  //   /* ----------------------------------------------------
+  //    * 9.1 Fetch available slots
+  //    * -------------------------------------------------- */
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+
+  //   const availableSlots =
+  //     await this.prisma.availableSlotsForService.findMany({
+  //       where: {
+  //         doulaId: { in: doulaProfileIds },
+  //         date: { gte: today },
+  //       },
+  //       select: {
+  //         doulaId: true,
+  //         date: true,
+  //         availability: true,
+  //       },
+  //       orderBy: { date: 'asc' },
+  //     });
+
+  //   /* ----------------------------------------------------
+  //    * 10. Build lookups
+  //    * -------------------------------------------------- */
+  //   const scheduleMap = new Map<string, Date[]>();
+
+  //   for (const s of schedules) {
+  //     if (!scheduleMap.has(s.doulaProfileId)) {
+  //       scheduleMap.set(s.doulaProfileId, []);
+  //     }
+  //     scheduleMap.get(s.doulaProfileId)!.push(s.date);
+  //   }
+
+  //   const availabilityMap = new Map<
+  //     string,
+  //     { date: Date; availability: Record<string, boolean> }[]
+  //   >();
+
+  //   for (const slot of availableSlots) {
+  //     if (!availabilityMap.has(slot.doulaId)) {
+  //       availabilityMap.set(slot.doulaId, []);
+  //     }
+  //     availabilityMap.get(slot.doulaId)!.push({
+  //       date: slot.date,
+  //       availability: slot.availability as Record<string, boolean>,
+  //     });
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 10.1 Helpers
+  //    * -------------------------------------------------- */
+  //   const normalizeDate = (d: Date) => {
+  //     const n = new Date(d);
+  //     n.setHours(0, 0, 0, 0);
+  //     return n.getTime();
+  //   };
+
+  //   function isDateAvailable(
+  //     date: Date,
+  //     availability: Record<string, boolean>,
+  //     bookedDates: Date[],
+  //   ) {
+  //     // Any shift false → unavailable
+  //     if (Object.values(availability).some((v) => v === false)) {
+  //       return false;
+  //     }
+
+  //     // All shifts true → must not be booked
+  //     return !bookedDates.some(
+  //       (d) => normalizeDate(d) === normalizeDate(date),
+  //     );
+  //   }
+
+  //   /* ----------------------------------------------------
+  //    * 11. Transform response
+  //    * -------------------------------------------------- */
+  //   const transformed = users
+  //     .map((user: any) => {
+  //       const profile = user.doulaProfile;
+  //       if (!profile) return null;
+
+  //       const bookedDates = scheduleMap.get(profile.id) ?? [];
+  //       const slotEntries = availabilityMap.get(profile.id) ?? [];
+
+  //       let nextAvailableDate: Date | null = null;
+
+  //       for (const slot of slotEntries) {
+  //         if (
+  //           isDateAvailable(
+  //             slot.date,
+  //             slot.availability,
+  //             bookedDates,
+  //           )
+  //         ) {
+  //           nextAvailableDate = slot.date;
+  //           break;
+  //         }
+  //       }
+
+  //       const available =
+  //         rangeStart && rangeEnd
+  //           ? slotEntries.some((slot) =>
+  //             isDateAvailable(
+  //               slot.date,
+  //               slot.availability,
+  //               bookedDates,
+  //             ),
+  //           )
+  //           : null;
+
+  //       if (typeof isAvailable === 'boolean' && available !== isAvailable) {
+  //         return null;
+  //       }
+
+  //       const services =
+  //         profile.ServicePricing?.map((p) =>
+  //           p.service
+  //             ? {
+  //               servicePricingId: p.id,
+  //               serviceId: p.service.id,
+  //               serviceName: p.service.name,
+  //               price: p.price,
+  //             }
+  //             : null,
+  //         ).filter(Boolean) ?? [];
+
+  //       let noOfAvailableDays: number | null = null;
+
+  //       if (rangeStart && rangeEnd) {
+  //         const availableDateSet = new Set<number>();
+
+  //         for (const slot of slotEntries) {
+  //           const slotTime = normalizeDate(slot.date);
+
+  //           if (
+  //             slotTime >= rangeStart.getTime() &&
+  //             slotTime <= rangeEnd.getTime() &&
+  //             isDateAvailable(
+  //               slot.date,
+  //               slot.availability,
+  //               bookedDates,
+  //             )
+  //           ) {
+  //             availableDateSet.add(slotTime);
+  //           }
+  //         }
+
+  //         noOfAvailableDays = availableDateSet.size;
+  //       }
+
+  //       return {
+  //         userId: user.id,
+  //         isActive: user.is_active,
+  //         name: user.name,
+  //         email: user.email,
+
+  //         profileId: profile.id,
+  //         yoe: profile.yoe ?? null,
+  //         profile_image: profile.profile_image,
+
+  //         serviceNames: services,
+  //         regionNames:
+  //           profile.Region?.map((r) => ({
+  //             id: r.id,
+  //             name: r.regionName,
+  //           })) ?? [],
+
+  //         ratings:
+  //           profile.Testimonials?.length > 0
+  //             ? profile.Testimonials.reduce(
+  //               (s, t) => s + t.ratings,
+  //               0,
+  //             ) / profile.Testimonials.length
+  //             : null,
+
+  //         reviewsCount: profile.Testimonials?.length ?? 0,
+  //         isAvailable: available,
+  //         nextImmediateAvailabilityDate: nextAvailableDate,
+  //         noOfAvailableDays,
+  //         images:
+  //           profile.DoulaGallery?.map((img) => ({
+  //             id: img.id,
+  //             url: img.url,
+  //             isPrimary: img.isPrimary ?? false,
+  //           })) ?? [],
+
+  //         certificates:
+  //           profile.Certificates?.map((cert) => ({
+  //             id: cert.id,
+  //             name: cert.name,
+  //             issuedBy: cert.issuedBy,
+  //             year: cert.year,
+  //           })) ?? [],
+  //       };
+  //     })
+  //     .filter(Boolean);
+
+  //   return {
+  //     message: 'Doulas fetched successfully',
+  //     ...result,
+  //     data: transformed,
+  //   };
+  // }
+
+
   async get(
     page = 1,
     limit = 10,
@@ -594,16 +949,52 @@ export class DoulaService {
           }
         }
 
-        const available =
-          rangeStart && rangeEnd
-            ? slotEntries.some((slot) =>
-              isDateAvailable(
-                slot.date,
-                slot.availability,
-                bookedDates,
-              ),
-            )
-            : null;
+        let available: boolean | null = null;
+        let noOfUnavailableDays: number | null = null;
+        let noOfAvailableDays: number | null = null;
+
+        if (rangeStart && rangeEnd) {
+          const availableDateSet = new Set<number>();
+          const bookedDateSet = new Set(
+            bookedDates.map((d) => normalizeDate(d)),
+          );
+
+          for (const slot of slotEntries) {
+            const slotTime = normalizeDate(slot.date);
+
+            if (
+              slotTime >= rangeStart.getTime() &&
+              slotTime <= rangeEnd.getTime()
+            ) {
+              if (
+                isDateAvailable(
+                  slot.date,
+                  slot.availability,
+                  bookedDates,
+                )
+              ) {
+                availableDateSet.add(slotTime);
+              }
+            }
+          }
+
+          // count schedules
+          noOfUnavailableDays = bookedDateSet.size;
+
+          // available days = available slots - schedules
+          noOfAvailableDays =
+            availableDateSet.size - noOfUnavailableDays;
+
+          if (noOfAvailableDays < 0) {
+            noOfAvailableDays = 0;
+          }
+
+          available = noOfAvailableDays > 0;
+        }
+
+        if (rangeStart && rangeEnd && !available) {
+          return null;
+        }
 
         if (typeof isAvailable === 'boolean' && available !== isAvailable) {
           return null;
@@ -620,8 +1011,6 @@ export class DoulaService {
               }
               : null,
           ).filter(Boolean) ?? [];
-
-        let noOfAvailableDays: number | null = null;
 
         if (rangeStart && rangeEnd) {
           const availableDateSet = new Set<number>();
@@ -674,6 +1063,7 @@ export class DoulaService {
           isAvailable: available,
           nextImmediateAvailabilityDate: nextAvailableDate,
           noOfAvailableDays,
+          noOfUnavailableDays,
           images:
             profile.DoulaGallery?.map((img) => ({
               id: img.id,
