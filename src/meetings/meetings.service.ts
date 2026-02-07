@@ -692,7 +692,7 @@ export class MeetingsService {
       this.logger.error(
         `[ScheduleMeeting] clientProfile missing in enquiry`,
       );
-      throw new Error('ClientProfile missing in enquiry');
+      throw new NotFoundException('ClientProfile missing in enquiry');
     }
 
     const meetingDate = new Date(date);

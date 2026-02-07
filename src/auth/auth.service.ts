@@ -118,7 +118,7 @@ export class AuthService {
       }
       return { message: 'Otp Sent Succesfully', data: otp };
     } else {
-      throw new Error('Invalid Role.');
+      throw new BadRequestException('Invalid Role.');
     }
   }
 

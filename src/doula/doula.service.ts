@@ -344,6 +344,7 @@ export class DoulaService {
     });
   }
 
+
   async get(
     page = 1,
     limit = 10,
@@ -620,6 +621,30 @@ export class DoulaService {
               : null,
           ).filter(Boolean) ?? [];
 
+        let noOfAvailableDays: number | null = null;
+
+        if (rangeStart && rangeEnd) {
+          const availableDateSet = new Set<number>();
+
+          for (const slot of slotEntries) {
+            const slotTime = normalizeDate(slot.date);
+
+            if (
+              slotTime >= rangeStart.getTime() &&
+              slotTime <= rangeEnd.getTime() &&
+              isDateAvailable(
+                slot.date,
+                slot.availability,
+                bookedDates,
+              )
+            ) {
+              availableDateSet.add(slotTime);
+            }
+          }
+
+          noOfAvailableDays = availableDateSet.size;
+        }
+
         return {
           userId: user.id,
           isActive: user.is_active,
@@ -648,7 +673,7 @@ export class DoulaService {
           reviewsCount: profile.Testimonials?.length ?? 0,
           isAvailable: available,
           nextImmediateAvailabilityDate: nextAvailableDate,
-
+          noOfAvailableDays,
           images:
             profile.DoulaGallery?.map((img) => ({
               id: img.id,
@@ -3093,3 +3118,4 @@ export class DoulaService {
   }
 
 }
+
