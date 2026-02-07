@@ -149,7 +149,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Transform response (UNCHANGED STRUCTURE)
@@ -200,7 +200,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Fetch schedule linked to booking & validate ownership
@@ -245,7 +245,7 @@ export class ClientsService {
     });
 
     if (!booking) {
-      throw new Error('Service booking not found');
+      throw new NotFoundException('Service booking not found');
     }
 
     // 3. Response mapping (UNCHANGED SHAPE)
@@ -336,7 +336,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Transform response (UNCHANGED STRUCTURE)
@@ -392,7 +392,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Fetch schedule linked to booking & validate ownership
@@ -440,7 +440,7 @@ export class ClientsService {
     });
 
     if (!schedule) {
-      throw new Error('Service booking not found');
+      throw new NotFoundException('Service booking not found');
     }
 
     const booking = schedule.serviceBooking;
@@ -488,7 +488,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Fetch booking and validate ownership
@@ -500,16 +500,16 @@ export class ClientsService {
     });
 
     if (!schedules) {
-      throw new Error('schedules booking not found');
+      throw new NotFoundException('schedules booking not found');
     }
 
     // 3. Business rules
     if (schedules.status === ServiceStatus.CANCELED) {
-      throw new Error('Service schedules is already canceled');
+      throw new BadRequestException('Service schedules is already canceled');
     }
 
     if (schedules.status === ServiceStatus.COMPLETED) {
-      throw new Error('Completed schedules cannot be canceled');
+      throw new BadRequestException('Completed schedules cannot be canceled');
     }
 
     // 4. Cancel booking
@@ -541,7 +541,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Fetch booking and validate ownership
@@ -558,11 +558,11 @@ export class ClientsService {
 
     // 3. Business rules
     if (booking.status === 'CANCELED') {
-      throw new Error('Service booking is already canceled');
+      throw new BadRequestException('Service booking is already canceled');
     }
 
     if (booking.status === 'COMPLETED') {
-      throw new Error('Completed bookings cannot be canceled');
+      throw new BadRequestException('Completed bookings cannot be canceled');
     }
 
     // 4. Cancel booking
@@ -841,7 +841,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Fetch bookings
@@ -962,7 +962,7 @@ export class ClientsService {
     });
 
     if (!clientProfile) {
-      throw new Error('Client profile not found');
+      throw new NotFoundException('Client profile not found');
     }
 
     // 2. Response mapping

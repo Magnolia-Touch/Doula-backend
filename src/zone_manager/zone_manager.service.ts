@@ -48,9 +48,15 @@ export class ZoneManagerService {
 
   // Create new Zone Manager
   async create(dto: CreateZoneManagerDto, profileImageUrl?: string) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: dto.email },
+          { phone: dto.phone },
+        ],
+      },
     });
+
     console.log('regionIds', dto.regionIds);
     const regions = await this.prisma.region.findMany({
       where: { id: { in: dto.regionIds } },
@@ -63,8 +69,15 @@ export class ZoneManagerService {
     }
 
     if (existingUser) {
-      throw new BadRequestException('User with this email already exists');
+      if (existingUser.email === dto.email) {
+        throw new BadRequestException('User with this email already exists');
+      }
+
+      if (existingUser.phone === dto.phone) {
+        throw new BadRequestException('User with this phone number already exists');
+      }
     }
+
     const zoneManager = await this.prisma.user.create({
       data: {
         name: dto.name,

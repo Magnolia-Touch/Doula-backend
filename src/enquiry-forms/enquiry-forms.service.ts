@@ -145,7 +145,7 @@ export class EnquiryService {
         const [startTime, endTime] = meetingsTimeSlots.split('-');
 
         if (!startTime || !endTime) {
-            throw new Error('Invalid time slot format. Expected HH:mm-HH:mm');
+            throw new BadRequestException('Invalid time slot format. Expected HH:mm-HH:mm');
         }
         const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
         const endDateTime = new Date(`${meetingsDate}T${endTime}:00`);
