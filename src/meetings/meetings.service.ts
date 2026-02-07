@@ -108,12 +108,13 @@ export class MeetingsService {
       startDate?: string;
       endDate?: string;
       status?: string;
+      createdby?: Role;   // ✅ added
       page?: number;
       limit?: number;
     },
     user: any,
   ) {
-    const { startDate, endDate, status, page = 1, limit = 10 } = params;
+    const { startDate, endDate, createdby, status, page = 1, limit = 10 } = params;
 
     // 1️⃣ Resolve profile based on role
     let profile: any = null;
@@ -140,6 +141,10 @@ export class MeetingsService {
     const where: any = {};
 
     if (status) where.status = status;
+
+    if (createdby) {
+      where.createdby = createdby;
+    }
 
     if (startDate || endDate) {
       where.date = {};

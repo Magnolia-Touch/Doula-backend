@@ -23,6 +23,7 @@ import {
 import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 import { GetDoulasQueryDto } from './dto/doula-under-zm-query.dto';
+import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
 
 type ZoneManagerRecentActivity = {
   id: string;                // activity id (derived from source record)
@@ -1796,7 +1797,8 @@ export class ZoneManagerService {
       experience,
       languages,
       specialities,
-      certificates
+      certificates,
+      servicePricings,
     } = dto;
 
     const operations: any[] = [];
@@ -1827,6 +1829,32 @@ export class ZoneManagerService {
       }),
     );
 
+    /**
+ * 2. Update Service Pricing (OPTIONAL)
+ */
+    const toJsonPrice = (price: PriceBreakdownDto): Prisma.InputJsonObject => ({
+      morning: price.morning,
+      night: price.night,
+      fullday: price.fullday,
+    });
+
+    if (servicePricings?.length) {
+      for (const pricing of servicePricings) {
+        operations.push(
+          this.prisma.servicePricing.updateMany({
+            where: {
+              id: pricing.servicePricingId,
+              doulaProfileId: doulaProfile.id, // ownership safety
+            },
+            data: {
+              price: toJsonPrice(pricing.price),
+            },
+          }),
+        );
+      }
+    }
+
+
     // 3. Update Certificates (EDIT ONLY)
     if (certificates?.length) {
       for (const cert of certificates) {
@@ -1852,6 +1880,8 @@ export class ZoneManagerService {
       message: 'Doula profile updated successfully',
     };
   }
+
+
   async recentActivityForZoneManager(userId: string) {
     // 1. Get zone manager profile
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
