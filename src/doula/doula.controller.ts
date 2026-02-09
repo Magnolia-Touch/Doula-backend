@@ -1787,24 +1787,33 @@ export class DoulaController {
     name: 'startDate',
     type: String,
     example: '2026-02-01',
-    description: 'Start date (YYYY-MM-DD)',
   })
   @ApiQuery({
     name: 'endDate',
     type: String,
     example: '2026-02-10',
-    description: 'End date (YYYY-MM-DD)',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'filter',
+    enum: ['BOOKED', 'UNBOOKED', 'ALL'],
+    required: false,
+  })
+  @ApiQuery({
+    name: 'serviceName',
+    type: String,
+    required: false,
+    example: 'Birth Doula',
   })
   async getBookedDates(
     @Param('doulaId') doulaId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
     @Query('filter') filter: 'BOOKED' | 'UNBOOKED' | 'ALL' = 'ALL',
+    @Query('serviceName') serviceName?: string,
   ) {
-    if (!startDate || !endDate) {
-      throw new BadRequestException(
-        'startDate and endDate are required',
-      );
+    if (!startDate) {
+      throw new BadRequestException('startDate is required');
     }
 
     return this.service.getBookedDatesInRange(
@@ -1812,7 +1821,10 @@ export class DoulaController {
       startDate,
       endDate,
       filter,
+      serviceName,
     );
   }
+
+
 
 }
