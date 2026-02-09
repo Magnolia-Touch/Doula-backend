@@ -3429,12 +3429,12 @@ export class DoulaService {
       },
     };
   }
-
   async getBookedDatesInRange(
     doulaId: string,
     startDate: string,
     endDate: string,
     filter: 'BOOKED' | 'UNBOOKED' | 'ALL' = 'ALL',
+    serviceName?: string,
   ) {
     /* ------------------ Validate Doula ------------------ */
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -3448,15 +3448,32 @@ export class DoulaService {
 
     /* ------------------ Normalize Dates ------------------ */
     const start = this.toUtcMidnight(startDate);
-    const end = this.toUtcMidnight(endDate);
+    const end = endDate
+      ? this.toUtcMidnight(endDate)
+      : new Date(start.getTime());
 
     if (start > end) {
       throw new BadRequestException('Start date must be before end date');
     }
 
-    /* ------------------ Generate ALL dates ------------------ */
+    /* ------------------------------------------------------
+       Birth Doula Buffer Range (ONLY for schedule fetching)
+       ------------------------------------------------------ */
+    let scheduleFetchStart = new Date(start);
+    let scheduleFetchEnd = new Date(end);
+
+    if (serviceName === 'Birth Doula') {
+      scheduleFetchStart.setUTCDate(
+        scheduleFetchStart.getUTCDate() - 3,
+      );
+      scheduleFetchEnd.setUTCDate(
+        scheduleFetchEnd.getUTCDate() + 3,
+      );
+    }
+
+    /* ------------------ Generate Requested Date Range ------------------ */
     const allDates: Date[] = [];
-    let current = new Date(start.getTime());
+    let current = new Date(start);
 
     while (current <= end) {
       allDates.push(new Date(current.getTime()));
@@ -3467,14 +3484,36 @@ export class DoulaService {
     const schedules = await this.prisma.schedules.findMany({
       where: {
         doulaProfileId: doulaId,
-        date: { in: allDates },
+        cancelledAt: null,
+        date: {
+          gte: scheduleFetchStart,
+          lte: scheduleFetchEnd,
+        },
       },
       select: { date: true },
     });
 
-    const scheduledDates = new Set(
-      schedules.map((s) => s.date.toISOString().split('T')[0]),
-    );
+    /* ------------------ Build Scheduled Dates Set ------------------ */
+    const scheduledDates = new Set<string>();
+
+    for (const s of schedules) {
+      const baseDate = this.toUtcMidnight(s.date);
+
+      // Birth Doula => block +/- 3 days
+      if (serviceName === 'Birth Doula') {
+        for (let i = -3; i <= 3; i++) {
+          const buffered = new Date(baseDate);
+          buffered.setUTCDate(buffered.getUTCDate() + i);
+          scheduledDates.add(
+            buffered.toISOString().split('T')[0],
+          );
+        }
+      } else {
+        scheduledDates.add(
+          baseDate.toISOString().split('T')[0],
+        );
+      }
+    }
 
     /* ------------------ Fetch Availability ------------------ */
     const availabilityRows =
@@ -3507,16 +3546,15 @@ export class DoulaService {
       }
     });
 
-    /* ------------------ Compute Dates ------------------ */
+    /* ------------------ Compute Booked / Unbooked ------------------ */
     const bookedDates: string[] = [];
     const unbookedDates: string[] = [];
 
     for (const date of allDates) {
       const key = date.toISOString().split('T')[0];
-
       let isBooked = false;
 
-      // 1️⃣ Already scheduled
+      // 1️⃣ Scheduled (or buffered scheduled)
       if (scheduledDates.has(key)) {
         isBooked = true;
       } else {
