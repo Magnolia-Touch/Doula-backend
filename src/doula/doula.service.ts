@@ -2106,6 +2106,8 @@ export class DoulaService {
       data: data
     };
   }
+
+
   async addDoulaprofileImage(
     userId: string,
     profileImageUrl?: string,
@@ -2121,16 +2123,17 @@ export class DoulaService {
       throw new NotFoundException('Doula profile not found');
     }
 
-    await this.prisma.doulaProfile.update({
+    const updatedProfile = await this.prisma.doulaProfile.update({
       where: { userId: targetUserId },
       data: { profile_image: profileImageUrl },
     });
 
     return {
       message: 'Image uploaded successfully',
-      data: doulaProfile,
+      data: updatedProfile,
     };
   }
+
 
   async getDoulaImages(userId: string, doulaId?: string) {
     const targetUserId = doulaId ?? userId;
