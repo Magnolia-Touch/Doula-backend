@@ -1259,6 +1259,7 @@ export class DoulaService {
       userId: doula.id,
       name: doula.name,
       email: doula.email,
+      phone: doula.phone,
 
       profileId: profile.id,
       yoe: profile.yoe ?? null,
