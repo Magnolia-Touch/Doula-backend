@@ -3456,27 +3456,12 @@ export class DoulaService {
       throw new BadRequestException('Start date must be before end date');
     }
 
-    /* ------------------------------------------------------
-       Birth Doula Buffer Range (ONLY for schedule fetching)
-       ------------------------------------------------------ */
-    let scheduleFetchStart = new Date(start);
-    let scheduleFetchEnd = new Date(end);
-
-    if (serviceName === 'Birth Doula') {
-      scheduleFetchStart.setUTCDate(
-        scheduleFetchStart.getUTCDate() - 3,
-      );
-      scheduleFetchEnd.setUTCDate(
-        scheduleFetchEnd.getUTCDate() + 3,
-      );
-    }
-
     /* ------------------ Generate Requested Date Range ------------------ */
     const allDates: Date[] = [];
     let current = new Date(start);
 
     while (current <= end) {
-      allDates.push(new Date(current.getTime()));
+      allDates.push(new Date(current));
       current.setUTCDate(current.getUTCDate() + 1);
     }
 
@@ -3485,35 +3470,16 @@ export class DoulaService {
       where: {
         doulaProfileId: doulaId,
         cancelledAt: null,
-        date: {
-          gte: scheduleFetchStart,
-          lte: scheduleFetchEnd,
-        },
+        date: { in: allDates },
       },
       select: { date: true },
     });
 
-    /* ------------------ Build Scheduled Dates Set ------------------ */
-    const scheduledDates = new Set<string>();
-
-    for (const s of schedules) {
-      const baseDate = this.toUtcMidnight(s.date);
-
-      // Birth Doula => block +/- 3 days
-      if (serviceName === 'Birth Doula') {
-        for (let i = -3; i <= 3; i++) {
-          const buffered = new Date(baseDate);
-          buffered.setUTCDate(buffered.getUTCDate() + i);
-          scheduledDates.add(
-            buffered.toISOString().split('T')[0],
-          );
-        }
-      } else {
-        scheduledDates.add(
-          baseDate.toISOString().split('T')[0],
-        );
-      }
-    }
+    const scheduledDates = new Set(
+      schedules.map((s) =>
+        this.toUtcMidnight(s.date).toISOString().split('T')[0],
+      ),
+    );
 
     /* ------------------ Fetch Availability ------------------ */
     const availabilityRows =
@@ -3534,44 +3500,56 @@ export class DoulaService {
     >();
 
     availabilityRows.forEach((row) => {
-      if (row.availability) {
-        availabilityByDate.set(
-          row.date.toISOString().split('T')[0],
-          row.availability as {
-            MORNING?: boolean;
-            NIGHT?: boolean;
-            FULLDAY?: boolean;
-          },
-        );
-      }
+      availabilityByDate.set(
+        row.date.toISOString().split('T')[0],
+        row.availability as any,
+      );
     });
+
+    /* ------------------ Helper: check single day availability ------------------ */
+    const isDateAvailable = (date: Date): boolean => {
+      const key = date.toISOString().split('T')[0];
+
+      if (scheduledDates.has(key)) return false;
+
+      const availability = availabilityByDate.get(key);
+      if (!availability) return false;
+
+      const noShiftAvailable =
+        availability.MORNING !== true &&
+        availability.NIGHT !== true &&
+        availability.FULLDAY !== true;
+
+      return !noShiftAvailable;
+    };
 
     /* ------------------ Compute Booked / Unbooked ------------------ */
     const bookedDates: string[] = [];
     const unbookedDates: string[] = [];
 
+    const bufferDays = 3;
+    const isBirthDoula = serviceName === 'Birth Doula';
+
     for (const date of allDates) {
       const key = date.toISOString().split('T')[0];
+
       let isBooked = false;
 
-      // 1️⃣ Scheduled (or buffered scheduled)
-      if (scheduledDates.has(key)) {
-        isBooked = true;
-      } else {
-        const availability = availabilityByDate.get(key);
+      // ---------- Normal logic ----------
+      if (!isBirthDoula) {
+        isBooked = !isDateAvailable(date);
+      }
 
-        // 2️⃣ No availability record
-        if (!availability) {
-          isBooked = true;
-        } else {
-          // 3️⃣ No shifts available
-          const noShiftAvailable =
-            availability.MORNING !== true &&
-            availability.NIGHT !== true &&
-            availability.FULLDAY !== true;
+      // ---------- Birth Doula logic ----------
+      else {
+        // must be available including buffer window
+        for (let i = -bufferDays; i <= bufferDays; i++) {
+          const checkDate = new Date(date);
+          checkDate.setUTCDate(checkDate.getUTCDate() + i);
 
-          if (noShiftAvailable) {
+          if (!isDateAvailable(checkDate)) {
             isBooked = true;
+            break;
           }
         }
       }
