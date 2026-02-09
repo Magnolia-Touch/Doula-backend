@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -152,12 +153,11 @@ export class DoulaService {
   async create(
     dto: CreateDoulaDto,
     userId: string,
-    images: {
-      url: string;
-    }[] = [],
+    images: { url: string }[] = [],
     profileImageUrl?: string,
   ) {
     console.log('loggg', dto.certificates);
+
     // -----------------------------
     // Validate logged-in user
     // -----------------------------
@@ -180,169 +180,194 @@ export class DoulaService {
       throw new NotFoundException('One or more region IDs are invalid');
     }
 
-    // -----------------------------
-    // Transaction starts
-    // -----------------------------
-    return await this.prisma.$transaction(async (tx) => {
-      let createdUser;
+    try {
+      // -----------------------------
+      // Transaction starts
+      // -----------------------------
+      return await this.prisma.$transaction(async (tx) => {
+        let createdUser;
 
-      // =====================================================
-      // CASE 1: ZONE MANAGER CREATES DOULA
-      // =====================================================
-      if (user.role === Role.ZONE_MANAGER) {
-        const manager = await tx.zoneManagerProfile.findUnique({
-          where: { userId },
-        });
+        // =====================================================
+        // CASE 1: ZONE MANAGER CREATES DOULA
+        // =====================================================
+        if (user.role === Role.ZONE_MANAGER) {
+          const manager = await tx.zoneManagerProfile.findUnique({
+            where: { userId },
+          });
 
-        if (!manager) {
-          throw new BadRequestException('Zone Manager profile not found');
-        }
+          if (!manager) {
+            throw new BadRequestException(
+              'Zone Manager profile not found',
+            );
+          }
 
-        createdUser = await tx.user.create({
-          data: {
-            name: dto.name,
-            email: dto.email,
-            phone: dto.phone,
-            role: Role.DOULA,
-            doulaProfile: {
-              create: {
-                description: dto.description,
-                qualification: dto.qualification,
-                achievements: dto.achievements,
-                yoe: dto.yoe,
-                languages: dto.languages,
-                profile_image: profileImageUrl ?? null,
-                specialities: dto.specialities,
+          createdUser = await tx.user.create({
+            data: {
+              name: dto.name,
+              email: dto.email,
+              phone: dto.phone,
+              role: Role.DOULA,
+              doulaProfile: {
+                create: {
+                  description: dto.description,
+                  qualification: dto.qualification,
+                  achievements: dto.achievements,
+                  yoe: dto.yoe,
+                  languages: dto.languages,
+                  profile_image: profileImageUrl ?? null,
+                  specialities: dto.specialities,
 
-                Region: {
-                  connect: dto.regionIds.map((id) => ({ id })),
-                },
+                  Region: {
+                    connect: dto.regionIds.map((id) => ({ id })),
+                  },
 
-                zoneManager: {
-                  connect: { id: manager.id },
-                },
+                  zoneManager: {
+                    connect: { id: manager.id },
+                  },
 
-                DoulaGallery: {
-                  create: images,
-                },
-              },
-            },
-          },
-          include: {
-            doulaProfile: true,
-          },
-        });
-      }
-      // =====================================================
-      // CASE 2: ADMIN CREATES DOULA
-      // =====================================================
-      if (user.role === Role.ADMIN) {
-        const regionsWithManagers = await tx.region.findMany({
-          where: { id: { in: dto.regionIds } },
-          select: {
-            zoneManager: {
-              select: { id: true },
-            },
-          },
-        });
-
-        const zoneManagerIds = regionsWithManagers
-          .filter((r) => r.zoneManager)
-          .map((r) => r.zoneManager!.id);
-
-        if (!zoneManagerIds.length) {
-          throw new BadRequestException(
-            'Selected regions must have Zone Managers assigned',
-          );
-        }
-
-        createdUser = await tx.user.create({
-          data: {
-            name: dto.name,
-            email: dto.email,
-            phone: dto.phone,
-            role: Role.DOULA,
-            doulaProfile: {
-              create: {
-                description: dto.description,
-                qualification: dto.qualification,
-                achievements: dto.achievements,
-                yoe: dto.yoe,
-                languages: dto.languages,
-                profile_image: profileImageUrl ?? null,
-                specialities: dto.specialities,
-
-                Region: {
-                  connect: dto.regionIds.map((id) => ({ id })),
-                },
-
-                zoneManager: {
-                  connect: zoneManagerIds.map((id) => ({ id })),
-                },
-
-                DoulaGallery: {
-                  create: images,
+                  DoulaGallery: {
+                    create: images,
+                  },
                 },
               },
             },
-          },
-          include: {
-            doulaProfile: true,
-          },
-        });
-      }
-
-      if (!createdUser) {
-        throw new BadRequestException('Unauthorized role');
-      }
-
-      // =====================================================
-      // CERTIFICATES CREATION
-      // =====================================================
-
-      const certificates = dto.parsedCertificates;
-
-      if (certificates.length) {
-        await tx.certificates.createMany({
-          data: certificates.map((cert) => ({
-            name: cert.name,
-            issuedBy: cert.issuedBy ?? 'Unknown',
-            year: cert.year ?? '0000',
-            doulaProfileId: createdUser.doulaProfile!.id,
-          })),
-        });
-      }
-
-      // =====================================================
-      // FINAL RESPONSE WITH RELATIONS
-      // =====================================================
-      const doulaWithDetails = await tx.user.findUnique({
-        where: { id: createdUser.id },
-        include: {
-          doulaProfile: {
             include: {
-              Region: {
-                select: {
-                  id: true,
-                  regionName: true,
-                  pincode: true,
-                  zoneManagerId: true,
+              doulaProfile: true,
+            },
+          });
+        }
+
+        // =====================================================
+        // CASE 2: ADMIN CREATES DOULA
+        // =====================================================
+        if (user.role === Role.ADMIN) {
+          const regionsWithManagers = await tx.region.findMany({
+            where: { id: { in: dto.regionIds } },
+            select: {
+              zoneManager: {
+                select: { id: true },
+              },
+            },
+          });
+
+          const zoneManagerIds = regionsWithManagers
+            .filter((r) => r.zoneManager)
+            .map((r) => r.zoneManager!.id);
+
+          if (!zoneManagerIds.length) {
+            throw new BadRequestException(
+              'Selected regions must have Zone Managers assigned',
+            );
+          }
+
+          createdUser = await tx.user.create({
+            data: {
+              name: dto.name,
+              email: dto.email,
+              phone: dto.phone,
+              role: Role.DOULA,
+              doulaProfile: {
+                create: {
+                  description: dto.description,
+                  qualification: dto.qualification,
+                  achievements: dto.achievements,
+                  yoe: dto.yoe,
+                  languages: dto.languages,
+                  profile_image: profileImageUrl ?? null,
+                  specialities: dto.specialities,
+
+                  Region: {
+                    connect: dto.regionIds.map((id) => ({ id })),
+                  },
+
+                  zoneManager: {
+                    connect: zoneManagerIds.map((id) => ({ id })),
+                  },
+
+                  DoulaGallery: {
+                    create: images,
+                  },
                 },
               },
-              zoneManager: true,
-              DoulaGallery: true,
-              Certificates: true,
+            },
+            include: {
+              doulaProfile: true,
+            },
+          });
+        }
+
+        if (!createdUser) {
+          throw new BadRequestException('Unauthorized role');
+        }
+
+        // =====================================================
+        // CERTIFICATES CREATION
+        // =====================================================
+        const certificates = dto.parsedCertificates;
+
+        if (certificates.length) {
+          await tx.certificates.createMany({
+            data: certificates.map((cert) => ({
+              name: cert.name,
+              issuedBy: cert.issuedBy ?? 'Unknown',
+              year: cert.year ?? '0000',
+              doulaProfileId: createdUser.doulaProfile!.id,
+            })),
+          });
+        }
+
+        // =====================================================
+        // FINAL RESPONSE WITH RELATIONS
+        // =====================================================
+        const doulaWithDetails = await tx.user.findUnique({
+          where: { id: createdUser.id },
+          include: {
+            doulaProfile: {
+              include: {
+                Region: {
+                  select: {
+                    id: true,
+                    regionName: true,
+                    pincode: true,
+                    zoneManagerId: true,
+                  },
+                },
+                zoneManager: true,
+                DoulaGallery: true,
+                Certificates: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      return {
-        message: 'Doula created successfully',
-        data: doulaWithDetails,
-      };
-    });
+        return {
+          message: 'Doula created successfully',
+          data: doulaWithDetails,
+        };
+      });
+    } catch (error) {
+      // Handle Prisma unique constraint errors
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const field = (error.meta?.target as string[])?.[0];
+
+        if (field === 'email') {
+          throw new ConflictException('Email already exists');
+        }
+
+        if (field === 'phone') {
+          throw new ConflictException('Phone number already exists');
+        }
+
+        throw new ConflictException('Duplicate entry detected');
+      }
+
+      throw error;
+    }
   }
+
 
 
   // async get(
@@ -2081,17 +2106,23 @@ export class DoulaService {
       data: data
     };
   }
+  async addDoulaprofileImage(
+    userId: string,
+    profileImageUrl?: string,
+    doulaId?: string,
+  ) {
+    const targetUserId = doulaId ?? userId;
 
-  async addDoulaprofileImage(userId: string, profileImageUrl?: string) {
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
-      where: { userId },
+      where: { userId: targetUserId },
     });
 
     if (!doulaProfile) {
       throw new NotFoundException('Doula profile not found');
     }
+
     await this.prisma.doulaProfile.update({
-      where: { userId: userId },
+      where: { userId: targetUserId },
       data: { profile_image: profileImageUrl },
     });
 
@@ -2101,22 +2132,17 @@ export class DoulaService {
     };
   }
 
-  async getDoulaImages(userId: string) {
+  async getDoulaImages(userId: string, doulaId?: string) {
+    const targetUserId = doulaId ?? userId;
+
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
-      where: { userId },
+      where: { userId: targetUserId },
       select: { id: true, profile_image: true },
     });
 
     if (!doulaProfile) {
       throw new NotFoundException('Doula profile not found');
     }
-
-    const images = await this.prisma.doulaProfile.findUnique({
-      where: {
-        userId: doulaProfile.id,
-      },
-      select: { profile_image: true },
-    });
 
     return {
       status: 'success',
@@ -2125,19 +2151,26 @@ export class DoulaService {
     };
   }
 
-  async deleteDoulaprofileImage(userId: string) {
+
+  async deleteDoulaprofileImage(userId: string, doulaId?: string) {
+    const targetUserId = doulaId ?? userId;
+
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
-      where: { userId },
+      where: { userId: targetUserId },
     });
+
     if (!doulaProfile) {
       throw new NotFoundException('Doula profile not found');
     }
-    const image = await this.prisma.doulaProfile.update({
-      where: { userId: userId },
+
+    await this.prisma.doulaProfile.update({
+      where: { userId: targetUserId },
       data: { profile_image: null },
     });
+
     return { message: 'Image deleted successfully' };
   }
+
 
   async addDoulaGalleryImages(
     userId: string,

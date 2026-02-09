@@ -948,7 +948,7 @@ export class DoulaController {
 
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
+  @Roles(Role.DOULA, Role.ZONE_MANAGER)
   @Post('profile/images')
   @ApiOperation({ summary: 'Upload doula profile image' })
   @ApiConsumes('multipart/form-data')
@@ -1000,6 +1000,7 @@ export class DoulaController {
   async uploadDoulaImage(
     @Req() req,
     @UploadedFile() file: Express.Multer.File,
+    @Query('doulaId') doulaId?: string,
   ) {
     if (!file) {
       throw new BadRequestException('Profile image is required');
@@ -1017,13 +1018,17 @@ export class DoulaController {
     }
     const folder = "uploads/doulas/profile"
     const profileImageUrl = await this.s3Service.uploadFile(file, folder);
-    return this.service.addDoulaprofileImage(req.user.id, profileImageUrl);
+    return this.service.addDoulaprofileImage(
+      req.user.id,
+      profileImageUrl,
+      doulaId,
+    );
   }
 
 
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
+  @Roles(Role.DOULA, Role.ZONE_MANAGER)
   @Get('profile/images')
   @ApiOperation({ summary: 'Get doula profile image' })
   @ApiResponse({
@@ -1038,12 +1043,14 @@ export class DoulaController {
       }
     }
   })
-  async getDoulaImages(@Req() req) {
-    return this.service.getDoulaImages(req.user.id);
+  async getDoulaImages(
+    @Req() req,
+    @Query('doulaId') doulaId?: string,) {
+    return this.service.getDoulaImages(req.user.id, doulaId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.DOULA)
+  @Roles(Role.DOULA, Role.ZONE_MANAGER)
   @Delete('profile/images/')
   @ApiOperation({ summary: 'Delete doula profile image' })
   @ApiResponse({
@@ -1057,8 +1064,13 @@ export class DoulaController {
       }
     }
   })
-  async deleteDoulaImage(@Req() req) {
-    return this.service.deleteDoulaprofileImage(req.user.id);
+  async deleteDoulaImage(
+    @Req() req,
+    @Query('doulaId') doulaId?: string,) {
+    return this.service.deleteDoulaprofileImage(
+      req.user.id,
+      doulaId,
+    );
   }
 
 
