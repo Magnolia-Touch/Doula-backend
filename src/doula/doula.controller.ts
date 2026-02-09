@@ -1799,6 +1799,7 @@ export class DoulaController {
     @Param('doulaId') doulaId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
+    @Query('filter') filter: 'BOOKED' | 'UNBOOKED' | 'ALL' = 'ALL',
   ) {
     if (!startDate || !endDate) {
       throw new BadRequestException(
@@ -1810,6 +1811,8 @@ export class DoulaController {
       doulaId,
       startDate,
       endDate,
+      filter,
     );
   }
+
 }

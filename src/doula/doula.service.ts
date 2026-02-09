@@ -3430,16 +3430,11 @@ export class DoulaService {
     };
   }
 
-
-
-  //--------------------------------------------------------------
-  // Update 1
-  //--------------------------------------------------------------
-
   async getBookedDatesInRange(
     doulaId: string,
     startDate: string,
     endDate: string,
+    filter: 'BOOKED' | 'UNBOOKED' | 'ALL' = 'ALL',
   ) {
     /* ------------------ Validate Doula ------------------ */
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -3459,7 +3454,7 @@ export class DoulaService {
       throw new BadRequestException('Start date must be before end date');
     }
 
-    /* ------------------ Generate ALL dates in range ------------------ */
+    /* ------------------ Generate ALL dates ------------------ */
     const allDates: Date[] = [];
     let current = new Date(start.getTime());
 
@@ -3468,7 +3463,7 @@ export class DoulaService {
       current.setUTCDate(current.getUTCDate() + 1);
     }
 
-    /* ------------------ Fetch Schedule Conflicts ------------------ */
+    /* ------------------ Fetch Schedules ------------------ */
     const schedules = await this.prisma.schedules.findMany({
       where: {
         doulaProfileId: doulaId,
@@ -3481,7 +3476,7 @@ export class DoulaService {
       schedules.map((s) => s.date.toISOString().split('T')[0]),
     );
 
-    /* ------------------ Fetch Service Availability ------------------ */
+    /* ------------------ Fetch Availability ------------------ */
     const availabilityRows =
       await this.prisma.availableSlotsForService.findMany({
         where: {
@@ -3503,53 +3498,74 @@ export class DoulaService {
       if (row.availability) {
         availabilityByDate.set(
           row.date.toISOString().split('T')[0],
-          row.availability as { MORNING?: boolean; NIGHT?: boolean; FULLDAY?: boolean },
+          row.availability as {
+            MORNING?: boolean;
+            NIGHT?: boolean;
+            FULLDAY?: boolean;
+          },
         );
       }
     });
 
-    /* ------------------ Compute Booked / Unavailable Dates ------------------ */
+    /* ------------------ Compute Dates ------------------ */
     const bookedDates: string[] = [];
+    const unbookedDates: string[] = [];
 
     for (const date of allDates) {
       const key = date.toISOString().split('T')[0];
 
+      let isBooked = false;
+
       // 1️⃣ Already scheduled
       if (scheduledDates.has(key)) {
-        bookedDates.push(key);
-        continue;
+        isBooked = true;
+      } else {
+        const availability = availabilityByDate.get(key);
+
+        // 2️⃣ No availability record
+        if (!availability) {
+          isBooked = true;
+        } else {
+          // 3️⃣ No shifts available
+          const noShiftAvailable =
+            availability.MORNING !== true &&
+            availability.NIGHT !== true &&
+            availability.FULLDAY !== true;
+
+          if (noShiftAvailable) {
+            isBooked = true;
+          }
+        }
       }
 
-      // 2️⃣ No availability record at all
-      const availability = availabilityByDate.get(key);
-      if (!availability) {
-        bookedDates.push(key);
-        continue;
-      }
-
-      // 3️⃣ All shifts unavailable
-      const noShiftAvailable =
-        availability.MORNING !== true &&
-        availability.NIGHT !== true &&
-        availability.FULLDAY !== true;
-
-      if (noShiftAvailable) {
-        bookedDates.push(key);
-      }
+      if (isBooked) bookedDates.push(key);
+      else unbookedDates.push(key);
     }
 
-    /* ------------------ Response ------------------ */
+    /* ------------------ Apply Filter ------------------ */
+    let responseData: any = {};
+
+    if (filter === 'BOOKED') {
+      responseData.bookedDates = bookedDates;
+    } else if (filter === 'UNBOOKED') {
+      responseData.unbookedDates = unbookedDates;
+    } else {
+      responseData.bookedDates = bookedDates;
+      responseData.unbookedDates = unbookedDates;
+    }
+
     return {
       success: true,
-      message: 'Booked dates fetched successfully',
+      message: 'Dates fetched successfully',
       data: {
         doulaId,
         startDate,
         endDate,
-        bookedDates,
+        ...responseData,
       },
     };
   }
+
 
 }
 
