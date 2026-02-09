@@ -61,6 +61,7 @@ export class MeetingsService {
     // create meeting
     const meeting = await this.prisma.meetings.create({
       data: {
+        bookedByName: Form.name,
         link: meetLink,
         status: MeetingStatus.SCHEDULED,
         startTime: Form.startTime,

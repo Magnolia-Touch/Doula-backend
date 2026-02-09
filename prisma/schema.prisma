@@ -312,8 +312,9 @@ model Meetings {
   serviceName String
   remarks     String?
 
-  bookedById String // customer ID
-  bookedBy   ClientProfile @relation(fields: [bookedById], references: [id], onDelete: Cascade)
+  bookedByName String        @default("") // customer ID
+  bookedById   String // customer ID
+  bookedBy     ClientProfile @relation(fields: [bookedById], references: [id], onDelete: Cascade)
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
