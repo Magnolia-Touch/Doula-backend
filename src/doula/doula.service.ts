@@ -1251,6 +1251,13 @@ export class DoulaService {
 
       nextImmediateAvailabilityDate,
 
+      achievements: profile.achievements ?? null,
+      languages: profile.languages ?? null,
+      regionId: profile.regionId ?? null,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+
+
       galleryImages:
         profile.DoulaGallery?.map((img) => ({
           id: img.id,

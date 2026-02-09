@@ -151,6 +151,7 @@ export class EnquiryService {
         const endDateTime = new Date(`${meetingsDate}T${endTime}:00`);
 
         const enquiryData = {
+            name: enquiry.name,
             email: enquiry.email,
             startTime: startDateTime,
             endTime: endDateTime,
