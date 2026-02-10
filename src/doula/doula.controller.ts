@@ -381,6 +381,7 @@ export class DoulaController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('weekDays') weekDays?: string | string[],
+    @Query('random') random?: boolean,
   ) {
 
     // normalize to array
@@ -405,6 +406,7 @@ export class DoulaController {
       startDate,
       endDate,
       parsedWeekDays as WeekDays[],
+      random
     );
   }
 

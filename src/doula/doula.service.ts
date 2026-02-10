@@ -727,6 +727,7 @@ export class DoulaService {
   //     data: transformed,
   //   };
   // }
+
   async get(
     page = 1,
     limit = 10,
@@ -740,6 +741,7 @@ export class DoulaService {
     startDate?: string,
     endDate?: string,
     weekDays?: WeekDays[],
+    random?: boolean,   // ✅ ADDED
   ) {
 
     /* ----------------------------------------------------
@@ -762,54 +764,58 @@ export class DoulaService {
 
     const where: any = { role: Role.DOULA };
 
-    if (search) {
-      const q = search.toLowerCase();
-      where.OR = [
-        { name: { contains: q } },
-        { email: { contains: q } },
-        { phone: { contains: q } },
-        {
-          doulaProfile: {
-            Region: { some: { regionName: { contains: q } } },
+    // ✅ ALL FILTERS IGNORED WHEN RANDOM = TRUE
+    if (!random) {
+
+      if (search) {
+        const q = search.toLowerCase();
+        where.OR = [
+          { name: { contains: q } },
+          { email: { contains: q } },
+          { phone: { contains: q } },
+          {
+            doulaProfile: {
+              Region: { some: { regionName: { contains: q } } },
+            },
           },
-        },
-      ];
-    }
+        ];
+      }
 
-    if (regionName) {
-      where.doulaProfile = {
-        ...(where.doulaProfile || {}),
-        Region: {
-          some: { regionName: { contains: regionName.toLowerCase() } },
-        },
-      };
-    }
+      if (regionName) {
+        where.doulaProfile = {
+          ...(where.doulaProfile || {}),
+          Region: {
+            some: { regionName: { contains: regionName.toLowerCase() } },
+          },
+        };
+      }
 
-    if (typeof minExperience === 'number') {
-      where.doulaProfile = {
-        ...(where.doulaProfile || {}),
-        yoe: { gte: minExperience },
-      };
-    }
+      if (typeof minExperience === 'number') {
+        where.doulaProfile = {
+          ...(where.doulaProfile || {}),
+          yoe: { gte: minExperience },
+        };
+      }
 
-    const servicePricingConditions: any = {};
-    if (serviceId) servicePricingConditions.serviceId = serviceId;
+      const servicePricingConditions: any = {};
+      if (serviceId) servicePricingConditions.serviceId = serviceId;
 
-    if (serviceName) {
-      servicePricingConditions.service = {
-        name: { contains: serviceName.toLowerCase() },
-      };
-    }
+      if (serviceName) {
+        servicePricingConditions.service = {
+          name: { contains: serviceName.toLowerCase() },
+        };
+      }
 
-    if (Object.keys(servicePricingConditions).length) {
-      where.doulaProfile = {
-        ...(where.doulaProfile || {}),
-        ServicePricing: { some: servicePricingConditions },
-      };
-    }
+      if (Object.keys(servicePricingConditions).length) {
+        where.doulaProfile = {
+          ...(where.doulaProfile || {}),
+          ServicePricing: { some: servicePricingConditions },
+        };
+      }
 
-    if (typeof isActive === 'boolean') {
-      where.is_active = isActive;
+      if (typeof isActive === 'boolean') {
+        where.is_active = isActive;
+      }
     }
 
     /* ----------------------------------------------------
@@ -836,8 +842,14 @@ export class DoulaService {
     });
 
     const users = result.data ?? [];
+
     if (!users.length) {
       return { message: 'Doulas fetched successfully', ...result, data: [] };
+    }
+
+    // ✅ RANDOMIZE ORDER AFTER FETCH
+    if (random) {
+      users.sort(() => Math.random() - 0.5);
     }
 
     /* ----------------------------------------------------
@@ -863,13 +875,10 @@ export class DoulaService {
 
     let allowedWeekDays: Set<number> | null = null;
 
-    if (weekDays?.length) {
+    if (!random && weekDays?.length) {
       allowedWeekDays = new Set(
         weekDays.map((d) => WEEKDAY_INDEX[d])
       );
-
-      console.log('Passed weekdays:', weekDays);
-      console.log('Mapped weekday indexes:', [...allowedWeekDays]);
     }
 
     const isAllowedWeekDay = (date: Date) => {
@@ -883,7 +892,7 @@ export class DoulaService {
 
     let requiredWeekdayDates: Set<number> | null = null;
 
-    if (rangeStart && rangeEnd && allowedWeekDays) {
+    if (!random && rangeStart && rangeEnd && allowedWeekDays) {
       requiredWeekdayDates = new Set();
 
       const cursor = new Date(rangeStart);
@@ -927,7 +936,7 @@ export class DoulaService {
     });
 
     /* ----------------------------------------------------
-     * 7. Fetch available slots (ONLY RANGE)
+     * 7. Fetch available slots
      * -------------------------------------------------- */
 
     const availableSlots =
@@ -992,10 +1001,6 @@ export class DoulaService {
      * 10. Transform response
      * -------------------------------------------------- */
 
-    /* ----------------------------------------------------
- * 10. Transform response (PRODUCTION RESPONSE SHAPE)
- * -------------------------------------------------- */
-
     const transformed = users
       .map((user: any) => {
         const profile = user.doulaProfile;
@@ -1005,7 +1010,6 @@ export class DoulaService {
         const slotEntries = availabilityMap.get(profile.id) ?? [];
 
         let nextAvailableDate: Date | null = null;
-
         const availableDateSet = new Set<number>();
 
         for (const slot of slotEntries) {
@@ -1030,9 +1034,9 @@ export class DoulaService {
         let noOfUnavailableDays: number | null = null;
         let noOfAvailableDays: number | null = null;
 
-        if (rangeStart && rangeEnd) {
-          const requiredDateSet = new Set<number>();
+        if (!random && rangeStart && rangeEnd) {
 
+          const requiredDateSet = new Set<number>();
           const cursor = new Date(rangeStart);
 
           while (cursor <= rangeEnd) {
@@ -1048,34 +1052,25 @@ export class DoulaService {
             cursor.setUTCDate(cursor.getUTCDate() + 1);
           }
 
-          const bookedDateSet = new Set(
-            bookedDates.map((d) => normalizeDateTime(d)),
-          );
+          const totalRequiredDays = requiredDateSet.size;
 
-          available = true;
+          const availableCount = [...requiredDateSet].filter((d) =>
+            availableDateSet.has(d),
+          ).length;
 
-          for (const requiredDate of requiredDateSet) {
-            if (!availableDateSet.has(requiredDate)) {
-              available = false;
-              break;
-            }
-          }
+          const unavailableCount = totalRequiredDays - availableCount;
 
-          noOfUnavailableDays = bookedDateSet.size;
-
-          noOfAvailableDays =
-            availableDateSet.size - noOfUnavailableDays;
-
-          if (noOfAvailableDays < 0) {
-            noOfAvailableDays = 0;
-          }
+          available = availableCount > 0;
+          noOfAvailableDays = availableCount;
+          noOfUnavailableDays = unavailableCount;
         }
 
-        if (rangeStart && rangeEnd && !available) {
+        if (!random && rangeStart && rangeEnd && available === false) {
           return null;
         }
 
         if (
+          !random &&
           typeof isAvailable === 'boolean' &&
           available !== isAvailable
         ) {
@@ -1144,12 +1139,14 @@ export class DoulaService {
         };
       })
       .filter(Boolean);
+
     return {
       message: 'Doulas fetched successfully',
       ...result,
       data: transformed,
     };
   }
+
 
 
 
