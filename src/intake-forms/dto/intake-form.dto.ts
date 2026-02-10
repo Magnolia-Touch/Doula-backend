@@ -63,14 +63,15 @@ export class IntakeFormDto {
     example: '2025-12-05',
     description: 'Service Start Date (ISO format)',
   })
-  @IsDateString()
-  seviceStartDate: string;
+  @IsString()
+  serviceStartDate: string;
 
   @ApiProperty({
     example: '2025-12-10',
     description: 'Service End Date (ISO format)',
   })
-  @IsDateString()
+  @IsOptional()
+  @IsString()
   serviceEndDate: string;
 
   @ApiPropertyOptional({
