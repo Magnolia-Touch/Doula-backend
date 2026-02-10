@@ -3462,6 +3462,8 @@ export class DoulaService {
       },
     };
   }
+
+
   async getBookedDatesInRange(
     doulaId: string,
     startDate: string,
@@ -3566,6 +3568,13 @@ export class DoulaService {
     for (const date of allDates) {
       const key = date.toISOString().split('T')[0];
 
+      // ✅ IMPORTANT: date must exist in AvailableSlotsForService
+      if (!availabilityByDate.has(key)) {
+        // not available at all → treat as booked (or skip entirely)
+        bookedDates.push(key);
+        continue;
+      }
+
       let isBooked = false;
 
       // ---------- Normal logic ----------
@@ -3575,12 +3584,14 @@ export class DoulaService {
 
       // ---------- Birth Doula logic ----------
       else {
-        // must be available including buffer window
         for (let i = -bufferDays; i <= bufferDays; i++) {
           const checkDate = new Date(date);
           checkDate.setUTCDate(checkDate.getUTCDate() + i);
 
-          if (!isDateAvailable(checkDate)) {
+          const checkKey = checkDate.toISOString().split('T')[0];
+
+          // buffer date must also exist in availability
+          if (!availabilityByDate.has(checkKey) || !isDateAvailable(checkDate)) {
             isBooked = true;
             break;
           }
@@ -3590,6 +3601,7 @@ export class DoulaService {
       if (isBooked) bookedDates.push(key);
       else unbookedDates.push(key);
     }
+
 
     /* ------------------ Apply Filter ------------------ */
     let responseData: any = {};
