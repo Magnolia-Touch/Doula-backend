@@ -1,138 +1,156 @@
-import {
-    PrismaClient,
-    Role,
-    WeekDays,
-    MeetingStatus
-} from '@prisma/client';
+import { PrismaClient, Role, TimeShift, ServiceStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const ZONE_MANAGER_ID =
-    "47e356d8-cee3-40df-9fd9-94a5ca806955";
-
 async function main() {
+    console.log('🌱 Seeding started...');
 
-    /*
-     -----------------------------------
-     1. FIND REGION UNDER SONA
-     -----------------------------------
-    */
+    /* --------------------------------------------------
+     * 1. Clean tables (order matters)
+     * -------------------------------------------------- */
+    await prisma.schedules.deleteMany();
+    await prisma.availableSlotsForService.deleteMany();
+    await prisma.servicePricing.deleteMany();
+    await prisma.doulaProfile.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.region.deleteMany();
+    await prisma.service.deleteMany();
 
-    const region = await prisma.region.findFirst({
-        where: {
-            zoneManagerId: ZONE_MANAGER_ID
-        }
+    /* --------------------------------------------------
+     * 2. Region
+     * -------------------------------------------------- */
+    const region = await prisma.region.create({
+        data: {
+            regionName: 'Kochi',
+            pincode: '682001',
+            district: 'Ernakulam',
+            state: 'Kerala',
+            country: 'India',
+            latitude: '0',
+            longitude: '0',
+        },
     });
 
-    if (!region) {
-        throw new Error("No region mapped to Sona zone manager");
-    }
-
-    /*
-     -----------------------------------
-     2. FIND SERVICE
-     -----------------------------------
-    */
-
-    const service = await prisma.service.findFirst();
-
-    if (!service) {
-        throw new Error("Service not found");
-    }
-
-    /*
-     -----------------------------------
-     3. SLOT (MONDAY example)
-     -----------------------------------
-    */
-
-    const slot = await prisma.availableSlotsForMeeting.findFirst({
-        where: {
-            zoneManagerId: ZONE_MANAGER_ID,
-            ownerRole: Role.ZONE_MANAGER,
-        }
+    /* --------------------------------------------------
+     * 3. Service
+     * -------------------------------------------------- */
+    const service = await prisma.service.create({
+        data: {
+            name: 'Postpartum Care',
+        },
     });
 
-    if (!slot) {
-        throw new Error("Available slot not found");
-    }
-
-    /*
-     -----------------------------------
-     4. CREATE CLIENTS
-     -----------------------------------
-    */
-
-    const clients: Awaited<ReturnType<typeof prisma.clientProfile.create>>[] = [];
-
-    for (let i = 0; i < 5; i++) {
-
+    /* --------------------------------------------------
+     * 4. Helper to create doula
+     * -------------------------------------------------- */
+    async function createDoula(name: string) {
         const user = await prisma.user.create({
             data: {
-                name: `Test Client ${i}`,
-                email: `sona-client${i}@mail.com`,
-                role: Role.CLIENT
-            }
+                name,
+                email: `${name.toLowerCase()}@test.com`,
+                role: Role.DOULA,
+            },
         });
 
-        const profile = await prisma.clientProfile.create({
+        const profile = await prisma.doulaProfile.create({
             data: {
-                userId: user.id
-            }
+                userId: user.id,
+                yoe: 5,
+                Region: {
+                    connect: { id: region.id },
+                },
+            },
         });
 
-        clients.push(profile);
-    }
-
-    /*
-     -----------------------------------
-     5. CREATE 15 ENQUIRIES
-     -----------------------------------
-    */
-
-    for (let i = 0; i < 15; i++) {
-
-        const client = clients[i % clients.length];
-
-        const meetingDate = new Date();
-        meetingDate.setDate(meetingDate.getDate() + i);
-
-        const enquiry = await prisma.enquiryForm.create({
+        await prisma.servicePricing.create({
             data: {
-                name: `Client ${i}`,
-                email: `sona-enquiry${i}@mail.com`,
-                phone: `99999999${i}`,
-                additionalNotes: `Enquiry for Sona ${i}`,
-                meetingsDate: meetingDate,
-                meetingsTimeSlots: "10:00-11:00",
-                serviceName: service.name,
-                regionId: region.id,
-                slotId: slot.id,
+                doulaProfileId: profile.id,
                 serviceId: service.id,
-                clientId: client.id,
-            }
+                price: { fullday: 1000 },
+            },
         });
 
-        await prisma.meetings.create({
+        return profile;
+    }
+
+    /* --------------------------------------------------
+     * 5. Create Doulas
+     * -------------------------------------------------- */
+    const doulaA = await createDoula('DoulaA');
+    const doulaB = await createDoula('DoulaB');
+    const doulaC = await createDoula('DoulaC');
+
+    /* --------------------------------------------------
+     * Test Date Range
+     * Example:
+     * 2026-03-01 → 2026-03-10
+     * Weekdays test: MONDAY, WEDNESDAY
+     * -------------------------------------------------- */
+    const dates = [
+        '2026-03-02', // Monday
+        '2026-03-04', // Wednesday
+        '2026-03-09', // Monday
+    ];
+
+    /* --------------------------------------------------
+     * 6. Available Slots
+     * -------------------------------------------------- */
+
+    // Doula A → available on all required weekdays
+    for (const d of dates) {
+        await prisma.availableSlotsForService.create({
             data: {
-                link: "https://meet.test.com/sona",
-                status: MeetingStatus.SCHEDULED,
-                startTime: new Date(`${meetingDate.toISOString().split('T')[0]}T10:00:00`),
-                endTime: new Date(`${meetingDate.toISOString().split('T')[0]}T11:00:00`),
-                date: meetingDate,
-                serviceName: service.name,
-                bookedById: client.id,
-                zoneManagerProfileId: ZONE_MANAGER_ID,
-                enquiryId: enquiry.id
-            }
+                doulaId: doulaA.id,
+                date: new Date(d),
+                availability: {
+                    MORNING: true,
+                    NIGHT: true,
+                    FULLDAY: true,
+                },
+            },
         });
     }
 
-    console.log("✅ 15 enquiries created under Sona Sasikumar");
+    // Doula B → missing one weekday (should be filtered)
+    await prisma.availableSlotsForService.create({
+        data: {
+            doulaId: doulaB.id,
+            date: new Date('2026-03-02'),
+            availability: {
+                MORNING: true,
+                NIGHT: true,
+                FULLDAY: true,
+            },
+        },
+    });
+
+    // Doula C → available but booked
+    await prisma.availableSlotsForService.create({
+        data: {
+            doulaId: doulaC.id,
+            date: new Date('2026-03-02'),
+            availability: {
+                MORNING: true,
+                NIGHT: true,
+                FULLDAY: true,
+            },
+        },
+    });
+
+    await prisma.schedules.create({
+        data: {
+            date: new Date('2026-03-02'),
+            doulaProfileId: doulaC.id,
+            serviceId: service.id,
+            clientId: 'dummy-client',
+            bookingId: 'dummy-booking',
+            status: ServiceStatus.IN_PROGRESS,
+        },
+    });
+
+    console.log('✅ Seeding completed');
 }
 
 main()
     .catch(console.error)
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+    .finally(() => prisma.$disconnect());

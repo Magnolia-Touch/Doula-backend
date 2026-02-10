@@ -727,7 +727,7 @@ export class DoulaService {
   //     data: transformed,
   //   };
   // }
-
+  noOfAvailableDays
   async get(
     page = 1,
     limit = 10,
@@ -902,6 +902,27 @@ export class DoulaService {
     };
 
     /* ----------------------------------------------------
+ * 8.2 Extract weekday dates from range (NEW)
+ * -------------------------------------------------- */
+    let requiredWeekdayDates: Set<number> | null = null;
+
+    if (rangeStart && rangeEnd && allowedWeekDays) {
+      requiredWeekdayDates = new Set();
+
+      const cursor = new Date(rangeStart);
+
+      while (cursor <= rangeEnd) {
+        if (allowedWeekDays.has(cursor.getDay())) {
+          const d = new Date(cursor);
+          d.setHours(0, 0, 0, 0);
+          requiredWeekdayDates.add(d.getTime());
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+
+    /* ----------------------------------------------------
      * 9. Fetch schedules
      * -------------------------------------------------- */
     const doulaProfileIds = users
@@ -1030,6 +1051,28 @@ export class DoulaService {
 
         if (rangeStart && rangeEnd) {
           const availableDateSet = new Set<number>();
+          /* -----------------------------------------------
+ * REQUIRED DATE SET (NEW)
+ * Doula must be available on ALL these dates
+ * --------------------------------------------- */
+          const requiredDateSet = new Set<number>();
+
+          const cursor = new Date(rangeStart);
+
+          while (cursor <= rangeEnd) {
+            const time = normalizeDate(cursor);
+
+            // if weekdays filter exists → only include those dates
+            if (
+              !requiredWeekdayDates ||
+              requiredWeekdayDates.has(time)
+            ) {
+              requiredDateSet.add(time);
+            }
+
+            cursor.setDate(cursor.getDate() + 1);
+          }
+
           const bookedDateSet = new Set(
             bookedDates.map((d) => normalizeDate(d)),
           );
@@ -1037,10 +1080,19 @@ export class DoulaService {
           for (const slot of slotEntries) {
             const slotTime = normalizeDate(slot.date);
 
+            // if weekday filter exists → only allow extracted weekday dates
+            if (
+              requiredWeekdayDates &&
+              !requiredWeekdayDates.has(slotTime)
+            ) {
+              continue;
+            }
+
             if (
               slotTime >= rangeStart.getTime() &&
               slotTime <= rangeEnd.getTime()
             ) {
+
               if (
                 isAllowedWeekDay(slot.date) &&
                 isDateAvailable(
@@ -1050,6 +1102,15 @@ export class DoulaService {
                 )
               ) {
                 availableDateSet.add(slotTime);
+
+              }
+            }
+          }
+          if (requiredWeekdayDates) {
+            for (const requiredDate of requiredWeekdayDates) {
+              if (!availableDateSet.has(requiredDate)) {
+                available = false;
+                break;
               }
             }
           }
@@ -1062,7 +1123,15 @@ export class DoulaService {
             noOfAvailableDays = 0;
           }
 
-          available = noOfAvailableDays > 0;
+          available = true;
+
+          for (const requiredDate of requiredDateSet) {
+            if (!availableDateSet.has(requiredDate)) {
+              available = false;
+              break;
+            }
+          }
+
         }
 
         if (rangeStart && rangeEnd && !available) {
@@ -1075,6 +1144,7 @@ export class DoulaService {
         ) {
           return null;
         }
+
 
         const services =
           profile.ServicePricing?.map((p) =>
