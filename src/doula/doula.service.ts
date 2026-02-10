@@ -116,6 +116,10 @@ export class DoulaService {
       experience: doula.yoe ?? 0,
       satisfaction,
       qualification: doula.qualification,
+      languages: doula.languages,
+      specialities: doula.specialities,
+      acheivements: doula.achievements,
+      profile_image: doula.profile_image,
 
       // Contact
       contact: {
