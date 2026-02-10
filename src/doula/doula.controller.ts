@@ -380,7 +380,18 @@ export class DoulaController {
     @Query('serviceName') serviceName?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('weekDays') weekDays?: string | string[],
   ) {
+
+    // normalize to array
+    const parsedWeekDays = weekDays
+      ? Array.isArray(weekDays)
+        ? weekDays
+        : [weekDays]
+      : undefined;
+
+    console.log('Controller weekDays:', parsedWeekDays);
+
     return this.service.get(
       Number(page),
       Number(limit),
@@ -388,14 +399,15 @@ export class DoulaController {
       serviceId,
       isAvailable,
       isActive,
-
       regionName,
       minExperience ? Number(minExperience) : undefined,
       serviceName,
       startDate,
       endDate,
+      parsedWeekDays as WeekDays[],
     );
   }
+
 
   // GET BY ID
   @Get(':id')

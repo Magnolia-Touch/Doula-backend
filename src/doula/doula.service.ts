@@ -727,7 +727,6 @@ export class DoulaService {
   //     data: transformed,
   //   };
   // }
-  noOfAvailableDays
   async get(
     page = 1,
     limit = 10,
@@ -740,18 +739,29 @@ export class DoulaService {
     serviceName?: string,
     startDate?: string,
     endDate?: string,
-    weekDays?: string[], // ✅ NEW OPTIONAL FILTER
+    weekDays?: WeekDays[],
   ) {
-    /* ----------------------------------------------------
-     * 1. Base user filter
-     * -------------------------------------------------- */
-    const where: any = {
-      role: Role.DOULA,
-    };
 
     /* ----------------------------------------------------
-     * 2. Search filters
+     * DATE UTILITIES (UTC ONLY)
      * -------------------------------------------------- */
+
+    const normalizeDate = (date: string): Date =>
+      new Date(`${date}T00:00:00.000Z`);
+
+    const normalizeDateTime = (d: Date): number =>
+      new Date(
+        d.toISOString().split('T')[0] + 'T00:00:00.000Z'
+      ).getTime();
+
+    const getUtcWeekday = (d: Date) => d.getUTCDay();
+
+    /* ----------------------------------------------------
+     * 1. Base filter
+     * -------------------------------------------------- */
+
+    const where: any = { role: Role.DOULA };
+
     if (search) {
       const q = search.toLowerCase();
       where.OR = [
@@ -766,9 +776,6 @@ export class DoulaService {
       ];
     }
 
-    /* ----------------------------------------------------
-     * 3. Region filter
-     * -------------------------------------------------- */
     if (regionName) {
       where.doulaProfile = {
         ...(where.doulaProfile || {}),
@@ -778,9 +785,6 @@ export class DoulaService {
       };
     }
 
-    /* ----------------------------------------------------
-     * 4. Minimum experience
-     * -------------------------------------------------- */
     if (typeof minExperience === 'number') {
       where.doulaProfile = {
         ...(where.doulaProfile || {}),
@@ -788,9 +792,6 @@ export class DoulaService {
       };
     }
 
-    /* ----------------------------------------------------
-     * 5. Service filters
-     * -------------------------------------------------- */
     const servicePricingConditions: any = {};
     if (serviceId) servicePricingConditions.serviceId = serviceId;
 
@@ -807,16 +808,14 @@ export class DoulaService {
       };
     }
 
-    /* ----------------------------------------------------
-     * 6. Active filter
-     * -------------------------------------------------- */
     if (typeof isActive === 'boolean') {
       where.is_active = isActive;
     }
 
     /* ----------------------------------------------------
-     * 7. Fetch doulas
+     * 2. Fetch doulas
      * -------------------------------------------------- */
+
     const result = await paginate({
       prismaModel: this.prisma.user,
       page,
@@ -837,73 +836,51 @@ export class DoulaService {
     });
 
     const users = result.data ?? [];
-
     if (!users.length) {
-      return {
-        message: 'Doulas fetched successfully',
-        ...result,
-        data: [],
-      };
+      return { message: 'Doulas fetched successfully', ...result, data: [] };
     }
 
     /* ----------------------------------------------------
-     * 8. Prepare date range
+     * 3. Date range preparation
      * -------------------------------------------------- */
-    const rangeStart = startDate ? new Date(startDate) : null;
-    const rangeEnd = endDate ? new Date(endDate) : null;
 
-    if (rangeStart) rangeStart.setHours(0, 0, 0, 0);
-    if (rangeEnd) rangeEnd.setHours(0, 0, 0, 0);
+    const rangeStart = startDate ? normalizeDate(startDate) : null;
+    const rangeEnd = endDate ? normalizeDate(endDate) : null;
 
     /* ----------------------------------------------------
-     * 8.1 WEEKDAY VALIDATION (NEW)
+     * 4. Weekday handling
      * -------------------------------------------------- */
-    const WEEKDAY_INDEX: Record<string, number> = {
-      SUNDAY: 0,
-      MONDAY: 1,
-      TUESDAY: 2,
-      WEDNESDAY: 3,
-      THURSDAY: 4,
-      FRIDAY: 5,
-      SATURDAY: 6,
+
+    const WEEKDAY_INDEX: Record<WeekDays, number> = {
+      [WeekDays.SUNDAY]: 0,
+      [WeekDays.MONDAY]: 1,
+      [WeekDays.TUESDAY]: 2,
+      [WeekDays.WEDNESDAY]: 3,
+      [WeekDays.THURSDAY]: 4,
+      [WeekDays.FRIDAY]: 5,
+      [WeekDays.SATURDAY]: 6,
     };
 
     let allowedWeekDays: Set<number> | null = null;
 
     if (weekDays?.length) {
       allowedWeekDays = new Set(
-        weekDays.map((d) => WEEKDAY_INDEX[d.toUpperCase()]),
+        weekDays.map((d) => WEEKDAY_INDEX[d])
       );
 
-      if (rangeStart && rangeEnd) {
-        let existsInRange = false;
-
-        const cursor = new Date(rangeStart);
-
-        while (cursor <= rangeEnd) {
-          if (allowedWeekDays.has(cursor.getDay())) {
-            existsInRange = true;
-            break;
-          }
-          cursor.setDate(cursor.getDate() + 1);
-        }
-
-        if (!existsInRange) {
-          throw new Error(
-            'Selected weekdays are not available within the selected date range',
-          );
-        }
-      }
+      console.log('Passed weekdays:', weekDays);
+      console.log('Mapped weekday indexes:', [...allowedWeekDays]);
     }
 
     const isAllowedWeekDay = (date: Date) => {
       if (!allowedWeekDays) return true;
-      return allowedWeekDays.has(date.getDay());
+      return allowedWeekDays.has(getUtcWeekday(date));
     };
 
     /* ----------------------------------------------------
- * 8.2 Extract weekday dates from range (NEW)
- * -------------------------------------------------- */
+     * 5. Extract weekday dates in range
+     * -------------------------------------------------- */
+
     let requiredWeekdayDates: Set<number> | null = null;
 
     if (rangeStart && rangeEnd && allowedWeekDays) {
@@ -912,19 +889,23 @@ export class DoulaService {
       const cursor = new Date(rangeStart);
 
       while (cursor <= rangeEnd) {
-        if (allowedWeekDays.has(cursor.getDay())) {
-          const d = new Date(cursor);
-          d.setHours(0, 0, 0, 0);
-          requiredWeekdayDates.add(d.getTime());
+        if (allowedWeekDays.has(getUtcWeekday(cursor))) {
+          requiredWeekdayDates.add(normalizeDateTime(cursor));
         }
-        cursor.setDate(cursor.getDate() + 1);
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+      }
+
+      if (!requiredWeekdayDates.size) {
+        throw new Error(
+          'Selected weekdays are not available within the selected date range',
+        );
       }
     }
 
-
     /* ----------------------------------------------------
-     * 9. Fetch schedules
+     * 6. Fetch schedules
      * -------------------------------------------------- */
+
     const doulaProfileIds = users
       .map((u: any) => u.doulaProfile?.id)
       .filter(Boolean);
@@ -942,37 +923,31 @@ export class DoulaService {
           }
           : {}),
       },
-      select: {
-        doulaProfileId: true,
-        date: true,
-      },
+      select: { doulaProfileId: true, date: true },
     });
 
     /* ----------------------------------------------------
-     * 9.1 Fetch available slots
+     * 7. Fetch available slots (ONLY RANGE)
      * -------------------------------------------------- */
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     const availableSlots =
       await this.prisma.availableSlotsForService.findMany({
         where: {
           doulaId: { in: doulaProfileIds },
-          date: { gte: today },
+          date: {
+            ...(rangeStart && { gte: rangeStart }),
+            ...(rangeEnd && { lte: rangeEnd }),
+          },
         },
-        select: {
-          doulaId: true,
-          date: true,
-          availability: true,
-        },
+        select: { doulaId: true, date: true, availability: true },
         orderBy: { date: 'asc' },
       });
 
     /* ----------------------------------------------------
-     * 10. Build lookups
+     * 8. Build lookup maps
      * -------------------------------------------------- */
-    const scheduleMap = new Map<string, Date[]>();
 
+    const scheduleMap = new Map<string, Date[]>();
     for (const s of schedules) {
       if (!scheduleMap.has(s.doulaProfileId)) {
         scheduleMap.set(s.doulaProfileId, []);
@@ -996,31 +971,31 @@ export class DoulaService {
     }
 
     /* ----------------------------------------------------
-     * 10.1 Helpers
+     * 9. Helpers
      * -------------------------------------------------- */
-    const normalizeDate = (d: Date) => {
-      const n = new Date(d);
-      n.setHours(0, 0, 0, 0);
-      return n.getTime();
-    };
 
-    function isDateAvailable(
+    const isDateAvailable = (
       date: Date,
       availability: Record<string, boolean>,
       bookedDates: Date[],
-    ) {
+    ) => {
       if (Object.values(availability).some((v) => v === false)) {
         return false;
       }
 
       return !bookedDates.some(
-        (d) => normalizeDate(d) === normalizeDate(date),
+        (d) => normalizeDateTime(d) === normalizeDateTime(date),
       );
-    }
+    };
 
     /* ----------------------------------------------------
-     * 11. Transform response
+     * 10. Transform response
      * -------------------------------------------------- */
+
+    /* ----------------------------------------------------
+ * 10. Transform response (PRODUCTION RESPONSE SHAPE)
+ * -------------------------------------------------- */
+
     const transformed = users
       .map((user: any) => {
         const profile = user.doulaProfile;
@@ -1031,6 +1006,8 @@ export class DoulaService {
 
         let nextAvailableDate: Date | null = null;
 
+        const availableDateSet = new Set<number>();
+
         for (const slot of slotEntries) {
           if (
             isAllowedWeekDay(slot.date) &&
@@ -1040,8 +1017,12 @@ export class DoulaService {
               bookedDates,
             )
           ) {
-            nextAvailableDate = slot.date;
-            break;
+            const t = normalizeDateTime(slot.date);
+            availableDateSet.add(t);
+
+            if (!nextAvailableDate) {
+              nextAvailableDate = slot.date;
+            }
           }
         }
 
@@ -1050,19 +1031,13 @@ export class DoulaService {
         let noOfAvailableDays: number | null = null;
 
         if (rangeStart && rangeEnd) {
-          const availableDateSet = new Set<number>();
-          /* -----------------------------------------------
- * REQUIRED DATE SET (NEW)
- * Doula must be available on ALL these dates
- * --------------------------------------------- */
           const requiredDateSet = new Set<number>();
 
           const cursor = new Date(rangeStart);
 
           while (cursor <= rangeEnd) {
-            const time = normalizeDate(cursor);
+            const time = normalizeDateTime(cursor);
 
-            // if weekdays filter exists → only include those dates
             if (
               !requiredWeekdayDates ||
               requiredWeekdayDates.has(time)
@@ -1070,58 +1045,12 @@ export class DoulaService {
               requiredDateSet.add(time);
             }
 
-            cursor.setDate(cursor.getDate() + 1);
+            cursor.setUTCDate(cursor.getUTCDate() + 1);
           }
 
           const bookedDateSet = new Set(
-            bookedDates.map((d) => normalizeDate(d)),
+            bookedDates.map((d) => normalizeDateTime(d)),
           );
-
-          for (const slot of slotEntries) {
-            const slotTime = normalizeDate(slot.date);
-
-            // if weekday filter exists → only allow extracted weekday dates
-            if (
-              requiredWeekdayDates &&
-              !requiredWeekdayDates.has(slotTime)
-            ) {
-              continue;
-            }
-
-            if (
-              slotTime >= rangeStart.getTime() &&
-              slotTime <= rangeEnd.getTime()
-            ) {
-
-              if (
-                isAllowedWeekDay(slot.date) &&
-                isDateAvailable(
-                  slot.date,
-                  slot.availability,
-                  bookedDates,
-                )
-              ) {
-                availableDateSet.add(slotTime);
-
-              }
-            }
-          }
-          if (requiredWeekdayDates) {
-            for (const requiredDate of requiredWeekdayDates) {
-              if (!availableDateSet.has(requiredDate)) {
-                available = false;
-                break;
-              }
-            }
-          }
-
-          noOfUnavailableDays = bookedDateSet.size;
-          noOfAvailableDays =
-            availableDateSet.size - noOfUnavailableDays;
-
-          if (noOfAvailableDays < 0) {
-            noOfAvailableDays = 0;
-          }
 
           available = true;
 
@@ -1132,6 +1061,14 @@ export class DoulaService {
             }
           }
 
+          noOfUnavailableDays = bookedDateSet.size;
+
+          noOfAvailableDays =
+            availableDateSet.size - noOfUnavailableDays;
+
+          if (noOfAvailableDays < 0) {
+            noOfAvailableDays = 0;
+          }
         }
 
         if (rangeStart && rangeEnd && !available) {
@@ -1144,7 +1081,6 @@ export class DoulaService {
         ) {
           return null;
         }
-
 
         const services =
           profile.ServicePricing?.map((p) =>
@@ -1208,7 +1144,6 @@ export class DoulaService {
         };
       })
       .filter(Boolean);
-
     return {
       message: 'Doulas fetched successfully',
       ...result,
