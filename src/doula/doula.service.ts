@@ -741,6 +741,7 @@ export class DoulaService {
     serviceName?: string,
     startDate?: string,
     endDate?: string,
+    weekDays?: string[], // ✅ NEW FILTER
   ) {
     /* ----------------------------------------------------
      * 1. Base user filter
@@ -793,6 +794,7 @@ export class DoulaService {
      * -------------------------------------------------- */
     const servicePricingConditions: any = {};
     if (serviceId) servicePricingConditions.serviceId = serviceId;
+
     if (serviceName) {
       servicePricingConditions.service = {
         name: { contains: serviceName.toLowerCase() },
@@ -941,16 +943,36 @@ export class DoulaService {
       availability: Record<string, boolean>,
       bookedDates: Date[],
     ) {
-      // Any shift false → unavailable
       if (Object.values(availability).some((v) => v === false)) {
         return false;
       }
 
-      // All shifts true → must not be booked
       return !bookedDates.some(
         (d) => normalizeDate(d) === normalizeDate(date),
       );
     }
+
+    /* ---------- WEEKDAY FILTER ---------- */
+    const WEEKDAY_INDEX: Record<string, number> = {
+      SUNDAY: 0,
+      MONDAY: 1,
+      TUESDAY: 2,
+      WEDNESDAY: 3,
+      THURSDAY: 4,
+      FRIDAY: 5,
+      SATURDAY: 6,
+    };
+
+    const allowedWeekDays = weekDays?.length
+      ? new Set(
+        weekDays.map((d) => WEEKDAY_INDEX[d.toUpperCase()]),
+      )
+      : null;
+
+    const isAllowedWeekDay = (date: Date) => {
+      if (!allowedWeekDays) return true;
+      return allowedWeekDays.has(date.getDay());
+    };
 
     /* ----------------------------------------------------
      * 11. Transform response
@@ -967,6 +989,7 @@ export class DoulaService {
 
         for (const slot of slotEntries) {
           if (
+            isAllowedWeekDay(slot.date) &&
             isDateAvailable(
               slot.date,
               slot.availability,
@@ -996,6 +1019,7 @@ export class DoulaService {
               slotTime <= rangeEnd.getTime()
             ) {
               if (
+                isAllowedWeekDay(slot.date) &&
                 isDateAvailable(
                   slot.date,
                   slot.availability,
@@ -1007,10 +1031,7 @@ export class DoulaService {
             }
           }
 
-          // count schedules
           noOfUnavailableDays = bookedDateSet.size;
-
-          // available days = available slots - schedules
           noOfAvailableDays =
             availableDateSet.size - noOfUnavailableDays;
 
@@ -1025,7 +1046,10 @@ export class DoulaService {
           return null;
         }
 
-        if (typeof isAvailable === 'boolean' && available !== isAvailable) {
+        if (
+          typeof isAvailable === 'boolean' &&
+          available !== isAvailable
+        ) {
           return null;
         }
 
@@ -1050,6 +1074,7 @@ export class DoulaService {
             if (
               slotTime >= rangeStart.getTime() &&
               slotTime <= rangeEnd.getTime() &&
+              isAllowedWeekDay(slot.date) &&
               isDateAvailable(
                 slot.date,
                 slot.availability,
@@ -1074,6 +1099,7 @@ export class DoulaService {
           profile_image: profile.profile_image,
 
           serviceNames: services,
+
           regionNames:
             profile.Region?.map((r) => ({
               id: r.id,
@@ -1089,10 +1115,12 @@ export class DoulaService {
               : null,
 
           reviewsCount: profile.Testimonials?.length ?? 0,
+
           isAvailable: available,
           nextImmediateAvailabilityDate: nextAvailableDate,
           noOfAvailableDays,
           noOfUnavailableDays,
+
           images:
             profile.DoulaGallery?.map((img) => ({
               id: img.id,
@@ -1117,6 +1145,7 @@ export class DoulaService {
       data: transformed,
     };
   }
+
 
 
 
