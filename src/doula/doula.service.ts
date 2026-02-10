@@ -3487,6 +3487,19 @@ export class DoulaService {
       ? this.toUtcMidnight(endDate)
       : new Date(start.getTime());
 
+    const isValidDateInput = (input: string, parsed: Date) => {
+      return parsed.toISOString().split('T')[0] === input;
+    };
+
+    if (!isValidDateInput(startDate, start)) {
+      throw new BadRequestException('Invalid start date');
+    }
+
+    if (endDate && !isValidDateInput(endDate, end)) {
+      throw new BadRequestException('Invalid end date');
+    }
+
+
     if (start > end) {
       throw new BadRequestException('Start date must be before end date');
     }
