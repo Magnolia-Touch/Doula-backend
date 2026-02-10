@@ -3463,7 +3463,6 @@ export class DoulaService {
     };
   }
 
-
   async getBookedDatesInRange(
     doulaId: string,
     startDate: string,
@@ -3481,17 +3480,36 @@ export class DoulaService {
       throw new NotFoundException('Doula not found');
     }
 
-    /* ------------------ Normalize Dates ------------------ */
-    const start = this.toUtcMidnight(startDate);
+    /* ------------------ Strict Date Parsing ------------------ */
+    const parseStrictDate = (dateStr: string): Date => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+
+      const dt = new Date(Date.UTC(y, m - 1, d));
+
+      // prevent overflow dates (Feb 30 → March 2)
+      if (
+        dt.getUTCFullYear() !== y ||
+        dt.getUTCMonth() !== m - 1 ||
+        dt.getUTCDate() !== d
+      ) {
+        throw new BadRequestException(`Invalid date: ${dateStr}`);
+      }
+
+      return dt;
+    };
+
+    const start = parseStrictDate(startDate);
     const end = endDate
-      ? this.toUtcMidnight(endDate)
+      ? parseStrictDate(endDate)
       : new Date(start.getTime());
 
     if (start > end) {
-      throw new BadRequestException('Start date must be before end date');
+      throw new BadRequestException(
+        'Start date must be before end date',
+      );
     }
 
-    /* ------------------ Generate Requested Date Range ------------------ */
+    /* ------------------ Generate Date Range ------------------ */
     const allDates: Date[] = [];
     let current = new Date(start);
 
@@ -3500,20 +3518,24 @@ export class DoulaService {
       current.setUTCDate(current.getUTCDate() + 1);
     }
 
+    const toKey = (date: Date) =>
+      date.toISOString().split('T')[0];
+
     /* ------------------ Fetch Schedules ------------------ */
     const schedules = await this.prisma.schedules.findMany({
       where: {
         doulaProfileId: doulaId,
         cancelledAt: null,
-        date: { in: allDates },
+        date: {
+          gte: start,
+          lte: end,
+        },
       },
       select: { date: true },
     });
 
     const scheduledDates = new Set(
-      schedules.map((s) =>
-        this.toUtcMidnight(s.date).toISOString().split('T')[0],
-      ),
+      schedules.map((s) => toKey(s.date)),
     );
 
     /* ------------------ Fetch Availability ------------------ */
@@ -3521,7 +3543,10 @@ export class DoulaService {
       await this.prisma.availableSlotsForService.findMany({
         where: {
           doulaId,
-          date: { in: allDates },
+          date: {
+            gte: start,
+            lte: end,
+          },
         },
         select: {
           date: true,
@@ -3536,26 +3561,25 @@ export class DoulaService {
 
     availabilityRows.forEach((row) => {
       availabilityByDate.set(
-        row.date.toISOString().split('T')[0],
+        toKey(row.date),
         row.availability as any,
       );
     });
 
-    /* ------------------ Helper: check single day availability ------------------ */
+    /* ------------------ Helper ------------------ */
     const isDateAvailable = (date: Date): boolean => {
-      const key = date.toISOString().split('T')[0];
+      const key = toKey(date);
 
       if (scheduledDates.has(key)) return false;
 
       const availability = availabilityByDate.get(key);
       if (!availability) return false;
 
-      const noShiftAvailable =
-        availability.MORNING !== true &&
-        availability.NIGHT !== true &&
-        availability.FULLDAY !== true;
-
-      return !noShiftAvailable;
+      return (
+        availability.MORNING === true ||
+        availability.NIGHT === true ||
+        availability.FULLDAY === true
+      );
     };
 
     /* ------------------ Compute Booked / Unbooked ------------------ */
@@ -3566,32 +3590,36 @@ export class DoulaService {
     const isBirthDoula = serviceName === 'Birth Doula';
 
     for (const date of allDates) {
-      const key = date.toISOString().split('T')[0];
+      const key = toKey(date);
 
-      // ✅ IMPORTANT: date must exist in AvailableSlotsForService
+      // Only dates existing in availability can be unbooked
       if (!availabilityByDate.has(key)) {
-        // not available at all → treat as booked (or skip entirely)
         bookedDates.push(key);
         continue;
       }
 
       let isBooked = false;
 
-      // ---------- Normal logic ----------
+      /* ---------- Normal Services ---------- */
       if (!isBirthDoula) {
         isBooked = !isDateAvailable(date);
       }
 
-      // ---------- Birth Doula logic ----------
+      /* ---------- Birth Doula ---------- */
       else {
         for (let i = -bufferDays; i <= bufferDays; i++) {
           const checkDate = new Date(date);
-          checkDate.setUTCDate(checkDate.getUTCDate() + i);
+          checkDate.setUTCDate(
+            checkDate.getUTCDate() + i,
+          );
 
-          const checkKey = checkDate.toISOString().split('T')[0];
+          // buffer must stay inside requested range
+          if (checkDate < start || checkDate > end) {
+            isBooked = true;
+            break;
+          }
 
-          // buffer date must also exist in availability
-          if (!availabilityByDate.has(checkKey) || !isDateAvailable(checkDate)) {
+          if (!isDateAvailable(checkDate)) {
             isBooked = true;
             break;
           }
@@ -3602,9 +3630,8 @@ export class DoulaService {
       else unbookedDates.push(key);
     }
 
-
     /* ------------------ Apply Filter ------------------ */
-    let responseData: any = {};
+    const responseData: any = {};
 
     if (filter === 'BOOKED') {
       responseData.bookedDates = bookedDates;
