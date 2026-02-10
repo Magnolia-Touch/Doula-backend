@@ -3603,13 +3603,16 @@ export class DoulaService {
       }
 
       const hasAvailabilityRow = availabilityByDate.has(key);
+      const isScheduled = scheduledDates.has(key);
 
-      if (isBooked) {
+      if (isScheduled && hasAvailabilityRow) {
+        // booked only if both exist
         bookedDates.push(key);
-      } else if (hasAvailabilityRow) {
-        // only dates present in AvailableSlotsForService
+      } else if (!isBooked && hasAvailabilityRow) {
+        // existing unbooked logic
         unbookedDates.push(key);
       }
+
 
     }
 
