@@ -108,14 +108,14 @@ export class IntakeFormService {
       doulaProfileId,
       serviceId,
       buffer = 0,
-      seviceStartDate,
+      serviceStartDate,
       serviceEndDate,
       visitDays,
       serviceTimeShift,
     } = dto;
 
     if (visitDays) {
-      const diffDays = areWeekdaysPresentBetweenDates(new Date(seviceStartDate), new Date(serviceEndDate), visitDays);
+      const diffDays = areWeekdaysPresentBetweenDates(new Date(serviceStartDate), new Date(serviceEndDate), visitDays);
       if (!diffDays) {
         throw new BadRequestException("Weekday Selected not available within the dates choosen")
       }
@@ -136,7 +136,7 @@ export class IntakeFormService {
     if (!clientProfile) {
       throw new NotFoundException('Client profile not found');
     }
-    if (!clientProfile.user.is_active === false) {
+    if (clientProfile.user.is_active === false) {
       throw new BadRequestException('Client profile is inactive');
     }
 
@@ -194,10 +194,10 @@ export class IntakeFormService {
     /* ----------------------------------------------------
      * 4. Normalize dates
      * -------------------------------------------------- */
-    const startDate = this.toUtcMidnight(seviceStartDate);
-    const endDate = this.toUtcMidnight(serviceEndDate);
+    const startDate = this.toUtcMidnight(serviceStartDate);
+    const endDate = serviceEndDate ? this.toUtcMidnight(serviceEndDate) : undefined
 
-    if (startDate > endDate) {
+    if (endDate && startDate > endDate) {
       throw new BadRequestException('Invalid service date range');
     }
 
@@ -381,7 +381,7 @@ export class IntakeFormService {
           doulaPhone: doula.user.phone,
           serviceName: servicePricing.service.name,
           serviceStartDate: formatDate(new Date(startDate), 'yyyy-MM-dd'),
-          serviceEndDate: formatDate(new Date(endDate), 'yyyy-MM-dd'),
+          serviceEndDate: endDate ? formatDate(new Date(endDate), 'yyyy-MM-dd') : undefined,
           timeShift: resolvedTimeShift,
           regionName: region.regionName,
           totalAmount,
@@ -399,7 +399,7 @@ export class IntakeFormService {
         serviceName: servicePricing.service.name,
         region: region.regionName,
         timeShift: resolvedTimeShift,
-        serviceStartDate: formatDate(new Date(seviceStartDate), 'yyyy-MM-dd'),
+        serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
         AmountPaid: payableAmount,
         TotalAmount: totalAmount
