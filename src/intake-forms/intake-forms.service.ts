@@ -220,9 +220,14 @@ export class IntakeFormService {
 
     console.log(visitDates)
     /* ----------------------------------------------------
-     * 6. Availability validation (same as BookDoula)
+     * 6. Availability validation — skip conflicting dates
      * -------------------------------------------------- */
+    const skippedDates: { date: string; reason: string }[] = [];
+    const availableDates: Date[] = [];
+
     for (const visitDate of visitDates) {
+      const dateStr = visitDate.toISOString().split('T')[0];
+
       if (
         await isDoulaOffOnShift(
           doulaProfileId,
@@ -230,9 +235,8 @@ export class IntakeFormService {
           serviceTimeShift,
         )
       ) {
-        throw new BadRequestException(
-          `Doula is off on ${visitDate.toISOString().split('T')[0]}`,
-        );
+        skippedDates.push({ date: dateStr, reason: 'Doula is off on this date' });
+        continue;
       }
 
       if (
@@ -242,9 +246,8 @@ export class IntakeFormService {
           serviceTimeShift,
         ))
       ) {
-        throw new BadRequestException(
-          `Doula not available on ${visitDate.toISOString().split('T')[0]}`,
-        );
+        skippedDates.push({ date: dateStr, reason: 'Doula not available for this shift' });
+        continue;
       }
 
       const existingSchedule = await this.prisma.schedules.findFirst({
@@ -257,10 +260,17 @@ export class IntakeFormService {
       });
 
       if (existingSchedule) {
-        throw new BadRequestException(
-          `Doula already booked on ${visitDate.toISOString().split('T')[0]}`,
-        );
+        skippedDates.push({ date: dateStr, reason: 'Doula already booked on this date' });
+        continue;
       }
+
+      availableDates.push(visitDate);
+    }
+
+    if (!availableDates.length) {
+      throw new BadRequestException(
+        'No available dates for booking. All requested dates are already booked or unavailable.',
+      );
     }
     let totalAmount = 0;
     let payableAmount = 0
@@ -277,8 +287,8 @@ export class IntakeFormService {
         serviceTimeShift,
       );
       console.log(perDayPrice)
-      console.log(visitDates.length)
-      totalAmount = (perDayPrice * visitDates.length)
+      console.log(availableDates.length)
+      totalAmount = (perDayPrice * availableDates.length)
     }
 
     if (totalAmount <= 0) {
@@ -332,7 +342,7 @@ export class IntakeFormService {
       });
 
       await tx.schedules.createMany({
-        data: visitDates.map((date) => ({
+        data: availableDates.map((date) => ({
           date,
           timeshift: resolvedTimeShift,
           doulaProfileId,
@@ -502,6 +512,10 @@ export class IntakeFormService {
       message: 'Intake form created and schedules booked successfully',
       intakeId: result.intake.id,
       bookingId: result.booking.id,
+      scheduledDates: availableDates.map(d => d.toISOString().split('T')[0]),
+      skippedDates,
+      totalAmount,
+      payableAmount,
     };
   }
 
@@ -1085,10 +1099,26 @@ export class IntakeFormService {
     console.log("visitDates", visitDates);
 
     /* ----------------------------------------------------
-     * 6. Availability validation
+     * 6. Availability validation — skip conflicting dates
      * -------------------------------------------------- */
     console.log("visitdates", visitDates)
+    const skippedDates: { date: string; reason: string }[] = [];
+    const availableDates: Date[] = [];
+
     for (const visitDate of visitDates) {
+      const dateStr = visitDate.toISOString().split('T')[0];
+
+      if (
+        await isDoulaOffOnShift(
+          doulaProfileId,
+          visitDate,
+          serviceTimeShift,
+        )
+      ) {
+        skippedDates.push({ date: dateStr, reason: 'Doula is off on this date' });
+        continue;
+      }
+
       if (
         !(await isDoulaAvailableForShift(
           doulaProfileId,
@@ -1096,9 +1126,8 @@ export class IntakeFormService {
           serviceTimeShift,
         ))
       ) {
-        throw new BadRequestException(
-          `Doula not available on ${visitDate.toISOString().split('T')[0]}`,
-        );
+        skippedDates.push({ date: dateStr, reason: 'Doula not available for this shift' });
+        continue;
       }
 
       const existingSchedule = await this.prisma.schedules.findFirst({
@@ -1110,10 +1139,17 @@ export class IntakeFormService {
       });
 
       if (existingSchedule) {
-        throw new BadRequestException(
-          `Doula already booked on ${visitDate.toISOString().split('T')[0]}`,
-        );
+        skippedDates.push({ date: dateStr, reason: 'Doula already booked on this date' });
+        continue;
       }
+
+      availableDates.push(visitDate);
+    }
+
+    if (!availableDates.length) {
+      throw new BadRequestException(
+        'No available dates for booking. All requested dates are already booked or unavailable.',
+      );
     }
 
     // /* ----------------------------------------------------
@@ -1151,7 +1187,7 @@ export class IntakeFormService {
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = (perDayPrice * visitDates.length)
+      totalAmount = (perDayPrice * availableDates.length)
     }
 
     console.log("servicename", servicePricing.service.name)
@@ -1218,7 +1254,7 @@ export class IntakeFormService {
             serviceStartDate: startDate.toISOString(),
             serviceEndDate: endDate?.toISOString(),
             timeShift: resolvedTimeShift,
-            visitDates: visitDates.map(d => d.toISOString()),
+            visitDates: availableDates.map(d => d.toISOString()),
 
             // Region details
             regionId: region.id,
@@ -1272,7 +1308,9 @@ export class IntakeFormService {
       currency: 'USD',
       checkout_url: checkoutSession.url,
       successUrl: successUrl,
-      cancelUrl: cancelUrl
+      cancelUrl: cancelUrl,
+      scheduledDates: availableDates.map(d => d.toISOString().split('T')[0]),
+      skippedDates,
     };
   }
 
