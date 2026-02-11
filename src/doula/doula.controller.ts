@@ -384,12 +384,23 @@ export class DoulaController {
     @Query('random') random?: boolean,
   ) {
 
-    // normalize to array
-    const parsedWeekDays = weekDays
-      ? Array.isArray(weekDays)
-        ? weekDays
-        : [weekDays]
-      : undefined;
+    // normalize to array and handle JSON-stringified arrays
+    let parsedWeekDays: string[] | undefined = undefined;
+    
+    if (weekDays) {
+      if (Array.isArray(weekDays)) {
+        parsedWeekDays = weekDays;
+      } else {
+        // Try to parse if it's a JSON string
+        try {
+          const parsed = JSON.parse(weekDays);
+          parsedWeekDays = Array.isArray(parsed) ? parsed : [weekDays];
+        } catch {
+          // If parsing fails, treat as single value
+          parsedWeekDays = [weekDays];
+        }
+      }
+    }
 
     console.log('Controller weekDays:', parsedWeekDays);
 

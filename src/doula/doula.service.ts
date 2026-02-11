@@ -905,7 +905,7 @@ export class DoulaService {
       }
 
       if (!requiredWeekdayDates.size) {
-        throw new Error(
+        throw new BadRequestException(
           'Selected weekdays are not available within the selected date range',
         );
       }
