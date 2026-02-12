@@ -519,7 +519,10 @@ export class ServiceBookingService {
       limit,
     } = query;
 
-    const where: any = {};
+    const where: any = {
+      // ✅ Exclude meetings created by zone managers
+      zoneManagerProfileId: null,
+    };
 
     if (status) {
       where.status = status;

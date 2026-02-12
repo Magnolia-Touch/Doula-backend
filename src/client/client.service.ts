@@ -601,6 +601,10 @@ export class ClientsService {
           },
         },
         Meetings: {
+          where: {
+            // ✅ Exclude meetings created by zone managers
+            zoneManagerProfileId: null,
+          },
           include: {
             DoulaProfile: {
               include: {

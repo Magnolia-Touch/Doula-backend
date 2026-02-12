@@ -1040,6 +1040,8 @@ export class ZoneManagerService {
             name: true,
           },
         },
+        // ✅ Add enquiry data
+        enquiry: true,
       },
       orderBy: {
         date: 'desc',
@@ -1074,6 +1076,7 @@ export class ZoneManagerService {
             name: true;
           };
         };
+        enquiry: true;
       };
     }>;
 
@@ -1100,6 +1103,8 @@ export class ZoneManagerService {
         meetingDate: meeting.date,
         createdby: meeting.createdby,
 
+        // ✅ Add enquiry data
+        enquiry: meeting.enquiry ?? null,
       })),
       meta: result.meta,
     };
@@ -1283,6 +1288,8 @@ export class ZoneManagerService {
             name: true,
           },
         },
+        // ✅ Add enquiry data
+        enquiry: true,
       },
     });
 
@@ -1308,6 +1315,9 @@ export class ZoneManagerService {
         endDate: formatTimeOnly(meeting.endTime),
         status: meeting.status,
         createdby: meeting.createdby,
+
+        // ✅ Add enquiry data
+        enquiry: meeting.enquiry ?? null,
       },
     };
   }
