@@ -3429,9 +3429,27 @@ export class DoulaService {
     }
 
     if (!availableDates.length) {
-      throw new BadRequestException(
-        'No available dates for booking. All requested dates are already booked or unavailable.',
-      );
+      return {
+        success: true,
+        message: 'No available dates for booking. All requested dates are already booked or unavailable.',
+        data: {
+          available: false,
+          doulaProfileId,
+          servicePricingId,
+          serviceName: servicePricing.service.name,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate?.toISOString().split('T')[0],
+          visitDates: [],
+          numberOfVisits: 0,
+          timeShift: serviceTimeShift,
+          pricePerVisit: 0,
+          totalAmount: 0,
+          payableAmount: 0,
+          currency: 'USD',
+          priceBreakdown: servicePricing.price,
+          skippedDates,
+        },
+      };
     }
 
     let totalAmount = 0;
