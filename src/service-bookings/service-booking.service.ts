@@ -521,7 +521,7 @@ export class ServiceBookingService {
 
     const where: any = {
       // ✅ Exclude meetings created by zone managers
-      zoneManagerProfileId: null,
+      NOT: { createdby: 'ZONE_MANAGER' },
     };
 
     if (status) {
@@ -538,6 +538,8 @@ export class ServiceBookingService {
 
     if (zoneManagerId) {
       where.zoneManagerProfileId = zoneManagerId;
+      // Remove the NOT filter when explicitly filtering by zone manager
+      delete where.NOT;
     }
 
     /**

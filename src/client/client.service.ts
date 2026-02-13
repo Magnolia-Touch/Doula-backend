@@ -603,7 +603,7 @@ export class ClientsService {
         Meetings: {
           where: {
             // ✅ Exclude meetings created by zone managers
-            zoneManagerProfileId: null,
+            NOT: { createdby: 'ZONE_MANAGER' },
           },
           include: {
             DoulaProfile: {
