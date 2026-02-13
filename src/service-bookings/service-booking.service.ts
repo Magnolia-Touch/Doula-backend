@@ -520,8 +520,11 @@ export class ServiceBookingService {
     } = query;
 
     const where: any = {
-      // ✅ Exclude meetings created by zone managers
-      NOT: { createdby: 'ZONE_MANAGER' },
+      // ✅ Exclude meetings created by zone managers (doula meetings scheduled by ZM)
+      NOT: {
+        createdby: 'ZONE_MANAGER',
+        doulaProfileId: { not: null },
+      },
     };
 
     if (status) {
