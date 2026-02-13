@@ -626,6 +626,7 @@ export class ClientsService {
             AvailableSlotsForMeeting: {
               select: { weekday: true },
             },
+            enquiry: true,
           },
           orderBy: { createdAt: 'desc' },
         },
@@ -671,6 +672,9 @@ export class ClientsService {
         serviceName: meeting.serviceName,
         remarks: meeting.remarks,
         status: meeting.status,
+
+        // ===== ENQUIRY =====
+        enquiry: meeting.enquiry ?? null,
       };
     });
   }
