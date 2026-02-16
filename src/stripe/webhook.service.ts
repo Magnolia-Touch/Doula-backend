@@ -173,16 +173,38 @@ export class WebhookService {
         data: { status: BookingStatus.PENDING },
       });
 
-      await tx.schedules.createMany({
-        data: visitDates.map((date: string) => ({
-          date: new Date(date),
-          timeshift: timeShift,
-          doulaProfileId,
-          serviceId: servicePricingId,
-          clientId,
-          bookingId,
-        })),
-      });
+      // Race-condition protection: filter out dates that got booked
+      // between payment initiation and webhook completion
+      const validDates: string[] = [];
+      for (const date of visitDates) {
+        const existing = await tx.schedules.findFirst({
+          where: {
+            doulaProfileId,
+            date: new Date(date),
+            status: { not: 'CANCELED' },
+          },
+        });
+        if (!existing) {
+          validDates.push(date);
+        } else {
+          this.logger.warn(
+            `[DB] Skipping already-booked date ${date} for doula ${doulaProfileId}`,
+          );
+        }
+      }
+
+      if (validDates.length > 0) {
+        await tx.schedules.createMany({
+          data: validDates.map((date: string) => ({
+            date: new Date(date),
+            timeshift: timeShift,
+            doulaProfileId,
+            serviceId: servicePricingId,
+            clientId,
+            bookingId,
+          })),
+        });
+      }
 
       await tx.payment.update({
         where: { id: paymentId },
@@ -202,7 +224,7 @@ export class WebhookService {
       });
 
       this.logger.log(
-        `[DB] Transaction completed | booking=${bookingId} | payment=${paymentId}`,
+        `[DB] Transaction completed | booking=${bookingId} | payment=${paymentId} | scheduled=${validDates.length}/${visitDates.length} dates`,
       );
     });
 

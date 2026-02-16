@@ -519,7 +519,13 @@ export class ServiceBookingService {
       limit,
     } = query;
 
-    const where: any = {};
+    const where: any = {
+      // ✅ Exclude meetings created by zone managers (doula meetings scheduled by ZM)
+      NOT: {
+        createdby: 'ZONE_MANAGER',
+        doulaProfileId: { not: null },
+      },
+    };
 
     if (status) {
       where.status = status;
@@ -535,6 +541,8 @@ export class ServiceBookingService {
 
     if (zoneManagerId) {
       where.zoneManagerProfileId = zoneManagerId;
+      // Remove the NOT filter when explicitly filtering by zone manager
+      delete where.NOT;
     }
 
     /**

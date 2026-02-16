@@ -6,7 +6,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { paginate } from 'src/common/utility/pagination.util';
 import { FilterUserDto } from './dto/filter-user.dto';
-import { Role } from '@prisma/client';
+import { Role, BookingStatus } from '@prisma/client';
 import { format } from 'date-fns';
 import { startOfDay, endOfDay } from 'date-fns';
 import { UserCountDto } from './dto/user-count.dto';
@@ -627,54 +627,62 @@ export class AnalyticsService {
     date1?: string;
     date2?: string;
   }) {
-    const paymentWhere: any = {
-      status: 'SUCCESS', // adjust if enum differs
+    const bookingWhere: any = {
+      isPaid: true,
+      status: { not: BookingStatus.CANCELED },
     };
 
     /** ---------------- DATE FILTER ---------------- */
     if (filters.date1 && !filters.date2) {
-      paymentWhere.paidAt = {
-        gte: new Date(filters.date1),
-        lt: new Date(new Date(filters.date1).setDate(
-          new Date(filters.date1).getDate() + 1,
-        )),
+      bookingWhere.Payment = {
+        some: {
+          status: 'SUCCESS',
+          paidAt: {
+            gte: new Date(filters.date1),
+            lt: new Date(new Date(filters.date1).setDate(
+              new Date(filters.date1).getDate() + 1,
+            )),
+          },
+        },
       };
     }
 
     if (filters.date1 && filters.date2) {
-      paymentWhere.paidAt = {
-        gte: new Date(filters.date1),
-        lte: new Date(filters.date2),
+      bookingWhere.Payment = {
+        some: {
+          status: 'SUCCESS',
+          paidAt: {
+            gte: new Date(filters.date1),
+            lte: new Date(filters.date2),
+          },
+        },
       };
     }
 
     /** ---------------- BOOKING-LEVEL FILTERS ---------------- */
-    paymentWhere.ServiceBooking = {};
-
     if (filters.doulaId) {
-      paymentWhere.ServiceBooking.doulaProfileId = filters.doulaId;
+      bookingWhere.doulaProfileId = filters.doulaId;
     }
 
     if (filters.regionId) {
-      paymentWhere.ServiceBooking.regionId = filters.regionId;
+      bookingWhere.regionId = filters.regionId;
     }
 
     if (filters.serviceId) {
-      paymentWhere.ServiceBooking.service = {
+      bookingWhere.service = {
         serviceId: filters.serviceId, // ServicePricing → Service
       };
     }
 
-    const payments = await this.prisma.payment.findMany({
-      where: paymentWhere,
+    const bookings = await this.prisma.serviceBooking.findMany({
+      where: bookingWhere,
       select: {
-        amount: true,
-        amountRefunded: true,
+        totalAmount: true,
       },
     });
 
-    const totalRevenue = payments.reduce((sum, p) => {
-      return sum + (Number(p.amount) - Number(p.amountRefunded));
+    const totalRevenue = bookings.reduce((sum, b) => {
+      return sum + (Number(b.totalAmount) || 0);
     }, 0);
 
     return {
@@ -687,7 +695,7 @@ export class AnalyticsService {
         date2: filters.date2 ?? null,
       },
       totalRevenue,
-      currency: 'INR',
+      currency: 'USD',
     };
   }
 }

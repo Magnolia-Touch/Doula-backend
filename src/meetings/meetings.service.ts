@@ -1318,6 +1318,7 @@ export class MeetingsService {
         remarks: dto.remarks,
         bookedById: clientProfile.id,
         doulaProfileId: doulaProfile.id,
+        enquiryId: dto.enquiryId,
         link: meetLink,
         createdby: Role.DOULA
       },

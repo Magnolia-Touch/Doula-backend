@@ -9,7 +9,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
-import { BookingStatus, MeetingStatus, Prisma, Role, WeekDays } from '@prisma/client';
+import { BookingStatus, MeetingStatus, Prisma, Role, ServiceStatus, WeekDays } from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
 import { checkUserExistorNot } from 'src/common/utility/service-utils';
 import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
@@ -905,7 +905,7 @@ export class DoulaService {
       }
 
       if (!requiredWeekdayDates.size) {
-        throw new Error(
+        throw new BadRequestException(
           'Selected weekdays are not available within the selected date range',
         );
       }
@@ -3383,7 +3383,23 @@ export class DoulaService {
       throw new BadRequestException('No valid visit dates generated');
     }
 
+    const skippedDates: { date: string; reason: string }[] = [];
+    const availableDates: Date[] = [];
+
     for (const visitDate of visitDates) {
+      const dateStr = visitDate.toISOString().split('T')[0];
+
+      if (
+        await isDoulaOffOnShift(
+          doulaProfileId,
+          visitDate,
+          serviceTimeShift,
+        )
+      ) {
+        skippedDates.push({ date: dateStr, reason: 'Doula is off on this date' });
+        continue;
+      }
+
       if (
         !(await isDoulaAvailableForShift(
           doulaProfileId,
@@ -3391,9 +3407,8 @@ export class DoulaService {
           serviceTimeShift,
         ))
       ) {
-        throw new BadRequestException(
-          `Doula not available on ${visitDate.toISOString().split('T')[0]}`,
-        );
+        skippedDates.push({ date: dateStr, reason: 'Doula not available for this shift' });
+        continue;
       }
 
       const existingSchedule = await this.prisma.schedules.findFirst({
@@ -3401,14 +3416,40 @@ export class DoulaService {
           doulaProfileId,
           date: visitDate,
           timeshift: serviceTimeShift,
+          status: { not: ServiceStatus.CANCELED },
         },
       });
 
       if (existingSchedule) {
-        throw new BadRequestException(
-          `Doula already booked on ${visitDate.toISOString().split('T')[0]}`,
-        );
+        skippedDates.push({ date: dateStr, reason: 'Doula already booked on this date' });
+        continue;
       }
+
+      availableDates.push(visitDate);
+    }
+
+    if (!availableDates.length) {
+      return {
+        success: true,
+        message: 'No available dates for booking. All requested dates are already booked or unavailable.',
+        data: {
+          available: false,
+          doulaProfileId,
+          servicePricingId,
+          serviceName: servicePricing.service.name,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate?.toISOString().split('T')[0],
+          visitDates: [],
+          numberOfVisits: 0,
+          timeShift: serviceTimeShift,
+          pricePerVisit: 0,
+          totalAmount: 0,
+          payableAmount: 0,
+          currency: 'USD',
+          priceBreakdown: servicePricing.price,
+          skippedDates,
+        },
+      };
     }
 
     let totalAmount = 0;
@@ -3425,11 +3466,9 @@ export class DoulaService {
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = (perDayPrice * visitDates.length)
+      totalAmount = (perDayPrice * availableDates.length)
     }
 
-    console.log("servicename", servicePricing.service.name)
-    console.log("totalamount", totalAmount)
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
@@ -3439,7 +3478,7 @@ export class DoulaService {
       payableAmount = Math.min(half, 1000);
     }
     payableAmount = Math.round(payableAmount * 100) / 100;
-    // All dates are available, return pricing
+
     return {
       success: true,
       message: 'Pricing calculated successfully',
@@ -3450,8 +3489,8 @@ export class DoulaService {
         serviceName: servicePricing.service.name,
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate?.toISOString().split('T')[0],
-        visitDates: visitDates.map((date) => date.toISOString().split('T')[0]),
-        numberOfVisits: visitDates.length,
+        visitDates: availableDates.map((date) => date.toISOString().split('T')[0]),
+        numberOfVisits: availableDates.length,
         timeShift: serviceTimeShift,
         pricePerVisit:
           servicePricing.service.name === 'Birth Doula'
@@ -3461,6 +3500,7 @@ export class DoulaService {
         payableAmount,
         currency: 'USD',
         priceBreakdown: servicePricing.price,
+        skippedDates,
       },
     };
   }
