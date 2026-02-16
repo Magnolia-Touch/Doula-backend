@@ -3638,7 +3638,7 @@ export class DoulaService {
           checkDate.setUTCDate(checkDate.getUTCDate() + i);
 
           const checkKey = checkDate.toISOString().split('T')[0];
-
+          console.log('Checking date for birth doula:', checkKey);
           // 1️⃣ availabilitySlotsForService must exist
           if (!availabilityByDate.has(checkKey)) {
             isBooked = true;
