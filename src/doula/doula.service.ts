@@ -3631,18 +3631,36 @@ export class DoulaService {
       }
 
       // ---------- Birth Doula logic ----------
+      // ---------- Birth Doula logic ----------
       else {
-        // must be available including buffer window
         for (let i = -bufferDays; i <= bufferDays; i++) {
           const checkDate = new Date(date);
           checkDate.setUTCDate(checkDate.getUTCDate() + i);
 
-          if (!isDateAvailable(checkDate)) {
+          const checkKey = checkDate.toISOString().split('T')[0];
+
+          // 1️⃣ availabilitySlotsForService must exist
+          if (!availabilityByDate.has(checkKey)) {
+            isBooked = true;
+            break;
+          }
+
+          // 2️⃣ no schedules must exist
+          if (scheduledDates.has(checkKey)) {
+            isBooked = true;
+            break;
+          }
+
+          // 3️⃣ FULLDAY must be available
+          const availability = availabilityByDate.get(checkKey);
+
+          if (!availability || availability.FULLDAY !== true) {
             isBooked = true;
             break;
           }
         }
       }
+
 
       const hasAvailabilityRow = availabilityByDate.has(key);
       const isScheduled = scheduledDates.has(key);
