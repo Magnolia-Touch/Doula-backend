@@ -3505,7 +3505,6 @@ export class DoulaService {
     };
   }
 
-
   async getBookedDatesInRange(
     doulaId: string,
     startDate: string,
@@ -3527,11 +3526,10 @@ export class DoulaService {
     const start = this.toUtcMidnight(startDate);
     const end = endDate
       ? this.toUtcMidnight(endDate)
-      : new Date(start.getTime());
+      : new Date(start);
 
-    const isValidDateInput = (input: string, parsed: Date) => {
-      return parsed.toISOString().split('T')[0] === input;
-    };
+    const isValidDateInput = (input: string, parsed: Date) =>
+      parsed.toISOString().split('T')[0] === input;
 
     if (!isValidDateInput(startDate, start)) {
       throw new BadRequestException('Invalid start date');
@@ -3541,18 +3539,29 @@ export class DoulaService {
       throw new BadRequestException('Invalid end date');
     }
 
-
     if (start > end) {
       throw new BadRequestException('Start date must be before end date');
     }
 
-    /* ------------------ Generate Requested Date Range ------------------ */
-    const allDates: Date[] = [];
-    let current = new Date(start);
+    const bufferDays = 3;
+    const isBirthDoula = serviceName === 'Birth Doula';
 
-    while (current <= end) {
-      allDates.push(new Date(current));
-      current.setUTCDate(current.getUTCDate() + 1);
+    /* ------------------ Requested Range ------------------ */
+    const requestedDates: Date[] = [];
+    let cursor = new Date(start);
+
+    while (cursor <= end) {
+      requestedDates.push(new Date(cursor));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    /* ------------------ Validation Range ------------------ */
+    const validationStart = new Date(start);
+    const validationEnd = new Date(end);
+
+    if (isBirthDoula) {
+      validationStart.setUTCDate(validationStart.getUTCDate() - bufferDays);
+      validationEnd.setUTCDate(validationEnd.getUTCDate() + bufferDays);
     }
 
     /* ------------------ Fetch Schedules ------------------ */
@@ -3560,7 +3569,10 @@ export class DoulaService {
       where: {
         doulaProfileId: doulaId,
         cancelledAt: null,
-        date: { in: allDates },
+        date: {
+          gte: validationStart,
+          lte: validationEnd,
+        },
       },
       select: { date: true },
     });
@@ -3576,7 +3588,10 @@ export class DoulaService {
       await this.prisma.availableSlotsForService.findMany({
         where: {
           doulaId,
-          date: { in: allDates },
+          date: {
+            gte: validationStart,
+            lte: validationEnd,
+          },
         },
         select: {
           date: true,
@@ -3591,19 +3606,22 @@ export class DoulaService {
 
     availabilityRows.forEach((row) => {
       availabilityByDate.set(
-        row.date.toISOString().split('T')[0],
+        this.toUtcMidnight(row.date).toISOString().split('T')[0],
         row.availability as any,
       );
     });
 
-    /* ------------------ Helper: check single day availability ------------------ */
+    /* ------------------ Helper ------------------ */
     const isDateAvailable = (date: Date): boolean => {
       const key = date.toISOString().split('T')[0];
 
       if (scheduledDates.has(key)) return false;
 
       const availability = availabilityByDate.get(key);
-      if (!availability) return false;
+
+      // IMPORTANT FIX:
+      // missing availability row should NOT invalidate buffer day
+      if (!availability) return true;
 
       const noShiftAvailable =
         availability.MORNING !== true &&
@@ -3613,67 +3631,58 @@ export class DoulaService {
       return !noShiftAvailable;
     };
 
-    /* ------------------ Compute Booked / Unbooked ------------------ */
+
+    const isFullDayAvailableWithoutSchedule = (date: Date): boolean => {
+      const key = date.toISOString().split('T')[0];
+
+      // schedule must not exist
+      if (scheduledDates.has(key)) return false;
+
+      const availability = availabilityByDate.get(key);
+
+      // availability row must exist
+      if (!availability) return false;
+
+      // FULLDAY must be true
+      return availability.FULLDAY === true;
+    };
+
+    /* ------------------ Compute Results ------------------ */
     const bookedDates: string[] = [];
     const unbookedDates: string[] = [];
 
-    const bufferDays = 3;
-    const isBirthDoula = serviceName === 'Birth Doula';
-
-    for (const date of allDates) {
+    for (const date of requestedDates) {
       const key = date.toISOString().split('T')[0];
 
       let isBooked = false;
 
-      // ---------- Normal logic ----------
       if (!isBirthDoula) {
         isBooked = !isDateAvailable(date);
-      }
-
-      // ---------- Birth Doula logic ----------
-      // ---------- Birth Doula logic ----------
-      else {
+      } else {
         for (let i = -bufferDays; i <= bufferDays; i++) {
           const checkDate = new Date(date);
           checkDate.setUTCDate(checkDate.getUTCDate() + i);
 
-          const checkKey = checkDate.toISOString().split('T')[0];
-          console.log('Checking date for birth doula:', checkKey);
-          // 1️⃣ availabilitySlotsForService must exist
-          if (!availabilityByDate.has(checkKey)) {
-            isBooked = true;
-            break;
-          }
+          console.log(
+            'Checking date for birth devan:',
+            checkDate.toISOString(),
+          );
 
-          // 2️⃣ no schedules must exist
-          if (scheduledDates.has(checkKey)) {
-            isBooked = true;
-            break;
-          }
-
-          // 3️⃣ FULLDAY must be available
-          const availability = availabilityByDate.get(checkKey);
-
-          if (!availability || availability.FULLDAY !== true) {
+          if (!isFullDayAvailableWithoutSchedule(checkDate)) {
             isBooked = true;
             break;
           }
         }
       }
 
-
       const hasAvailabilityRow = availabilityByDate.has(key);
       const isScheduled = scheduledDates.has(key);
 
       if (isScheduled && hasAvailabilityRow) {
-        // booked only if both exist
         bookedDates.push(key);
       } else if (!isBooked && hasAvailabilityRow) {
-        // existing unbooked logic
         unbookedDates.push(key);
       }
-
-
     }
 
     /* ------------------ Apply Filter ------------------ */
@@ -3699,7 +3708,6 @@ export class DoulaService {
       },
     };
   }
-
 
 }
 
