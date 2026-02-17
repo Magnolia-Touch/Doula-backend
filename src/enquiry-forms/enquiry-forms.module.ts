@@ -12,4 +12,4 @@ import { MailModule } from 'src/mail/mail.module';
   controllers: [EnquiryController],
   providers: [EnquiryService, PrismaService, MeetingsService],
 })
-export class EnquiryModule { }
+export class EnquiryModule {}

@@ -35,7 +35,6 @@ export class FilterTestimonialsDto {
   limit?: string;
 }
 
-
 export class GetZmTestimonialDto {
   @IsString()
   @IsOptional()
@@ -51,5 +50,5 @@ export class GetZmTestimonialDto {
 
   @IsString()
   @IsOptional()
-  endDate: string;   // YYYY-MM-DD
-} 
+  endDate: string; // YYYY-MM-DD
+}

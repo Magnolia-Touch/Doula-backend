@@ -5,9 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
-    imports: [MailerModule],
-    controllers: [DoulaJoinEnquiryController],
-    providers: [DoulaJoinEnquiryService, PrismaService],
-    exports: [DoulaJoinEnquiryService],
+  imports: [MailerModule],
+  controllers: [DoulaJoinEnquiryController],
+  providers: [DoulaJoinEnquiryService, PrismaService],
+  exports: [DoulaJoinEnquiryService],
 })
-export class DoulaJoinEnquiryModule { }
+export class DoulaJoinEnquiryModule {}

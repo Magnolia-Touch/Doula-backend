@@ -1,21 +1,21 @@
 import {
-    IsEmail,
-    IsOptional,
-    IsPhoneNumber,
-    IsString,
-    IsArray,
-    IsUUID,
-    ArrayNotEmpty,
+  IsEmail,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  IsArray,
+  IsUUID,
+  ArrayNotEmpty,
 } from 'class-validator';
 
 export class CreateDoulaJoinEnquiryDto {
-    @IsString()
-    name: string;
+  @IsString()
+  name: string;
 
-    @IsEmail()
-    email: string;
+  @IsEmail()
+  email: string;
 
-    @IsOptional()
-    @IsString()
-    phone?: string;
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }

@@ -13,7 +13,10 @@ import {
 import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { FilterTestimonialsDto, GetZmTestimonialDto } from './dto/filter-testimonials.dto';
+import {
+  FilterTestimonialsDto,
+  GetZmTestimonialDto,
+} from './dto/filter-testimonials.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -34,7 +37,7 @@ import {
   version: '1',
 })
 export class TestimonialsController {
-  constructor(private readonly service: TestimonialsService) { }
+  constructor(private readonly service: TestimonialsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CLIENT)
@@ -43,7 +46,8 @@ export class TestimonialsController {
   @Roles(Role.CLIENT)
   @ApiOperation({
     summary: 'Create testimonial',
-    description: 'Allows a client to create a testimonial for a completed service',
+    description:
+      'Allows a client to create a testimonial for a completed service',
   })
   @ApiBody({
     type: CreateTestimonialDto,
@@ -65,8 +69,16 @@ export class TestimonialsController {
     summary: 'Get all testimonials',
     description: 'Fetch testimonials with optional filters and pagination',
   })
-  @ApiQuery({ name: 'doulaId', required: false, description: 'Filter by doula ID' })
-  @ApiQuery({ name: 'serviceId', required: false, description: 'Filter by service ID' })
+  @ApiQuery({
+    name: 'doulaId',
+    required: false,
+    description: 'Filter by doula ID',
+  })
+  @ApiQuery({
+    name: 'serviceId',
+    required: false,
+    description: 'Filter by service ID',
+  })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
   findAll(@Query() query: FilterTestimonialsDto) {
@@ -119,7 +131,6 @@ export class TestimonialsController {
     return this.service.remove(id, req.user.id);
   }
 
-
   @Get('recent/testimonials')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
@@ -141,7 +152,6 @@ export class TestimonialsController {
     );
   }
 
-
   @Get('all/testimonials')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
@@ -155,7 +165,7 @@ export class TestimonialsController {
     @Req() req,
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-    @Query() dto: GetZmTestimonialDto
+    @Query() dto: GetZmTestimonialDto,
   ) {
     const zoneManagerId = req.user.id; // authenticated user ID
     return this.service.getAllzmTestimonial(
@@ -171,14 +181,11 @@ export class TestimonialsController {
   @Roles(Role.ZONE_MANAGER)
   @ApiOperation({
     summary: 'Get testimonial summary (Zone Manager)',
-    description: 'Returns aggregated testimonial statistics for the zone manager',
+    description:
+      'Returns aggregated testimonial statistics for the zone manager',
   })
-  async getZmTestimonialSummary(
-    @Req() req,
-  ) {
+  async getZmTestimonialSummary(@Req() req) {
     const zoneManagerId = req.user.id; // authenticated user ID
-    return this.service.getZmTestimonialSummary(
-      req.user.id,
-    );
+    return this.service.getZmTestimonialSummary(req.user.id);
   }
 }

@@ -9,15 +9,21 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
-import { BookingStatus, MeetingStatus, Prisma, Role, ServiceStatus, WeekDays } from '@prisma/client';
+import {
+  BookingStatus,
+  MeetingStatus,
+  Prisma,
+  Role,
+  ServiceStatus,
+  WeekDays,
+} from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
-import { checkUserExistorNot } from 'src/common/utility/service-utils';
 import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
-import { AddDoulaImageDto } from './dto/add-doula-image.dto';
 import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
-import * as fs from 'fs';
-import * as path from 'path';
-import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificate.dto';
+import {
+  CreateCertificateDto,
+  UpdateCertificateDto,
+} from './dto/certificate.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
 import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
 import { CalculatePricingDto } from './dto/calculate-pricing.dto';
@@ -35,8 +41,10 @@ const MAX_GALLERY_IMAGES = 5;
 
 @Injectable()
 export class DoulaService {
-  constructor(private prisma: PrismaService, private readonly s3Service: S3Service) { }
-
+  constructor(
+    private prisma: PrismaService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   private async buildDoulaProfileResponse(userId: string) {
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -84,20 +92,13 @@ export class DoulaService {
      * Rating calculations
      * ---------------------- */
     const totalReviews = doula.Testimonials.length;
-    const ratingSum = doula.Testimonials.reduce(
-      (sum, r) => sum + r.ratings,
-      0,
-    );
+    const ratingSum = doula.Testimonials.reduce((sum, r) => sum + r.ratings, 0);
 
     const averageRating =
-      totalReviews > 0
-        ? Number((ratingSum / totalReviews).toFixed(1))
-        : 0;
+      totalReviews > 0 ? Number((ratingSum / totalReviews).toFixed(1)) : 0;
 
     const satisfaction =
-      totalReviews > 0
-        ? Math.round((ratingSum / (totalReviews * 5)) * 100)
-        : 0;
+      totalReviews > 0 ? Math.round((ratingSum / (totalReviews * 5)) * 100) : 0;
 
     /** -----------------------
      * Final response shape
@@ -200,9 +201,7 @@ export class DoulaService {
           });
 
           if (!manager) {
-            throw new BadRequestException(
-              'Zone Manager profile not found',
-            );
+            throw new BadRequestException('Zone Manager profile not found');
           }
 
           createdUser = await tx.user.create({
@@ -372,362 +371,6 @@ export class DoulaService {
     }
   }
 
-
-
-  // async get(
-  //   page = 1,
-  //   limit = 10,
-  //   search?: string,
-  //   serviceId?: string,
-  //   isAvailable?: boolean,
-  //   isActive?: boolean,
-  //   regionName?: string,
-  //   minExperience?: number,
-  //   serviceName?: string,
-  //   startDate?: string,
-  //   endDate?: string,
-  // ) {
-  //   /* ----------------------------------------------------
-  //    * 1. Base user filter
-  //    * -------------------------------------------------- */
-  //   const where: any = {
-  //     role: Role.DOULA,
-  //   };
-
-  //   /* ----------------------------------------------------
-  //    * 2. Search filters
-  //    * -------------------------------------------------- */
-  //   if (search) {
-  //     const q = search.toLowerCase();
-  //     where.OR = [
-  //       { name: { contains: q } },
-  //       { email: { contains: q } },
-  //       { phone: { contains: q } },
-  //       {
-  //         doulaProfile: {
-  //           Region: { some: { regionName: { contains: q } } },
-  //         },
-  //       },
-  //     ];
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 3. Region filter
-  //    * -------------------------------------------------- */
-  //   if (regionName) {
-  //     where.doulaProfile = {
-  //       ...(where.doulaProfile || {}),
-  //       Region: {
-  //         some: { regionName: { contains: regionName.toLowerCase() } },
-  //       },
-  //     };
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 4. Minimum experience
-  //    * -------------------------------------------------- */
-  //   if (typeof minExperience === 'number') {
-  //     where.doulaProfile = {
-  //       ...(where.doulaProfile || {}),
-  //       yoe: { gte: minExperience },
-  //     };
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 5. Service filters
-  //    * -------------------------------------------------- */
-  //   const servicePricingConditions: any = {};
-  //   if (serviceId) servicePricingConditions.serviceId = serviceId;
-  //   if (serviceName) {
-  //     servicePricingConditions.service = {
-  //       name: { contains: serviceName.toLowerCase() },
-  //     };
-  //   }
-
-  //   if (Object.keys(servicePricingConditions).length) {
-  //     where.doulaProfile = {
-  //       ...(where.doulaProfile || {}),
-  //       ServicePricing: { some: servicePricingConditions },
-  //     };
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 6. Active filter
-  //    * -------------------------------------------------- */
-  //   if (typeof isActive === 'boolean') {
-  //     where.is_active = isActive;
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 7. Fetch doulas
-  //    * -------------------------------------------------- */
-  //   const result = await paginate({
-  //     prismaModel: this.prisma.user,
-  //     page,
-  //     limit,
-  //     where,
-  //     include: {
-  //       doulaProfile: {
-  //         include: {
-  //           Region: true,
-  //           ServicePricing: { include: { service: true } },
-  //           Testimonials: true,
-  //           DoulaGallery: true,
-  //           Certificates: true,
-  //         },
-  //       },
-  //     },
-  //     orderBy: { createdAt: 'desc' },
-  //   });
-
-  //   const users = result.data ?? [];
-
-  //   if (!users.length) {
-  //     return {
-  //       message: 'Doulas fetched successfully',
-  //       ...result,
-  //       data: [],
-  //     };
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 8. Prepare date range
-  //    * -------------------------------------------------- */
-  //   const rangeStart = startDate ? new Date(startDate) : null;
-  //   const rangeEnd = endDate ? new Date(endDate) : null;
-
-  //   if (rangeStart) rangeStart.setHours(0, 0, 0, 0);
-  //   if (rangeEnd) rangeEnd.setHours(0, 0, 0, 0);
-
-  //   /* ----------------------------------------------------
-  //    * 9. Fetch schedules
-  //    * -------------------------------------------------- */
-  //   const doulaProfileIds = users
-  //     .map((u: any) => u.doulaProfile?.id)
-  //     .filter(Boolean);
-
-  //   const schedules = await this.prisma.schedules.findMany({
-  //     where: {
-  //       doulaProfileId: { in: doulaProfileIds },
-  //       status: { not: MeetingStatus.CANCELED },
-  //       ...(rangeStart || rangeEnd
-  //         ? {
-  //           date: {
-  //             ...(rangeStart && { gte: rangeStart }),
-  //             ...(rangeEnd && { lte: rangeEnd }),
-  //           },
-  //         }
-  //         : {}),
-  //     },
-  //     select: {
-  //       doulaProfileId: true,
-  //       date: true,
-  //     },
-  //   });
-
-  //   /* ----------------------------------------------------
-  //    * 9.1 Fetch available slots
-  //    * -------------------------------------------------- */
-  //   const today = new Date();
-  //   today.setHours(0, 0, 0, 0);
-
-  //   const availableSlots =
-  //     await this.prisma.availableSlotsForService.findMany({
-  //       where: {
-  //         doulaId: { in: doulaProfileIds },
-  //         date: { gte: today },
-  //       },
-  //       select: {
-  //         doulaId: true,
-  //         date: true,
-  //         availability: true,
-  //       },
-  //       orderBy: { date: 'asc' },
-  //     });
-
-  //   /* ----------------------------------------------------
-  //    * 10. Build lookups
-  //    * -------------------------------------------------- */
-  //   const scheduleMap = new Map<string, Date[]>();
-
-  //   for (const s of schedules) {
-  //     if (!scheduleMap.has(s.doulaProfileId)) {
-  //       scheduleMap.set(s.doulaProfileId, []);
-  //     }
-  //     scheduleMap.get(s.doulaProfileId)!.push(s.date);
-  //   }
-
-  //   const availabilityMap = new Map<
-  //     string,
-  //     { date: Date; availability: Record<string, boolean> }[]
-  //   >();
-
-  //   for (const slot of availableSlots) {
-  //     if (!availabilityMap.has(slot.doulaId)) {
-  //       availabilityMap.set(slot.doulaId, []);
-  //     }
-  //     availabilityMap.get(slot.doulaId)!.push({
-  //       date: slot.date,
-  //       availability: slot.availability as Record<string, boolean>,
-  //     });
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 10.1 Helpers
-  //    * -------------------------------------------------- */
-  //   const normalizeDate = (d: Date) => {
-  //     const n = new Date(d);
-  //     n.setHours(0, 0, 0, 0);
-  //     return n.getTime();
-  //   };
-
-  //   function isDateAvailable(
-  //     date: Date,
-  //     availability: Record<string, boolean>,
-  //     bookedDates: Date[],
-  //   ) {
-  //     // Any shift false → unavailable
-  //     if (Object.values(availability).some((v) => v === false)) {
-  //       return false;
-  //     }
-
-  //     // All shifts true → must not be booked
-  //     return !bookedDates.some(
-  //       (d) => normalizeDate(d) === normalizeDate(date),
-  //     );
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 11. Transform response
-  //    * -------------------------------------------------- */
-  //   const transformed = users
-  //     .map((user: any) => {
-  //       const profile = user.doulaProfile;
-  //       if (!profile) return null;
-
-  //       const bookedDates = scheduleMap.get(profile.id) ?? [];
-  //       const slotEntries = availabilityMap.get(profile.id) ?? [];
-
-  //       let nextAvailableDate: Date | null = null;
-
-  //       for (const slot of slotEntries) {
-  //         if (
-  //           isDateAvailable(
-  //             slot.date,
-  //             slot.availability,
-  //             bookedDates,
-  //           )
-  //         ) {
-  //           nextAvailableDate = slot.date;
-  //           break;
-  //         }
-  //       }
-
-  //       const available =
-  //         rangeStart && rangeEnd
-  //           ? slotEntries.some((slot) =>
-  //             isDateAvailable(
-  //               slot.date,
-  //               slot.availability,
-  //               bookedDates,
-  //             ),
-  //           )
-  //           : null;
-
-  //       if (typeof isAvailable === 'boolean' && available !== isAvailable) {
-  //         return null;
-  //       }
-
-  //       const services =
-  //         profile.ServicePricing?.map((p) =>
-  //           p.service
-  //             ? {
-  //               servicePricingId: p.id,
-  //               serviceId: p.service.id,
-  //               serviceName: p.service.name,
-  //               price: p.price,
-  //             }
-  //             : null,
-  //         ).filter(Boolean) ?? [];
-
-  //       let noOfAvailableDays: number | null = null;
-
-  //       if (rangeStart && rangeEnd) {
-  //         const availableDateSet = new Set<number>();
-
-  //         for (const slot of slotEntries) {
-  //           const slotTime = normalizeDate(slot.date);
-
-  //           if (
-  //             slotTime >= rangeStart.getTime() &&
-  //             slotTime <= rangeEnd.getTime() &&
-  //             isDateAvailable(
-  //               slot.date,
-  //               slot.availability,
-  //               bookedDates,
-  //             )
-  //           ) {
-  //             availableDateSet.add(slotTime);
-  //           }
-  //         }
-
-  //         noOfAvailableDays = availableDateSet.size;
-  //       }
-
-  //       return {
-  //         userId: user.id,
-  //         isActive: user.is_active,
-  //         name: user.name,
-  //         email: user.email,
-
-  //         profileId: profile.id,
-  //         yoe: profile.yoe ?? null,
-  //         profile_image: profile.profile_image,
-
-  //         serviceNames: services,
-  //         regionNames:
-  //           profile.Region?.map((r) => ({
-  //             id: r.id,
-  //             name: r.regionName,
-  //           })) ?? [],
-
-  //         ratings:
-  //           profile.Testimonials?.length > 0
-  //             ? profile.Testimonials.reduce(
-  //               (s, t) => s + t.ratings,
-  //               0,
-  //             ) / profile.Testimonials.length
-  //             : null,
-
-  //         reviewsCount: profile.Testimonials?.length ?? 0,
-  //         isAvailable: available,
-  //         nextImmediateAvailabilityDate: nextAvailableDate,
-  //         noOfAvailableDays,
-  //         images:
-  //           profile.DoulaGallery?.map((img) => ({
-  //             id: img.id,
-  //             url: img.url,
-  //             isPrimary: img.isPrimary ?? false,
-  //           })) ?? [],
-
-  //         certificates:
-  //           profile.Certificates?.map((cert) => ({
-  //             id: cert.id,
-  //             name: cert.name,
-  //             issuedBy: cert.issuedBy,
-  //             year: cert.year,
-  //           })) ?? [],
-  //       };
-  //     })
-  //     .filter(Boolean);
-
-  //   return {
-  //     message: 'Doulas fetched successfully',
-  //     ...result,
-  //     data: transformed,
-  //   };
-  // }
-
   async get(
     page = 1,
     limit = 10,
@@ -741,9 +384,8 @@ export class DoulaService {
     startDate?: string,
     endDate?: string,
     weekDays?: WeekDays[],
-    random?: boolean,   // ✅ ADDED
+    random?: boolean, // ✅ ADDED
   ) {
-
     /* ----------------------------------------------------
      * DATE UTILITIES (UTC ONLY)
      * -------------------------------------------------- */
@@ -752,9 +394,7 @@ export class DoulaService {
       new Date(`${date}T00:00:00.000Z`);
 
     const normalizeDateTime = (d: Date): number =>
-      new Date(
-        d.toISOString().split('T')[0] + 'T00:00:00.000Z'
-      ).getTime();
+      new Date(d.toISOString().split('T')[0] + 'T00:00:00.000Z').getTime();
 
     const getUtcWeekday = (d: Date) => d.getUTCDay();
 
@@ -766,7 +406,6 @@ export class DoulaService {
 
     // ✅ ALL FILTERS IGNORED WHEN RANDOM = TRUE
     if (!random) {
-
       if (search) {
         const q = search.toLowerCase();
         where.OR = [
@@ -876,9 +515,7 @@ export class DoulaService {
     let allowedWeekDays: Set<number> | null = null;
 
     if (!random && weekDays?.length) {
-      allowedWeekDays = new Set(
-        weekDays.map((d) => WEEKDAY_INDEX[d])
-      );
+      allowedWeekDays = new Set(weekDays.map((d) => WEEKDAY_INDEX[d]));
     }
 
     const isAllowedWeekDay = (date: Date) => {
@@ -925,11 +562,11 @@ export class DoulaService {
         status: { not: MeetingStatus.CANCELED },
         ...(rangeStart || rangeEnd
           ? {
-            date: {
-              ...(rangeStart && { gte: rangeStart }),
-              ...(rangeEnd && { lte: rangeEnd }),
-            },
-          }
+              date: {
+                ...(rangeStart && { gte: rangeStart }),
+                ...(rangeEnd && { lte: rangeEnd }),
+              },
+            }
           : {}),
       },
       select: { doulaProfileId: true, date: true },
@@ -939,18 +576,17 @@ export class DoulaService {
      * 7. Fetch available slots
      * -------------------------------------------------- */
 
-    const availableSlots =
-      await this.prisma.availableSlotsForService.findMany({
-        where: {
-          doulaId: { in: doulaProfileIds },
-          date: {
-            ...(rangeStart && { gte: rangeStart }),
-            ...(rangeEnd && { lte: rangeEnd }),
-          },
+    const availableSlots = await this.prisma.availableSlotsForService.findMany({
+      where: {
+        doulaId: { in: doulaProfileIds },
+        date: {
+          ...(rangeStart && { gte: rangeStart }),
+          ...(rangeEnd && { lte: rangeEnd }),
         },
-        select: { doulaId: true, date: true, availability: true },
-        orderBy: { date: 'asc' },
-      });
+      },
+      select: { doulaId: true, date: true, availability: true },
+      orderBy: { date: 'asc' },
+    });
 
     /* ----------------------------------------------------
      * 8. Build lookup maps
@@ -1015,11 +651,7 @@ export class DoulaService {
         for (const slot of slotEntries) {
           if (
             isAllowedWeekDay(slot.date) &&
-            isDateAvailable(
-              slot.date,
-              slot.availability,
-              bookedDates,
-            )
+            isDateAvailable(slot.date, slot.availability, bookedDates)
           ) {
             const t = normalizeDateTime(slot.date);
             availableDateSet.add(t);
@@ -1035,17 +667,13 @@ export class DoulaService {
         let noOfAvailableDays: number | null = null;
 
         if (!random && rangeStart && rangeEnd) {
-
           const requiredDateSet = new Set<number>();
           const cursor = new Date(rangeStart);
 
           while (cursor <= rangeEnd) {
             const time = normalizeDateTime(cursor);
 
-            if (
-              !requiredWeekdayDates ||
-              requiredWeekdayDates.has(time)
-            ) {
+            if (!requiredWeekdayDates || requiredWeekdayDates.has(time)) {
               requiredDateSet.add(time);
             }
 
@@ -1081,11 +709,11 @@ export class DoulaService {
           profile.ServicePricing?.map((p) =>
             p.service
               ? {
-                servicePricingId: p.id,
-                serviceId: p.service.id,
-                serviceName: p.service.name,
-                price: p.price,
-              }
+                  servicePricingId: p.id,
+                  serviceId: p.service.id,
+                  serviceName: p.service.name,
+                  price: p.price,
+                }
               : null,
           ).filter(Boolean) ?? [];
 
@@ -1109,10 +737,8 @@ export class DoulaService {
 
           ratings:
             profile.Testimonials?.length > 0
-              ? profile.Testimonials.reduce(
-                (s, t) => s + t.ratings,
-                0,
-              ) / profile.Testimonials.length
+              ? profile.Testimonials.reduce((s, t) => s + t.ratings, 0) /
+                profile.Testimonials.length
               : null,
 
           reviewsCount: profile.Testimonials?.length ?? 0,
@@ -1146,10 +772,6 @@ export class DoulaService {
       data: transformed,
     };
   }
-
-
-
-
 
   async getById(id: string) {
     const doula = await this.prisma.user.findUnique({
@@ -1194,11 +816,11 @@ export class DoulaService {
       profile.ServicePricing?.map((p) =>
         p.service
           ? {
-            servicePricingId: p.id,
-            serviceId: p.service.id,
-            serviceName: p.service.name,
-            price: p.price,
-          }
+              servicePricingId: p.id,
+              serviceId: p.service.id,
+              serviceName: p.service.name,
+              price: p.price,
+            }
           : null,
       ).filter(Boolean) ?? [];
 
@@ -1216,8 +838,7 @@ export class DoulaService {
 
     const avgRating =
       reviewsCount > 0
-        ? testimonials.reduce((sum, t) => sum + t.ratings, 0) /
-        reviewsCount
+        ? testimonials.reduce((sum, t) => sum + t.ratings, 0) / reviewsCount
         : null;
 
     /* ----------------------------------------------------
@@ -1237,18 +858,17 @@ export class DoulaService {
 
     const bookedDates = schedules.map((s) => s.date);
 
-    const availableSlots =
-      await this.prisma.availableSlotsForService.findMany({
-        where: {
-          doulaId: profile.id,
-          date: { gte: today },
-        },
-        select: {
-          date: true,
-          availability: true,
-        },
-        orderBy: { date: 'asc' },
-      });
+    const availableSlots = await this.prisma.availableSlotsForService.findMany({
+      where: {
+        doulaId: profile.id,
+        date: { gte: today },
+      },
+      select: {
+        date: true,
+        availability: true,
+      },
+      orderBy: { date: 'asc' },
+    });
 
     const normalizeDate = (d: Date) => {
       const n = new Date(d);
@@ -1267,9 +887,7 @@ export class DoulaService {
       }
 
       // All shifts true → must not be booked
-      return !bookedDates.some(
-        (d) => normalizeDate(d) === normalizeDate(date),
-      );
+      return !bookedDates.some((d) => normalizeDate(d) === normalizeDate(date));
     }
 
     let nextImmediateAvailabilityDate: Date | null = null;
@@ -1318,7 +936,6 @@ export class DoulaService {
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
 
-
       galleryImages:
         profile.DoulaGallery?.map((img) => ({
           id: img.id,
@@ -1350,7 +967,6 @@ export class DoulaService {
       data: transformed,
     };
   }
-
 
   async delete(id: string) {
     // 1. find user
@@ -1535,7 +1151,7 @@ export class DoulaService {
         bookedBy: {
           include: {
             user: {
-              select: { name: true, id: true, },
+              select: { name: true, id: true },
             },
           },
         },
@@ -1551,7 +1167,10 @@ export class DoulaService {
           include: {
             user: {
               select: {
-                name: true, id: true, email: true, phone: true
+                name: true;
+                id: true;
+                email: true;
+                phone: true;
               };
             };
           };
@@ -1628,10 +1247,10 @@ export class DoulaService {
 
         client: meeting.bookedBy?.user
           ? {
-            clientId: meeting.bookedBy.user.id,
-            name: meeting.bookedBy.user.name,
-            email: meeting.bookedBy.user.email,
-          }
+              clientId: meeting.bookedBy.user.id,
+              name: meeting.bookedBy.user.name,
+              email: meeting.bookedBy.user.email,
+            }
           : null,
       },
     };
@@ -1699,7 +1318,13 @@ export class DoulaService {
         client: {
           include: {
             user: {
-              select: { id: true, name: true, email: true, phone: true, address: true };
+              select: {
+                id: true;
+                name: true;
+                email: true;
+                phone: true;
+                address: true;
+              };
             };
           };
         };
@@ -1797,11 +1422,11 @@ export class DoulaService {
 
         client: schedule.client?.user
           ? {
-            clientId: schedule.client.user.id,
-            name: schedule.client.user.name,
-            email: schedule.client.user.email,
-            phone: schedule.client.user.phone,
-          }
+              clientId: schedule.client.user.id,
+              name: schedule.client.user.name,
+              email: schedule.client.user.email,
+              phone: schedule.client.user.phone,
+            }
           : null,
       },
     };
@@ -2132,17 +1757,15 @@ export class DoulaService {
 
     const data = await this.buildDoulaProfileResponse(user.id);
 
-
     /** -----------------------
      * Response
      * ---------------------- */
     return {
       success: true,
       message: 'Doula profile fetched successfully',
-      data: data
+      data: data,
     };
   }
-
 
   async addDoulaprofileImage(
     userId: string,
@@ -2170,7 +1793,6 @@ export class DoulaService {
     };
   }
 
-
   async getDoulaImages(userId: string, doulaId?: string) {
     const targetUserId = doulaId ?? userId;
 
@@ -2190,7 +1812,6 @@ export class DoulaService {
     };
   }
 
-
   async deleteDoulaprofileImage(userId: string, doulaId?: string) {
     const targetUserId = doulaId ?? userId;
 
@@ -2209,7 +1830,6 @@ export class DoulaService {
 
     return { message: 'Image deleted successfully' };
   }
-
 
   async addDoulaGalleryImages(
     userId: string,
@@ -2439,8 +2059,6 @@ export class DoulaService {
     };
   }
 
-
-
   // Helper: get doula profile
   private async getDoulaProfile(userId: string) {
     const profile = await this.prisma.doulaProfile.findUnique({
@@ -2454,13 +2072,9 @@ export class DoulaService {
     return profile;
   }
 
-
   // UPDATE
-  async addCertificate(
-    userId: string,
-    dto: CreateCertificateDto,
-  ) {
-    const { name, issuedBy, year } = dto
+  async addCertificate(userId: string, dto: CreateCertificateDto) {
+    const { name, issuedBy, year } = dto;
     const doulaProfile = await this.getDoulaProfile(userId);
 
     const certificate = await this.prisma.certificates.create({
@@ -2468,10 +2082,10 @@ export class DoulaService {
         doulaProfileId: doulaProfile.id,
         name: name,
         issuedBy: issuedBy,
-        year: year
+        year: year,
       },
     });
-    return { message: 'Certificate Added Succesfully', data: certificate }
+    return { message: 'Certificate Added Succesfully', data: certificate };
   }
 
   // GET all
@@ -2555,195 +2169,6 @@ export class DoulaService {
     };
   }
 
-  // async getServiceBookings(userId: string, page = 1, limit = 10) {
-  //   const doula = await this.prisma.doulaProfile.findUnique({
-  //     where: { userId: userId },
-  //     select: {
-  //       id: true,
-  //       user: {
-  //         select: { name: true },
-  //       },
-  //     },
-  //   });
-  //   if (!doula) {
-  //     throw new NotFoundException('Doula profile not found');
-  //   }
-  //   type ServiceBookingWithRelations = Prisma.ServiceBookingGetPayload<{
-  //     include: {
-  //       region: {
-  //         select: {
-  //           id: true;
-  //           regionName: true;
-  //         };
-  //       };
-  //       service: {
-  //         select: {
-  //           id: true;
-  //           service: {
-  //             select: {
-  //               id: true;
-  //               name: true;
-  //             };
-  //           };
-  //         };
-  //       };
-  //       schedules: {
-  //         select: {
-  //           id: true;
-  //         };
-  //       };
-  //     };
-  //   }>;
-
-  //   const result = await paginateWithRelations<ServiceBookingWithRelations>({
-  //     page,
-  //     limit,
-  //     query: () =>
-  //       this.prisma.serviceBooking.findMany({
-  //         skip: (page - 1) * limit,
-  //         take: limit,
-  //         where: {
-  //           doulaProfileId: doula.id,
-  //         },
-  //         orderBy: {
-  //           startDate: 'desc',
-  //         },
-  //         include: {
-  //           region: {
-  //             select: {
-  //               id: true,
-  //               regionName: true,
-  //             },
-  //           },
-  //           service: {
-  //             select: {
-  //               id: true,
-  //               service: {
-  //                 select: {
-  //                   id: true,
-  //                   name: true,
-  //                 },
-  //               },
-  //             },
-  //           },
-  //           schedules: {
-  //             select: {
-  //               id: true,
-  //             },
-  //           },
-  //         },
-  //       }),
-  //     countQuery: () =>
-  //       this.prisma.serviceBooking.count({
-  //         where: {
-  //           doulaProfileId: doula.id,
-  //         },
-  //       }),
-  //   });
-
-  //   return {
-  //     data: result.data.map((booking) => ({
-  //       serviceBookingId: booking.id,
-  //       satisfiestartDate: booking.startDate,
-  //       endDate: booking.endDate,
-  //       status: booking.status,
-  //       regionId: booking.region.id,
-  //       regionName: booking.region.regionName,
-  //       servicePricingId: booking.service.id,
-  //       serviceName: booking.service.service.name,
-  //       serviceId: booking.service.service.id,
-  //       schedulesCount: booking.schedules.length,
-  //     })),
-  //     meta: result.meta,
-  //   };
-  // }
-
-  // async getServiceBookingsinDetail(userId: string, serviceBookingId: string) {
-  //   const doula = await this.prisma.doulaProfile.findUnique({
-  //     where: { userId: userId },
-  //     select: {
-  //       id: true,
-  //       user: {
-  //         select: { name: true },
-  //       },
-  //     },
-  //   });
-  //   if (!doula) {
-  //     throw new NotFoundException('Doula profile not found');
-  //   }
-  //   const booking = await this.prisma.serviceBooking.findUnique({
-  //     where: { id: serviceBookingId },
-  //     select: {
-  //       id: true,
-  //       startDate: true,
-  //       endDate: true,
-  //       status: true,
-  //       region: {
-  //         select: {
-  //           id: true,
-  //           regionName: true,
-  //           zoneManager: {
-  //             select: {
-  //               id: true,
-  //               user: { select: { id: true, email: true, name: true } },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       service: {
-  //         select: {
-  //           id: true,
-  //           price: true,
-  //           service: {
-  //             select: {
-  //               id: true,
-  //               name: true,
-  //             },
-  //           },
-  //         },
-  //       },
-  //       schedules: true,
-  //     },
-  //   });
-  //   if (!booking) {
-  //     throw new NotFoundException('Service booking not found');
-  //   }
-
-  //   return {
-  //     serviceBookingId: booking.id,
-  //     startDate: booking.startDate,
-  //     endDate: booking.endDate,
-  //     status: booking.status,
-
-  //     region: {
-  //       id: booking.region.id,
-  //       name: booking.region.regionName,
-  //       zoneManager: booking.region.zoneManager?.user
-  //         ? {
-  //           id: booking.region.zoneManager.id,
-  //           name: booking.region.zoneManager.user.name,
-  //           email: booking.region.zoneManager.user.email,
-  //         }
-  //         : null,
-  //     },
-
-  //     service: {
-  //       servicePricingId: booking.service.id,
-  //       serviceId: booking.service.service.id,
-  //       serviceName: booking.service.service.name,
-  //       price: booking.service.price,
-  //     },
-
-  //     schedules: booking.schedules.map((schedule) => ({
-  //       id: schedule.id,
-  //       date: schedule.date,
-  //       timeshift: schedule.timeshift,
-  //       status: schedule.status,
-  //     })),
-  //   };
-  // }
-
-
   async getServiceBookings(userId: string, page = 1, limit = 10) {
     /* ---------------- FETCH DOULA ---------------- */
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -2756,46 +2181,45 @@ export class DoulaService {
     }
 
     /* ---------------- TYPES ---------------- */
-    type ServiceBookingWithRelations =
-      Prisma.ServiceBookingGetPayload<{
-        include: {
-          region: {
-            select: {
-              id: true;
-              regionName: true;
-            };
+    type ServiceBookingWithRelations = Prisma.ServiceBookingGetPayload<{
+      include: {
+        region: {
+          select: {
+            id: true;
+            regionName: true;
           };
-          service: {
-            select: {
-              id: true;
-              price: true;
-              service: {
-                select: {
-                  id: true;
-                  name: true;
-                };
-              };
-            };
-          };
-          schedules: {
-            select: {
-              id: true;
-            };
-          };
-          client: {
-            select: {
-              id: true;
-              user: {
-                select: {
-                  name: true;
-                  email: true;
-                  phone: true;
-                };
+        };
+        service: {
+          select: {
+            id: true;
+            price: true;
+            service: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
         };
-      }>;
+        schedules: {
+          select: {
+            id: true;
+          };
+        };
+        client: {
+          select: {
+            id: true;
+            user: {
+              select: {
+                name: true;
+                email: true;
+                phone: true;
+              };
+            };
+          };
+        };
+      };
+    }>;
 
     /* ---------------- PAGINATION ---------------- */
     const result = await paginateWithRelations<ServiceBookingWithRelations>({
@@ -2862,7 +2286,7 @@ export class DoulaService {
     return {
       data: result.data.map((booking) => {
         const schedulesCount = booking.schedules.length;
-        const totalPrice = booking.totalAmount
+        const totalPrice = booking.totalAmount;
 
         return {
           serviceBookingId: booking.id,
@@ -2881,7 +2305,6 @@ export class DoulaService {
           region: {
             id: booking.region.id,
             name: booking.region.regionName,
-
           },
 
           service: {
@@ -2899,11 +2322,7 @@ export class DoulaService {
     };
   }
 
-
-  async getServiceBookingsInDetail(
-    userId: string,
-    serviceBookingId: string,
-  ) {
+  async getServiceBookingsInDetail(userId: string, serviceBookingId: string) {
     /* ---------------- FETCH DOULA ---------------- */
     const doula = await this.prisma.doulaProfile.findUnique({
       where: { userId },
@@ -2984,7 +2403,7 @@ export class DoulaService {
 
     /* ---------------- CALCULATIONS ---------------- */
     const totalVisits = booking.schedules.length;
-    const totalPrice = booking.totalAmount
+    const totalPrice = booking.totalAmount;
 
     /* ---------------- RESPONSE ---------------- */
     return {
@@ -3008,10 +2427,10 @@ export class DoulaService {
         name: booking.region.regionName,
         zoneManager: booking.region.zoneManager?.user
           ? {
-            id: booking.region.zoneManager.id,
-            name: booking.region.zoneManager.user.name,
-            email: booking.region.zoneManager.user.email,
-          }
+              id: booking.region.zoneManager.id,
+              name: booking.region.zoneManager.user.name,
+              email: booking.region.zoneManager.user.email,
+            }
           : null,
       },
 
@@ -3037,8 +2456,7 @@ export class DoulaService {
     doulaId: string,
     startDate: string,
     endDate: string,
-    visitDays?: WeekDays[]
-
+    visitDays?: WeekDays[],
   ) {
     /* ------------------ Validate Doula ------------------ */
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -3143,9 +2561,7 @@ export class DoulaService {
         startDate,
         endDate,
         visitDays,
-        visitDates: visitDates.map((d) =>
-          d.toISOString().split('T')[0],
-        ),
+        visitDates: visitDates.map((d) => d.toISOString().split('T')[0]),
         availability: {
           MORNING: morningAvailable,
           NIGHT: nightAvailable,
@@ -3154,8 +2570,6 @@ export class DoulaService {
       },
     };
   }
-
-
 
   async getShiftsByDoula(doulaId: string, page = 1, limit = 10) {
     // Validate doula exists
@@ -3288,10 +2702,10 @@ export class DoulaService {
         },
         client: shift.client?.user
           ? {
-            clientId: shift.client.user.id,
-            name: shift.client.user.name,
-            email: shift.client.user.email,
-          }
+              clientId: shift.client.user.id,
+              name: shift.client.user.name,
+              email: shift.client.user.email,
+            }
           : null,
         service: {
           servicePricingId: shift.ServicePricing.id,
@@ -3330,7 +2744,7 @@ export class DoulaService {
             email: true,
             name: true,
             phone: true,
-            is_active: true
+            is_active: true,
           },
         },
       },
@@ -3361,7 +2775,9 @@ export class DoulaService {
       );
     }
     const startDate = this.toUtcMidnight(serviceStartDate);
-    const endDate = servicEndDate ? this.toUtcMidnight(servicEndDate) : undefined
+    const endDate = servicEndDate
+      ? this.toUtcMidnight(servicEndDate)
+      : undefined;
 
     if (endDate && startDate > endDate) {
       throw new BadRequestException('Invalid service date range');
@@ -3372,12 +2788,11 @@ export class DoulaService {
     visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
-          startDate,
-          endDate,
-          visitDays,
-        )
+            startDate,
+            endDate,
+            visitDays,
+          )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
-
 
     if (!visitDates.length) {
       throw new BadRequestException('No valid visit dates generated');
@@ -3390,13 +2805,12 @@ export class DoulaService {
       const dateStr = visitDate.toISOString().split('T')[0];
 
       if (
-        await isDoulaOffOnShift(
-          doulaProfileId,
-          visitDate,
-          serviceTimeShift,
-        )
+        await isDoulaOffOnShift(doulaProfileId, visitDate, serviceTimeShift)
       ) {
-        skippedDates.push({ date: dateStr, reason: 'Doula is off on this date' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula is off on this date',
+        });
         continue;
       }
 
@@ -3407,7 +2821,10 @@ export class DoulaService {
           serviceTimeShift,
         ))
       ) {
-        skippedDates.push({ date: dateStr, reason: 'Doula not available for this shift' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula not available for this shift',
+        });
         continue;
       }
 
@@ -3421,7 +2838,10 @@ export class DoulaService {
       });
 
       if (existingSchedule) {
-        skippedDates.push({ date: dateStr, reason: 'Doula already booked on this date' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula already booked on this date',
+        });
         continue;
       }
 
@@ -3431,7 +2851,8 @@ export class DoulaService {
     if (!availableDates.length) {
       return {
         success: true,
-        message: 'No available dates for booking. All requested dates are already booked or unavailable.',
+        message:
+          'No available dates for booking. All requested dates are already booked or unavailable.',
         data: {
           available: false,
           doulaProfileId,
@@ -3453,26 +2874,25 @@ export class DoulaService {
     }
 
     let totalAmount = 0;
-    let payableAmount = 0
+    let payableAmount = 0;
     if (servicePricing.service.name === 'Birth Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      totalAmount = perDayPrice
-
+      totalAmount = perDayPrice;
     } else if (servicePricing.service.name === 'Post Partum Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = (perDayPrice * availableDates.length)
+      totalAmount = perDayPrice * availableDates.length;
     }
 
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
-    payableAmount = totalAmount
+    payableAmount = totalAmount;
     if (totalAmount >= 1000) {
       const half = totalAmount / 2;
       payableAmount = Math.min(half, 1000);
@@ -3489,7 +2909,9 @@ export class DoulaService {
         serviceName: servicePricing.service.name,
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate?.toISOString().split('T')[0],
-        visitDates: availableDates.map((date) => date.toISOString().split('T')[0]),
+        visitDates: availableDates.map(
+          (date) => date.toISOString().split('T')[0],
+        ),
         numberOfVisits: availableDates.length,
         timeShift: serviceTimeShift,
         pricePerVisit:
@@ -3524,9 +2946,7 @@ export class DoulaService {
 
     /* ------------------ Normalize Dates ------------------ */
     const start = this.toUtcMidnight(startDate);
-    const end = endDate
-      ? this.toUtcMidnight(endDate)
-      : new Date(start);
+    const end = endDate ? this.toUtcMidnight(endDate) : new Date(start);
 
     const isValidDateInput = (input: string, parsed: Date) =>
       parsed.toISOString().split('T')[0] === input;
@@ -3548,7 +2968,7 @@ export class DoulaService {
 
     /* ------------------ Requested Range ------------------ */
     const requestedDates: Date[] = [];
-    let cursor = new Date(start);
+    const cursor = new Date(start);
 
     while (cursor <= end) {
       requestedDates.push(new Date(cursor));
@@ -3578,8 +2998,8 @@ export class DoulaService {
     });
 
     const scheduledDates = new Set(
-      schedules.map((s) =>
-        this.toUtcMidnight(s.date).toISOString().split('T')[0],
+      schedules.map(
+        (s) => this.toUtcMidnight(s.date).toISOString().split('T')[0],
       ),
     );
 
@@ -3630,7 +3050,6 @@ export class DoulaService {
 
       return !noShiftAvailable;
     };
-
 
     const isFullDayAvailableWithoutSchedule = (date: Date): boolean => {
       const key = date.toISOString().split('T')[0];
@@ -3686,7 +3105,7 @@ export class DoulaService {
     }
 
     /* ------------------ Apply Filter ------------------ */
-    let responseData: any = {};
+    const responseData: any = {};
 
     if (filter === 'BOOKED') {
       responseData.bookedDates = bookedDates;
@@ -3708,6 +3127,4 @@ export class DoulaService {
       },
     };
   }
-
 }
-

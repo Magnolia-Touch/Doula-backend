@@ -25,7 +25,11 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { ScheduleDoulaDto, UpdateClientDoulaEnquiryDto, UpdateMeetingStatusDto } from './dto/schedule-doula.dto';
+import {
+  ScheduleDoulaDto,
+  UpdateClientDoulaEnquiryDto,
+  UpdateMeetingStatusDto,
+} from './dto/schedule-doula.dto';
 import { cancelDto } from './dto/cancel.dto';
 import { RescheduleDto } from './dto/reschedule.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -39,7 +43,7 @@ import { CreateMeetingDto } from './dto/create-meeting.dto';
   version: '1',
 })
 export class MeetingsController {
-  constructor(private readonly service: MeetingsService) { }
+  constructor(private readonly service: MeetingsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.DOULA, Role.ZONE_MANAGER)
@@ -62,71 +66,71 @@ export class MeetingsController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        "status": "success",
-        "message": "Request successful",
-        "data": [
+        status: 'success',
+        message: 'Request successful',
+        data: [
           {
-            "meetingId": "505a0938-6169-4b6d-aaa9-90746d8847a0",
-            "meetingLink": "https://meet.google.com/oo8cb355",
-            "meetingStatus": "SCHEDULED",
-            "meetingStartTime": "1970-01-01T03:30:00.000Z",
-            "meetingEndTime": "1970-01-01T05:30:00.000Z",
-            "meetingDate": "2025-12-06T00:00:00.000Z",
-            "weekday": "SATURDAY",
-            "serviceName": "Birth Doula",
-            "remarks": "Looking for postpartum support during night hours.",
-            "meeting_with": "ZONE_MANAGER",
-            "enquiryId": null,
-            "client": {
-              "clientId": "6dd1d8f1-a75c-4d20-aa4c-44d36bcc7c03",
-              "clientName": "John Doe",
-              "clientEmail": "john.doe@example.com",
-              "clientPhone": "9876543210"
+            meetingId: '505a0938-6169-4b6d-aaa9-90746d8847a0',
+            meetingLink: 'https://meet.google.com/oo8cb355',
+            meetingStatus: 'SCHEDULED',
+            meetingStartTime: '1970-01-01T03:30:00.000Z',
+            meetingEndTime: '1970-01-01T05:30:00.000Z',
+            meetingDate: '2025-12-06T00:00:00.000Z',
+            weekday: 'SATURDAY',
+            serviceName: 'Birth Doula',
+            remarks: 'Looking for postpartum support during night hours.',
+            meeting_with: 'ZONE_MANAGER',
+            enquiryId: null,
+            client: {
+              clientId: '6dd1d8f1-a75c-4d20-aa4c-44d36bcc7c03',
+              clientName: 'John Doe',
+              clientEmail: 'john.doe@example.com',
+              clientPhone: '9876543210',
             },
-            "doula": null,
-            "zoneManager": {
-              "zoneManagerId": "55f12bf3-317f-4157-8aa0-0d979e3e8fa7",
-              "zoneManagerProfileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
-              "zoneManagerName": "Adam Smith",
-              "zoneManagerEmail": "zonemanager@test.com"
-            }
+            doula: null,
+            zoneManager: {
+              zoneManagerId: '55f12bf3-317f-4157-8aa0-0d979e3e8fa7',
+              zoneManagerProfileId: 'f88c9e79-66b0-4d3b-968a-7df22bdaee50',
+              zoneManagerName: 'Adam Smith',
+              zoneManagerEmail: 'zonemanager@test.com',
+            },
           },
           {
-            "meetingId": "46c20c8e-5b15-4c2b-875b-90de4179f853",
-            "meetingLink": "https://meet.google.com/p3rkoh0c",
-            "meetingStatus": "SCHEDULED",
-            "meetingStartTime": "1970-01-01T03:30:00.000Z",
-            "meetingEndTime": "1970-01-01T05:30:00.000Z",
-            "meetingDate": "2025-12-05T00:00:00.000Z",
-            "weekday": "FRIDAY",
-            "serviceName": "Birth Doula",
-            "remarks": "Looking for postpartum support during night hours.",
-            "meeting_with": "ZONE_MANAGER",
-            "enquiryId": null,
-            "client": {
-              "clientId": "6dd1d8f1-a75c-4d20-aa4c-44d36bcc7c03",
-              "clientName": "John Doe",
-              "clientEmail": "john.doe@example.com",
-              "clientPhone": "9876543210"
+            meetingId: '46c20c8e-5b15-4c2b-875b-90de4179f853',
+            meetingLink: 'https://meet.google.com/p3rkoh0c',
+            meetingStatus: 'SCHEDULED',
+            meetingStartTime: '1970-01-01T03:30:00.000Z',
+            meetingEndTime: '1970-01-01T05:30:00.000Z',
+            meetingDate: '2025-12-05T00:00:00.000Z',
+            weekday: 'FRIDAY',
+            serviceName: 'Birth Doula',
+            remarks: 'Looking for postpartum support during night hours.',
+            meeting_with: 'ZONE_MANAGER',
+            enquiryId: null,
+            client: {
+              clientId: '6dd1d8f1-a75c-4d20-aa4c-44d36bcc7c03',
+              clientName: 'John Doe',
+              clientEmail: 'john.doe@example.com',
+              clientPhone: '9876543210',
             },
-            "doula": null,
-            "zoneManager": {
-              "zoneManagerId": "55f12bf3-317f-4157-8aa0-0d979e3e8fa7",
-              "zoneManagerProfileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
-              "zoneManagerName": "Adam Smith",
-              "zoneManagerEmail": "zonemanager@test.com"
-            }
-          }
+            doula: null,
+            zoneManager: {
+              zoneManagerId: '55f12bf3-317f-4157-8aa0-0d979e3e8fa7',
+              zoneManagerProfileId: 'f88c9e79-66b0-4d3b-968a-7df22bdaee50',
+              zoneManagerName: 'Adam Smith',
+              zoneManagerEmail: 'zonemanager@test.com',
+            },
+          },
         ],
-        "meta": {
-          "total": 2,
-          "page": 1,
-          "limit": 10,
-          "totalPages": 1,
-          "hasNextPage": false,
-          "hasPrevPage": false
-        }
-      }
+        meta: {
+          total: 2,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      },
     },
   })
   @Get()
@@ -144,7 +148,6 @@ export class MeetingsController {
     return this.service.getMeetings(params, req.user);
   }
 
-
   // USE LESS API
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
@@ -152,7 +155,6 @@ export class MeetingsController {
   async scheduleDoulaMeeting(@Body() dto: ScheduleDoulaDto, @Req() req) {
     return this.service.doulasMeetingSchedule(dto, req.user);
   }
-
 
   // USE LESS API
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -171,7 +173,6 @@ export class MeetingsController {
     );
   }
 
-
   // USE LESS API
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER, Role.DOULA)
@@ -189,12 +190,10 @@ export class MeetingsController {
     );
   }
 
-
-
   // USE LESS API
   @Get('doula/schedule/list/:id')
-  findOne(@Param('id') id: string,) {
-    return this.service.doulaMeeingsRetrieve(id,);
+  findOne(@Param('id') id: string) {
+    return this.service.doulaMeeingsRetrieve(id);
   }
 
   // USE LESS API
@@ -213,15 +212,8 @@ export class MeetingsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ZONE_MANAGER)
   @Delete('doula/schedule/delete/:id')
-  remove(@Param('id') id: string, @Req() req: any,) {
+  remove(@Param('id') id: string, @Req() req: any) {
     return this.service.deleteDoulaMeeting(id, req.user.id);
-  }
-
-
-  // USE LESS API
-  @Post('reschedule')
-  async rescheduleMeeting(@Body() dto: RescheduleDto, @Req() req) {
-    return this.service.rescheduleMeeting(dto, req.user);
   }
 
   // UPDATE MEETING STATUS
@@ -232,32 +224,32 @@ export class MeetingsController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        "status": "success",
-        "message": "Meeting status updated",
-        "data": {
-          "message": "Meeting status updated",
-          "meeting": {
-            "id": "066ceafa-596f-4cb7-9d99-9747fe411c71",
-            "link": "https://meet.test/zm-2027-12-23",
-            "status": "COMPLETED",
-            "startTime": "1970-01-01T10:00:00.000Z",
-            "endTime": "1970-01-01T11:00:00.000Z",
-            "date": "2027-12-23T00:00:00.000Z",
-            "serviceName": "Zone Manager Consultation",
-            "remarks": null,
-            "bookedById": "77b9176a-6cb0-4360-bdb8-207c1d12962d",
-            "createdAt": "2025-12-22T07:42:29.787Z",
-            "updatedAt": "2025-12-23T07:50:20.031Z",
-            "cancelledAt": null,
-            "rescheduledAt": null,
-            "availableSlotsForMeetingId": null,
-            "zoneManagerProfileId": "8d749262-267e-47e7-a53f-26916c0b91be",
-            "doulaProfileId": null,
-            "adminProfileId": null,
-            "serviceId": "7bfca5a5-f198-4b0d-a681-f0367fda7f17"
-          }
-        }
-      }
+        status: 'success',
+        message: 'Meeting status updated',
+        data: {
+          message: 'Meeting status updated',
+          meeting: {
+            id: '066ceafa-596f-4cb7-9d99-9747fe411c71',
+            link: 'https://meet.test/zm-2027-12-23',
+            status: 'COMPLETED',
+            startTime: '1970-01-01T10:00:00.000Z',
+            endTime: '1970-01-01T11:00:00.000Z',
+            date: '2027-12-23T00:00:00.000Z',
+            serviceName: 'Zone Manager Consultation',
+            remarks: null,
+            bookedById: '77b9176a-6cb0-4360-bdb8-207c1d12962d',
+            createdAt: '2025-12-22T07:42:29.787Z',
+            updatedAt: '2025-12-23T07:50:20.031Z',
+            cancelledAt: null,
+            rescheduledAt: null,
+            availableSlotsForMeetingId: null,
+            zoneManagerProfileId: '8d749262-267e-47e7-a53f-26916c0b91be',
+            doulaProfileId: null,
+            adminProfileId: null,
+            serviceId: '7bfca5a5-f198-4b0d-a681-f0367fda7f17',
+          },
+        },
+      },
     },
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -292,20 +284,20 @@ export class MeetingsController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        "status": "success",
-        "message": "Request successful",
-        "data": {
-          "date": "2025-12-21",
-          "totalBookedSlots": 1,
-          "bookings": [
+        status: 'success',
+        message: 'Request successful',
+        data: {
+          date: '2025-12-21',
+          totalBookedSlots: 1,
+          bookings: [
             {
-              "meetingDate": "2025-12-21T00:00:00.000Z",
-              "startTime": "1970-01-01T05:30:00.000Z",
-              "endTime": "1970-01-01T05:30:00.000Z"
-            }
-          ]
-        }
-      }
+              meetingDate: '2025-12-21T00:00:00.000Z',
+              startTime: '1970-01-01T05:30:00.000Z',
+              endTime: '1970-01-01T05:30:00.000Z',
+            },
+          ],
+        },
+      },
     },
   })
   async getBookedMeetingsByDate(
@@ -346,35 +338,35 @@ export class MeetingsController {
     type: SwaggerResponseDto,
     schema: {
       example: {
-        "status": "success",
-        "message": "Request successful",
-        "data": {
-          "meetingId": "505a0938-6169-4b6d-aaa9-90746d8847a0",
-          "meetingLink": "https://meet.google.com/oo8cb355",
-          "meetingStatus": "SCHEDULED",
-          "meetingStartTime": "1970-01-01T03:30:00.000Z",
-          "meetingEndTime": "1970-01-01T05:30:00.000Z",
-          "meetingDate": "2025-12-06T00:00:00.000Z",
-          "weekday": "SATURDAY",
-          "serviceName": "Birth Doula",
-          "remarks": "Looking for postpartum support during night hours.",
-          "meeting_with": "ZONE_MANAGER",
-          "enquiryId": null,
-          "client": {
-            "clientId": "6dd1d8f1-a75c-4d20-aa4c-44d36bcc7c03",
-            "clientName": "John Doe",
-            "clientEmail": "john.doe@example.com",
-            "clientPhone": "9876543210"
+        status: 'success',
+        message: 'Request successful',
+        data: {
+          meetingId: '505a0938-6169-4b6d-aaa9-90746d8847a0',
+          meetingLink: 'https://meet.google.com/oo8cb355',
+          meetingStatus: 'SCHEDULED',
+          meetingStartTime: '1970-01-01T03:30:00.000Z',
+          meetingEndTime: '1970-01-01T05:30:00.000Z',
+          meetingDate: '2025-12-06T00:00:00.000Z',
+          weekday: 'SATURDAY',
+          serviceName: 'Birth Doula',
+          remarks: 'Looking for postpartum support during night hours.',
+          meeting_with: 'ZONE_MANAGER',
+          enquiryId: null,
+          client: {
+            clientId: '6dd1d8f1-a75c-4d20-aa4c-44d36bcc7c03',
+            clientName: 'John Doe',
+            clientEmail: 'john.doe@example.com',
+            clientPhone: '9876543210',
           },
-          "doula": null,
-          "zoneManager": {
-            "zoneManagerId": "55f12bf3-317f-4157-8aa0-0d979e3e8fa7",
-            "zoneManagerProfileId": "f88c9e79-66b0-4d3b-968a-7df22bdaee50",
-            "zoneManagerName": "Adam Smith",
-            "zoneManagerEmail": "zonemanager@test.com"
-          }
-        }
-      }
+          doula: null,
+          zoneManager: {
+            zoneManagerId: '55f12bf3-317f-4157-8aa0-0d979e3e8fa7',
+            zoneManagerProfileId: 'f88c9e79-66b0-4d3b-968a-7df22bdaee50',
+            zoneManagerName: 'Adam Smith',
+            zoneManagerEmail: 'zonemanager@test.com',
+          },
+        },
+      },
     },
   })
   @Get(':id')
@@ -382,14 +374,10 @@ export class MeetingsController {
     return this.service.getMeetingById(id, req.user);
   }
 
-
-  @Post("schedule/doula-client")
+  @Post('schedule/doula-client')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.DOULA)
-  async createMeeting(
-    @Body() dto: CreateMeetingDto,
-    @Req() req,
-  ) {
+  async createMeeting(@Body() dto: CreateMeetingDto, @Req() req) {
     return this.service.createMeetingForClientAndDoula(dto, req.user.id);
   }
 }

@@ -86,7 +86,6 @@ export class IntakeFormDto {
   @IsEnum(WeekDays, { each: true })
   visitDays?: WeekDays[];
 
-
   @ApiProperty({
     example: TimeShift.MORNING,
     enum: TimeShift,
@@ -97,8 +96,6 @@ export class IntakeFormDto {
   })
   serviceTimeShift: TimeShift;
 }
-
-
 
 export class BookDoulaDto {
   @ApiProperty({
@@ -157,7 +154,6 @@ export class BookDoulaDto {
   @IsString()
   serviceStartDate: string;
 
-
   @ApiProperty({
     example: '2025-12-10',
     description: 'Service End Date (ISO format)',
@@ -165,7 +161,6 @@ export class BookDoulaDto {
   @IsString()
   @IsOptional()
   servicEndDate: string;
-
 
   @ApiPropertyOptional({
     example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
@@ -179,7 +174,6 @@ export class BookDoulaDto {
   @IsEnum(WeekDays, { each: true })
   visitDays?: WeekDays[];
 
-
   @ApiProperty({
     example: TimeShift.MORNING,
     enum: TimeShift,
@@ -190,11 +184,9 @@ export class BookDoulaDto {
   })
   serviceTimeShift: TimeShift;
 
-
   @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
   @IsNumber()
   buffer: number = 1;
-
 
   @IsOptional()
   @IsString()

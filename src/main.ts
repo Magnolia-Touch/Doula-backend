@@ -29,7 +29,6 @@ async function bootstrap() {
     bodyParser.raw({ type: 'application/json' }),
   );
 
-
   // app.use(
   //   bodyParser.json({
   //     verify: (req: any, _res, buf) => {
@@ -77,8 +76,8 @@ async function bootstrap() {
   );
   console.log(
     '📚 Swagger docs: http://localhost:' +
-    (process.env.PORT ?? 3000) +
-    '/api/docs',
+      (process.env.PORT ?? 3000) +
+      '/api/docs',
   );
 }
 bootstrap();

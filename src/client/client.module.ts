@@ -10,5 +10,4 @@ import { S3Module } from 'src/s3/s3.module';
   exports: [ClientsService],
   controllers: [ClientController],
 })
-export class ClientModule { }
-;
+export class ClientModule {}

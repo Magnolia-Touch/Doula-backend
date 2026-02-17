@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsNumber, IsUUID, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumber,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 export class GetAvailableShiftsDto {
   @ApiProperty({

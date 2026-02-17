@@ -1,10 +1,10 @@
 export interface EmailJob {
-    to: string;
-    subject: string;
+  to: string;
+  subject: string;
 
-    html?: string;
-    template?: string;
-    context?: Record<string, any>;
+  html?: string;
+  template?: string;
+  context?: Record<string, any>;
 
-    text?: string;
+  text?: string;
 }

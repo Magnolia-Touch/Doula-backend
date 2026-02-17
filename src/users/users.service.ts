@@ -28,7 +28,7 @@ export class UserService {
     private readonly jwtService: JwtService,
 
     private readonly mail: MailService,
-  ) { }
+  ) {}
 
   //make this to just a create admin funtion without otp
   async RegisterUser(dto: UserRegistrationDto) {
@@ -66,7 +66,6 @@ export class UserService {
         },
       });
     } catch (error) {
-
       await this.prisma.user.update({
         where: { email },
         data: {
@@ -84,10 +83,7 @@ export class UserService {
     return this.prisma.schedules.deleteMany({});
   }
 
-  async changeUserStatus(
-    dto: ChangeUserStatusDto,
-    currentUserRole: Role
-  ) {
+  async changeUserStatus(dto: ChangeUserStatusDto, currentUserRole: Role) {
     if (currentUserRole !== Role.ADMIN) {
       throw new ForbiddenException('Only admin can change user status');
     }
@@ -124,5 +120,4 @@ export class UserService {
       user: updatedUser,
     };
   }
-
 }

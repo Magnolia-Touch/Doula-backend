@@ -29,10 +29,9 @@ type TimeSlot = {
   endTime: Date;
 };
 
-
 @Injectable()
 export class AvailableSlotsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   private toMinutesinUtc(date: Date): number {
     return date.getUTCHours() * 60 + date.getUTCMinutes();
@@ -64,7 +63,6 @@ export class AvailableSlotsService {
 
     return slots;
   }
-
 
   private toMinutes(time: string): number {
     const [hours, minutes] = time.split(':').map(Number);
@@ -102,9 +100,7 @@ export class AvailableSlotsService {
     const endMinutes = this.toMinutes(endTime);
 
     if (endMinutes <= startMinutes) {
-      throw new BadRequestException(
-        'End time must be greater than start time',
-      );
+      throw new BadRequestException('End time must be greater than start time');
     }
 
     const duration = endMinutes - startMinutes;
@@ -135,14 +131,20 @@ export class AvailableSlotsService {
           endTime: true,
         },
       });
-    console.log("inputs", startTime, endTime, "\n existing slot", existingSlots)
+    console.log(
+      'inputs',
+      startTime,
+      endTime,
+      '\n existing slot',
+      existingSlots,
+    );
     // Resolve overlap
     const result = resolveAvailabilityOverlap(
       { startTime, endTime },
       existingSlots,
     );
 
-    console.log("result", result)
+    console.log('result', result);
     if (result === 0) {
       throw new BadRequestException(
         'Availability fully overlaps an existing slot',
@@ -162,16 +164,15 @@ export class AvailableSlotsService {
       throw new BadRequestException('Invalid availability after adjustment');
     }
 
-    const timings =
-      await this.prisma.availableSlotsTimeForMeeting.create({
-        data: {
-          dateId: dateSlot.id,
-          startTime: startDateTime,
-          endTime: endDateTime,
-          availabe: true,
-          isBooked: false,
-        },
-      });
+    const timings = await this.prisma.availableSlotsTimeForMeeting.create({
+      data: {
+        dateId: dateSlot.id,
+        startTime: startDateTime,
+        endTime: endDateTime,
+        availabe: true,
+        isBooked: false,
+      },
+    });
 
     return {
       message: 'Slots created successfully',
@@ -187,8 +188,6 @@ export class AvailableSlotsService {
       },
     };
   }
-
-
 
   //continue from here. booked or unbooked filter not needed on slots.
   //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
@@ -444,12 +443,9 @@ export class AvailableSlotsService {
     return { message: 'Slot Updated Successfully' };
   }
 
-
-  async deleteTimeSlotAvailability(
-    id: string,
-  ) {
+  async deleteTimeSlotAvailability(id: string) {
     const slot = await this.prisma.availableSlotsTimeForMeeting.findUnique({
-      where: { id: id, },
+      where: { id: id },
     });
     if (!slot) {
       throw new NotFoundException('Slot Not Found');
@@ -633,15 +629,11 @@ export class AvailableSlotsService {
     const endMinutes = this.toMinutes(endTime);
 
     if (endMinutes <= startMinutes) {
-      throw new BadRequestException(
-        'End time must be greater than start time',
-      );
+      throw new BadRequestException('End time must be greater than start time');
     }
 
     if ((endMinutes - startMinutes) % 30 !== 0) {
-      throw new BadRequestException(
-        'Duration must be divisible by 30 minutes',
-      );
+      throw new BadRequestException('Duration must be divisible by 30 minutes');
     }
 
     const startTimeObj = new Date(`1970-01-01T${startTime}:00`);
@@ -677,68 +669,60 @@ export class AvailableSlotsService {
     return this.prisma.offDays.createMany({ data: offDays });
   }
 
-
-
-
   //debug purpose only
   async fetchOffdays(userId: string) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const offdays = await this.prisma.offDays.findMany({
       where: {
         date: { gte: today },
         OR: [
           { DoulaProfile: { userId: userId } },
-          { ZoneManagerProfile: { userId: userId } }
-        ]
+          { ZoneManagerProfile: { userId: userId } },
+        ],
       },
       orderBy: {
-        date: "asc"
-      }
-    })
-    return offdays
+        date: 'asc',
+      },
+    });
+    return offdays;
   }
 
   async fetchOffdaysbyid(userId: string, id: string) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const offdays = await this.prisma.offDays.findFirst({
       where: {
         id: id,
         OR: [
           { DoulaProfile: { userId: userId } },
-          { ZoneManagerProfile: { userId: userId } }
-        ]
+          { ZoneManagerProfile: { userId: userId } },
+        ],
       },
       orderBy: {
-        date: "asc"
-      }
-    })
-    return offdays
+        date: 'asc',
+      },
+    });
+    return offdays;
   }
 
-
-
   async DeleteOffdaysbyid(userId: string, id: string) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const offdays = await this.prisma.offDays.delete({
       where: {
         id: id,
         OR: [
           { DoulaProfile: { userId: userId } },
-          { ZoneManagerProfile: { userId: userId } }
-        ]
+          { ZoneManagerProfile: { userId: userId } },
+        ],
       },
-    })
-    return { message: "Off days Deleted Successfully", data: offdays }
+    });
+    return { message: 'Off days Deleted Successfully', data: offdays };
   }
-
-
-
 
   private getWeekdayEnum(date: Date): WeekDays {
     const day = date.getUTCDay(); // 👈 IMPORTANT
@@ -764,7 +748,7 @@ export class AvailableSlotsService {
   }
 
   private formatTimeOnly(date: Date): string {
-    return date.toISOString().substring(11, 19)
+    return date.toISOString().substring(11, 19);
   }
 
   private subtractIntervals(
@@ -815,25 +799,13 @@ export class AvailableSlotsService {
   }
 
   // Align time-only values to the actual calendar date
-  private normalizeToBaseDate(
-    time: Date,
-    baseDate: Date,
-  ): Date {
+  private normalizeToBaseDate(time: Date, baseDate: Date): Date {
     const d = new Date(baseDate);
-    d.setHours(
-      time.getHours(),
-      time.getMinutes(),
-      0,
-      0,
-    );
+    d.setHours(time.getHours(), time.getMinutes(), 0, 0);
     return d;
   }
 
-
-  async ZmgetAvailablility(
-    regionId: string,
-    dto: GetAvailabilityDto
-  ) {
+  async ZmgetAvailablility(regionId: string, dto: GetAvailabilityDto) {
     const { date1, date2, weekday } = dto;
 
     /* ---------------- VALIDATION ---------------- */
@@ -853,7 +825,6 @@ export class AvailableSlotsService {
     const endDate = date2 ? new Date(date2) : new Date(startDate);
     endDate.setUTCHours(0, 0, 0, 0);
 
-
     if (startDate > endDate) {
       throw new BadRequestException('date1 cannot be after date2');
     }
@@ -868,7 +839,7 @@ export class AvailableSlotsService {
       throw new ForbiddenException('Region not found');
     }
     if (!region.zoneManagerId) {
-      throw new BadRequestException("Region Not Assigned to zone manager")
+      throw new BadRequestException('Region Not Assigned to zone manager');
     }
 
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
@@ -883,7 +854,7 @@ export class AvailableSlotsService {
     /* ---------------- BUILD DATE LIST ---------------- */
 
     const dates: Date[] = [];
-    let cursor = new Date(startDate);
+    const cursor = new Date(startDate);
 
     while (cursor.getTime() <= endDate.getTime()) {
       dates.push(new Date(cursor));
@@ -892,9 +863,7 @@ export class AvailableSlotsService {
     /* ---------------- FILTER BY WEEKDAY IF PROVIDED ---------------- */
 
     const filteredDates = weekday
-      ? dates.filter(
-        (d) => this.getWeekdayEnum(d) === weekday,
-      )
+      ? dates.filter((d) => this.getWeekdayEnum(d) === weekday)
       : dates;
 
     /* ---------------- FETCH ALL DATA IN BULK ---------------- */
@@ -940,9 +909,7 @@ export class AvailableSlotsService {
     const response = filteredDates.map((date) => {
       const weekdayEnum = this.getWeekdayEnum(date);
 
-      const weeklySlot = weeklySlots.find(
-        (s) => s.weekday === weekdayEnum,
-      );
+      const weeklySlot = weeklySlots.find((s) => s.weekday === weekdayEnum);
 
       if (!weeklySlot) {
         return {
@@ -953,24 +920,20 @@ export class AvailableSlotsService {
       }
 
       // 1️⃣ Base availability from AvailableSlotsTimeForMeeting
-      let slots: TimeSlot[] =
-        weeklySlot.AvailableSlotsTimeForMeeting.map((t) => ({
+      let slots: TimeSlot[] = weeklySlot.AvailableSlotsTimeForMeeting.map(
+        (t) => ({
           startTime: this.normalizeToBaseDate(t.startTime, date),
           endTime: this.normalizeToBaseDate(t.endTime, date),
-        }));
-
-
+        }),
+      );
 
       // 2️⃣ Meetings as blockers
       const dayMeetings = meetings
-        .filter(
-          (m) => this.toDateKey(m.date) === this.toDateKey(date),
-        )
+        .filter((m) => this.toDateKey(m.date) === this.toDateKey(date))
         .map((m) => ({
           startTime: this.normalizeToBaseDate(m.startTime, date),
           endTime: this.normalizeToBaseDate(m.endTime, date),
         }));
-
 
       slots = this.subtractIntervals(slots, dayMeetings);
 
@@ -978,7 +941,6 @@ export class AvailableSlotsService {
       const dayOffs = offDays.filter(
         (o) => this.toDateKey(o.date) === this.toDateKey(date),
       );
-
 
       for (const off of dayOffs) {
         // Full day off
@@ -991,7 +953,6 @@ export class AvailableSlotsService {
           {
             startTime: this.normalizeToBaseDate(off.startTime!, date),
             endTime: this.normalizeToBaseDate(off.endTime!, date),
-
           },
         ]);
       }
@@ -1008,16 +969,9 @@ export class AvailableSlotsService {
     });
 
     return response;
-
   }
 
-
-
-
-  async splitTimeslots(
-    regionId: string,
-    dto: GetAvailabilityDto,
-  ) {
+  async splitTimeslots(regionId: string, dto: GetAvailabilityDto) {
     const baseResponse = await this.ZmgetAvailablility(regionId, dto);
 
     const response = baseResponse.map((day) => {
@@ -1053,7 +1007,6 @@ export class AvailableSlotsService {
       data: response,
     };
   }
-
 
   async getMyAvailabilities(userId: string) {
     // 1. Fetch user role
@@ -1116,5 +1069,4 @@ export class AvailableSlotsService {
 
     return availabilities;
   }
-
 }

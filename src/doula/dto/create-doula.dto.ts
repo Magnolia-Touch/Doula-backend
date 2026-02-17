@@ -114,8 +114,7 @@ export class CreateDoulaDto {
   // ⛔ accept as string ONLY
   @ApiPropertyOptional({
     type: 'string',
-    example:
-      '[{"title":"Birth Doula","issuer":"ABC Institute","year":2022}]',
+    example: '[{"title":"Birth Doula","issuer":"ABC Institute","year":2022}]',
     description: 'Certificates as JSON string',
   })
   @IsOptional()

@@ -20,7 +20,15 @@ import {
   isOverlapping,
 } from 'src/common/utility/service-utils';
 import { MailService } from 'src/mail/mail.service';
-import { BookingStatus, PaymentProvider, PaymentStatus, Prisma, ServiceStatus, TimeShift, WeekDays } from '@prisma/client';
+import {
+  BookingStatus,
+  PaymentProvider,
+  PaymentStatus,
+  Prisma,
+  ServiceStatus,
+  TimeShift,
+  WeekDays,
+} from '@prisma/client';
 import { StripeService } from 'src/stripe/stripe.service';
 import { Console } from 'console';
 import { formatDate } from 'date-fns/format';
@@ -57,7 +65,6 @@ type IntakeFormWithRelations = Prisma.IntakeFormGetPayload<{
   };
 }>;
 
-
 @Injectable()
 export class IntakeFormService {
   private readonly logger = new Logger(IntakeFormService.name);
@@ -66,9 +73,7 @@ export class IntakeFormService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private stripeService: StripeService,
-  ) { }
-
-
+  ) {}
 
   private ensureHttpsUrl(url: string): string {
     if (!url) return url;
@@ -89,15 +94,10 @@ export class IntakeFormService {
 
   private toUtcMidnight(date: Date | string): Date {
     const d = new Date(date);
-    return new Date(Date.UTC(
-      d.getUTCFullYear(),
-      d.getUTCMonth(),
-      d.getUTCDate(),
-      0, 0, 0, 0
-    ));
+    return new Date(
+      Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0),
+    );
   }
-
-
 
   async createIntakeForm(dto: IntakeFormDto) {
     const {
@@ -115,9 +115,15 @@ export class IntakeFormService {
     } = dto;
 
     if (visitDays) {
-      const diffDays = areWeekdaysPresentBetweenDates(new Date(serviceStartDate), new Date(serviceEndDate), visitDays);
+      const diffDays = areWeekdaysPresentBetweenDates(
+        new Date(serviceStartDate),
+        new Date(serviceEndDate),
+        visitDays,
+      );
       if (!diffDays) {
-        throw new BadRequestException("Weekday Selected not available within the dates choosen")
+        throw new BadRequestException(
+          'Weekday Selected not available within the dates choosen',
+        );
       }
     }
     /* ----------------------------------------------------
@@ -140,7 +146,6 @@ export class IntakeFormService {
       throw new BadRequestException('Client profile is inactive');
     }
 
-
     /* ----------------------------------------------------
      * 2. Validate region
      * -------------------------------------------------- */
@@ -148,7 +153,7 @@ export class IntakeFormService {
       where: { doula: { some: { id: doulaProfileId } } },
       include: { zoneManager: { include: { user: true } } },
     });
-    console.log("helo", region)
+    console.log('helo', region);
     if (!region) {
       throw new BadRequestException('Region not listed for doula');
     }
@@ -163,7 +168,7 @@ export class IntakeFormService {
             email: true,
             name: true,
             phone: true,
-            is_active: true
+            is_active: true,
           },
         },
       },
@@ -195,7 +200,9 @@ export class IntakeFormService {
      * 4. Normalize dates
      * -------------------------------------------------- */
     const startDate = this.toUtcMidnight(serviceStartDate);
-    const endDate = serviceEndDate ? this.toUtcMidnight(serviceEndDate) : undefined
+    const endDate = serviceEndDate
+      ? this.toUtcMidnight(serviceEndDate)
+      : undefined;
 
     if (endDate && startDate > endDate) {
       throw new BadRequestException('Invalid service date range');
@@ -208,17 +215,17 @@ export class IntakeFormService {
     visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
-          startDate,
-          endDate,
-          visitDays,
-        )
+            startDate,
+            endDate,
+            visitDays,
+          )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 
     if (!visitDates.length) {
       throw new BadRequestException('No valid visit dates generated');
     }
 
-    console.log(visitDates)
+    console.log(visitDates);
     /* ----------------------------------------------------
      * 6. Availability validation — skip conflicting dates
      * -------------------------------------------------- */
@@ -229,13 +236,12 @@ export class IntakeFormService {
       const dateStr = visitDate.toISOString().split('T')[0];
 
       if (
-        await isDoulaOffOnShift(
-          doulaProfileId,
-          visitDate,
-          serviceTimeShift,
-        )
+        await isDoulaOffOnShift(doulaProfileId, visitDate, serviceTimeShift)
       ) {
-        skippedDates.push({ date: dateStr, reason: 'Doula is off on this date' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula is off on this date',
+        });
         continue;
       }
 
@@ -246,7 +252,10 @@ export class IntakeFormService {
           serviceTimeShift,
         ))
       ) {
-        skippedDates.push({ date: dateStr, reason: 'Doula not available for this shift' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula not available for this shift',
+        });
         continue;
       }
 
@@ -260,7 +269,10 @@ export class IntakeFormService {
       });
 
       if (existingSchedule) {
-        skippedDates.push({ date: dateStr, reason: 'Doula already booked on this date' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula already booked on this date',
+        });
         continue;
       }
 
@@ -273,28 +285,27 @@ export class IntakeFormService {
       );
     }
     let totalAmount = 0;
-    let payableAmount = 0
+    let payableAmount = 0;
     if (servicePricing.service.name === 'Birth Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      totalAmount = perDayPrice
-
+      totalAmount = perDayPrice;
     } else if (servicePricing.service.name === 'Post Partum Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      console.log(perDayPrice)
-      console.log(availableDates.length)
-      totalAmount = (perDayPrice * availableDates.length)
+      console.log(perDayPrice);
+      console.log(availableDates.length);
+      totalAmount = perDayPrice * availableDates.length;
     }
 
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
-    payableAmount = totalAmount
+    payableAmount = totalAmount;
     if (totalAmount >= 1000) {
       const half = totalAmount / 2;
       payableAmount = Math.min(half, 1000);
@@ -355,7 +366,7 @@ export class IntakeFormService {
       return { intake, booking };
     });
 
-    console.log("helo", region.zoneManager, region.zoneManager?.user)
+    console.log('helo', region.zoneManager, region.zoneManager?.user);
     if (region.zoneManager == null || region.zoneManager.user == null) {
       throw new BadRequestException('Region not listed for doula');
     }
@@ -391,17 +402,17 @@ export class IntakeFormService {
           doulaPhone: doula.user.phone,
           serviceName: servicePricing.service.name,
           serviceStartDate: formatDate(new Date(startDate), 'yyyy-MM-dd'),
-          serviceEndDate: endDate ? formatDate(new Date(endDate), 'yyyy-MM-dd') : undefined,
+          serviceEndDate: endDate
+            ? formatDate(new Date(endDate), 'yyyy-MM-dd')
+            : undefined,
           timeShift: resolvedTimeShift,
           regionName: region.regionName,
           totalAmount,
-          payableAmount
+          payableAmount,
         },
       });
 
-      this.logger.log(
-        `[IntakeMail] Zone Manager email SENT successfully`,
-      );
+      this.logger.log(`[IntakeMail] Zone Manager email SENT successfully`);
 
       const commonContext = {
         appName: 'Bambini Doula',
@@ -412,7 +423,7 @@ export class IntakeFormService {
         serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
         serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
         AmountPaid: payableAmount,
-        TotalAmount: totalAmount
+        TotalAmount: totalAmount,
       };
 
       /* ----------------------------------------------------
@@ -434,9 +445,7 @@ export class IntakeFormService {
         },
       });
 
-      this.logger.log(
-        `[IntakeMail] Doula email SENT successfully`,
-      );
+      this.logger.log(`[IntakeMail] Doula email SENT successfully`);
 
       /* ----------------------------------------------------
        * Client Email
@@ -450,9 +459,7 @@ export class IntakeFormService {
       );
 
       if (attachments.length > 0) {
-        this.logger.log(
-          `[IntakeMail] Sending client email WITH attachments`,
-        );
+        this.logger.log(`[IntakeMail] Sending client email WITH attachments`);
 
         await this.mail.sendMailWithAttachments({
           to: clientProfile.user.email,
@@ -512,15 +519,12 @@ export class IntakeFormService {
       message: 'Intake form created and schedules booked successfully',
       intakeId: result.intake.id,
       bookingId: result.booking.id,
-      scheduledDates: availableDates.map(d => d.toISOString().split('T')[0]),
+      scheduledDates: availableDates.map((d) => d.toISOString().split('T')[0]),
       skippedDates,
       totalAmount,
       payableAmount,
     };
   }
-
-
-
 
   async getAllForms(page: number, limit: number) {
     const result = await paginate({
@@ -692,279 +696,6 @@ export class IntakeFormService {
     };
   }
 
-  // async BookDoula(dto: BookDoulaDto, userId: string) {
-  //   const {
-  //     name,
-  //     email,
-  //     phone,
-  //     location,
-  //     address,
-  //     doulaProfileId,
-  //     serviceId,
-  //     serviceStartDate,
-  //     servicEndDate,
-  //     visitFrequency,
-  //     serviceTimeShift,
-  //     buffer,
-  //     successUrl,
-  //     cancelUrl
-  //   } = dto;
-
-  //   /* ----------------------------------------------------
-  //    * 1. Update client profile
-  //    * -------------------------------------------------- */
-  //   const userTable = await this.prisma.user.findUnique({
-  //     where: { id: userId },
-  //     select: { id: true, email: true, name: true, phone: true }
-  //   });
-  //   if (!userTable) {
-  //     throw new NotFoundException("client not found")
-  //   }
-  //   const clientProfile = await this.prisma.clientProfile.findUnique({
-  //     where: { userId }
-  //   });
-  //   if (!clientProfile) {
-  //     throw new NotFoundException("client not found")
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 2. Validate region
-  //    * -------------------------------------------------- */
-  //   const region = await this.prisma.region.findFirst({
-  //     where: { doula: { some: { id: doulaProfileId } } },
-  //   });
-
-  //   if (!region) {
-  //     throw new BadRequestException('Region not listed for doula');
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 3. Validate service
-  //    * -------------------------------------------------- */
-  //   const service = await this.prisma.servicePricing.findUnique({
-  //     where: { id: serviceId },
-  //     select:
-  //     {
-  //       id: true,
-  //       price: true,
-  //       service: { select: { id: true, name: true } }
-  //     }
-  //   });
-
-  //   if (!service) {
-  //     throw new NotFoundException('Service not found');
-  //   }
-
-  //   /* ----------------------------------------------------
-  //    * 5. Normalize service dates
-  //    * -------------------------------------------------- */
-
-  //   const startDate = this.toUtcMidnight(serviceStartDate);
-  //   const endDate = this.toUtcMidnight(servicEndDate);
-
-  //   if (startDate > endDate) {
-  //     throw new BadRequestException('Invalid service date range');
-  //   }
-  //   console.log('RAW INPUT:', serviceStartDate);
-  //   console.log(
-  //     'PARSED DATE:',
-  //     startDate.getFullYear(),
-  //     startDate.getMonth() + 1,
-  //     startDate.getDate(),
-  //   );
-
-  //   //section of checking availbility
-  //   const visitDates =
-  //     service.service.name === 'Post Partum Doula'
-  //       ? await generateVisitDatesforPostPartumDoula(startDate, endDate, visitFrequency)
-  //       : await generateVisitDatesforBirthDoula(startDate, endDate, buffer);
-
-  //   for (const visitDate of visitDates) {
-  //     const isOff = await isDoulaOffOnShift(
-  //       doulaProfileId,
-  //       visitDate,
-  //       serviceTimeShift,
-  //     );
-
-  //     if (isOff) {
-  //       throw new BadRequestException(
-  //         `Doula has marked ${serviceTimeShift} off on ${visitDate.toISOString().split('T')[0]}`,
-  //       );
-  //     }
-
-  //     const isAvailable = await isDoulaAvailableForShift(
-  //       doulaProfileId,
-  //       visitDate,
-  //       serviceTimeShift,
-  //     );
-
-  //     if (!isAvailable) {
-  //       throw new BadRequestException(
-  //         `Doula is not available on ${visitDate.toISOString().split('T')[0]} for ${serviceTimeShift}`,
-  //       );
-  //     }
-
-  //     const schedule = await this.prisma.schedules.findFirst({
-  //       where: {
-  //         doulaProfileId,
-  //         date: visitDate,
-  //         timeshift: serviceTimeShift,
-  //       },
-  //     });
-
-  //     if (schedule) {
-  //       throw new BadRequestException(
-  //         `Doula already booked on ${visitDate.toISOString().split('T')[0]}`
-  //       );
-  //     }
-  //   }
-
-  //   if (service.service.name == "Birth Doula") {
-  //     let totalAmount: number;
-  //     totalAmount = getPriceForShift(service.price, TimeShift.FULLDAY);
-  //     const schedulesToCreate: any[] = [];
-  //     const visitDates = await generateVisitDatesforBirthDoula(
-  //       startDate,
-  //       endDate,
-  //       buffer,
-  //     );
-
-  //     for (const visitDate of visitDates) {
-  //       schedulesToCreate.push({
-  //         date: visitDate,
-  //         timeshift: serviceTimeShift,
-  //         doulaProfileId,
-  //         serviceId: service.id,
-  //         clientId: clientProfile.id,
-  //       });
-  //     }
-  //     if (!schedulesToCreate.length) {
-  //       throw new BadRequestException(
-  //         'No valid schedules available for the selected dates and time slot',
-  //       );
-  //     }
-
-
-  //     const result = await this.prisma.$transaction(async (tx) => {
-
-  //       const booking = await tx.serviceBooking.create({
-  //         data: {
-  //           startDate,
-  //           endDate,
-  //           regionId: region.id,
-  //           servicePricingId: service.id,
-  //           doulaProfileId,
-  //           clientId: clientProfile.id,
-  //           status: BookingStatus.ACTIVE,
-  //           isPaid: false
-  //         },
-  //       });
-  //       const payment = await tx.payment.create({
-  //         data: {
-  //           bookingId: booking.id,
-  //           clientId: clientProfile.id,
-  //           amount: totalAmount,
-  //           currency: 'INR',
-  //           status: PaymentStatus.PENDING,
-  //           provider: PaymentProvider.STRIPE,
-  //         },
-  //       });
-
-  //       const checkoutSession =
-  //         await this.stripeService.createCheckoutLinkForBooking(
-  //           booking,
-  //           payment,
-  //           userTable.email,
-  //           successUrl || this.getDefaultUrl('/booking/success'),
-  //           cancelUrl || this.getDefaultUrl('/booking/cancel'),
-  //         );
-
-  //       await tx.schedules.createMany({
-  //         data: schedulesToCreate.map((schedule) => ({
-  //           ...schedule,
-  //           bookingId: booking.id,
-  //         })),
-  //       });
-
-  //       return { booking };
-  //     });
-  //   }
-  //   else if (service.service.name == "Post Partum Doula") {
-  //     const schedulesToCreate: any[] = [];
-  //     const visitDates = await generateVisitDatesforPostPartumDoula(
-  //       startDate,
-  //       endDate,
-  //       visitFrequency
-  //     );
-  //     const perDayPrice = getPriceForShift(
-  //       service.price,
-  //       serviceTimeShift,
-  //     );
-
-  //     const numberOfVisits = visitDates.length;
-  //     let totalAmount: number;
-  //     totalAmount = perDayPrice * numberOfVisits;
-
-  //     for (const visitDate of visitDates) {
-  //       schedulesToCreate.push({
-  //         date: visitDate,
-  //         timeshift: serviceTimeShift,
-  //         doulaProfileId,
-  //         serviceId: service.id,
-  //         clientId: clientProfile.id,
-  //       });
-  //     }
-  //     if (!schedulesToCreate.length) {
-  //       throw new BadRequestException(
-  //         'No valid schedules available for the selected dates and time slot',
-  //       );
-  //     }
-
-  //     const result = await this.prisma.$transaction(async (tx) => {
-
-  //       const booking = await tx.serviceBooking.create({
-  //         data: {
-  //           startDate,
-  //           endDate,
-  //           regionId: region.id,
-  //           servicePricingId: service.id,
-  //           doulaProfileId,
-  //           clientId: clientProfile.id,
-  //         },
-  //       });
-  //       const payment = await tx.payment.create({
-  //         data: {
-  //           bookingId: booking.id,
-  //           clientId: clientProfile.id,
-  //           amount: totalAmount,
-  //           currency: 'INR',
-  //           status: PaymentStatus.PENDING,
-  //           provider: PaymentProvider.STRIPE,
-  //         },
-  //       });
-
-  //       const checkoutSession =
-  //         await this.stripeService.createCheckoutLinkForBooking(
-  //           booking,
-  //           payment,
-  //           userTable.email,
-  //           successUrl || this.getDefaultUrl('/booking/success'),
-  //           cancelUrl || this.getDefaultUrl('/booking/cancel'),
-  //         );
-
-  //       await tx.schedules.createMany({
-  //         data: schedulesToCreate.map((schedule) => ({
-  //           ...schedule,
-  //           bookingId: booking.id,
-  //         })),
-  //       });
-
-  //       return { booking };
-  //     });
-  //   }
-
-  // }
-
   async BookDoula(dto: BookDoulaDto, userId: string) {
     const {
       name,
@@ -983,9 +714,15 @@ export class IntakeFormService {
     } = dto;
 
     if (visitDays) {
-      const diffDays = areWeekdaysPresentBetweenDates(new Date(serviceStartDate), new Date(servicEndDate), visitDays);
+      const diffDays = areWeekdaysPresentBetweenDates(
+        new Date(serviceStartDate),
+        new Date(servicEndDate),
+        visitDays,
+      );
       if (!diffDays) {
-        throw new BadRequestException("Weekday Selected not available within the dates choosen")
+        throw new BadRequestException(
+          'Weekday Selected not available within the dates choosen',
+        );
       }
     }
 
@@ -994,7 +731,13 @@ export class IntakeFormService {
      * -------------------------------------------------- */
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, phone: true, is_active: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        is_active: true,
+      },
     });
 
     if (!user) {
@@ -1035,7 +778,7 @@ export class IntakeFormService {
             email: true,
             name: true,
             phone: true,
-            is_active: true
+            is_active: true,
           },
         },
       },
@@ -1063,14 +806,16 @@ export class IntakeFormService {
     }
 
     if (servicePricing.service.name == 'Birth Doula' && servicEndDate) {
-      throw new BadRequestException("Deselect ServiceEnd Date for Birth Doula")
+      throw new BadRequestException('Deselect ServiceEnd Date for Birth Doula');
     }
     // end date is optinal
     /* ----------------------------------------------------
      * 4. Normalize dates
      * -------------------------------------------------- */
     const startDate = this.toUtcMidnight(serviceStartDate);
-    const endDate = servicEndDate ? this.toUtcMidnight(servicEndDate) : undefined
+    const endDate = servicEndDate
+      ? this.toUtcMidnight(servicEndDate)
+      : undefined;
 
     if (endDate && startDate > endDate) {
       throw new BadRequestException('Invalid service date range');
@@ -1085,23 +830,22 @@ export class IntakeFormService {
     visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
-          startDate,
-          endDate,
-          visitDays,
-        )
+            startDate,
+            endDate,
+            visitDays,
+          )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
-
 
     if (!visitDates.length) {
       throw new BadRequestException('No valid visit dates generated');
     }
 
-    console.log("visitDates", visitDates);
+    console.log('visitDates', visitDates);
 
     /* ----------------------------------------------------
      * 6. Availability validation — skip conflicting dates
      * -------------------------------------------------- */
-    console.log("visitdates", visitDates)
+    console.log('visitdates', visitDates);
     const skippedDates: { date: string; reason: string }[] = [];
     const availableDates: Date[] = [];
 
@@ -1109,13 +853,12 @@ export class IntakeFormService {
       const dateStr = visitDate.toISOString().split('T')[0];
 
       if (
-        await isDoulaOffOnShift(
-          doulaProfileId,
-          visitDate,
-          serviceTimeShift,
-        )
+        await isDoulaOffOnShift(doulaProfileId, visitDate, serviceTimeShift)
       ) {
-        skippedDates.push({ date: dateStr, reason: 'Doula is off on this date' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula is off on this date',
+        });
         continue;
       }
 
@@ -1126,7 +869,10 @@ export class IntakeFormService {
           serviceTimeShift,
         ))
       ) {
-        skippedDates.push({ date: dateStr, reason: 'Doula not available for this shift' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula not available for this shift',
+        });
         continue;
       }
 
@@ -1139,7 +885,10 @@ export class IntakeFormService {
       });
 
       if (existingSchedule) {
-        skippedDates.push({ date: dateStr, reason: 'Doula already booked on this date' });
+        skippedDates.push({
+          date: dateStr,
+          reason: 'Doula already booked on this date',
+        });
         continue;
       }
 
@@ -1174,37 +923,36 @@ export class IntakeFormService {
      * 8. Price calculation
      * -------------------------------------------------- */
     let totalAmount = 0;
-    let payableAmount = 0
+    let payableAmount = 0;
     if (servicePricing.service.name === 'Birth Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      totalAmount = perDayPrice
-
+      totalAmount = perDayPrice;
     } else if (servicePricing.service.name === 'Post Partum Doula') {
       const perDayPrice = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = (perDayPrice * availableDates.length)
+      totalAmount = perDayPrice * availableDates.length;
     }
 
-    console.log("servicename", servicePricing.service.name)
-    console.log("totalamount", totalAmount)
+    console.log('servicename', servicePricing.service.name);
+    console.log('totalamount', totalAmount);
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
     }
-    payableAmount = totalAmount
+    payableAmount = totalAmount;
     if (totalAmount >= 1000) {
       const half = totalAmount / 2;
       payableAmount = Math.min(half, 1000);
     }
 
     payableAmount = Math.round(payableAmount * 100) / 100;
-    console.log(payableAmount)
-    console.log("payable type", typeof payableAmount)
-    console.log("totalamoutn type", typeof totalAmount)
+    console.log(payableAmount);
+    console.log('payable type', typeof payableAmount);
+    console.log('totalamoutn type', typeof totalAmount);
     /* ----------------------------------------------------
      * 10. Create booking + payment (transaction)
      * -------------------------------------------------- */
@@ -1254,7 +1002,7 @@ export class IntakeFormService {
             serviceStartDate: startDate.toISOString(),
             serviceEndDate: endDate?.toISOString(),
             timeShift: resolvedTimeShift,
-            visitDates: availableDates.map(d => d.toISOString()),
+            visitDates: availableDates.map((d) => d.toISOString()),
 
             // Region details
             regionId: region.id,
@@ -1268,16 +1016,14 @@ export class IntakeFormService {
             // Payment details
             totalAmount: totalAmount,
             currency: 'USD',
-          }
-
+          },
         },
       });
-
 
       return { booking, payment };
     });
 
-    console.log("hi deva, i am here")
+    console.log('hi deva, i am here');
     /* ----------------------------------------------------
      * 11. Create Stripe checkout (OUTSIDE transaction)
      * -------------------------------------------------- */
@@ -1295,7 +1041,6 @@ export class IntakeFormService {
       data: { checkoutSessionId: checkoutSession.id },
     });
 
-
     /* ----------------------------------------------------
      * 12. Response
      * -------------------------------------------------- */
@@ -1309,13 +1054,10 @@ export class IntakeFormService {
       checkout_url: checkoutSession.url,
       successUrl: successUrl,
       cancelUrl: cancelUrl,
-      scheduledDates: availableDates.map(d => d.toISOString().split('T')[0]),
+      scheduledDates: availableDates.map((d) => d.toISOString().split('T')[0]),
       skippedDates,
     };
   }
-
-
-
 
   private getServiceAttachments(serviceName: string): Attachment[] {
     const normalized = serviceName.trim().toLowerCase();
@@ -1332,7 +1074,10 @@ export class IntakeFormService {
       ];
     }
 
-    if (normalized === 'post partum doula' || normalized === 'postpartum doula') {
+    if (
+      normalized === 'post partum doula' ||
+      normalized === 'postpartum doula'
+    ) {
       return [
         {
           filename: 'Postpartum-Contract.pdf',

@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UseGuards, Req, Delete, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { UserService } from './users.service';
 import { UserRegistrationDto } from './dto/user-registration.dto';
 import {
@@ -21,14 +29,13 @@ import { ChangeUserStatusDto } from './dto/change-user-status.dto';
   version: '1',
 })
 export class UserController {
-  constructor(private readonly service: UserService) { }
+  constructor(private readonly service: UserService) {}
 
   // Register Admin - protected
   @Post('register/user')
   @ApiOperation({
     summary: 'Send registration OTP',
-    description:
-      'Sends an OTP to the user email for registration verification',
+    description: 'Sends an OTP to the user email for registration verification',
   })
   @ApiBody({
     type: UserRegistrationDto,
@@ -74,8 +81,7 @@ export class UserController {
   @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Change user status',
-    description:
-      'Allows admin to activate or deactivate a user account',
+    description: 'Allows admin to activate or deactivate a user account',
   })
   @ApiBody({
     type: ChangeUserStatusDto,
@@ -90,16 +96,7 @@ export class UserController {
     description: 'Forbidden – only admins can change user status',
   })
   @ApiBearerAuth('bearer')
-  async changeUserStatus(
-    @Body() dto: ChangeUserStatusDto,
-    @Req() req,
-  ) {
-    return this.service.changeUserStatus(
-      dto,
-      req.user.role,
-    );
+  async changeUserStatus(@Body() dto: ChangeUserStatusDto, @Req() req) {
+    return this.service.changeUserStatus(dto, req.user.role);
   }
-
 }
-
-

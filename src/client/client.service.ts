@@ -6,17 +6,22 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
 // import { UpdateclientsDto } from './dto/update-zone-manager.dto';
-import { BookingStatus, MeetingStatus, Role, ServiceStatus } from '@prisma/client';
+import {
+  BookingStatus,
+  MeetingStatus,
+  Role,
+  ServiceStatus,
+} from '@prisma/client';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { S3Service } from 'src/s3/s3.service';
 import { formatTimeOnly } from 'src/common/utility/service-utils';
-
 
 @Injectable()
 export class ClientsService {
   constructor(
     private prisma: PrismaService,
-    private readonly s3Service: S3Service,) { }
+    private readonly s3Service: S3Service,
+  ) {}
 
   // Create new Clients
   async create(dto: CreateClientDto) {
@@ -115,23 +120,24 @@ export class ClientsService {
           where: { status: { not: BookingStatus.PENDING } },
           include: {
             region: {
-              select: { regionName: true }
+              select: { regionName: true },
             },
             service: {
               select: {
                 service: {
                   select: {
                     name: true,
-                    id: true
+                    id: true,
                   },
-                }
-              }
+                },
+              },
             },
             DoulaProfile: {
               include: {
                 user: {
                   select: {
-                    name: true, email: true
+                    name: true,
+                    email: true,
                   },
                 },
                 DoulaGallery: {
@@ -141,9 +147,9 @@ export class ClientsService {
                   take: 1,
                 },
               },
-            }
+            },
           },
-          orderBy: { createdAt: 'desc', }
+          orderBy: { createdAt: 'desc' },
         },
       },
     });
@@ -185,7 +191,7 @@ export class ClientsService {
         doulaUserId: bk.DoulaProfile.userId,
         doulaEmail: bk.DoulaProfile.user.email,
         mainDoulaImage: bk.DoulaProfile.profile_image,
-        timeshift: bk.timeshift
+        timeshift: bk.timeshift,
       };
     });
   }
@@ -210,7 +216,6 @@ export class ClientsService {
         clientId: clientProfile.id,
       },
       include: {
-
         region: {
           select: {
             regionName: true,
@@ -230,7 +235,8 @@ export class ClientsService {
           include: {
             user: {
               select: {
-                name: true, email: true
+                name: true,
+                email: true,
               },
             },
             DoulaGallery: {
@@ -280,7 +286,7 @@ export class ClientsService {
       doulaUserId: booking.DoulaProfile.userId,
       doulaEmail: booking.DoulaProfile.user.email,
       mainDoulaImage: booking.DoulaProfile.profile_image,
-      timeshift: booking.timeshift
+      timeshift: booking.timeshift,
     };
   }
 
@@ -314,7 +320,7 @@ export class ClientsService {
                     user: {
                       select: {
                         name: true,
-                        email: true
+                        email: true,
                       },
                     },
                     DoulaGallery: {
@@ -342,8 +348,6 @@ export class ClientsService {
     // 2. Transform response (UNCHANGED STRUCTURE)
     return clientProfile.Schedules.map((schedule) => {
       const booking = schedule.serviceBooking;
-
-
 
       return {
         // User details
@@ -464,8 +468,6 @@ export class ClientsService {
       date: schedule.date,
       timeshift: schedule.timeshift,
 
-
-
       // Region
       regionName: booking.region.regionName,
 
@@ -479,7 +481,6 @@ export class ClientsService {
       mainDoulaImage: booking.DoulaProfile.profile_image,
     };
   }
-
 
   async cancelSchedules(userId: string, scheduleId: string) {
     // 1. Fetch client profile
@@ -533,7 +534,6 @@ export class ClientsService {
     };
   }
 
-
   async cancelServiceBooking(userId: string, serviceBookingId: string) {
     // 1. Fetch client profile
     const clientProfile = await this.prisma.clientProfile.findUnique({
@@ -585,7 +585,6 @@ export class ClientsService {
       status: canceledBooking.status,
     };
   }
-
 
   async Meetings(userId: string) {
     // 1️⃣ Fetch client profile with meetings
@@ -889,11 +888,11 @@ export class ClientsService {
     });
     type RecentActivity = {
       type:
-      | 'BOOKING_CREATED'
-      | 'BOOKING_COMPLETED'
-      | 'BOOKING_CANCELED'
-      | 'MEETING_SCHEDULED'
-      | 'MEETING_CANCELED';
+        | 'BOOKING_CREATED'
+        | 'BOOKING_COMPLETED'
+        | 'BOOKING_CANCELED'
+        | 'MEETING_SCHEDULED'
+        | 'MEETING_CANCELED';
       title: string;
       description: string;
       date: Date;
@@ -1045,7 +1044,6 @@ export class ClientsService {
       memberSince: updatedProfile.createdAt,
     };
   }
-
 
   async addClientProfileImage(userId: string, profileImageUrl?: string) {
     const clientProfile = await this.prisma.clientProfile.findUnique({

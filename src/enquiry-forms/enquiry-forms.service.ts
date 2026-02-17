@@ -1,23 +1,23 @@
 import {
-    Injectable,
-    BadRequestException,
-    NotFoundException,
+  Injectable,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EnquiryFormDto } from './dto/create-enquiry-forms.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 import {
-    getWeekdayFromDate,
-    isMeetingExists,
+  getWeekdayFromDate,
+  isMeetingExists,
 } from 'src/common/utility/service-utils';
 
 import {
-    findRegionOrThrow,
-    findServiceOrThrowwithId,
-    findSlotOrThrow,
-    findUserOrThrowwithId,
-    findZoneManagerOrThrowWithId,
-    getOrcreateClent,
+  findRegionOrThrow,
+  findServiceOrThrowwithId,
+  findSlotOrThrow,
+  findUserOrThrowwithId,
+  findZoneManagerOrThrowWithId,
+  getOrcreateClent,
 } from 'src/common/utility/service-utils';
 
 import { MailerService } from '@nestjs-modules/mailer';
@@ -27,289 +27,290 @@ import { error } from 'console';
 
 @Injectable()
 export class EnquiryService {
-    constructor(
-        private readonly prisma: PrismaService,
-        private readonly mail: MailerService,
-        private readonly schedule: MeetingsService,
-    ) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailerService,
+    private readonly schedule: MeetingsService,
+  ) {}
 
-    // --------------------------------------------------------------
-    //  1️⃣  CREATE / SUBMIT ENQUIRY
-    // --------------------------------------------------------------
-    async submitEnquiry(data: EnquiryFormDto) {
-        // create meeting instance - done
-        // slot Lock-- done
-        // create client-- done, take client email from here.add meeting history to client
-        // add meeting history to zone manager or doula profile
-        // send mail to zone manager and user
-        // //client is created while submiting the enquiry form. might be useful for followup
-        // const client = await createClent(this.prisma, data)
+  // --------------------------------------------------------------
+  //  1️⃣  CREATE / SUBMIT ENQUIRY
+  // --------------------------------------------------------------
+  async submitEnquiry(data: EnquiryFormDto) {
+    // create meeting instance - done
+    // slot Lock-- done
+    // create client-- done, take client email from here.add meeting history to client
+    // add meeting history to zone manager or doula profile
+    // send mail to zone manager and user
+    // //client is created while submiting the enquiry form. might be useful for followup
+    // const client = await createClent(this.prisma, data)
 
-        //
-        //
-        // take availablemeetinginstance with date and weekday
-        // check if the meetingsTimeSlots is free by checking the meeting table with date, starttime, endtime.if not availale throw error
-        // if no meeting exist for selected meetingsTimeSlots, create a meeting instance.
-        const {
-            name,
-            email,
-            phone,
-            regionId,
-            meetingsDate,
-            meetingsTimeSlots,
-            serviceId,
-            seviceStartDate,
-            serviceEndDate,
-            visitDays,
-            serviceTimeSlots,
-            additionalNotes,
-        } = data;
+    //
+    //
+    // take availablemeetinginstance with date and weekday
+    // check if the meetingsTimeSlots is free by checking the meeting table with date, starttime, endtime.if not availale throw error
+    // if no meeting exist for selected meetingsTimeSlots, create a meeting instance.
+    const {
+      name,
+      email,
+      phone,
+      regionId,
+      meetingsDate,
+      meetingsTimeSlots,
+      serviceId,
+      seviceStartDate,
+      serviceEndDate,
+      visitDays,
+      serviceTimeSlots,
+      additionalNotes,
+    } = data;
 
-        const client = await getOrcreateClent(this.prisma, data);
-        const profile = await this.prisma.clientProfile.findUnique({
-            where: { userId: client.id },
-            include: { user: true },
-        });
-        if (!profile) {
-            throw new NotFoundException('profile not found');
-        }
-
-        if (profile.user.role !== Role.CLIENT) {
-            throw new NotFoundException('User is not a client');
-        }
-
-        // weekday is taken from Date
-        const weekday = await getWeekdayFromDate(meetingsDate);
-        console.log('weekday', weekday);
-
-        // doulaId is taken from region of regionId.
-        const region = await findRegionOrThrow(this.prisma, regionId);
-        if (!region.zoneManagerId) {
-            throw new BadRequestException(
-                'Region does not have a zone manager assigned',
-            );
-        }
-        // Get Zone Manager
-        const zoneManager = await findZoneManagerOrThrowWithId(
-            this.prisma,
-            region.zoneManagerId,
-        );
-        console.log(weekday)
-        // 2. Validate Slot
-        const slot = await findSlotOrThrow(this.prisma, {
-            ownerRole: Role.ZONE_MANAGER,
-            ownerProfileId: region.zoneManagerId,
-            weekday,
-        });
-
-        console.log('slot', slot);
-
-        const exists = await isMeetingExists(
-            this.prisma,
-            new Date(meetingsDate),
-            meetingsTimeSlots,
-            {
-                zoneManagerProfileId: region.zoneManagerId,
-            },
-        );
-
-        if (exists) {
-            throw new BadRequestException(
-                'Meeting already exists for this time slot',
-            );
-        }
-        // 3. Validate Service
-        const service = await findServiceOrThrowwithId(this.prisma, serviceId);
-
-        // 7. Create Enquiry
-        const enquiry = await this.prisma.enquiryForm.create({
-            data: {
-                name,
-                email,
-                phone,
-                additionalNotes,
-                meetingsDate: new Date(meetingsDate),
-                meetingsTimeSlots: meetingsTimeSlots,
-                seviceStartDate: seviceStartDate ? new Date(seviceStartDate) : null,
-                serviceEndDate: serviceEndDate ? new Date(serviceEndDate) : null,
-                visitDays: visitDays,
-                serviceTimeSlots: serviceTimeSlots ? serviceTimeSlots : null,
-                serviceName: service.name,
-                regionId,
-                slotId: slot.id,
-                serviceId: service.id,
-                clientId: profile.id,
-            },
-        });
-
-        const [startTime, endTime] = meetingsTimeSlots.split('-');
-
-        if (!startTime || !endTime) {
-            throw new BadRequestException('Invalid time slot format. Expected HH:mm-HH:mm');
-        }
-        const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
-        const endDateTime = new Date(`${meetingsDate}T${endTime}:00`);
-
-        const enquiryData = {
-            name: enquiry.name,
-            email: enquiry.email,
-            startTime: startDateTime,
-            endTime: endDateTime,
-            date: new Date(meetingsDate),
-            additionalNotes: enquiry.additionalNotes,
-            serviceName: service.name,
-        };
-        console.log('enquiry data', enquiryData);
-        const meeting = await this.schedule.scheduleMeeting(
-            enquiryData,
-            client.clientProfile.id,
-            zoneManager.id,
-            Role.ZONE_MANAGER,
-            enquiry.id,
-            slot.id,
-
-        );
-        const fullEnquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id: enquiry.id },
-            include: {
-                Meetings: true,
-            },
-        });
-
-        /**
- * ========================
- * MAIL SECTION
- * ========================
- */
-
-        const mailContext = {
-            clientName: name,
-            meetingDate: meetingsDate,
-            meetingTime: meetingsTimeSlots,
-            serviceName: service.name,
-            additionalNotes: additionalNotes || 'None',
-            zoneManagerName: zoneManager.user?.name || 'Zone Manager',
-        };
-
-        if (!zoneManager.user) {
-            console.error(
-                `Zone Manager with ID ${zoneManager.id} does not have an email address.`,
-            );
-            return {
-                message: 'Enquiry submitted successfully',
-                enquiry: fullEnquiry,
-            };
-        }
-
-        (async () => {
-            try {
-                await Promise.all([
-                    // // Mail to Client
-                    // this.mail.sendMail({
-                    //     to: email,
-                    //     subject: 'Enquiry Confirmation',
-                    //     template: 'enquiry-confirmation',
-                    //     context: mailContext,
-                    // }),
-
-                    // Mail to Zone Manager
-                    this.mail.sendMail({
-                        to: zoneManager.user?.email,
-                        subject: 'New Enquiry Assigned',
-                        template: 'enquiry-zone-manager',
-                        context: mailContext,
-                    }),
-                ]);
-            } catch (error) {
-                console.error('Mail sending failed:', error);
-            }
-        })();
-        return {
-            message: 'Enquiry submitted successfully',
-            enquiry: fullEnquiry,
-        };
+    const client = await getOrcreateClent(this.prisma, data);
+    const profile = await this.prisma.clientProfile.findUnique({
+      where: { userId: client.id },
+      include: { user: true },
+    });
+    if (!profile) {
+      throw new NotFoundException('profile not found');
     }
 
-    // --------------------------------------------------------------
-    //  2️⃣  GET ALL ENQUIRIES (with pagination)
-    // --------------------------------------------------------------
-    async getAllEnquiries(page = 1, limit = 10, userId: string) {
-        return paginate({
-            prismaModel: this.prisma.enquiryForm,
-            page,
-            limit,
-            orderBy: { createdAt: 'desc' },
-            where: { region: { zoneManager: { userId: userId } } },
-        });
+    if (profile.user.role !== Role.CLIENT) {
+      throw new NotFoundException('User is not a client');
     }
 
-    // --------------------------------------------------------------
-    //  3️⃣  GET ENQUIRY BY ID
-    // --------------------------------------------------------------
-    async getEnquiryById(id: string, userId: string) {
-        const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id, region: { zoneManager: { userId: userId } } },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                phone: true,
-                additionalNotes: true,
-                meetingsDate: true,
-                meetingsTimeSlots: true,
-                seviceStartDate: true,
-                serviceEndDate: true,
-                visitDays: true,
-                serviceTimeSlots: true,
-                serviceName: true,
-                createdAt: true,
-                updatedAt: true,
-                regionId: true,
-                slotId: true,
-                clientId: true,
-                serviceId: true,
-                Meetings: true,
-            },
-        });
+    // weekday is taken from Date
+    const weekday = await getWeekdayFromDate(meetingsDate);
+    console.log('weekday', weekday);
 
-        if (!enquiry) {
-            throw new NotFoundException('Enquiry not found');
-        }
+    // doulaId is taken from region of regionId.
+    const region = await findRegionOrThrow(this.prisma, regionId);
+    if (!region.zoneManagerId) {
+      throw new BadRequestException(
+        'Region does not have a zone manager assigned',
+      );
+    }
+    // Get Zone Manager
+    const zoneManager = await findZoneManagerOrThrowWithId(
+      this.prisma,
+      region.zoneManagerId,
+    );
+    console.log(weekday);
+    // 2. Validate Slot
+    const slot = await findSlotOrThrow(this.prisma, {
+      ownerRole: Role.ZONE_MANAGER,
+      ownerProfileId: region.zoneManagerId,
+      weekday,
+    });
 
-        return enquiry;
+    console.log('slot', slot);
+
+    const exists = await isMeetingExists(
+      this.prisma,
+      new Date(meetingsDate),
+      meetingsTimeSlots,
+      {
+        zoneManagerProfileId: region.zoneManagerId,
+      },
+    );
+
+    if (exists) {
+      throw new BadRequestException(
+        'Meeting already exists for this time slot',
+      );
+    }
+    // 3. Validate Service
+    const service = await findServiceOrThrowwithId(this.prisma, serviceId);
+
+    // 7. Create Enquiry
+    const enquiry = await this.prisma.enquiryForm.create({
+      data: {
+        name,
+        email,
+        phone,
+        additionalNotes,
+        meetingsDate: new Date(meetingsDate),
+        meetingsTimeSlots: meetingsTimeSlots,
+        seviceStartDate: seviceStartDate ? new Date(seviceStartDate) : null,
+        serviceEndDate: serviceEndDate ? new Date(serviceEndDate) : null,
+        visitDays: visitDays,
+        serviceTimeSlots: serviceTimeSlots ? serviceTimeSlots : null,
+        serviceName: service.name,
+        regionId,
+        slotId: slot.id,
+        serviceId: service.id,
+        clientId: profile.id,
+      },
+    });
+
+    const [startTime, endTime] = meetingsTimeSlots.split('-');
+
+    if (!startTime || !endTime) {
+      throw new BadRequestException(
+        'Invalid time slot format. Expected HH:mm-HH:mm',
+      );
+    }
+    const startDateTime = new Date(`${meetingsDate}T${startTime}:00`);
+    const endDateTime = new Date(`${meetingsDate}T${endTime}:00`);
+
+    const enquiryData = {
+      name: enquiry.name,
+      email: enquiry.email,
+      startTime: startDateTime,
+      endTime: endDateTime,
+      date: new Date(meetingsDate),
+      additionalNotes: enquiry.additionalNotes,
+      serviceName: service.name,
+    };
+    console.log('enquiry data', enquiryData);
+    const meeting = await this.schedule.scheduleMeeting(
+      enquiryData,
+      client.clientProfile.id,
+      zoneManager.id,
+      Role.ZONE_MANAGER,
+      enquiry.id,
+      slot.id,
+    );
+    const fullEnquiry = await this.prisma.enquiryForm.findUnique({
+      where: { id: enquiry.id },
+      include: {
+        Meetings: true,
+      },
+    });
+
+    /**
+     * ========================
+     * MAIL SECTION
+     * ========================
+     */
+
+    const mailContext = {
+      clientName: name,
+      meetingDate: meetingsDate,
+      meetingTime: meetingsTimeSlots,
+      serviceName: service.name,
+      additionalNotes: additionalNotes || 'None',
+      zoneManagerName: zoneManager.user?.name || 'Zone Manager',
+    };
+
+    if (!zoneManager.user) {
+      console.error(
+        `Zone Manager with ID ${zoneManager.id} does not have an email address.`,
+      );
+      return {
+        message: 'Enquiry submitted successfully',
+        enquiry: fullEnquiry,
+      };
     }
 
-    // --------------------------------------------------------------
-    //  4️⃣  DELETE ENQUIRY (auto-unlock slot)
-    // --------------------------------------------------------------
-    async deleteEnquiry(id: string) {
-        const enquiry = await this.prisma.enquiryForm.findUnique({
-            where: { id },
-        });
+    (async () => {
+      try {
+        await Promise.all([
+          // // Mail to Client
+          // this.mail.sendMail({
+          //     to: email,
+          //     subject: 'Enquiry Confirmation',
+          //     template: 'enquiry-confirmation',
+          //     context: mailContext,
+          // }),
 
-        if (!enquiry) {
-            throw new NotFoundException('Enquiry not found');
-        }
+          // Mail to Zone Manager
+          this.mail.sendMail({
+            to: zoneManager.user?.email,
+            subject: 'New Enquiry Assigned',
+            template: 'enquiry-zone-manager',
+            context: mailContext,
+          }),
+        ]);
+      } catch (error) {
+        console.error('Mail sending failed:', error);
+      }
+    })();
+    return {
+      message: 'Enquiry submitted successfully',
+      enquiry: fullEnquiry,
+    };
+  }
 
-        // Unlock slot
-        await this.prisma.availableSlotsTimeForMeeting.update({
-            where: { id: enquiry.slotId },
-            data: { isBooked: false },
-        });
+  // --------------------------------------------------------------
+  //  2️⃣  GET ALL ENQUIRIES (with pagination)
+  // --------------------------------------------------------------
+  async getAllEnquiries(page = 1, limit = 10, userId: string) {
+    return paginate({
+      prismaModel: this.prisma.enquiryForm,
+      page,
+      limit,
+      orderBy: { createdAt: 'desc' },
+      where: { region: { zoneManager: { userId: userId } } },
+    });
+  }
 
-        // Delete enquiry
-        await this.prisma.enquiryForm.delete({
-            where: { id },
-        });
+  // --------------------------------------------------------------
+  //  3️⃣  GET ENQUIRY BY ID
+  // --------------------------------------------------------------
+  async getEnquiryById(id: string, userId: string) {
+    const enquiry = await this.prisma.enquiryForm.findUnique({
+      where: { id, region: { zoneManager: { userId: userId } } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        additionalNotes: true,
+        meetingsDate: true,
+        meetingsTimeSlots: true,
+        seviceStartDate: true,
+        serviceEndDate: true,
+        visitDays: true,
+        serviceTimeSlots: true,
+        serviceName: true,
+        createdAt: true,
+        updatedAt: true,
+        regionId: true,
+        slotId: true,
+        clientId: true,
+        serviceId: true,
+        Meetings: true,
+      },
+    });
 
-        return { message: 'Enquiry deleted successfully and slot unlocked' };
+    if (!enquiry) {
+      throw new NotFoundException('Enquiry not found');
     }
 
-    async deleteAllEnquiryForms() {
-        const result = await this.prisma.enquiryForm.deleteMany({});
-        return {
-            message: 'All enquiry forms deleted successfully',
-            deletedCount: result.count,
-        };
+    return enquiry;
+  }
+
+  // --------------------------------------------------------------
+  //  4️⃣  DELETE ENQUIRY (auto-unlock slot)
+  // --------------------------------------------------------------
+  async deleteEnquiry(id: string) {
+    const enquiry = await this.prisma.enquiryForm.findUnique({
+      where: { id },
+    });
+
+    if (!enquiry) {
+      throw new NotFoundException('Enquiry not found');
     }
+
+    // Unlock slot
+    await this.prisma.availableSlotsTimeForMeeting.update({
+      where: { id: enquiry.slotId },
+      data: { isBooked: false },
+    });
+
+    // Delete enquiry
+    await this.prisma.enquiryForm.delete({
+      where: { id },
+    });
+
+    return { message: 'Enquiry deleted successfully and slot unlocked' };
+  }
+
+  async deleteAllEnquiryForms() {
+    const result = await this.prisma.enquiryForm.deleteMany({});
+    return {
+      message: 'All enquiry forms deleted successfully',
+      deletedCount: result.count,
+    };
+  }
 }

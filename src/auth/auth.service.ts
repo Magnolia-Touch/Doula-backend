@@ -32,7 +32,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mail: MailService,
     private readonly mailqueue: EmailProducer,
-  ) { }
+  ) {}
 
   //make this to just a create admin funtion without otp
   async RegisterAdmin(dto: RegistrationDto) {
@@ -63,7 +63,7 @@ export class AuthService {
       await this.prisma.user.update({
         where: { email: email },
         data: {
-          otp: "123456",
+          otp: '123456',
           otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
         },
       });
@@ -243,10 +243,10 @@ export class AuthService {
           user: baseUser,
           profile: user.adminProfile
             ? {
-              profileId: user.adminProfile.id,
-              profile_image: user.adminProfile.profile_image,
-              notes: user.adminProfile.notes,
-            }
+                profileId: user.adminProfile.id,
+                profile_image: user.adminProfile.profile_image,
+                notes: user.adminProfile.notes,
+              }
             : null,
         };
 
@@ -257,43 +257,43 @@ export class AuthService {
           user: baseUser,
           profile: user.zonemanagerprofile
             ? {
-              profileId: user.zonemanagerprofile.id,
-              profile_image: user.zonemanagerprofile.profile_image,
+                profileId: user.zonemanagerprofile.id,
+                profile_image: user.zonemanagerprofile.profile_image,
 
-              managingRegions: user.zonemanagerprofile.managingRegion.map(
-                (region) => ({
-                  regionId: region.id,
-                  regionName: region.regionName,
-                }),
-              ),
+                managingRegions: user.zonemanagerprofile.managingRegion.map(
+                  (region) => ({
+                    regionId: region.id,
+                    regionName: region.regionName,
+                  }),
+                ),
 
-              doulas: user.zonemanagerprofile.doulas.map((doula) => ({
-                doulaId: doula.id,
-                doulaProfile: {
-                  userId: doula.user.id,
-                  name: doula.user.name,
-                  email: doula.user.email,
-                  phone: doula.user.phone,
-                  is_active: doula.user.is_active,
-                  role: doula.user.role,
+                doulas: user.zonemanagerprofile.doulas.map((doula) => ({
+                  doulaId: doula.id,
+                  doulaProfile: {
+                    userId: doula.user.id,
+                    name: doula.user.name,
+                    email: doula.user.email,
+                    phone: doula.user.phone,
+                    is_active: doula.user.is_active,
+                    role: doula.user.role,
 
-                  qualification: doula.qualification,
-                  description: doula.description,
-                  achievements: doula.achievements,
-                  yoe: doula.yoe,
-                  languages: doula.languages,
+                    qualification: doula.qualification,
+                    description: doula.description,
+                    achievements: doula.achievements,
+                    yoe: doula.yoe,
+                    languages: doula.languages,
 
-                  regions: doula.Region.map((r) => ({
-                    regionId: r.id,
-                    regionName: r.regionName,
-                  })),
+                    regions: doula.Region.map((r) => ({
+                      regionId: r.id,
+                      regionName: r.regionName,
+                    })),
 
-                  doulaImages: doula.DoulaGallery,
-                },
-              })),
+                    doulaImages: doula.DoulaGallery,
+                  },
+                })),
 
-              notes: user.zonemanagerprofile.notes,
-            }
+                notes: user.zonemanagerprofile.notes,
+              }
             : null,
         };
 
@@ -304,20 +304,20 @@ export class AuthService {
           user: baseUser,
           profile: user.doulaProfile
             ? {
-              profileId: user.doulaProfile.id,
-              description: user.doulaProfile.description,
-              qualification: user.doulaProfile.qualification,
-              achievements: user.doulaProfile.achievements,
-              yoe: user.doulaProfile.yoe,
-              languages: user.doulaProfile.languages,
+                profileId: user.doulaProfile.id,
+                description: user.doulaProfile.description,
+                qualification: user.doulaProfile.qualification,
+                achievements: user.doulaProfile.achievements,
+                yoe: user.doulaProfile.yoe,
+                languages: user.doulaProfile.languages,
 
-              regions: user.doulaProfile.Region.map((region) => ({
-                regionId: region.id,
-                regionName: region.regionName,
-              })),
+                regions: user.doulaProfile.Region.map((region) => ({
+                  regionId: region.id,
+                  regionName: region.regionName,
+                })),
 
-              doulaImages: user.doulaProfile.DoulaGallery,
-            }
+                doulaImages: user.doulaProfile.DoulaGallery,
+              }
             : null,
         };
 
@@ -328,12 +328,12 @@ export class AuthService {
           user: baseUser,
           profile: user.clientProfile
             ? {
-              profileId: user.clientProfile.id,
-              profile_image: user.clientProfile.profile_image,
-              region: user.clientProfile.region,
-              address: user.clientProfile.address,
-              is_verified: user.clientProfile.is_verified,
-            }
+                profileId: user.clientProfile.id,
+                profile_image: user.clientProfile.profile_image,
+                region: user.clientProfile.region,
+                address: user.clientProfile.address,
+                is_verified: user.clientProfile.is_verified,
+              }
             : null,
         };
 
@@ -341,7 +341,6 @@ export class AuthService {
         throw new BadRequestException('Unknown role or profile not assigned');
     }
   }
-
 
   async verifyOtpZoneManager(dto: OtpVerifyDto) {
     const { email, otp } = dto;
@@ -404,7 +403,6 @@ export class AuthService {
     };
   }
 
-
   async verifyOtpAdmin(dto: OtpVerifyDto) {
     const { email, otp } = dto;
     const defaultOtp = process.env.DEFAULT_OTP;
@@ -466,7 +464,6 @@ export class AuthService {
     };
   }
 
-
   // async verifyOtpClient(dto: OtpVerifyDto) {
   //   const { email, otp } = dto;
   //   // if (dto.email == 'client@test.com' && dto.otp == '123456') {
@@ -525,7 +522,6 @@ export class AuthService {
   //     status: 200,
   //   };
   // }
-
 
   async verifyOtpClient(dto: OtpVerifyDto) {
     const { email, otp } = dto;
@@ -618,6 +614,4 @@ export class AuthService {
       status: 200,
     };
   }
-
-
 }

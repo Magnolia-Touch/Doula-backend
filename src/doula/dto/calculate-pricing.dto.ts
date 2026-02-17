@@ -57,7 +57,6 @@ export class CalculatePricingDto {
   @IsEnum(WeekDays, { each: true })
   visitDays?: WeekDays[];
 
-
   @ApiProperty({
     example: TimeShift.MORNING,
     enum: TimeShift,
@@ -67,7 +66,6 @@ export class CalculatePricingDto {
     message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
   })
   serviceTimeShift: TimeShift;
-
 
   @ApiPropertyOptional({
     description: 'Buffer days before and after for Birth Doula service',

@@ -7,14 +7,14 @@ import { MailModule } from 'src/mail/mail.module';
 import { QueueController } from './queue.controller';
 
 @Module({
-    imports: [
-        BullModule.registerQueue({
-            name: 'email',
-        }),
-        MailModule
-    ],
-    providers: [EmailProducer, EmailProcessor],
-    exports: [EmailProducer],
-    controllers: [QueueController]
+  imports: [
+    BullModule.registerQueue({
+      name: 'email',
+    }),
+    MailModule,
+  ],
+  providers: [EmailProducer, EmailProcessor],
+  exports: [EmailProducer],
+  controllers: [QueueController],
 })
-export class EmailQueueModule { }
+export class EmailQueueModule {}
