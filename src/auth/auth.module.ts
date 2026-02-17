@@ -48,4 +48,4 @@ import { EmailQueueModule } from 'src/mail-queue/email-queue.module';
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ServiceBookingService } from './service-booking.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { SwaggerResponseDto } from 'src/common/dto/swagger-response.dto';
@@ -19,7 +28,7 @@ import { GetTestimonialsDto } from './dto/get-testimonials.dto';
   version: '1',
 })
 export class ServiceBookingController {
-  constructor(private readonly bookingService: ServiceBookingService) { }
+  constructor(private readonly bookingService: ServiceBookingService) {}
 
   @ApiOperation({ summary: 'Get all service bookings' })
   @ApiResponse({
@@ -46,7 +55,9 @@ export class ServiceBookingController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get()
-  async findAll(@Query() query: BookingFilterDto & { page?: string; limit?: string }) {
+  async findAll(
+    @Query() query: BookingFilterDto & { page?: string; limit?: string },
+  ) {
     return this.bookingService.findAll({
       ...query,
       page: query.page ? Number(query.page) : undefined,
@@ -57,8 +68,6 @@ export class ServiceBookingController {
           : undefined,
     });
   }
-
-
 
   @ApiOperation({ summary: 'Get a booking by ID' })
   @ApiParam({ name: 'id', description: 'Booking UUID' })
@@ -97,7 +106,6 @@ export class ServiceBookingController {
     return this.bookingService.findById(id);
   }
 
-
   @Patch('schedules/:id/status')
   @ApiOperation({
     summary: 'Update schedule status',
@@ -130,8 +138,6 @@ export class ServiceBookingController {
     );
   }
 
-
-
   @Patch('bookings/:id/status')
   @ApiOperation({
     summary: 'Update booking status',
@@ -163,7 +169,6 @@ export class ServiceBookingController {
       dto,
     );
   }
-
 
   @Get('meetings/list/admin')
   @ApiOperation({

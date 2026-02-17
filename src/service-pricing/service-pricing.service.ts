@@ -3,13 +3,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateServicePricingDto,
   UpdateServicePricingDto,
-  PriceBreakdownDto
+  PriceBreakdownDto,
 } from './dto/service-pricing.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 
 @Injectable()
 export class ServicePricingService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   private toJsonPrice(price: PriceBreakdownDto) {
     return {
@@ -18,7 +18,6 @@ export class ServicePricingService {
       fullday: price.fullday,
     };
   }
-
 
   async create(dto: CreateServicePricingDto, userId: string) {
     const user = await this.prisma.doulaProfile.findUnique({
@@ -36,7 +35,6 @@ export class ServicePricingService {
         price: this.toJsonPrice(dto.price), // ✅ FIX
       },
     });
-
   }
 
   async findAll(userId: string) {
@@ -81,13 +79,11 @@ export class ServicePricingService {
       serviceDescription: pricing.service.description,
     }));
 
-
     return {
       message: 'Service pricing fetched successfully',
       data,
     };
   }
-
 
   async findOne(id: string) {
     const pricing = await this.prisma.servicePricing.findUnique({
@@ -125,7 +121,6 @@ export class ServicePricingService {
       serviceName: pricing.service.name,
       serviceDescription: pricing.service.description,
     };
-
   }
 
   async update(id: string, dto: UpdateServicePricingDto) {
@@ -165,7 +160,6 @@ export class ServicePricingService {
       });
     });
   }
-
 
   async listServices(query: any) {
     const { name, doulaId, page = 1, limit = 10 } = query;
@@ -222,9 +216,7 @@ export class ServicePricingService {
         serviceId: item.service.id,
         serviceName: item.service.name,
         price: item.price,
-
       })),
     };
   }
-
 }

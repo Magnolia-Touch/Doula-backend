@@ -10,4 +10,4 @@ import { S3Module } from 'src/s3/s3.module';
   controllers: [ZoneManagerController],
   providers: [ZoneManagerService],
 })
-export class ZoneManagerModule { }
+export class ZoneManagerModule {}

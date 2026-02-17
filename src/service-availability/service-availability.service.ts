@@ -5,9 +5,17 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AvailableDoulasFilterDto, CreateDoulaServiceAvailabilityDto, ServiceAvailabilityDto, UpdateDoulaServiceAvailabilityDto } from './dto/service-availability.dto';
+import {
+  AvailableDoulasFilterDto,
+  CreateDoulaServiceAvailabilityDto,
+  ServiceAvailabilityDto,
+  UpdateDoulaServiceAvailabilityDto,
+} from './dto/service-availability.dto';
 import { Prisma, Role, ServiceStatus, TimeShift } from '@prisma/client';
-import { CreateDoulaOffDaysDto, UpdateDoulaOffDaysDto } from './dto/off-days.dto';
+import {
+  CreateDoulaOffDaysDto,
+  UpdateDoulaOffDaysDto,
+} from './dto/off-days.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 
 type AvailableDoulaResult = {
@@ -19,7 +27,7 @@ type AvailableDoulaResult = {
 
 @Injectable()
 export class DoulaServiceAvailabilityService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   private async getDoulaProfile(userId: string) {
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -33,10 +41,7 @@ export class DoulaServiceAvailabilityService {
     return doula;
   }
 
-  async createAvailability(
-    dto: CreateDoulaServiceAvailabilityDto,
-    user: any,
-  ) {
+  async createAvailability(dto: CreateDoulaServiceAvailabilityDto, user: any) {
     // 1. Fetch doula profile
     const doula = await this.prisma.doulaProfile.findUnique({
       where: { userId: user.id },
@@ -74,7 +79,7 @@ export class DoulaServiceAvailabilityService {
      * Generate date range (inclusive)
      */
     const dates: Date[] = [];
-    let current = new Date(startDate);
+    const current = new Date(startDate);
 
     while (current <= endDate) {
       dates.push(new Date(current));
@@ -108,8 +113,6 @@ export class DoulaServiceAvailabilityService {
       },
     };
   }
-
-
 
   //continue from here. booked or unbooked filter not needed on slots.
   //get all Slots of Zone Manager. Region Id is passsing for the convnience of user.
@@ -155,9 +158,6 @@ export class DoulaServiceAvailabilityService {
     };
   }
 
-
-
-
   async findOne(id: string, user: any) {
     const doula = await this.getDoulaProfile(user.id);
 
@@ -178,12 +178,7 @@ export class DoulaServiceAvailabilityService {
     };
   }
 
-
-  async update(
-    id: string,
-    dto: UpdateDoulaServiceAvailabilityDto,
-    user: any,
-  ) {
+  async update(id: string, dto: UpdateDoulaServiceAvailabilityDto, user: any) {
     const doula = await this.getDoulaProfile(user.id);
 
     const slot = await this.prisma.availableSlotsForService.findFirst({
@@ -215,7 +210,6 @@ export class DoulaServiceAvailabilityService {
     };
   }
 
-
   async remove(id: string, user: any) {
     const doula = await this.getDoulaProfile(user.id);
 
@@ -239,10 +233,7 @@ export class DoulaServiceAvailabilityService {
     };
   }
 
-  async createOffDays(
-    dto: CreateDoulaOffDaysDto,
-    user: any,
-  ) {
+  async createOffDays(dto: CreateDoulaOffDaysDto, user: any) {
     // 1. Fetch doula profile
     const doula = await this.prisma.doulaProfile.findUnique({
       where: { userId: user.id },
@@ -278,18 +269,17 @@ export class DoulaServiceAvailabilityService {
     /**
      * 3. Fetch service availability
      */
-    const availabilities =
-      await this.prisma.availableSlotsForService.findMany({
-        where: {
-          doulaId: doula.id,
-          date: { in: dates },
-        },
-        select: {
-          id: true,
-          date: true,
-          availability: true,
-        },
-      });
+    const availabilities = await this.prisma.availableSlotsForService.findMany({
+      where: {
+        doulaId: doula.id,
+        date: { in: dates },
+      },
+      select: {
+        id: true,
+        date: true,
+        availability: true,
+      },
+    });
 
     const availabilityMap = new Map<string, any>();
     for (const a of availabilities) {
@@ -362,134 +352,127 @@ export class DoulaServiceAvailabilityService {
     };
   }
 
+  // async getOffDays(user: any) {
+  //   // 1. Fetch doula profile
+  //   const doula = await this.prisma.doulaProfile.findUnique({
+  //     where: { userId: user.id },
+  //   });
 
-  async getOffDays(user: any) {
-    // 1. Fetch doula profile
-    const doula = await this.prisma.doulaProfile.findUnique({
-      where: { userId: user.id },
-    });
+  //   if (!doula) {
+  //     throw new ForbiddenException('Doula profile not found');
+  //   }
 
-    if (!doula) {
-      throw new ForbiddenException('Doula profile not found');
-    }
+  //   // 2. Fetch off-days
+  //   const offDays = await this.prisma.doulaOffDays.findMany({
+  //     where: { doulaProfileId: doula.id },
+  //     orderBy: { date: 'asc' },
+  //   });
 
-    // 2. Fetch off-days
-    const offDays = await this.prisma.doulaOffDays.findMany({
-      where: { doulaProfileId: doula.id },
-      orderBy: { date: 'asc' },
-    });
+  //   return {
+  //     message: 'Off days fetched successfully',
+  //     data: offDays,
+  //   };
+  // }
 
-    return {
-      message: 'Off days fetched successfully',
-      data: offDays,
-    };
-  }
+  // /* ------------------------- GET BY ID ------------------------- */
 
-  /* ------------------------- GET BY ID ------------------------- */
+  // async getOffdaysbyId(id: string, user: any) {
+  //   const doula = await this.getDoulaProfile(user.id);
 
-  async getOffdaysbyId(id: string, user: any) {
-    const doula = await this.getDoulaProfile(user.id);
+  //   const offDay = await this.prisma.doulaOffDays.findFirst({
+  //     where: {
+  //       id,
+  //       doulaProfileId: doula.id,
+  //     },
+  //   });
 
-    const offDay = await this.prisma.doulaOffDays.findFirst({
-      where: {
-        id,
-        doulaProfileId: doula.id,
-      },
-    });
+  //   if (!offDay) {
+  //     throw new NotFoundException('Off day not found');
+  //   }
 
-    if (!offDay) {
-      throw new NotFoundException('Off day not found');
-    }
+  //   return {
+  //     message: 'Off day fetched successfully',
+  //     data: offDay,
+  //   };
+  // }
 
-    return {
-      message: 'Off day fetched successfully',
-      data: offDay,
-    };
-  }
+  // /* ------------------------- PATCH ------------------------- */
+  // async updateOffdays(
+  //   id: string,
+  //   dto: UpdateDoulaOffDaysDto,
+  //   user: any,
+  // ) {
+  //   const doula = await this.getDoulaProfile(user.id);
 
-  /* ------------------------- PATCH ------------------------- */
-  async updateOffdays(
-    id: string,
-    dto: UpdateDoulaOffDaysDto,
-    user: any,
-  ) {
-    const doula = await this.getDoulaProfile(user.id);
+  //   const existing = await this.prisma.doulaOffDays.findFirst({
+  //     where: {
+  //       id,
+  //       doulaProfileId: doula.id,
+  //     },
+  //   });
 
-    const existing = await this.prisma.doulaOffDays.findFirst({
-      where: {
-        id,
-        doulaProfileId: doula.id,
-      },
-    });
+  //   if (!existing) {
+  //     throw new NotFoundException('Off day not found');
+  //   }
 
-    if (!existing) {
-      throw new NotFoundException('Off day not found');
-    }
+  //   // Normalize date if provided
+  //   let updatedDate: Date | undefined;
+  //   if (dto.date) {
+  //     updatedDate = new Date(dto.date);
+  //     updatedDate.setUTCHours(0, 0, 0, 0);
+  //   }
 
-    // Normalize date if provided
-    let updatedDate: Date | undefined;
-    if (dto.date) {
-      updatedDate = new Date(dto.date);
-      updatedDate.setUTCHours(0, 0, 0, 0);
-    }
+  //   // Merge JSON safely
+  //   const updatedOfftime: Prisma.InputJsonValue | undefined =
+  //     dto.offtime
+  //       ? {
+  //         ...(existing.offtime as object),
+  //         ...dto.offtime,
+  //       }
+  //       : undefined;
 
-    // Merge JSON safely
-    const updatedOfftime: Prisma.InputJsonValue | undefined =
-      dto.offtime
-        ? {
-          ...(existing.offtime as object),
-          ...dto.offtime,
-        }
-        : undefined;
+  //   const updated = await this.prisma.doulaOffDays.update({
+  //     where: { id },
+  //     data: {
+  //       ...(updatedDate && { date: updatedDate }),
+  //       ...(updatedOfftime && { offtime: updatedOfftime }),
+  //     },
+  //   });
 
-    const updated = await this.prisma.doulaOffDays.update({
-      where: { id },
-      data: {
-        ...(updatedDate && { date: updatedDate }),
-        ...(updatedOfftime && { offtime: updatedOfftime }),
-      },
-    });
+  //   return {
+  //     message: 'Off day updated successfully',
+  //     data: updated,
+  //   };
+  // }
 
-    return {
-      message: 'Off day updated successfully',
-      data: updated,
-    };
-  }
+  // /* ------------------------- DELETE ------------------------- */
 
-  /* ------------------------- DELETE ------------------------- */
+  // async removeOffdays(id: string, user: any) {
+  //   const doula = await this.getDoulaProfile(user.id);
 
-  async removeOffdays(id: string, user: any) {
-    const doula = await this.getDoulaProfile(user.id);
+  //   const existing = await this.prisma.doulaOffDays.findFirst({
+  //     where: {
+  //       id,
+  //       doulaProfileId: doula.id,
+  //     },
+  //   });
 
-    const existing = await this.prisma.doulaOffDays.findFirst({
-      where: {
-        id,
-        doulaProfileId: doula.id,
-      },
-    });
+  //   if (!existing) {
+  //     throw new NotFoundException('Off day not found');
+  //   }
 
-    if (!existing) {
-      throw new NotFoundException('Off day not found');
-    }
+  //   await this.prisma.doulaOffDays.delete({
+  //     where: { id },
+  //   });
 
-    await this.prisma.doulaOffDays.delete({
-      where: { id },
-    });
-
-    return {
-      message: 'Off day deleted successfully',
-    };
-  }
+  //   return {
+  //     message: 'Off day deleted successfully',
+  //   };
+  // }
   async getAvailableDoulas(
     filters: AvailableDoulasFilterDto,
   ): Promise<{ status: string; data: AvailableDoulaResult[] }> {
-    const {
-      startDate,
-      endDate,
-      regionId,
-      serviceId,
-      shift,
-    } = filters;
+    const { startDate, endDate, regionId, serviceId, shift } = filters;
 
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
@@ -552,34 +535,32 @@ export class DoulaServiceAvailabilityService {
       ServiceStatus.IN_PROGRESS,
     ];
 
-    const schedules = start && end
-      ? await this.prisma.schedules.findMany({
-        where: {
-          cancelledAt: null,
-          status: { in: BLOCKING_STATUSES },
-          date: {
-            gte: start,
-            lte: end,
-          },
-          doulaProfileId: {
-            in: doulas.map((d) => d.id),
-          },
-        },
-        select: {
-          doulaProfileId: true,
-          date: true,
-          timeshift: true,
-        },
-      })
-      : [];
+    const schedules =
+      start && end
+        ? await this.prisma.schedules.findMany({
+            where: {
+              cancelledAt: null,
+              status: { in: BLOCKING_STATUSES },
+              date: {
+                gte: start,
+                lte: end,
+              },
+              doulaProfileId: {
+                in: doulas.map((d) => d.id),
+              },
+            },
+            select: {
+              doulaProfileId: true,
+              date: true,
+              timeshift: true,
+            },
+          })
+        : [];
 
     /* --------------------------------------------------
      * 4. Group schedules by doula → date → shifts
      * -------------------------------------------------- */
-    const schedulesByDoula = new Map<
-      string,
-      Map<string, Set<TimeShift>>
-    >();
+    const schedulesByDoula = new Map<string, Map<string, Set<TimeShift>>>();
 
     for (const s of schedules) {
       const d = new Date(s.date);
@@ -658,9 +639,7 @@ export class DoulaServiceAvailabilityService {
         shift: shifts.map((s) => s.toLowerCase()),
         noOfUnavailableDaysInThatPeriod: unavailableDays,
         availableServices: [
-          ...new Set(
-            doula.ServicePricing.map((sp) => sp.service.name),
-          ),
+          ...new Set(doula.ServicePricing.map((sp) => sp.service.name)),
         ],
       };
     });
@@ -674,8 +653,7 @@ export class DoulaServiceAvailabilityService {
 
     filtered.sort(
       (a, b) =>
-        a.noOfUnavailableDaysInThatPeriod -
-        b.noOfUnavailableDaysInThatPeriod,
+        a.noOfUnavailableDaysInThatPeriod - b.noOfUnavailableDaysInThatPeriod,
     );
 
     /* --------------------------------------------------
@@ -686,6 +664,4 @@ export class DoulaServiceAvailabilityService {
       data: filtered,
     };
   }
-
 }
-

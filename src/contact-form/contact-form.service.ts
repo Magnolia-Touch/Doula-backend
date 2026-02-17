@@ -10,7 +10,7 @@ export class ContactFormService {
   constructor(
     private prisma: PrismaService,
     private mailService: MailerService,
-  ) { }
+  ) {}
 
   async submitForm(dto: CreateContactFormDto) {
     const { Name, email, message } = dto;

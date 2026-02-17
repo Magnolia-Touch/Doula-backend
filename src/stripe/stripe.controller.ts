@@ -15,9 +15,7 @@ import { WebhookService } from './webhook.service';
   version: '1',
 })
 export class StripeController {
-  constructor(
-    private readonly webhookService: WebhookService,
-  ) { }
+  constructor(private readonly webhookService: WebhookService) {}
 
   @Get('webhook')
   testWebhook() {
@@ -30,10 +28,7 @@ export class StripeController {
    * - No JSON parsing here
    */
   @Post('webhook')
-  async handleStripeWebhook(
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
+  async handleStripeWebhook(@Req() req: Request, @Res() res: Response) {
     console.log('Body is buffer:', Buffer.isBuffer(req.body));
     console.log('Body length:', (req.body as Buffer)?.length);
 
@@ -59,5 +54,4 @@ export class StripeController {
       return res.status(HttpStatus.BAD_REQUEST).send(error.message);
     }
   }
-
 }

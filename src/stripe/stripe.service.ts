@@ -8,8 +8,7 @@ export class StripeService {
   private readonly logger = new Logger(StripeService.name);
 
   constructor(private readonly configService: ConfigService) {
-    const stripeSecretKey =
-      this.configService.get<string>('STRIPE_SECRET_KEY');
+    const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
 
     if (!stripeSecretKey) {
       throw new Error('STRIPE_SECRET_KEY is not configured');

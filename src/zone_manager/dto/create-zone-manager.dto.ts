@@ -44,5 +44,4 @@ export class CreateZoneManagerDto {
     description: 'Profile image (jpg, jpeg, png, max 5MB)',
   })
   profile_image?: any;
-
 }

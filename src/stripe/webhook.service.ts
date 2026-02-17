@@ -1,4 +1,9 @@
-import { Injectable, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -27,12 +32,10 @@ export class WebhookService {
   /* ----------------------------------------------------
    * Verify Stripe Signature
    * -------------------------------------------------- */
-  verifyWebhookSignature(
-    body: Buffer,
-    signature: string,
-  ): Stripe.Event {
-    const endpointSecret =
-      this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+  verifyWebhookSignature(body: Buffer, signature: string): Stripe.Event {
+    const endpointSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
 
     if (!endpointSecret) {
       throw new Error('STRIPE_WEBHOOK_SECRET not configured');
@@ -58,19 +61,13 @@ export class WebhookService {
 
     switch (event.type) {
       case 'checkout.session.completed':
-        return this.handleCheckoutSessionCompleted(
-          event.data.object as Stripe.Checkout.Session,
-        );
+        return this.handleCheckoutSessionCompleted(event.data.object);
 
       case 'checkout.session.expired':
-        return this.handleCheckoutSessionExpired(
-          event.data.object as Stripe.Checkout.Session,
-        );
+        return this.handleCheckoutSessionExpired(event.data.object);
 
       case 'payment_intent.payment_failed':
-        return this.handlePaymentIntentFailed(
-          event.data.object as Stripe.PaymentIntent,
-        );
+        return this.handlePaymentIntentFailed(event.data.object);
 
       default:
         this.logger.warn(`Unhandled Stripe event: ${event.type}`);
@@ -92,7 +89,6 @@ export class WebhookService {
   }
 
   private async handleCheckoutSessionCompleted(
-
     session: Stripe.Checkout.Session,
   ) {
     this.logger.log(
@@ -249,9 +245,7 @@ export class WebhookService {
       };
 
       /** -------- Doula Mail -------- */
-      this.logger.log(
-        `[Email] Sending email to DOULA | to=${doulaEmail}`,
-      );
+      this.logger.log(`[Email] Sending email to DOULA | to=${doulaEmail}`);
 
       await this.mail.sendMail({
         to: doulaEmail,
@@ -299,9 +293,7 @@ export class WebhookService {
           `[Email] Client email (with attachments) SENT | to=${clientEmail}`,
         );
       } else {
-        this.logger.log(
-          `[Email] Sending client email WITHOUT attachments`,
-        );
+        this.logger.log(`[Email] Sending client email WITHOUT attachments`);
 
         await this.mail.sendMail({
           to: clientEmail,
@@ -338,15 +330,10 @@ export class WebhookService {
     return { received: true };
   }
 
-
-
-
   /* ----------------------------------------------------
    * Checkout session EXPIRED
    * -------------------------------------------------- */
-  private async handleCheckoutSessionExpired(
-    session: Stripe.Checkout.Session,
-  ) {
+  private async handleCheckoutSessionExpired(session: Stripe.Checkout.Session) {
     const { paymentId } = session.metadata || {};
 
     if (!paymentId) {
@@ -364,9 +351,7 @@ export class WebhookService {
       },
     });
 
-    this.logger.warn(
-      `Checkout session expired | payment=${paymentId}`,
-    );
+    this.logger.warn(`Checkout session expired | payment=${paymentId}`);
 
     return { received: true };
   }
@@ -374,9 +359,7 @@ export class WebhookService {
   /* ----------------------------------------------------
    * PaymentIntent FAILED
    * -------------------------------------------------- */
-  private async handlePaymentIntentFailed(
-    paymentIntent: Stripe.PaymentIntent,
-  ) {
+  private async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     const { paymentId } = paymentIntent.metadata || {};
 
     if (!paymentId) {
@@ -391,8 +374,7 @@ export class WebhookService {
       data: {
         status: PaymentStatus.FAILED,
         failureReason:
-          paymentIntent.last_payment_error?.message ||
-          'Payment failed',
+          paymentIntent.last_payment_error?.message || 'Payment failed',
       },
     });
 
@@ -402,7 +384,6 @@ export class WebhookService {
 
     return { received: true };
   }
-
 
   private getServiceAttachments(serviceName: string): Attachment[] {
     const normalized = serviceName.trim().toLowerCase();
@@ -419,7 +400,10 @@ export class WebhookService {
       ];
     }
 
-    if (normalized === 'post partum doula' || normalized === 'postpartum doula') {
+    if (
+      normalized === 'post partum doula' ||
+      normalized === 'postpartum doula'
+    ) {
       return [
         {
           filename: 'Postpartum-Contract.pdf',
@@ -431,5 +415,4 @@ export class WebhookService {
 
     return [];
   }
-
 }

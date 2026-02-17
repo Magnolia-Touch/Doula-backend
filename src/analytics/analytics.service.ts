@@ -13,7 +13,7 @@ import { UserCountDto } from './dto/user-count.dto';
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async listUsers(query: FilterUserDto, userId: string, userRole: Role) {
     const { role, is_active, search, regionId } = query;
@@ -21,12 +21,12 @@ export class AnalyticsService {
     const searchCondition =
       search && search.trim()
         ? {
-          OR: [
-            { name: { contains: search } },
-            { email: { contains: search } },
-            { phone: { contains: search } },
-          ],
-        }
+            OR: [
+              { name: { contains: search } },
+              { email: { contains: search } },
+              { phone: { contains: search } },
+            ],
+          }
         : null;
 
     // Pagination
@@ -175,11 +175,7 @@ export class AnalyticsService {
     });
   }
 
-  async countUsersByRole(
-    query: UserCountDto,
-    userId: string,
-    userRole: Role
-  ) {
+  async countUsersByRole(query: UserCountDto, userId: string, userRole: Role) {
     const { role, is_active, regionId } = query;
 
     const baseFilter: any = {};
@@ -190,7 +186,7 @@ export class AnalyticsService {
       admins = 0,
       zonemanagers = 0,
       doulas = 0,
-      clients = 0
+      clients = 0,
     ) => ({
       total: admins + zonemanagers + doulas + clients,
       counts: {
@@ -209,7 +205,7 @@ export class AnalyticsService {
       });
 
       if (!zmUser?.zonemanagerprofile) {
-        throw new NotFoundException("Zone Manager Profile Not Found");
+        throw new NotFoundException('Zone Manager Profile Not Found');
       }
 
       const zoneManagerId = zmUser.zonemanagerprofile.id;
@@ -292,24 +288,22 @@ export class AnalyticsService {
         role === Role.ADMIN ? count : 0,
         role === Role.ZONE_MANAGER ? count : 0,
         role === Role.DOULA ? count : 0,
-        role === Role.CLIENT ? count : 0
+        role === Role.CLIENT ? count : 0,
       );
     }
 
     // ADMIN + OVERALL (DEFAULT)
-    const [admins, zonemanagers, doulas, clients] =
-      await Promise.all([
-        this.prisma.user.count({ where: { role: Role.ADMIN, ...baseFilter } }),
-        this.prisma.user.count({
-          where: { role: Role.ZONE_MANAGER, ...baseFilter },
-        }),
-        this.prisma.user.count({ where: { role: Role.DOULA, ...baseFilter } }),
-        this.prisma.user.count({ where: { role: Role.CLIENT, ...baseFilter } }),
-      ]);
+    const [admins, zonemanagers, doulas, clients] = await Promise.all([
+      this.prisma.user.count({ where: { role: Role.ADMIN, ...baseFilter } }),
+      this.prisma.user.count({
+        where: { role: Role.ZONE_MANAGER, ...baseFilter },
+      }),
+      this.prisma.user.count({ where: { role: Role.DOULA, ...baseFilter } }),
+      this.prisma.user.count({ where: { role: Role.CLIENT, ...baseFilter } }),
+    ]);
 
     return response(admins, zonemanagers, doulas, clients);
   }
-
 
   async ActivecountUsersByRole() {
     const clients = await this.prisma.user.count({
@@ -359,23 +353,19 @@ export class AnalyticsService {
     };
   }
 
-  async getBookingStats(
-    userId: string,
-    userRole: Role,
-    regionId?: string
-  ) {
+  async getBookingStats(userId: string, userRole: Role, regionId?: string) {
     let bookingWhere: any = {};
 
     /* -------------------- ZONE MANAGER -------------------- */
     if (userRole === Role.ZONE_MANAGER) {
-      console.log("i am here")
+      console.log('i am here');
       const zmUser = await this.prisma.user.findUnique({
         where: { id: userId },
         include: { zonemanagerprofile: true },
       });
 
       if (!zmUser?.zonemanagerprofile) {
-        throw new NotFoundException("Zone Manager Profile Not Found");
+        throw new NotFoundException('Zone Manager Profile Not Found');
       }
 
       bookingWhere = {
@@ -416,23 +406,19 @@ export class AnalyticsService {
     };
   }
 
-  async getMeetingStats(
-    userId: string,
-    userRole: Role,
-    regionId?: string
-  ) {
+  async getMeetingStats(userId: string, userRole: Role, regionId?: string) {
     let meetingWhere: any = {};
 
     /* -------------------- ZONE MANAGER -------------------- */
     if (userRole === Role.ZONE_MANAGER) {
-      console.log("i am here")
+      console.log('i am here');
       const zmUser = await this.prisma.user.findUnique({
         where: { id: userId },
         include: { zonemanagerprofile: true },
       });
 
       if (!zmUser?.zonemanagerprofile) {
-        throw new NotFoundException("Zone Manager Profile Not Found");
+        throw new NotFoundException('Zone Manager Profile Not Found');
       }
 
       meetingWhere = {
@@ -474,7 +460,6 @@ export class AnalyticsService {
       counts,
     };
   }
-
 
   async getDailyActivity(startDate?: string, endDate?: string) {
     let start: Date | undefined;
@@ -639,9 +624,11 @@ export class AnalyticsService {
           status: 'SUCCESS',
           paidAt: {
             gte: new Date(filters.date1),
-            lt: new Date(new Date(filters.date1).setDate(
-              new Date(filters.date1).getDate() + 1,
-            )),
+            lt: new Date(
+              new Date(filters.date1).setDate(
+                new Date(filters.date1).getDate() + 1,
+              ),
+            ),
           },
         },
       };

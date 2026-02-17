@@ -8,11 +8,12 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
   version: '1',
 })
 export class ContactFormController {
-  constructor(private readonly service: ContactFormService) { }
+  constructor(private readonly service: ContactFormService) {}
 
   @ApiOperation({
     summary: 'Submit contact form',
-    description: 'Allows users to submit a contact form with name, email, and message',
+    description:
+      'Allows users to submit a contact form with name, email, and message',
   })
   @ApiBody({ type: CreateContactFormDto })
   @ApiResponse({

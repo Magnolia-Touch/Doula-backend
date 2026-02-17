@@ -1,8 +1,19 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { paginate } from 'src/common/utility/pagination.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateScheduleStatusDto } from './dto/update-schedule-status.dto';
-import { BookingStatus, MeetingStatus, Prisma, Role, ServiceStatus } from '@prisma/client';
+import {
+  BookingStatus,
+  MeetingStatus,
+  Prisma,
+  Role,
+  ServiceStatus,
+} from '@prisma/client';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { BookingFilterDto } from './dto/bookings-filter.dto';
 import { GetMeetingsQueryDto } from './dto/get-meetings.query.dto';
@@ -11,11 +22,9 @@ import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 
 @Injectable()
 export class ServiceBookingService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-  async findAll(
-    query: BookingFilterDto & { page?: number; limit?: number },
-  ) {
+  async findAll(query: BookingFilterDto & { page?: number; limit?: number }) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
 
@@ -130,7 +139,6 @@ export class ServiceBookingService {
     };
   }
 
-
   async findById(id: string) {
     const booking = await this.prisma.serviceBooking.findUnique({
       where: { id },
@@ -211,18 +219,19 @@ export class ServiceBookingService {
 
       slots: booking.AvailableSlotsForService ?? [],
 
-      schedules: booking.schedules?.map((s) => ({
-        scheduleId: s.id,
-        date: s.date,
-        timeshift: s.timeshift,
-        status: s.status,
-        cancelledAt: s.cancelledAt,
+      schedules:
+        booking.schedules?.map((s) => ({
+          scheduleId: s.id,
+          date: s.date,
+          timeshift: s.timeshift,
+          status: s.status,
+          cancelledAt: s.cancelledAt,
 
-        clientName: s.client?.user?.name ?? null,
-        doulaName: s.DoulaProfile?.user?.name ?? null,
+          clientName: s.client?.user?.name ?? null,
+          doulaName: s.DoulaProfile?.user?.name ?? null,
 
-        serviceName: s.ServicePricing?.service?.name ?? null,
-      })) ?? [],
+          serviceName: s.ServicePricing?.service?.name ?? null,
+        })) ?? [],
 
       payments: booking.Payment ?? [],
 
@@ -230,13 +239,11 @@ export class ServiceBookingService {
       updatedAt: booking.updatedAt,
     };
 
-
     return {
       message: 'Booking fetched successfully',
       data: transformed,
     };
   }
-
 
   async updateScheduleStatus(
     userId: string,
@@ -338,20 +345,28 @@ export class ServiceBookingService {
        * ====================================
        */
       if (serviceName === 'Birth Doula') {
-        if (status === ServiceStatus.COMPLETED || status === ServiceStatus.CANCELED) {
+        if (
+          status === ServiceStatus.COMPLETED ||
+          status === ServiceStatus.CANCELED
+        ) {
           await tx.schedules.updateMany({
             where: { bookingId },
             data: {
               status,
-              cancelledAt: status === ServiceStatus.CANCELED ? new Date() : null,
+              cancelledAt:
+                status === ServiceStatus.CANCELED ? new Date() : null,
             },
           });
 
           await tx.serviceBooking.update({
             where: { id: bookingId },
             data: {
-              status: status === ServiceStatus.COMPLETED ? ServiceStatus.COMPLETED : ServiceStatus.CANCELED,
-              cancelledAt: status === ServiceStatus.CANCELED ? new Date() : null,
+              status:
+                status === ServiceStatus.COMPLETED
+                  ? ServiceStatus.COMPLETED
+                  : ServiceStatus.CANCELED,
+              cancelledAt:
+                status === ServiceStatus.CANCELED ? new Date() : null,
             },
           });
         }
@@ -389,8 +404,6 @@ export class ServiceBookingService {
       status,
     };
   }
-
-
 
   async updateBookingStatus(
     userId: string,
@@ -504,8 +517,6 @@ export class ServiceBookingService {
     };
   }
 
-
-
   async getAllMeetings(query: GetMeetingsQueryDto) {
     const {
       status,
@@ -603,8 +614,6 @@ export class ServiceBookingService {
       },
     });
   }
-
-
 
   async getMeetingById(meetingId: string) {
     return this.prisma.meetings.findUnique({
@@ -748,19 +757,9 @@ export class ServiceBookingService {
     return schedule;
   }
 
-
-
   async getAllTestimonial(dto: GetTestimonialsDto) {
-    const {
-      doulaId,
-      serviceId,
-      regionId,
-      ratings,
-      date1,
-      date2,
-      page,
-      limit,
-    } = dto;
+    const { doulaId, serviceId, regionId, ratings, date1, date2, page, limit } =
+      dto;
 
     const where: Prisma.TestimonialsWhereInput = {};
 
@@ -881,5 +880,4 @@ export class ServiceBookingService {
 
     return testimonial;
   }
-
 }

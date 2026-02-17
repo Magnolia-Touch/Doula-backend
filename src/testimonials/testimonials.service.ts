@@ -7,30 +7,35 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { paginate } from 'src/common/utility/pagination.util';
-import { FilterTestimonialsDto, GetZmTestimonialDto } from './dto/filter-testimonials.dto';
+import {
+  FilterTestimonialsDto,
+  GetZmTestimonialDto,
+} from './dto/filter-testimonials.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
 import { BookingStatus } from '@prisma/client';
 
 //testimonials can be added for purchased services.
 @Injectable()
 export class TestimonialsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTestimonialDto, userId: string) {
-    console.log("client Id", userId)
-    console.log(dto)
+    console.log('client Id', userId);
+    console.log(dto);
     const client = await this.prisma.clientProfile.findUnique({
       where: { userId: userId },
-      select: { id: true }
+      select: { id: true },
     });
     if (!client) {
-      throw new NotFoundException(
-        'User Not Found',
-      );
+      throw new NotFoundException('User Not Found');
     }
 
     const bookedservice = await this.prisma.serviceBooking.findFirst({
-      where: { client: { userId: userId }, id: dto.serviceBookingId, status: BookingStatus.COMPLETED },
+      where: {
+        client: { userId: userId },
+        id: dto.serviceBookingId,
+        status: BookingStatus.COMPLETED,
+      },
     });
     if (!bookedservice) {
       throw new NotFoundException(
@@ -44,7 +49,6 @@ export class TestimonialsService {
         ratings: dto.ratings,
         reviews: dto.reviews,
         clientId: client.id,
-
       },
     });
   }
@@ -165,11 +169,7 @@ export class TestimonialsService {
   }
 
   //fetch recent testimonial
-  async getZoneManagerTestimonials(
-    userId: string,
-    page = 1,
-    limit = 10,
-  ) {
+  async getZoneManagerTestimonials(userId: string, page = 1, limit = 10) {
     // 1. find zone manager profile via userId
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
       where: { userId: userId },
@@ -225,8 +225,6 @@ export class TestimonialsService {
       },
     });
   }
-
-
 
   async getAllzmTestimonial(
     userId: string,
@@ -304,7 +302,7 @@ export class TestimonialsService {
       where.ServicePricing = {
         service: {
           name: {
-            contains: serviceName.toLowerCase()
+            contains: serviceName.toLowerCase(),
           },
         },
       };
@@ -386,7 +384,6 @@ export class TestimonialsService {
     };
   }
 
-
   async getZmTestimonialSummary(userId: string) {
     /* ---------------- STEP 1: FETCH ZONE MANAGER ---------------- */
 
@@ -436,55 +433,48 @@ export class TestimonialsService {
 
     /* ---------------- STEP 4: AGGREGATIONS ---------------- */
 
-    const [
-      totalCount,
-      ratingAgg,
-      fiveStarCount,
-      thisMonthCount,
-    ] = await Promise.all([
-      this.prisma.testimonials.count({
-        where: {
-          doulaProfileId: { in: doulaIds },
-        },
-      }),
-
-      this.prisma.testimonials.aggregate({
-        where: {
-          doulaProfileId: { in: doulaIds },
-        },
-        _avg: {
-          ratings: true,
-        },
-      }),
-
-      this.prisma.testimonials.count({
-        where: {
-          doulaProfileId: { in: doulaIds },
-          ratings: 5,
-        },
-      }),
-
-      this.prisma.testimonials.count({
-        where: {
-          doulaProfileId: { in: doulaIds },
-          createdAt: {
-            gte: startOfMonth,
-            lt: endOfMonth,
+    const [totalCount, ratingAgg, fiveStarCount, thisMonthCount] =
+      await Promise.all([
+        this.prisma.testimonials.count({
+          where: {
+            doulaProfileId: { in: doulaIds },
           },
-        },
-      }),
-    ]);
+        }),
+
+        this.prisma.testimonials.aggregate({
+          where: {
+            doulaProfileId: { in: doulaIds },
+          },
+          _avg: {
+            ratings: true,
+          },
+        }),
+
+        this.prisma.testimonials.count({
+          where: {
+            doulaProfileId: { in: doulaIds },
+            ratings: 5,
+          },
+        }),
+
+        this.prisma.testimonials.count({
+          where: {
+            doulaProfileId: { in: doulaIds },
+            createdAt: {
+              gte: startOfMonth,
+              lt: endOfMonth,
+            },
+          },
+        }),
+      ]);
 
     /* ---------------- STEP 5: RESPONSE ---------------- */
 
     return {
       totalTestimonials: totalCount,
-      averageRating: Number(
-        (ratingAgg._avg.ratings ?? 0).toFixed(1),
-      ),
+      averageRating: Number((ratingAgg._avg.ratings ?? 0).toFixed(1)),
       fiveStarReviews: fiveStarCount,
       thisMonth: thisMonthCount,
     };
   }
-
 }

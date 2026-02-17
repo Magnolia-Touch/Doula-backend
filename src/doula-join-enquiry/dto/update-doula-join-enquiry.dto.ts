@@ -4,9 +4,9 @@ import { IsEnum, IsOptional } from 'class-validator';
 import { JoinEnquiryStatus } from '@prisma/client';
 
 export class UpdateDoulaJoinEnquiryDto extends PartialType(
-    CreateDoulaJoinEnquiryDto,
+  CreateDoulaJoinEnquiryDto,
 ) {
-    @IsOptional()
-    @IsEnum(JoinEnquiryStatus)
-    status?: JoinEnquiryStatus;
+  @IsOptional()
+  @IsEnum(JoinEnquiryStatus)
+  status?: JoinEnquiryStatus;
 }

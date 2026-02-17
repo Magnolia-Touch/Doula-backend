@@ -35,7 +35,7 @@ import { Role } from '@prisma/client';
   version: '1',
 })
 export class ServicePricingController {
-  constructor(private readonly servicesService: ServicePricingService) { }
+  constructor(private readonly servicesService: ServicePricingService) {}
 
   // --------------------------------------------------------
   // CREATE
@@ -184,5 +184,4 @@ export class ServicePricingController {
   getServiceWithPricing(@Query() query) {
     return this.servicesService.listServices(query);
   }
-
 }

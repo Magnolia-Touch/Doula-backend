@@ -5,7 +5,7 @@ import { CreateRegionDto, UpdateRegionDto } from './dto/regions.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 @Injectable()
 export class RegionService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateRegionDto) {
     return this.prisma.region.create({
@@ -86,8 +86,6 @@ export class RegionService {
     };
   }
 
-
-
   async findOne(id: string) {
     const region = await this.prisma.region.findUnique({
       where: { id },
@@ -144,10 +142,4 @@ export class RegionService {
       data: { is_active: false },
     });
   }
-
-  async asignRegionToZoneManager() { }
-
-  async updateRegionOfZoneManager() { }
-
-  async removeRegionFromZoneManager() { }
 }

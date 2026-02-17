@@ -26,18 +26,18 @@ import { GetDoulasQueryDto } from './dto/doula-under-zm-query.dto';
 import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
 
 type ZoneManagerRecentActivity = {
-  id: string;                // activity id (derived from source record)
+  id: string; // activity id (derived from source record)
   entityType: 'BOOKING' | 'MEETING' | 'DOULA' | 'GALLERY';
-  entityId: string;          // bookingId / meetingId / doulaId / galleryId
+  entityId: string; // bookingId / meetingId / doulaId / galleryId
   action:
-  | 'BOOKING_CREATED'
-  | 'BOOKING_COMPLETED'
-  | 'BOOKING_CANCELED'
-  | 'MEETING_SCHEDULED'
-  | 'MEETING_COMPLETED'
-  | 'MEETING_CANCELED'
-  | 'DOULA_PROFILE_UPDATED'
-  | 'GALLERY_IMAGE_ADDED';
+    | 'BOOKING_CREATED'
+    | 'BOOKING_COMPLETED'
+    | 'BOOKING_CANCELED'
+    | 'MEETING_SCHEDULED'
+    | 'MEETING_COMPLETED'
+    | 'MEETING_CANCELED'
+    | 'DOULA_PROFILE_UPDATED'
+    | 'GALLERY_IMAGE_ADDED';
   title: string;
   description: string;
   date: Date;
@@ -45,16 +45,13 @@ type ZoneManagerRecentActivity = {
 
 @Injectable()
 export class ZoneManagerService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   // Create new Zone Manager
   async create(dto: CreateZoneManagerDto, profileImageUrl?: string) {
     const existingUser = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { email: dto.email },
-          { phone: dto.phone },
-        ],
+        OR: [{ email: dto.email }, { phone: dto.phone }],
       },
     });
 
@@ -66,7 +63,9 @@ export class ZoneManagerService {
       throw new NotFoundException('One or more region IDs are invalid');
     }
     if (regions.some((r) => r.zoneManagerId !== null)) {
-      throw new BadRequestException('One or more regions are already assigned to another Zone Manager');
+      throw new BadRequestException(
+        'One or more regions are already assigned to another Zone Manager',
+      );
     }
 
     if (existingUser) {
@@ -75,7 +74,9 @@ export class ZoneManagerService {
       }
 
       if (existingUser.phone === dto.phone) {
-        throw new BadRequestException('User with this phone number already exists');
+        throw new BadRequestException(
+          'User with this phone number already exists',
+        );
       }
     }
 
@@ -202,7 +203,8 @@ export class ZoneManagerService {
         profileId: user.zonemanagerprofile?.id ?? null,
 
         regions:
-          user.zonemanagerprofile?.managingRegion.map((r) => r.regionName) ?? [],
+          user.zonemanagerprofile?.managingRegion.map((r) => r.regionName) ??
+          [],
 
         doulas:
           user.zonemanagerprofile?.doulas
@@ -217,7 +219,6 @@ export class ZoneManagerService {
       meta: result.meta,
     };
   }
-
 
   async getById(id: string) {
     const zoneManager = await this.prisma.user.findUnique({
@@ -313,7 +314,10 @@ export class ZoneManagerService {
       throw new NotFoundException('Zone Manager not found');
     }
 
-    await this.prisma.user.update({ where: { id }, data: { is_active: false } });
+    await this.prisma.user.update({
+      where: { id },
+      data: { is_active: false },
+    });
 
     return { message: 'Zone Manager deleted successfully', data: null };
   }
@@ -441,12 +445,11 @@ export class ZoneManagerService {
         ServicePricing: {
           service: {
             name: {
-              contains: filters.serviceName
-            }
-          }
-        }
-      })
-
+              contains: filters.serviceName,
+            },
+          },
+        },
+      });
     }
     /* Service Name */
     if (filters?.search) {
@@ -461,7 +464,6 @@ export class ZoneManagerService {
               user: {
                 name: {
                   contains: search,
-
                 },
               },
             },
@@ -473,7 +475,6 @@ export class ZoneManagerService {
               user: {
                 email: {
                   contains: search,
-
                 },
               },
             },
@@ -496,7 +497,6 @@ export class ZoneManagerService {
               user: {
                 email: {
                   contains: search,
-
                 },
               },
             },
@@ -508,7 +508,6 @@ export class ZoneManagerService {
     if (AND.length > 0) {
       where.AND = AND;
     }
-
 
     const result = await paginate({
       prismaModel: this.prisma.schedules,
@@ -522,7 +521,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
-                email: true
+                email: true,
               },
             },
           },
@@ -533,7 +532,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
-                email: true
+                email: true,
               },
             },
           },
@@ -561,7 +560,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
-                email: true
+                email: true;
               };
             };
           };
@@ -572,7 +571,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
-                email: true
+                email: true;
               };
             };
           };
@@ -614,7 +613,6 @@ export class ZoneManagerService {
           doulaId: schedule.DoulaProfile.id,
           doulaName: schedule.DoulaProfile.user.name,
           doulaEmail: schedule.DoulaProfile.user.email,
-
         };
       }),
       meta: result.meta,
@@ -693,12 +691,11 @@ export class ZoneManagerService {
         service: {
           service: {
             name: {
-              contains: filters.serviceName
-            }
-          }
-        }
-      })
-
+              contains: filters.serviceName,
+            },
+          },
+        },
+      });
     }
 
     if (filters?.search) {
@@ -712,7 +709,6 @@ export class ZoneManagerService {
               user: {
                 name: {
                   contains: search,
-
                 },
               },
             },
@@ -724,7 +720,6 @@ export class ZoneManagerService {
               user: {
                 email: {
                   contains: search,
-
                 },
               },
             },
@@ -747,7 +742,6 @@ export class ZoneManagerService {
               user: {
                 email: {
                   contains: search,
-
                 },
               },
             },
@@ -755,7 +749,6 @@ export class ZoneManagerService {
         ],
       });
     }
-
 
     if (AND.length > 0) {
       where.AND = AND;
@@ -774,7 +767,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
-                email: true
+                email: true,
               },
             },
           },
@@ -785,7 +778,7 @@ export class ZoneManagerService {
               select: {
                 id: true,
                 name: true,
-                email: true
+                email: true,
               },
             },
           },
@@ -813,7 +806,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
-                email: true
+                email: true;
               };
             };
           };
@@ -824,7 +817,7 @@ export class ZoneManagerService {
               select: {
                 id: true;
                 name: true;
-                email: true
+                email: true;
               };
             };
           };
@@ -864,7 +857,7 @@ export class ZoneManagerService {
         startDate: booking.startDate,
         endDate: booking.endDate,
         status: booking.status,
-        timeshift: booking.timeshift
+        timeshift: booking.timeshift,
       })),
       meta: result.meta,
     };
@@ -880,7 +873,6 @@ export class ZoneManagerService {
     date1?: string,
     date2?: string,
   ) {
-
     // Fetch zone manager pro
     // file
     console.log('servicename', serviceName);
@@ -972,7 +964,6 @@ export class ZoneManagerService {
             Service: {
               name: {
                 contains: serviceName,
-
               },
             },
           },
@@ -980,7 +971,6 @@ export class ZoneManagerService {
           {
             serviceName: {
               contains: serviceName,
-
             },
           },
         ],
@@ -1089,7 +1079,6 @@ export class ZoneManagerService {
         meetingId: meeting.id,
         clientId: meeting.bookedBy.id,
         clientName: meeting.bookedBy.user.name,
-
 
         doulaId: meeting.DoulaProfile?.id ?? null,
         doulaName: meeting.DoulaProfile?.user.name ?? null,
@@ -1237,7 +1226,7 @@ export class ZoneManagerService {
         startDate: booking.startDate,
         endDate: booking.endDate,
         status: booking.status,
-        timeshift: booking.timeshift
+        timeshift: booking.timeshift,
       },
     };
   }
@@ -1322,11 +1311,7 @@ export class ZoneManagerService {
     };
   }
 
-
-  async getDoulasUnderZm(
-    userId: string,
-    query: GetDoulasQueryDto,
-  ) {
+  async getDoulasUnderZm(userId: string, query: GetDoulasQueryDto) {
     const {
       page = 1,
       limit = 10,
@@ -1518,19 +1503,18 @@ export class ZoneManagerService {
         date: true,
       },
     });
-    const availableSlots =
-      await this.prisma.availableSlotsForService.findMany({
-        where: {
-          doulaId: { in: doulaProfileIds },
-          date: { gte: today },
-        },
-        select: {
-          doulaId: true,
-          date: true,
-          availability: true,
-        },
-        orderBy: { date: 'asc' },
-      });
+    const availableSlots = await this.prisma.availableSlotsForService.findMany({
+      where: {
+        doulaId: { in: doulaProfileIds },
+        date: { gte: today },
+      },
+      select: {
+        doulaId: true,
+        date: true,
+        availability: true,
+      },
+      orderBy: { date: 'asc' },
+    });
     const scheduleMap = new Map<string, Date[]>();
 
     for (const s of schedules) {
@@ -1569,12 +1553,8 @@ export class ZoneManagerService {
         return false;
       }
 
-      return !bookedDates.some(
-        (d) => normalizeDate(d) === normalizeDate(date),
-      );
+      return !bookedDates.some((d) => normalizeDate(d) === normalizeDate(date));
     }
-
-
 
     /* -------------------------------
        Response shaping
@@ -1586,13 +1566,7 @@ export class ZoneManagerService {
       let nextAvailableDate: Date | null = null;
 
       for (const slot of slotEntries) {
-        if (
-          isDateAvailable(
-            slot.date,
-            slot.availability,
-            bookedDates,
-          )
-        ) {
+        if (isDateAvailable(slot.date, slot.availability, bookedDates)) {
           nextAvailableDate = slot.date;
           break;
         }
@@ -1626,7 +1600,6 @@ export class ZoneManagerService {
           updatedAt: region.updatedAt,
         })),
 
-
         services: doula.ServicePricing.map((sp) => ({
           id: sp.id,
           name: sp.service.name,
@@ -1637,7 +1610,6 @@ export class ZoneManagerService {
       };
     });
 
-
     return {
       status: 'success',
       page: Number(page),
@@ -1646,9 +1618,6 @@ export class ZoneManagerService {
       data: formattedDoulas,
     };
   }
-
-
-
 
   async addDoulaGalleryImages(
     doulaId: string,
@@ -1669,7 +1638,6 @@ export class ZoneManagerService {
       throw new BadRequestException('At least one image is required');
     }
 
-
     const doulaProfile = await this.prisma.doulaProfile.findUnique({
       where: { userId: doulaId, zoneManager: { some: { id: zoneManager.id } } },
     });
@@ -1678,17 +1646,15 @@ export class ZoneManagerService {
       throw new NotFoundException('Doula profile not found');
     }
 
-
     const galleryData = images.map((image) => ({
       doulaProfileId: doulaProfile.id,
       url: image.url,
-      altText: "Doula Gallery Image",
+      altText: 'Doula Gallery Image',
     }));
 
     await this.prisma.doulaGallery.createMany({
       data: galleryData,
     });
-
 
     const galleryImages = await this.prisma.doulaGallery.findMany({
       where: {
@@ -1745,7 +1711,11 @@ export class ZoneManagerService {
     };
   }
 
-  async deleteDoulaGalleryImage(doulaId: string, imageId: string, userId: string) {
+  async deleteDoulaGalleryImage(
+    doulaId: string,
+    imageId: string,
+    userId: string,
+  ) {
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
       where: { userId },
       select: { id: true },
@@ -1780,7 +1750,11 @@ export class ZoneManagerService {
     };
   }
 
-  async updateDoulaProfile(doulaId: string, dto: UpdateDoulaProfileDto, userId: string) {
+  async updateDoulaProfile(
+    doulaId: string,
+    dto: UpdateDoulaProfileDto,
+    userId: string,
+  ) {
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
       where: { userId },
       select: { id: true },
@@ -1840,8 +1814,8 @@ export class ZoneManagerService {
     );
 
     /**
- * 2. Update Service Pricing (OPTIONAL)
- */
+     * 2. Update Service Pricing (OPTIONAL)
+     */
     const toJsonPrice = (price: PriceBreakdownDto): Prisma.InputJsonObject => ({
       morning: price.morning,
       night: price.night,
@@ -1863,7 +1837,6 @@ export class ZoneManagerService {
         );
       }
     }
-
 
     // 3. Update Certificates (EDIT ONLY)
     if (certificates?.length) {
@@ -1891,7 +1864,6 @@ export class ZoneManagerService {
     };
   }
 
-
   async recentActivityForZoneManager(userId: string) {
     // 1. Get zone manager profile
     const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
@@ -1907,7 +1879,7 @@ export class ZoneManagerService {
       throw new Error('Zone manager profile not found');
     }
 
-    const regionIds = zoneManager.managingRegion.map(r => r.id);
+    const regionIds = zoneManager.managingRegion.map((r) => r.id);
 
     /* ----------------------------------------------------
      * 2. Fetch bookings in managed regions
@@ -2041,9 +2013,10 @@ export class ZoneManagerService {
     /* ----------------------------------------------------
      * 6. Merge & sort
      * -------------------------------------------------- */
-    return [...bookingActivities, ...meetingActivities, ...galleryActivities].sort(
-      (a, b) => b.date.getTime() - a.date.getTime(),
-    );
+    return [
+      ...bookingActivities,
+      ...meetingActivities,
+      ...galleryActivities,
+    ].sort((a, b) => b.date.getTime() - a.date.getTime());
   }
-
 }

@@ -10,6 +10,6 @@ import { MailModule } from 'src/mail/mail.module';
   controllers: [IntakeFormController],
   providers: [IntakeFormService, PrismaService, StripeService],
   imports: [StripeModule, MailModule],
-  exports: [IntakeFormService]
+  exports: [IntakeFormService],
 })
-export class IntakeFormModule { }
+export class IntakeFormModule {}

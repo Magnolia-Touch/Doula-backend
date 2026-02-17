@@ -5,11 +5,11 @@ import { EmailJob } from './email.job';
 
 @Processor('email')
 export class EmailProcessor extends WorkerHost {
-    constructor(private readonly mailService: MailService) {
-        super();
-    }
+  constructor(private readonly mailService: MailService) {
+    super();
+  }
 
-    async process(job: Job<EmailJob>) {
-        await this.mailService.sendMail(job.data);
-    }
+  async process(job: Job<EmailJob>) {
+    await this.mailService.sendMail(job.data);
+  }
 }

@@ -1,4 +1,12 @@
-import { ArrayNotEmpty, IsArray, IsDateString, IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WeekDays } from '@prisma/client';
 

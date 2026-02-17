@@ -10,4 +10,4 @@ import { S3Module } from 'src/s3/s3.module';
   providers: [DoulaService],
   controllers: [DoulaController],
 })
-export class DoulaModule { }
+export class DoulaModule {}

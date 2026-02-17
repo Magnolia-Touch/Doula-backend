@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-findZoneManagerOrThrowWithId
+findZoneManagerOrThrowWithId;
 
 export async function findSlotOrThrow(
   prisma: PrismaService,
@@ -71,7 +71,7 @@ export async function findZoneManagerOrThrowWithId(
 ) {
   const zoneManager = await prisma.zoneManagerProfile.findUnique({
     where: { id: zoneManagerId },
-    include: { user: true }
+    include: { user: true },
   });
 
   if (!zoneManager) {
@@ -195,8 +195,8 @@ export async function getSlotOrCreateSlot(
       : userRole === Role.ADMIN
         ? { adminId_weekday: { adminId: profileId, weekday: week } }
         : {
-          zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
-        };
+            zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
+          };
   console.log('unique where', uniqueWhere);
   const ownerField =
     userRole === Role.DOULA
@@ -485,7 +485,7 @@ export async function generateVisitDatesforPostPartumDoula(
 
   const dates: Date[] = [];
   const requiredDays = new Set(
-    visitDays.map(day => WEEKDAY_MAP[day]), // 0–6 (Sun–Sat)
+    visitDays.map((day) => WEEKDAY_MAP[day]), // 0–6 (Sun–Sat)
   );
 
   const current = new Date(startDate.getTime());
@@ -507,8 +507,6 @@ export async function generateVisitDatesforPostPartumDoula(
   return dates;
 }
 
-
-
 /**
  * Checks if a doula is available for a given date and time shift
  */
@@ -519,20 +517,19 @@ export async function isDoulaAvailableForShift(
 ): Promise<boolean> {
   // Normalize date to avoid time issues
   const normalizedDate = new Date(date);
-  console.log("normalised date")
+  console.log('normalised date');
   // normalizedDate.setHours(0, 0, 0, 0);
 
-  const availabilityRecord =
-    await prisma.availableSlotsForService.findFirst({
-      where: {
-        doulaId,
-        date: normalizedDate,
-      },
-      select: {
-        availability: true,
-      },
-    });
-  console.log("availabilityRecord", availabilityRecord);
+  const availabilityRecord = await prisma.availableSlotsForService.findFirst({
+    where: {
+      doulaId,
+      date: normalizedDate,
+    },
+    select: {
+      availability: true,
+    },
+  });
+  console.log('availabilityRecord', availabilityRecord);
   if (!availabilityRecord) {
     return false;
   }
@@ -543,15 +540,16 @@ export async function isDoulaAvailableForShift(
   >;
 
   // FULLDAY overrides all
-  if (availability.FULLDAY === true && availability.MORNING === true && availability.NIGHT === true) {
+  if (
+    availability.FULLDAY === true &&
+    availability.MORNING === true &&
+    availability.NIGHT === true
+  ) {
     return true;
   }
 
   return availability[timeShift] === true;
 }
-
-
-
 
 export function areWeekdaysPresentBetweenDates(
   startDate: Date,
@@ -560,8 +558,8 @@ export function areWeekdaysPresentBetweenDates(
 ): boolean {
   if (startDate > endDate) return false;
 
-  const requiredDays = new Set(weekdays.map(day => WEEKDAY_MAP[day]));
-  console.log("requiredDays", requiredDays);
+  const requiredDays = new Set(weekdays.map((day) => WEEKDAY_MAP[day]));
+  console.log('requiredDays', requiredDays);
   const foundDays = new Set<number>();
 
   const current = new Date(startDate);
@@ -569,7 +567,7 @@ export function areWeekdaysPresentBetweenDates(
 
   const end = new Date(endDate);
   end.setHours(0, 0, 0, 0);
-  console.log(foundDays, "foundDays");
+  console.log(foundDays, 'foundDays');
   while (current <= end) {
     const day = current.getDay();
     if (requiredDays.has(day)) {
@@ -583,7 +581,6 @@ export function areWeekdaysPresentBetweenDates(
 
   return false;
 }
-
 
 /**
  * Returns TRUE if doula is OFF on the given date & time shift
@@ -650,7 +647,6 @@ export function daysBetween(start: Date, end: Date): number {
   return Math.floor((endUtc - startUtc) / MS_PER_DAY);
 }
 
-
 export function generateOrderId(): string {
   const now = new Date();
   const pad = (n: number, width: number) => {
@@ -672,10 +668,7 @@ type ServicePrice = {
   fullday: number;
 };
 
-export function getPriceForShift(
-  price: unknown,
-  shift: TimeShift,
-): number {
+export function getPriceForShift(price: unknown, shift: TimeShift): number {
   if (!price || typeof price !== 'object') {
     throw new BadRequestException('Invalid price configuration');
   }
@@ -692,7 +685,4 @@ export function getPriceForShift(
     default:
       throw new BadRequestException('Invalid time shift');
   }
-
-
-
 }
