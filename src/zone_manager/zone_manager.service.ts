@@ -30,14 +30,14 @@ type ZoneManagerRecentActivity = {
   entityType: 'BOOKING' | 'MEETING' | 'DOULA' | 'GALLERY';
   entityId: string; // bookingId / meetingId / doulaId / galleryId
   action:
-    | 'BOOKING_CREATED'
-    | 'BOOKING_COMPLETED'
-    | 'BOOKING_CANCELED'
-    | 'MEETING_SCHEDULED'
-    | 'MEETING_COMPLETED'
-    | 'MEETING_CANCELED'
-    | 'DOULA_PROFILE_UPDATED'
-    | 'GALLERY_IMAGE_ADDED';
+  | 'BOOKING_CREATED'
+  | 'BOOKING_COMPLETED'
+  | 'BOOKING_CANCELED'
+  | 'MEETING_SCHEDULED'
+  | 'MEETING_COMPLETED'
+  | 'MEETING_CANCELED'
+  | 'DOULA_PROFILE_UPDATED'
+  | 'GALLERY_IMAGE_ADDED';
   title: string;
   description: string;
   date: Date;
@@ -45,7 +45,7 @@ type ZoneManagerRecentActivity = {
 
 @Injectable()
 export class ZoneManagerService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Create new Zone Manager
   async create(dto: CreateZoneManagerDto, profileImageUrl?: string) {
@@ -1439,56 +1439,59 @@ export class ZoneManagerService {
     /* -------------------------------
        Fetch doulas
     --------------------------------*/
-    const doulas = await this.prisma.doulaProfile.findMany({
-      where,
-      skip,
-      take: Number(limit),
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        yoe: true,
-        qualification: true,
-        languages: true,
-        specialities: true,
-        profile_image: true,
+    const [doulas, total] = await Promise.all([
+      this.prisma.doulaProfile.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          yoe: true,
+          qualification: true,
+          languages: true,
+          specialities: true,
+          profile_image: true,
 
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            is_active: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              is_active: true,
+            },
           },
-        },
 
-        Region: {
-          select: {
-            id: true,
-            regionName: true,
-            is_active: true,
-            createdAt: true,
-            updatedAt: true,
-            pincode: true,
-            district: true,
-            state: true,
-            country: true,
-            latitude: true,
-            longitude: true,
+          Region: {
+            select: {
+              id: true,
+              regionName: true,
+              is_active: true,
+              createdAt: true,
+              updatedAt: true,
+              pincode: true,
+              district: true,
+              state: true,
+              country: true,
+              latitude: true,
+              longitude: true,
+            },
           },
-        },
 
-        ServicePricing: {
-          select: {
-            id: true,
-            price: true,
-            service: {
-              select: { name: true },
+          ServicePricing: {
+            select: {
+              id: true,
+              price: true,
+              service: {
+                select: { name: true },
+              },
             },
           },
         },
-      },
-    });
+      }),
+      this.prisma.doulaProfile.count({ where }),
+    ]);
     const doulaProfileIds = doulas.map((d) => d.id);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1612,10 +1615,15 @@ export class ZoneManagerService {
 
     return {
       status: 'success',
-      page: Number(page),
-      limit: Number(limit),
-      count: formattedDoulas.length,
       data: formattedDoulas,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPrevPage: page > 1,
+      },
     };
   }
 

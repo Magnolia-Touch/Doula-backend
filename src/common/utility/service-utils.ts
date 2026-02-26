@@ -195,8 +195,8 @@ export async function getSlotOrCreateSlot(
       : userRole === Role.ADMIN
         ? { adminId_weekday: { adminId: profileId, weekday: week } }
         : {
-            zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
-          };
+          zoneManagerId_weekday: { zoneManagerId: profileId, weekday: week },
+        };
   console.log('unique where', uniqueWhere);
   const ownerField =
     userRole === Role.DOULA
@@ -268,7 +268,7 @@ export async function getOrcreateClent(prisma: PrismaService, data: any) {
       email: data.email,
       phone: data.phone,
       role: Role.CLIENT,
-      clientProfile: { create: { is_verified: true } },
+      clientProfile: { create: { is_verified: false } },
     },
     include: {
       clientProfile: true,
