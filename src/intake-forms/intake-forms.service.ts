@@ -73,7 +73,7 @@ export class IntakeFormService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private stripeService: StripeService,
-  ) {}
+  ) { }
 
   private ensureHttpsUrl(url: string): string {
     if (!url) return url;
@@ -215,10 +215,10 @@ export class IntakeFormService {
     visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
-            startDate,
-            endDate,
-            visitDays,
-          )
+          startDate,
+          endDate,
+          visitDays,
+        )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 
     if (!visitDates.length) {
@@ -420,10 +420,12 @@ export class IntakeFormService {
         serviceName: servicePricing.service.name,
         region: region.regionName,
         timeShift: resolvedTimeShift,
-        serviceStartDate: formatDate(new Date(serviceStartDate), 'yyyy-MM-dd'),
-        serviceEndDate: formatDate(new Date(serviceEndDate), 'yyyy-MM-dd'),
+        serviceStartDate: formatDate(new Date(startDate), 'yyyy-MM-dd'),
+        serviceEndDate: endDate
+          ? formatDate(new Date(endDate), 'yyyy-MM-dd')
+          : undefined,
         AmountPaid: payableAmount,
-        TotalAmount: totalAmount,
+        totalAmount: totalAmount,
       };
 
       /* ----------------------------------------------------
@@ -830,10 +832,10 @@ export class IntakeFormService {
     visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
-            startDate,
-            endDate,
-            visitDays,
-          )
+          startDate,
+          endDate,
+          visitDays,
+        )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 
     if (!visitDates.length) {
@@ -1015,6 +1017,7 @@ export class IntakeFormService {
 
             // Payment details
             totalAmount: totalAmount,
+            amountPaid: payableAmount,   // ✅ ADD THIS
             currency: 'USD',
           },
         },

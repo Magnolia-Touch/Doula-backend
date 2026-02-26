@@ -152,6 +152,7 @@ export class WebhookService {
       regionId,
       regionName,
       totalAmount,
+      amountPaid,
       currency,
     } = payment.metadata as any;
 
@@ -240,7 +241,7 @@ export class WebhookService {
         timeShift: timeShift,
         serviceStartDate: this.safeFormatDate(serviceStartDate, 'yyyy-MM-dd'),
         serviceEndDate: this.safeFormatDate(serviceEndDate, 'yyyy-MM-dd'),
-
+        AmountPaid: amountPaid,
         totalAmount: totalAmount,
       };
 
