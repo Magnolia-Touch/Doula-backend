@@ -28,7 +28,7 @@ import { GetTestimonialsDto } from './dto/get-testimonials.dto';
   version: '1',
 })
 export class ServiceBookingController {
-  constructor(private readonly bookingService: ServiceBookingService) {}
+  constructor(private readonly bookingService: ServiceBookingService) { }
 
   @ApiOperation({ summary: 'Get all service bookings' })
   @ApiResponse({

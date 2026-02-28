@@ -36,6 +36,7 @@ import {
 } from 'src/common/utility/service-utils';
 import { TimeShift } from '@prisma/client';
 import { S3Service } from 'src/s3/s3.service';
+import { MailService } from 'src/mail/mail.service';
 
 const MAX_GALLERY_IMAGES = 5;
 
@@ -44,7 +45,8 @@ export class DoulaService {
   constructor(
     private prisma: PrismaService,
     private readonly s3Service: S3Service,
-  ) {}
+    private readonly mailService: MailService,
+  ) { }
 
   private async buildDoulaProfileResponse(userId: string) {
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -189,7 +191,7 @@ export class DoulaService {
       // -----------------------------
       // Transaction starts
       // -----------------------------
-      return await this.prisma.$transaction(async (tx) => {
+      const result = await this.prisma.$transaction(async (tx) => {
         let createdUser;
 
         // =====================================================
@@ -348,6 +350,23 @@ export class DoulaService {
           data: doulaWithDetails,
         };
       });
+
+      // Send welcome email to the newly created doula (fire-and-forget)
+      this.mailService
+        .sendMail({
+          to: dto.email,
+          subject: 'Welcome to Bambini Doulas!',
+          template: 'doula-welcome',
+          context: {
+            userName: dto.name,
+            userEmail: dto.email,
+          },
+        })
+        .catch((err) => {
+          console.error('Failed to send doula welcome email:', err.message);
+        });
+
+      return result;
     } catch (error) {
       // Handle Prisma unique constraint errors
       if (
@@ -562,11 +581,11 @@ export class DoulaService {
         status: { not: MeetingStatus.CANCELED },
         ...(rangeStart || rangeEnd
           ? {
-              date: {
-                ...(rangeStart && { gte: rangeStart }),
-                ...(rangeEnd && { lte: rangeEnd }),
-              },
-            }
+            date: {
+              ...(rangeStart && { gte: rangeStart }),
+              ...(rangeEnd && { lte: rangeEnd }),
+            },
+          }
           : {}),
       },
       select: { doulaProfileId: true, date: true },
@@ -709,11 +728,11 @@ export class DoulaService {
           profile.ServicePricing?.map((p) =>
             p.service
               ? {
-                  servicePricingId: p.id,
-                  serviceId: p.service.id,
-                  serviceName: p.service.name,
-                  price: p.price,
-                }
+                servicePricingId: p.id,
+                serviceId: p.service.id,
+                serviceName: p.service.name,
+                price: p.price,
+              }
               : null,
           ).filter(Boolean) ?? [];
 
@@ -738,7 +757,7 @@ export class DoulaService {
           ratings:
             profile.Testimonials?.length > 0
               ? profile.Testimonials.reduce((s, t) => s + t.ratings, 0) /
-                profile.Testimonials.length
+              profile.Testimonials.length
               : null,
 
           reviewsCount: profile.Testimonials?.length ?? 0,
@@ -816,11 +835,11 @@ export class DoulaService {
       profile.ServicePricing?.map((p) =>
         p.service
           ? {
-              servicePricingId: p.id,
-              serviceId: p.service.id,
-              serviceName: p.service.name,
-              price: p.price,
-            }
+            servicePricingId: p.id,
+            serviceId: p.service.id,
+            serviceName: p.service.name,
+            price: p.price,
+          }
           : null,
       ).filter(Boolean) ?? [];
 
@@ -1247,10 +1266,10 @@ export class DoulaService {
 
         client: meeting.bookedBy?.user
           ? {
-              clientId: meeting.bookedBy.user.id,
-              name: meeting.bookedBy.user.name,
-              email: meeting.bookedBy.user.email,
-            }
+            clientId: meeting.bookedBy.user.id,
+            name: meeting.bookedBy.user.name,
+            email: meeting.bookedBy.user.email,
+          }
           : null,
       },
     };
@@ -1422,11 +1441,11 @@ export class DoulaService {
 
         client: schedule.client?.user
           ? {
-              clientId: schedule.client.user.id,
-              name: schedule.client.user.name,
-              email: schedule.client.user.email,
-              phone: schedule.client.user.phone,
-            }
+            clientId: schedule.client.user.id,
+            name: schedule.client.user.name,
+            email: schedule.client.user.email,
+            phone: schedule.client.user.phone,
+          }
           : null,
       },
     };
@@ -2427,10 +2446,10 @@ export class DoulaService {
         name: booking.region.regionName,
         zoneManager: booking.region.zoneManager?.user
           ? {
-              id: booking.region.zoneManager.id,
-              name: booking.region.zoneManager.user.name,
-              email: booking.region.zoneManager.user.email,
-            }
+            id: booking.region.zoneManager.id,
+            name: booking.region.zoneManager.user.name,
+            email: booking.region.zoneManager.user.email,
+          }
           : null,
       },
 
@@ -2702,10 +2721,10 @@ export class DoulaService {
         },
         client: shift.client?.user
           ? {
-              clientId: shift.client.user.id,
-              name: shift.client.user.name,
-              email: shift.client.user.email,
-            }
+            clientId: shift.client.user.id,
+            name: shift.client.user.name,
+            email: shift.client.user.email,
+          }
           : null,
         service: {
           servicePricingId: shift.ServicePricing.id,
@@ -2788,10 +2807,10 @@ export class DoulaService {
     visitDates =
       servicePricing.service.name === 'Post Partum Doula'
         ? await generateVisitDatesforPostPartumDoula(
-            startDate,
-            endDate,
-            visitDays,
-          )
+          startDate,
+          endDate,
+          visitDays,
+        )
         : await generateVisitDatesforBirthDoula(startDate, buffer);
 
     if (!visitDates.length) {
@@ -2933,6 +2952,7 @@ export class DoulaService {
     endDate: string,
     filter: 'BOOKED' | 'UNBOOKED' | 'ALL' = 'ALL',
     serviceName?: string,
+    shift?: 'MORNING' | 'NIGHT' | 'FULLDAY',
   ) {
     /* ------------------ Validate Doula ------------------ */
     const doula = await this.prisma.doulaProfile.findUnique({
@@ -2984,24 +3004,34 @@ export class DoulaService {
       validationEnd.setUTCDate(validationEnd.getUTCDate() + bufferDays);
     }
 
+    // Expand schedule query range by 1 day before for cross-day shift constraints
+    const scheduleQueryStart = new Date(validationStart);
+    scheduleQueryStart.setUTCDate(scheduleQueryStart.getUTCDate() - 1);
+
     /* ------------------ Fetch Schedules ------------------ */
     const schedules = await this.prisma.schedules.findMany({
       where: {
         doulaProfileId: doulaId,
         cancelledAt: null,
         date: {
-          gte: validationStart,
+          gte: scheduleQueryStart,
           lte: validationEnd,
         },
       },
-      select: { date: true },
+      select: { date: true, timeshift: true },
     });
 
-    const scheduledDates = new Set(
-      schedules.map(
-        (s) => this.toUtcMidnight(s.date).toISOString().split('T')[0],
-      ),
-    );
+    // Build shift-aware schedule map: date → Set of booked shifts
+    const scheduledShiftsByDate = new Map<string, Set<string>>();
+    for (const s of schedules) {
+      const key = this.toUtcMidnight(s.date).toISOString().split('T')[0];
+      if (!scheduledShiftsByDate.has(key)) {
+        scheduledShiftsByDate.set(key, new Set());
+      }
+      scheduledShiftsByDate.get(key)!.add(s.timeshift);
+    }
+
+    const scheduledDates = new Set(scheduledShiftsByDate.keys());
 
     /* ------------------ Fetch Availability ------------------ */
     const availabilityRows =
@@ -3031,39 +3061,87 @@ export class DoulaService {
       );
     });
 
-    /* ------------------ Helper ------------------ */
-    const isDateAvailable = (date: Date): boolean => {
+    /* ------------------ Shift Constraint Helpers ------------------ */
+    /**
+     * Cross-day & same-day shift blocking rules:
+     *
+     * MORNING booked on Day X → same day: FULLDAY blocked
+     * NIGHT booked on Day X   → same day: FULLDAY blocked
+     *                           next day: MORNING & FULLDAY blocked
+     * FULLDAY booked on Day X → same day: MORNING & NIGHT blocked
+     *                           next day: MORNING & FULLDAY blocked
+     */
+    const isShiftBlockedBySchedule = (
+      dateKey: string,
+      targetShift: 'MORNING' | 'NIGHT' | 'FULLDAY',
+    ): boolean => {
+      const bookedShifts = scheduledShiftsByDate.get(dateKey);
+
+      if (bookedShifts) {
+        // Direct: same shift already booked
+        if (bookedShifts.has(targetShift)) return true;
+
+        // Same-day conflicts
+        if (targetShift === 'FULLDAY' && (bookedShifts.has('MORNING') || bookedShifts.has('NIGHT'))) return true;
+        if (targetShift === 'MORNING' && bookedShifts.has('FULLDAY')) return true;
+        if (targetShift === 'NIGHT' && bookedShifts.has('FULLDAY')) return true;
+      }
+
+      // Cross-day conflicts (previous day's schedule affects current day)
+      const prevDate = new Date(dateKey + 'T00:00:00.000Z');
+      prevDate.setUTCDate(prevDate.getUTCDate() - 1);
+      const prevKey = prevDate.toISOString().split('T')[0];
+      const prevBookedShifts = scheduledShiftsByDate.get(prevKey);
+
+      if (prevBookedShifts) {
+        // Previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
+        if (
+          (targetShift === 'MORNING' || targetShift === 'FULLDAY') &&
+          (prevBookedShifts.has('NIGHT') || prevBookedShifts.has('FULLDAY'))
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    const isDateAvailableForShift = (
+      date: Date,
+      targetShift: 'MORNING' | 'NIGHT' | 'FULLDAY',
+    ): boolean => {
       const key = date.toISOString().split('T')[0];
 
-      if (scheduledDates.has(key)) return false;
-
       const availability = availabilityByDate.get(key);
-
-      // IMPORTANT FIX:
-      // missing availability row should NOT invalidate buffer day
+      // No availability row → assume available (existing behavior for buffer days)
       if (!availability) return true;
+      // Shift not enabled in availability settings
+      if (availability[targetShift] !== true) return false;
 
-      const noShiftAvailable =
-        availability.MORNING !== true &&
-        availability.NIGHT !== true &&
-        availability.FULLDAY !== true;
+      // Check schedule-based blocking (direct + same-day + cross-day)
+      return !isShiftBlockedBySchedule(key, targetShift);
+    };
 
-      return !noShiftAvailable;
+    const isDateAvailable = (date: Date): boolean => {
+      // A date is available if ANY shift is available
+      return (
+        isDateAvailableForShift(date, 'MORNING') ||
+        isDateAvailableForShift(date, 'NIGHT') ||
+        isDateAvailableForShift(date, 'FULLDAY')
+      );
     };
 
     const isFullDayAvailableWithoutSchedule = (date: Date): boolean => {
       const key = date.toISOString().split('T')[0];
 
-      // schedule must not exist
-      if (scheduledDates.has(key)) return false;
-
       const availability = availabilityByDate.get(key);
-
       // availability row must exist
       if (!availability) return false;
+      // FULLDAY must be true in availability settings
+      if (availability.FULLDAY !== true) return false;
 
-      // FULLDAY must be true
-      return availability.FULLDAY === true;
+      // Check schedule-based blocking for FULLDAY (includes cross-day)
+      return !isShiftBlockedBySchedule(key, 'FULLDAY');
     };
 
     /* ------------------ Compute Results ------------------ */
@@ -3076,16 +3154,18 @@ export class DoulaService {
       let isBooked = false;
 
       if (!isBirthDoula) {
-        isBooked = !isDateAvailable(date);
+        if (shift) {
+          // Shift-specific check
+          isBooked = !isDateAvailableForShift(date, shift);
+        } else {
+          // Any-shift check (date is booked only if ALL shifts are unavailable)
+          isBooked = !isDateAvailable(date);
+        }
       } else {
+        // Birth Doula: check FULLDAY across buffer window
         for (let i = -bufferDays; i <= bufferDays; i++) {
           const checkDate = new Date(date);
           checkDate.setUTCDate(checkDate.getUTCDate() + i);
-
-          console.log(
-            'Checking date for birth devan:',
-            checkDate.toISOString(),
-          );
 
           if (!isFullDayAvailableWithoutSchedule(checkDate)) {
             isBooked = true;
@@ -3095,12 +3175,13 @@ export class DoulaService {
       }
 
       const hasAvailabilityRow = availabilityByDate.has(key);
-      const isScheduled = scheduledDates.has(key);
 
-      if (isScheduled && hasAvailabilityRow) {
-        bookedDates.push(key);
-      } else if (!isBooked && hasAvailabilityRow) {
-        unbookedDates.push(key);
+      if (hasAvailabilityRow) {
+        if (isBooked) {
+          bookedDates.push(key);
+        } else {
+          unbookedDates.push(key);
+        }
       }
     }
 
@@ -3123,6 +3204,7 @@ export class DoulaService {
         doulaId,
         startDate,
         endDate,
+        ...(shift && { shift }),
         ...responseData,
       },
     };

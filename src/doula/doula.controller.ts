@@ -72,7 +72,7 @@ export class DoulaController {
   constructor(
     private readonly service: DoulaService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create Doulas' })
@@ -1792,12 +1792,19 @@ export class DoulaController {
     required: false,
     example: 'Birth Doula',
   })
+  @ApiQuery({
+    name: 'shift',
+    enum: ['MORNING', 'NIGHT', 'FULLDAY'],
+    required: false,
+    description: 'Filter availability by specific shift',
+  })
   async getBookedDates(
     @Param('doulaId') doulaId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
     @Query('filter') filter: 'BOOKED' | 'UNBOOKED' | 'ALL' = 'ALL',
     @Query('serviceName') serviceName?: string,
+    @Query('shift') shift?: 'MORNING' | 'NIGHT' | 'FULLDAY',
   ) {
     if (!startDate) {
       throw new BadRequestException('startDate is required');
@@ -1809,6 +1816,7 @@ export class DoulaController {
       endDate,
       filter,
       serviceName,
+      shift,
     );
   }
 }
