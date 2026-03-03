@@ -99,6 +99,72 @@ export class IntakeFormService {
     );
   }
 
+  /**
+   * Shift conflict rules (mirrors getBookedDatesInRange logic):
+   *
+   * Same-day:
+   *   - Same shift booked → blocked
+   *   - FULLDAY requested + (MORNING or NIGHT booked) → blocked
+   *   - MORNING requested + FULLDAY booked → blocked
+   *   - NIGHT requested + FULLDAY booked → blocked
+   *
+   * Cross-day (previous day's schedule affects current day):
+   *   - Previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
+   */
+  private async isShiftBlockedByExistingSchedules(
+    doulaProfileId: string,
+    visitDate: Date,
+    targetShift: TimeShift,
+  ): Promise<{ blocked: boolean; reason?: string }> {
+    const prevDate = new Date(visitDate);
+    prevDate.setUTCDate(prevDate.getUTCDate() - 1);
+
+    const schedules = await this.prisma.schedules.findMany({
+      where: {
+        doulaProfileId,
+        date: { in: [visitDate, prevDate] },
+        status: { not: ServiceStatus.CANCELED },
+      },
+      select: { date: true, timeshift: true },
+    });
+
+    const visitDateKey = visitDate.toISOString().split('T')[0];
+    const prevDateKey = prevDate.toISOString().split('T')[0];
+
+    const sameDayShifts = new Set<string>();
+    const prevDayShifts = new Set<string>();
+
+    for (const s of schedules) {
+      const key = this.toUtcMidnight(s.date).toISOString().split('T')[0];
+      if (key === visitDateKey) sameDayShifts.add(s.timeshift);
+      if (key === prevDateKey) prevDayShifts.add(s.timeshift);
+    }
+
+    // Same-day conflicts
+    if (sameDayShifts.has(targetShift)) {
+      return { blocked: true, reason: `Doula already booked for ${targetShift} on this date` };
+    }
+    if (targetShift === 'FULLDAY' && (sameDayShifts.has('MORNING') || sameDayShifts.has('NIGHT'))) {
+      return { blocked: true, reason: 'Cannot book FULLDAY - doula has a partial shift on this date' };
+    }
+    if (targetShift === 'MORNING' && sameDayShifts.has('FULLDAY')) {
+      return { blocked: true, reason: 'Cannot book MORNING - doula has FULLDAY on this date' };
+    }
+    if (targetShift === 'NIGHT' && sameDayShifts.has('FULLDAY')) {
+      return { blocked: true, reason: 'Cannot book NIGHT - doula has FULLDAY on this date' };
+    }
+
+    // Cross-day conflicts: previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
+    if (
+      (targetShift === 'MORNING' || targetShift === 'FULLDAY') &&
+      (prevDayShifts.has('NIGHT') || prevDayShifts.has('FULLDAY'))
+    ) {
+      return { blocked: true, reason: `Cannot book ${targetShift} - doula had NIGHT/FULLDAY previous day` };
+    }
+
+    return { blocked: false };
+  }
+
   async createIntakeForm(dto: IntakeFormDto) {
     const {
       name,
@@ -259,19 +325,16 @@ export class IntakeFormService {
         continue;
       }
 
-      const existingSchedule = await this.prisma.schedules.findFirst({
-        where: {
-          doulaProfileId,
-          date: visitDate,
-          timeshift: serviceTimeShift,
-          status: { not: ServiceStatus.CANCELED },
-        },
-      });
+      const shiftBlock = await this.isShiftBlockedByExistingSchedules(
+        doulaProfileId,
+        visitDate,
+        serviceTimeShift,
+      );
 
-      if (existingSchedule) {
+      if (shiftBlock.blocked) {
         skippedDates.push({
           date: dateStr,
-          reason: 'Doula already booked on this date',
+          reason: shiftBlock.reason || 'Doula already booked on this date',
         });
         continue;
       }
@@ -878,18 +941,16 @@ export class IntakeFormService {
         continue;
       }
 
-      const existingSchedule = await this.prisma.schedules.findFirst({
-        where: {
-          doulaProfileId,
-          date: visitDate,
-          status: { not: ServiceStatus.CANCELED },
-        },
-      });
+      const shiftBlock = await this.isShiftBlockedByExistingSchedules(
+        doulaProfileId,
+        visitDate,
+        serviceTimeShift,
+      );
 
-      if (existingSchedule) {
+      if (shiftBlock.blocked) {
         skippedDates.push({
           date: dateStr,
-          reason: 'Doula already booked on this date',
+          reason: shiftBlock.reason || 'Doula already booked on this date',
         });
         continue;
       }

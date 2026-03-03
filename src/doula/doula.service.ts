@@ -740,7 +740,6 @@ export class DoulaService {
           userId: user.id,
           isActive: user.is_active,
           name: user.name,
-          email: user.email,
 
           profileId: profile.id,
           yoe: profile.yoe ?? null,
@@ -930,8 +929,6 @@ export class DoulaService {
     const transformed = {
       userId: doula.id,
       name: doula.name,
-      email: doula.email,
-      phone: doula.phone,
 
       profileId: profile.id,
       yoe: profile.yoe ?? null,
