@@ -740,6 +740,7 @@ export class DoulaService {
           userId: user.id,
           isActive: user.is_active,
           name: user.name,
+          email: user.email,
 
           profileId: profile.id,
           yoe: profile.yoe ?? null,
@@ -2844,11 +2845,11 @@ export class DoulaService {
         continue;
       }
 
+      // Same-day: any shift already booked → entire day blocked
       const existingSchedule = await this.prisma.schedules.findFirst({
         where: {
           doulaProfileId,
           date: visitDate,
-          timeshift: serviceTimeShift,
           status: { not: ServiceStatus.CANCELED },
         },
       });
@@ -2856,9 +2857,30 @@ export class DoulaService {
       if (existingSchedule) {
         skippedDates.push({
           date: dateStr,
-          reason: 'Doula already booked on this date',
+          reason: 'Doula already has a shift booked on this date',
         });
         continue;
+      }
+
+      // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING
+      if (serviceTimeShift === TimeShift.MORNING) {
+        const prevDate = new Date(visitDate);
+        prevDate.setUTCDate(prevDate.getUTCDate() - 1);
+        const prevDaySchedule = await this.prisma.schedules.findFirst({
+          where: {
+            doulaProfileId,
+            date: prevDate,
+            timeshift: { in: [TimeShift.NIGHT, TimeShift.FULLDAY] },
+            status: { not: ServiceStatus.CANCELED },
+          },
+        });
+        if (prevDaySchedule) {
+          skippedDates.push({
+            date: dateStr,
+            reason: 'Cannot book MORNING - doula had NIGHT/FULLDAY previous day',
+          });
+          continue;
+        }
       }
 
       availableDates.push(visitDate);
@@ -3060,13 +3082,10 @@ export class DoulaService {
 
     /* ------------------ Shift Constraint Helpers ------------------ */
     /**
-     * Cross-day & same-day shift blocking rules:
+     * Shift blocking rules:
      *
-     * MORNING booked on Day X → same day: FULLDAY blocked
-     * NIGHT booked on Day X   → same day: FULLDAY blocked
-     *                           next day: MORNING & FULLDAY blocked
-     * FULLDAY booked on Day X → same day: MORNING & NIGHT blocked
-     *                           next day: MORNING & FULLDAY blocked
+     * Same-day: Only one shift per day — any existing booking blocks the entire day.
+     * Cross-day: NIGHT or FULLDAY on Day X → blocks MORNING on Day X+1.
      */
     const isShiftBlockedBySchedule = (
       dateKey: string,
@@ -3074,26 +3093,18 @@ export class DoulaService {
     ): boolean => {
       const bookedShifts = scheduledShiftsByDate.get(dateKey);
 
-      if (bookedShifts) {
-        // Direct: same shift already booked
-        if (bookedShifts.has(targetShift)) return true;
+      // Same-day: any shift already booked → entire day blocked
+      if (bookedShifts && bookedShifts.size > 0) return true;
 
-        // Same-day conflicts
-        if (targetShift === 'FULLDAY' && (bookedShifts.has('MORNING') || bookedShifts.has('NIGHT'))) return true;
-        if (targetShift === 'MORNING' && bookedShifts.has('FULLDAY')) return true;
-        if (targetShift === 'NIGHT' && bookedShifts.has('FULLDAY')) return true;
-      }
-
-      // Cross-day conflicts (previous day's schedule affects current day)
+      // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING
       const prevDate = new Date(dateKey + 'T00:00:00.000Z');
       prevDate.setUTCDate(prevDate.getUTCDate() - 1);
       const prevKey = prevDate.toISOString().split('T')[0];
       const prevBookedShifts = scheduledShiftsByDate.get(prevKey);
 
       if (prevBookedShifts) {
-        // Previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
         if (
-          (targetShift === 'MORNING' || targetShift === 'FULLDAY') &&
+          targetShift === 'MORNING' &&
           (prevBookedShifts.has('NIGHT') || prevBookedShifts.has('FULLDAY'))
         ) {
           return true;
