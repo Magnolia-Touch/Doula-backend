@@ -106,7 +106,7 @@ export class IntakeFormService {
    *   - Any shift already booked → entire day is blocked (one shift per day)
    *
    * Cross-day (previous day's schedule affects current day):
-   *   - Previous day NIGHT or FULLDAY → blocks current MORNING
+   *   - Previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
    */
   private async isShiftBlockedByExistingSchedules(
     doulaProfileId: string,
@@ -142,12 +142,12 @@ export class IntakeFormService {
       return { blocked: true, reason: 'Doula already has a shift booked on this date' };
     }
 
-    // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING
+    // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
     if (
-      targetShift === 'MORNING' &&
+      (targetShift === 'MORNING' || targetShift === 'FULLDAY') &&
       (prevDayShifts.has('NIGHT') || prevDayShifts.has('FULLDAY'))
     ) {
-      return { blocked: true, reason: 'Cannot book MORNING - doula had NIGHT/FULLDAY previous day' };
+      return { blocked: true, reason: `Cannot book ${targetShift} - doula had NIGHT/FULLDAY previous day` };
     }
 
     return { blocked: false };

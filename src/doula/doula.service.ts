@@ -2862,8 +2862,8 @@ export class DoulaService {
         continue;
       }
 
-      // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING
-      if (serviceTimeShift === TimeShift.MORNING) {
+      // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
+      if (serviceTimeShift === TimeShift.MORNING || serviceTimeShift === TimeShift.FULLDAY) {
         const prevDate = new Date(visitDate);
         prevDate.setUTCDate(prevDate.getUTCDate() - 1);
         const prevDaySchedule = await this.prisma.schedules.findFirst({
@@ -2877,7 +2877,7 @@ export class DoulaService {
         if (prevDaySchedule) {
           skippedDates.push({
             date: dateStr,
-            reason: 'Cannot book MORNING - doula had NIGHT/FULLDAY previous day',
+            reason: `Cannot book ${serviceTimeShift} - doula had NIGHT/FULLDAY previous day`,
           });
           continue;
         }
@@ -3085,7 +3085,7 @@ export class DoulaService {
      * Shift blocking rules:
      *
      * Same-day: Only one shift per day — any existing booking blocks the entire day.
-     * Cross-day: NIGHT or FULLDAY on Day X → blocks MORNING on Day X+1.
+     * Cross-day: NIGHT or FULLDAY on Day X → blocks MORNING and FULLDAY on Day X+1.
      */
     const isShiftBlockedBySchedule = (
       dateKey: string,
@@ -3096,7 +3096,7 @@ export class DoulaService {
       // Same-day: any shift already booked → entire day blocked
       if (bookedShifts && bookedShifts.size > 0) return true;
 
-      // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING
+      // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
       const prevDate = new Date(dateKey + 'T00:00:00.000Z');
       prevDate.setUTCDate(prevDate.getUTCDate() - 1);
       const prevKey = prevDate.toISOString().split('T')[0];
@@ -3104,7 +3104,7 @@ export class DoulaService {
 
       if (prevBookedShifts) {
         if (
-          targetShift === 'MORNING' &&
+          (targetShift === 'MORNING' || targetShift === 'FULLDAY') &&
           (prevBookedShifts.has('NIGHT') || prevBookedShifts.has('FULLDAY'))
         ) {
           return true;
