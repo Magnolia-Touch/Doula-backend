@@ -103,13 +103,10 @@ export class IntakeFormService {
    * Shift conflict rules (mirrors getBookedDatesInRange logic):
    *
    * Same-day:
-   *   - Same shift booked → blocked
-   *   - FULLDAY requested + (MORNING or NIGHT booked) → blocked
-   *   - MORNING requested + FULLDAY booked → blocked
-   *   - NIGHT requested + FULLDAY booked → blocked
+   *   - Any shift already booked → entire day is blocked (one shift per day)
    *
    * Cross-day (previous day's schedule affects current day):
-   *   - Previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
+   *   - Previous day NIGHT or FULLDAY → blocks current MORNING
    */
   private async isShiftBlockedByExistingSchedules(
     doulaProfileId: string,
@@ -140,26 +137,17 @@ export class IntakeFormService {
       if (key === prevDateKey) prevDayShifts.add(s.timeshift);
     }
 
-    // Same-day conflicts
-    if (sameDayShifts.has(targetShift)) {
-      return { blocked: true, reason: `Doula already booked for ${targetShift} on this date` };
-    }
-    if (targetShift === 'FULLDAY' && (sameDayShifts.has('MORNING') || sameDayShifts.has('NIGHT'))) {
-      return { blocked: true, reason: 'Cannot book FULLDAY - doula has a partial shift on this date' };
-    }
-    if (targetShift === 'MORNING' && sameDayShifts.has('FULLDAY')) {
-      return { blocked: true, reason: 'Cannot book MORNING - doula has FULLDAY on this date' };
-    }
-    if (targetShift === 'NIGHT' && sameDayShifts.has('FULLDAY')) {
-      return { blocked: true, reason: 'Cannot book NIGHT - doula has FULLDAY on this date' };
+    // Same-day: only one shift allowed per day
+    if (sameDayShifts.size > 0) {
+      return { blocked: true, reason: 'Doula already has a shift booked on this date' };
     }
 
-    // Cross-day conflicts: previous day NIGHT or FULLDAY → blocks current MORNING and FULLDAY
+    // Cross-day: previous day NIGHT or FULLDAY → blocks current MORNING
     if (
-      (targetShift === 'MORNING' || targetShift === 'FULLDAY') &&
+      targetShift === 'MORNING' &&
       (prevDayShifts.has('NIGHT') || prevDayShifts.has('FULLDAY'))
     ) {
-      return { blocked: true, reason: `Cannot book ${targetShift} - doula had NIGHT/FULLDAY previous day` };
+      return { blocked: true, reason: 'Cannot book MORNING - doula had NIGHT/FULLDAY previous day' };
     }
 
     return { blocked: false };
@@ -423,6 +411,7 @@ export class IntakeFormService {
           serviceId: servicePricing.id,
           clientId: clientProfile.id,
           bookingId: booking.id,
+          status: ServiceStatus.IN_PROGRESS
         })),
       });
 
