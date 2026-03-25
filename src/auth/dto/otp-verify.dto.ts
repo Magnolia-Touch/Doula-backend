@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class OtpVerifyDto {
   @ApiProperty({ example: 'user@example.com' })
-  @IsEmail()
+  @IsString()
   @IsNotEmpty()
   email: string;
 
