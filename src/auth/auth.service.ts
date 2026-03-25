@@ -145,19 +145,20 @@ export class AuthService {
 
   async verifyOtpDoula(dto: OtpVerifyDto) {
     const { email, otp } = dto;
+    const normalizedEmail = email.trim().replace(/\.+$/, '');
     const defaultOtp = process.env.DEFAULT_OTP;
 
-    // 1️⃣ Find the user by email
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
 
     if (!user || user.role != Role.DOULA) {
       throw new UnauthorizedException('User not found');
     }
 
-    // ✅ UPDATED: Master OTP bypass — env DEFAULT_OTP or hardcoded HARDCODED_DEFAULT_OTP
     if ((defaultOtp && otp === defaultOtp) || otp === HARDCODED_DEFAULT_OTP) {
       await this.prisma.user.update({
-        where: { email },
+        where: { email: normalizedEmail },
         data: { otp: null, otpExpiresAt: null },
       });
       return {
@@ -172,12 +173,10 @@ export class AuthService {
       };
     }
 
-    // 2️⃣ Check if OTP and expiry exist
     if (!user.otp || !user.otpExpiresAt) {
       throw new UnauthorizedException('No OTP found for this user');
     }
 
-    // 3️⃣ Validate OTP and expiry
     const isOtpValid = user.otp === otp;
     const isOtpNotExpired = user.otpExpiresAt > new Date();
 
@@ -185,13 +184,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid OTP or OTP has expired');
     }
 
-    // 5️⃣ Clear OTP fields
     await this.prisma.user.update({
-      where: { email },
+      where: { email: normalizedEmail },
       data: { otp: null, otpExpiresAt: null },
     });
 
-    // 6️⃣ Return response with JWT token
     return {
       user: user,
       role: user.role,
@@ -365,19 +362,20 @@ export class AuthService {
 
   async verifyOtpZoneManager(dto: OtpVerifyDto) {
     const { email, otp } = dto;
+    const normalizedEmail = email.trim().replace(/\.+$/, '');
     const defaultOtp = process.env.DEFAULT_OTP;
 
-    // 1️⃣ Find the user by email
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
 
     if (!user || user.role != Role.ZONE_MANAGER) {
       throw new UnauthorizedException('User not found');
     }
 
-    // ✅ UPDATED: Master OTP bypass — env DEFAULT_OTP or hardcoded HARDCODED_DEFAULT_OTP
     if ((defaultOtp && otp === defaultOtp) || otp === HARDCODED_DEFAULT_OTP) {
       await this.prisma.user.update({
-        where: { email },
+        where: { email: normalizedEmail },
         data: { otp: null, otpExpiresAt: null },
       });
       return {
@@ -392,12 +390,10 @@ export class AuthService {
       };
     }
 
-    // 2️⃣ Check if OTP and expiry exist
     if (!user.otp || !user.otpExpiresAt) {
       throw new UnauthorizedException('No OTP found for this user');
     }
 
-    // 3️⃣ Validate OTP and expiry
     const isOtpValid = user.otp === otp;
     const isOtpNotExpired = user.otpExpiresAt > new Date();
 
@@ -405,13 +401,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid OTP or OTP has expired');
     }
 
-    // 5️⃣ Clear OTP fields
     await this.prisma.user.update({
-      where: { email },
+      where: { email: normalizedEmail },
       data: { otp: null, otpExpiresAt: null },
     });
 
-    // 6️⃣ Return response with JWT token
     return {
       user: user,
       role: user.role,
@@ -424,21 +418,23 @@ export class AuthService {
     };
   }
 
+
   async verifyOtpAdmin(dto: OtpVerifyDto) {
     const { email, otp } = dto;
+    const normalizedEmail = email.trim().replace(/\.+$/, '');
     const defaultOtp = process.env.DEFAULT_OTP;
 
-    // 1️⃣ Find the user by email
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
 
     if (!user || user.role != Role.ADMIN) {
       throw new UnauthorizedException('User not found');
     }
 
-    // ✅ UPDATED: Master OTP bypass — env DEFAULT_OTP or hardcoded HARDCODED_DEFAULT_OTP
     if ((defaultOtp && otp === defaultOtp) || otp === HARDCODED_DEFAULT_OTP) {
       await this.prisma.user.update({
-        where: { email },
+        where: { email: normalizedEmail },
         data: { otp: null, otpExpiresAt: null },
       });
       return {
@@ -453,12 +449,10 @@ export class AuthService {
       };
     }
 
-    // 2️⃣ Check if OTP and expiry exist
     if (!user.otp || !user.otpExpiresAt) {
       throw new UnauthorizedException('No OTP found for this user');
     }
 
-    // 3️⃣ Validate OTP and expiry
     const isOtpValid = user.otp === otp;
     const isOtpNotExpired = user.otpExpiresAt > new Date();
 
@@ -466,13 +460,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid OTP or OTP has expired');
     }
 
-    // 5️⃣ Clear OTP fields
     await this.prisma.user.update({
-      where: { email },
+      where: { email: normalizedEmail },
       data: { otp: null, otpExpiresAt: null },
     });
 
-    // 6️⃣ Return response with JWT token
     return {
       user: user,
       role: user.role,
@@ -545,11 +537,13 @@ export class AuthService {
   // }
 
   async verifyOtpClient(dto: OtpVerifyDto) {
+
     const { email, otp } = dto;
+    const normalizedEmail = email.trim().replace(/\.+$/, '');
     const defaultOtp = process.env.DEFAULT_OTP;
 
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
       include: { clientProfile: true },
     });
 
@@ -579,7 +573,7 @@ export class AuthService {
 
     // Clear OTP
     await this.prisma.user.update({
-      where: { email },
+      where: { email: normalizedEmail },
       data: {
         otp: null,
         otpExpiresAt: null,
