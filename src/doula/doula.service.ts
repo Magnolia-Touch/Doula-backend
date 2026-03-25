@@ -404,6 +404,7 @@ export class DoulaService {
     endDate?: string,
     weekDays?: WeekDays[],
     random?: boolean, // ✅ ADDED
+    isAdmin = false,   // ← ADD THIS
   ) {
     /* ----------------------------------------------------
      * DATE UTILITIES (UTC ONLY)
@@ -745,7 +746,8 @@ export class DoulaService {
           profileId: profile.id,
           yoe: profile.yoe ?? null,
           profile_image: profile.profile_image,
-
+          description: profile.description ?? null,   // ← ADD (already in DB, just expose it)
+          languages: profile.languages ?? null,        // ← ADD (already in DB, just expose it)
           serviceNames: services,
 
           regionNames:
@@ -785,10 +787,19 @@ export class DoulaService {
       })
       .filter(Boolean);
 
+    const finalData = isAdmin
+      ? transformed
+      : transformed.filter(
+        (d: any) =>
+          d.profile_image &&
+          d.description &&
+          d.languages?.length,       // languages comes from profile.languages (Json field)
+      );
+
     return {
       message: 'Doulas fetched successfully',
       ...result,
-      data: transformed,
+      data: finalData,
     };
   }
 
