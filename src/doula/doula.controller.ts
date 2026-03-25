@@ -15,6 +15,7 @@ import {
   UploadedFile,
   ValidationPipe,
   UsePipes,
+  Request,
 } from '@nestjs/common';
 import { DoulaService } from './doula.service';
 import { CreateDoulaDto } from './dto/create-doula.dto';
@@ -49,6 +50,7 @@ import {
 } from './dto/certificate.dto';
 import { CalculatePricingDto } from './dto/calculate-pricing.dto';
 import { S3Service } from 'src/s3/s3.service';
+import { OptionalJwtAuthGuard } from 'src/common/guards/optional-jwt-auth.guard';
 const allowedImageTypes = [
   'image/jpeg',
   'image/png',
@@ -263,6 +265,7 @@ export class DoulaController {
   }
 
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Fetch All Doulas' })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
@@ -358,6 +361,7 @@ export class DoulaController {
     },
   })
   async get(
+    @Request() req,
     @Query('page') page = 1,
     @Query('limit') limit = 10,
     @Query('search') search?: string,
@@ -372,6 +376,7 @@ export class DoulaController {
     @Query('weekDays') weekDays?: string | string[],
     @Query('random') random?: boolean,
   ) {
+    const isAdmin = req.user?.role === Role.ADMIN; // ← ADD THIS
     // normalize to array and handle JSON-stringified arrays
     let parsedWeekDays: string[] | undefined = undefined;
 
@@ -406,6 +411,7 @@ export class DoulaController {
       endDate,
       parsedWeekDays as WeekDays[],
       random,
+      isAdmin,    // ← ADD THIS (new last param)
     );
   }
 
