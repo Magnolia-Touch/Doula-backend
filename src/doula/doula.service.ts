@@ -793,7 +793,8 @@ export class DoulaService {
         (d: any) =>
           d.profile_image &&
           d.description &&
-          d.languages?.length,       // languages comes from profile.languages (Json field)
+          d.languages?.length &&     // languages comes from profile.languages (Json field)
+          d.serviceNames
       );
 
     return {
