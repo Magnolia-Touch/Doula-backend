@@ -513,7 +513,7 @@ export class DoulaService {
           },
         },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { name: 'asc' },
     });
 
     const users = result.data ?? [];
