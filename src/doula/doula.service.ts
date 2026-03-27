@@ -390,6 +390,7 @@ export class DoulaService {
     }
   }
 
+
   async get(
     page = 1,
     limit = 10,
@@ -475,6 +476,21 @@ export class DoulaService {
       if (typeof isActive === 'boolean') {
         where.is_active = isActive;
       }
+    }
+
+    // ✅ ADD HERE — after all filters are built, before paginate
+    if (!isAdmin) {
+      where.doulaProfile = {
+        ...(where.doulaProfile || {}),
+        profile_image: { not: null },
+        description: { not: null },
+        languages: { not: { equals: Prisma.DbNull } },
+        ServicePricing: {
+          some: {
+            ...(where.doulaProfile?.ServicePricing?.some || {}),
+          },
+        },
+      };
     }
 
     /* ----------------------------------------------------
@@ -787,15 +803,7 @@ export class DoulaService {
       })
       .filter(Boolean);
 
-    const finalData = isAdmin
-      ? transformed
-      : transformed.filter(
-        (d: any) =>
-          d.profile_image &&
-          d.description &&
-          d.languages?.length &&     // languages comes from profile.languages (Json field)
-          d.serviceNames
-      );
+    const finalData = transformed;
 
     return {
       message: 'Doulas fetched successfully',
