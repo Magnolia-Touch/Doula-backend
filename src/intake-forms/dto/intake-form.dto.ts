@@ -18,7 +18,7 @@ export class IntakeFormDto {
     example: 'Jane Doe',
   })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({
     required: false,
@@ -26,7 +26,7 @@ export class IntakeFormDto {
     example: 'jane@example.com',
   })
   @IsString()
-  email: string;
+  email!: string;
 
   @ApiProperty({
     required: false,
@@ -34,25 +34,32 @@ export class IntakeFormDto {
     example: '+919876543210',
   })
   @IsString()
-  phone: string;
+  phone!: string;
 
   @ApiProperty({ example: 'doula-uuid', description: 'Doula profile id' })
   @IsString()
-  doulaProfileId: string;
+  doulaProfileId!: string;
 
   @ApiProperty({
     example: 'service-uuid',
     description: 'Service pricing id or service id',
   })
   @IsString()
-  serviceId: string;
+  serviceId!: string;
 
   @ApiProperty({
     example: 'Street, City, State',
     description: 'Address for the service',
   })
   @IsString()
-  address: string;
+  address!: string;
+
+  @ApiProperty({
+    example: 8,
+    description: 'Number of hours requested for the service',
+  })
+  @IsInt()
+  serviceHours!: number;
 
   @ApiProperty({ example: 2, description: 'Buffer time in minutes' })
   @IsNumber()
@@ -64,7 +71,7 @@ export class IntakeFormDto {
     description: 'Service Start Date (ISO format)',
   })
   @IsString()
-  serviceStartDate: string;
+  serviceStartDate!: string;
 
   @ApiProperty({
     example: '2025-12-10',
@@ -72,7 +79,7 @@ export class IntakeFormDto {
   })
   @IsOptional()
   @IsString()
-  serviceEndDate: string;
+  serviceEndDate?: string;
 
   @ApiPropertyOptional({
     example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
@@ -94,7 +101,16 @@ export class IntakeFormDto {
   @IsEnum(TimeShift, {
     message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
   })
-  serviceTimeShift: TimeShift;
+  serviceTimeShift!: TimeShift;
+
+  @ApiPropertyOptional({
+    example: 12,
+    description:
+      'Optional commission percentage to apply on top of total amount',
+  })
+  @IsOptional()
+  @IsNumber()
+  commissionPercentage?: number;
 }
 
 export class BookDoulaDto {
@@ -104,7 +120,7 @@ export class BookDoulaDto {
     example: 'Jane Doe',
   })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({
     required: false,
@@ -127,32 +143,39 @@ export class BookDoulaDto {
     description: 'Address for the service',
   })
   @IsString()
-  location: string;
+  location!: string;
 
   @ApiProperty({
     example: 'Street, City, State',
     description: 'Address for the service',
   })
   @IsString()
-  address: string;
+  address!: string;
+
+  @ApiProperty({
+    example: 8,
+    description: 'Number of hours requested for the service',
+  })
+  @IsInt()
+  serviceHours!: number;
 
   @ApiProperty({ example: 'doula-uuid', description: 'Doula profile id' })
   @IsString()
-  doulaProfileId: string;
+  doulaProfileId!: string;
 
   @ApiProperty({
     example: 'service-uuid',
     description: 'Service pricing id or service id',
   })
   @IsString()
-  serviceId: string;
+  serviceId!: string;
 
   @ApiProperty({
     example: '2025-12-05',
     description: 'Service Start Date (ISO format)',
   })
   @IsString()
-  serviceStartDate: string;
+  serviceStartDate!: string;
 
   @ApiProperty({
     example: '2025-12-10',
@@ -160,7 +183,7 @@ export class BookDoulaDto {
   })
   @IsString()
   @IsOptional()
-  servicEndDate: string;
+  servicEndDate?: string;
 
   @ApiPropertyOptional({
     example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
@@ -182,7 +205,7 @@ export class BookDoulaDto {
   @IsEnum(TimeShift, {
     message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
   })
-  serviceTimeShift: TimeShift;
+  serviceTimeShift!: TimeShift;
 
   @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
   @IsNumber()
@@ -190,9 +213,9 @@ export class BookDoulaDto {
 
   @IsOptional()
   @IsString()
-  successUrl: string;
+  successUrl?: string;
 
   @IsOptional()
   @IsString()
-  cancelUrl: string;
+  cancelUrl?: string;
 }

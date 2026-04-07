@@ -89,10 +89,12 @@ model User {
   phone        String?   @unique
   otp          String?
   otpExpiresAt DateTime?
-  role         Role
-  is_active    Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  // Add a field for dynamic pricing to fetch different commision from different users
+
+  role      Role
+  is_active Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   zonemanagerprofile ZoneManagerProfile? @relation("UserZoneManagerProfile")
   doulaProfile       DoulaProfile?       @relation("UserDoulaProfile")
@@ -162,6 +164,7 @@ model ClientProfile {
   region        String?
   address       String?
   profile_image String?
+  commission    Float    @default(10.0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -391,6 +394,7 @@ model ServiceBooking {
   startDate      DateTime      @default(now())
   endDate        DateTime?
   timeshift      TimeShift     @default(FULLDAY)
+  serviceHours   Int           @default(0)
   paymentDetails Json?
   status         BookingStatus @default(PENDING)
   isPaid         Boolean       @default(false)
@@ -466,10 +470,11 @@ model Testimonials {
 }
 
 model Schedules {
-  id        String        @id @default(uuid())
-  date      DateTime      @db.Date
-  timeshift TimeShift     @default(FULLDAY)
-  status    ServiceStatus @default(PENDING)
+  id           String        @id @default(uuid())
+  date         DateTime      @db.Date
+  timeshift    TimeShift     @default(FULLDAY)
+  serviceHours Int           @default(0)
+  status       ServiceStatus @default(PENDING)
 
   doulaProfileId String
   serviceId      String
