@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `User` ADD COLUMN `commission` DOUBLE NOT NULL DEFAULT 10.0;

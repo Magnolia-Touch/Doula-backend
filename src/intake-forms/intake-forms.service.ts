@@ -99,6 +99,26 @@ export class IntakeFormService {
     );
   }
 
+  private roundToNearestMultipleOf5(amount: number): number {
+    return Math.round(amount / 5) * 5;
+  }
+
+  private async getUserCommissionPercentage(userId: string): Promise<number> {
+    const result = await this.prisma.$queryRaw<Array<{ commission: number }>>`
+      SELECT commission FROM ClientProfile WHERE userId = ${userId} LIMIT 1
+    `;
+    return result?.[0]?.commission ?? 10;
+  }
+
+  private async updateUserCommissionPercentage(
+    userId: string,
+    commissionPercentage: number,
+  ): Promise<void> {
+    await this.prisma.$executeRaw`
+      UPDATE ClientProfile SET commission = ${commissionPercentage} WHERE userId = ${userId}
+    `;
+  }
+
   /**
    * Shift conflict rules (mirrors getBookedDatesInRange logic):
    *
@@ -159,6 +179,7 @@ export class IntakeFormService {
       email,
       phone,
       address,
+      serviceHours,
       doulaProfileId,
       serviceId,
       buffer = 0,
@@ -166,12 +187,13 @@ export class IntakeFormService {
       serviceEndDate,
       visitDays,
       serviceTimeShift,
+      commissionPercentage,
     } = dto;
 
     if (visitDays) {
       const diffDays = areWeekdaysPresentBetweenDates(
         new Date(serviceStartDate),
-        new Date(serviceEndDate),
+        new Date(serviceEndDate as string),
         visitDays,
       );
       if (!diffDays) {
@@ -198,6 +220,19 @@ export class IntakeFormService {
     }
     if (clientProfile.user.is_active === false) {
       throw new BadRequestException('Client profile is inactive');
+    }
+
+    let resolvedCommissionPercentage = 10;
+    if (commissionPercentage !== undefined && commissionPercentage !== null) {
+      resolvedCommissionPercentage = commissionPercentage;
+      await this.updateUserCommissionPercentage(
+        clientUser.id,
+        commissionPercentage,
+      );
+    } else {
+      resolvedCommissionPercentage = await this.getUserCommissionPercentage(
+        clientUser.id,
+      );
     }
 
     /* ----------------------------------------------------
@@ -337,21 +372,27 @@ export class IntakeFormService {
     }
     let totalAmount = 0;
     let payableAmount = 0;
+    const resolvedServiceHours =
+      servicePricing.service.name === 'Birth Doula' ? 16 : serviceHours;
     if (servicePricing.service.name === 'Birth Doula') {
-      const perDayPrice = getPriceForShift(
+      const hourlyRate = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      totalAmount = perDayPrice;
+      totalAmount = hourlyRate * resolvedServiceHours;
     } else if (servicePricing.service.name === 'Post Partum Doula') {
-      const perDayPrice = getPriceForShift(
+      const hourlyRate = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      console.log(perDayPrice);
-      console.log(availableDates.length);
-      totalAmount = perDayPrice * availableDates.length;
+      totalAmount = hourlyRate * resolvedServiceHours * availableDates.length;
     }
+
+    totalAmount =
+      totalAmount +
+      (totalAmount * resolvedCommissionPercentage) / 100;
+
+    totalAmount = this.roundToNearestMultipleOf5(totalAmount);
 
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
@@ -362,7 +403,7 @@ export class IntakeFormService {
       payableAmount = Math.min(half, 1000);
     }
 
-    payableAmount = Math.round(payableAmount * 100) / 100;
+    payableAmount = this.roundToNearestMultipleOf5(payableAmount);
 
     const resolvedTimeShift: TimeShift =
       servicePricing.service.name === 'Post Partum Doula'
@@ -394,6 +435,7 @@ export class IntakeFormService {
           regionId: region.id,
           servicePricingId: servicePricing.id,
           doulaProfileId,
+          serviceHours: resolvedServiceHours,
           clientId: clientProfile.id,
           status: BookingStatus.ACTIVE,
           isPaid: true, // IMPORTANT: intake flow assumes confirmed booking
@@ -410,6 +452,7 @@ export class IntakeFormService {
           doulaProfileId,
           serviceId: servicePricing.id,
           clientId: clientProfile.id,
+          serviceHours: resolvedServiceHours,
           bookingId: booking.id,
           status: ServiceStatus.IN_PROGRESS
         })),
@@ -756,6 +799,7 @@ export class IntakeFormService {
       email,
       phone,
       address,
+      serviceHours,
       doulaProfileId,
       serviceId,
       serviceStartDate,
@@ -770,7 +814,7 @@ export class IntakeFormService {
     if (visitDays) {
       const diffDays = areWeekdaysPresentBetweenDates(
         new Date(serviceStartDate),
-        new Date(servicEndDate),
+        new Date(servicEndDate as string),
         visitDays,
       );
       if (!diffDays) {
@@ -976,19 +1020,30 @@ export class IntakeFormService {
      * -------------------------------------------------- */
     let totalAmount = 0;
     let payableAmount = 0;
+    const resolvedServiceHours =
+      servicePricing.service.name === 'Birth Doula' ? 16 : serviceHours;
     if (servicePricing.service.name === 'Birth Doula') {
-      const perDayPrice = getPriceForShift(
+      const hourlyRate = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      totalAmount = perDayPrice;
+      totalAmount = hourlyRate * resolvedServiceHours;
     } else if (servicePricing.service.name === 'Post Partum Doula') {
-      const perDayPrice = getPriceForShift(
+      const hourlyRate = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = perDayPrice * availableDates.length;
+      totalAmount = hourlyRate * resolvedServiceHours * availableDates.length;
     }
+
+    const resolvedCommissionPercentage = await this.getUserCommissionPercentage(
+      userId,
+    );
+    totalAmount =
+      totalAmount +
+      (totalAmount * resolvedCommissionPercentage) / 100;
+
+    totalAmount = this.roundToNearestMultipleOf5(totalAmount);
 
     console.log('servicename', servicePricing.service.name);
     console.log('totalamount', totalAmount);
@@ -1001,7 +1056,7 @@ export class IntakeFormService {
       payableAmount = Math.min(half, 1000);
     }
 
-    payableAmount = Math.round(payableAmount * 100) / 100;
+    payableAmount = this.roundToNearestMultipleOf5(payableAmount);
     console.log(payableAmount);
     console.log('payable type', typeof payableAmount);
     console.log('totalamoutn type', typeof totalAmount);
@@ -1021,6 +1076,7 @@ export class IntakeFormService {
           regionId: region.id,
           servicePricingId: servicePricing.id,
           doulaProfileId,
+          serviceHours: resolvedServiceHours,
           clientId: clientProfile.id,
           status: BookingStatus.PENDING,
           isPaid: false,

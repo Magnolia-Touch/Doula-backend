@@ -21,7 +21,7 @@ export class ClientsService {
   constructor(
     private prisma: PrismaService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
   // Create new Clients
   async create(dto: CreateClientDto) {
@@ -888,11 +888,11 @@ export class ClientsService {
     });
     type RecentActivity = {
       type:
-        | 'BOOKING_CREATED'
-        | 'BOOKING_COMPLETED'
-        | 'BOOKING_CANCELED'
-        | 'MEETING_SCHEDULED'
-        | 'MEETING_CANCELED';
+      | 'BOOKING_CREATED'
+      | 'BOOKING_COMPLETED'
+      | 'BOOKING_CANCELED'
+      | 'MEETING_SCHEDULED'
+      | 'MEETING_CANCELED';
       title: string;
       description: string;
       date: Date;
@@ -993,6 +993,8 @@ export class ClientsService {
       memberSince: clientProfile.createdAt,
     };
   }
+
+
   async updateProfile(userId: string, dto: UpdateClientDto) {
     const { name, address, region } = dto;
 
