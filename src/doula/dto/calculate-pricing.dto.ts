@@ -19,7 +19,7 @@ export class CalculatePricingDto {
   })
   @IsString()
   @IsNotEmpty()
-  doulaProfileId: string;
+  doulaProfileId!: string;
 
   @ApiProperty({
     description: 'Service Pricing ID',
@@ -27,7 +27,7 @@ export class CalculatePricingDto {
   })
   @IsString()
   @IsNotEmpty()
-  servicePricingId: string;
+  servicePricingId!: string;
 
   @ApiProperty({
     description: 'Start date (YYYY-MM-DD)',
@@ -35,7 +35,7 @@ export class CalculatePricingDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  serviceStartDate: string;
+  serviceStartDate!: string;
 
   @ApiProperty({
     description: 'End date (YYYY-MM-DD)',
@@ -43,7 +43,7 @@ export class CalculatePricingDto {
   })
   @IsDateString()
   @IsNotEmpty()
-  servicEndDate: string;
+  servicEndDate!: string;
 
   @ApiPropertyOptional({
     example: ['SUNDAY', 'MONDAY', 'WEDNESDAY'],
@@ -65,7 +65,27 @@ export class CalculatePricingDto {
   @IsEnum(TimeShift, {
     message: 'serviceTimeShift must be MORNING, NIGHT, or FULLDAY',
   })
-  serviceTimeShift: TimeShift;
+  serviceTimeShift!: TimeShift;
+
+  @ApiPropertyOptional({
+    description: 'Service hours requested for the booking preview',
+    example: 8,
+    default: 8,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  serviceHour?: number;
+
+  @ApiPropertyOptional({
+    description: 'Optional commission percentage override',
+    example: 12,
+    default: 10,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  commissionPercentage?: number;
 
   @ApiPropertyOptional({
     description: 'Buffer days before and after for Birth Doula service',

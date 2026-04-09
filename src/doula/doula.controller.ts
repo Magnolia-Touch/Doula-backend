@@ -1672,6 +1672,7 @@ export class DoulaController {
   }
 
   @Post('calculate/pricing')
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({
     summary: 'Calculate pricing for doula service',
     description:
@@ -1759,8 +1760,8 @@ export class DoulaController {
     status: 404,
     description: 'Doula profile or service pricing not found',
   })
-  async calculatePricing(@Body() dto: CalculatePricingDto) {
-    return this.service.calculatePricing(dto);
+  async calculatePricing(@Body() dto: CalculatePricingDto, @Req() req) {
+    return this.service.calculatePricing(dto, req.user?.id);
   }
 
   //--------------------------------------------------------------
