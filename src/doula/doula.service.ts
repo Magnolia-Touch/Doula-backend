@@ -2761,7 +2761,30 @@ export class DoulaService {
     );
   }
 
-  async calculatePricing(dto: CalculatePricingDto) {
+  private roundToNearestMultipleOf5(amount: number): number {
+    return Math.round(amount / 5) * 5;
+  }
+
+  private async getCustomerCommissionPercentage(userId: string): Promise<number> {
+    const clientProfile = await this.prisma.clientProfile.findUnique({
+      where: { userId },
+      select: { commission: true },
+    });
+
+    return clientProfile?.commission ?? 10;
+  }
+
+  private async updateCustomerCommissionPercentage(
+    userId: string,
+    commissionPercentage: number,
+  ): Promise<void> {
+    await this.prisma.clientProfile.updateMany({
+      where: { userId },
+      data: { commission: commissionPercentage },
+    });
+  }
+
+  async calculatePricing(dto: CalculatePricingDto, customerUserId?: string) {
     const {
       doulaProfileId,
       servicePricingId,
@@ -2769,6 +2792,8 @@ export class DoulaService {
       servicEndDate,
       visitDays,
       serviceTimeShift,
+      serviceHour,
+      commissionPercentage,
       buffer = 0,
     } = dto;
 
@@ -2818,6 +2843,22 @@ export class DoulaService {
 
     if (endDate && startDate > endDate) {
       throw new BadRequestException('Invalid service date range');
+    }
+
+    let resolvedCommissionPercentage = 10;
+    if (commissionPercentage !== undefined && commissionPercentage !== null) {
+      resolvedCommissionPercentage = commissionPercentage;
+
+      if (customerUserId) {
+        await this.updateCustomerCommissionPercentage(
+          customerUserId,
+          commissionPercentage,
+        );
+      }
+    } else if (customerUserId) {
+      resolvedCommissionPercentage = await this.getCustomerCommissionPercentage(
+        customerUserId,
+      );
     }
 
     let visitDates: Date[];
@@ -2933,19 +2974,35 @@ export class DoulaService {
 
     let totalAmount = 0;
     let payableAmount = 0;
+    const resolvedServiceHours =
+      servicePricing.service.name === 'Birth Doula' ? 16 : serviceHour ?? 0;
+
+    if (
+      servicePricing.service.name === 'Post Partum Doula' &&
+      (serviceHour === undefined || serviceHour === null)
+    ) {
+      throw new BadRequestException(
+        'serviceHour is required for Post Partum Doula pricing',
+      );
+    }
+
     if (servicePricing.service.name === 'Birth Doula') {
-      const perDayPrice = getPriceForShift(
+      const hourlyRate = getPriceForShift(
         servicePricing.price,
         TimeShift.FULLDAY,
       );
-      totalAmount = perDayPrice;
+      totalAmount = hourlyRate * resolvedServiceHours;
     } else if (servicePricing.service.name === 'Post Partum Doula') {
-      const perDayPrice = getPriceForShift(
+      const hourlyRate = getPriceForShift(
         servicePricing.price,
         serviceTimeShift,
       );
-      totalAmount = perDayPrice * availableDates.length;
+      totalAmount = hourlyRate * resolvedServiceHours * availableDates.length;
     }
+
+    totalAmount =
+      totalAmount + (totalAmount * resolvedCommissionPercentage) / 100;
+    totalAmount = this.roundToNearestMultipleOf5(totalAmount);
 
     if (totalAmount <= 0) {
       throw new BadRequestException('Invalid total amount');
@@ -2955,7 +3012,7 @@ export class DoulaService {
       const half = totalAmount / 2;
       payableAmount = Math.min(half, 1000);
     }
-    payableAmount = Math.round(payableAmount * 100) / 100;
+    payableAmount = this.roundToNearestMultipleOf5(payableAmount);
 
     return {
       success: true,
@@ -2972,10 +3029,9 @@ export class DoulaService {
         ),
         numberOfVisits: availableDates.length,
         timeShift: serviceTimeShift,
-        pricePerVisit:
-          servicePricing.service.name === 'Birth Doula'
-            ? totalAmount
-            : getPriceForShift(servicePricing.price, serviceTimeShift),
+        serviceHour: resolvedServiceHours,
+        commissionPercentage: resolvedCommissionPercentage,
+        pricePerVisit: getPriceForShift(servicePricing.price, serviceTimeShift),
         totalAmount,
         payableAmount,
         currency: 'USD',
