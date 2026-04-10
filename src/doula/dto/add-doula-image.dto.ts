@@ -7,7 +7,7 @@ export class AddDoulaImageDto {
     description: 'Publicly accessible image URL',
   })
   @IsUrl()
-  url: string;
+  url!: string;
 
   @ApiPropertyOptional({
     example: 'Doula assisting during prenatal session',

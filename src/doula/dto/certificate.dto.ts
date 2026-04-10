@@ -9,7 +9,7 @@ export class CreateCertificateDto {
     description: 'Name of the certificate',
   })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional({
     example: 'International Doula Institute',
