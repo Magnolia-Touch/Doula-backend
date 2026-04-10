@@ -106,7 +106,7 @@ export class CreateDoulaDto {
   @IsOptional()
   @IsString({ each: true })
   @IsOptional()
-  specialities: string;
+  specialities!: string;
 
   // ----------------------------------------
   // Certificates (DTO1 inside DTO2)
