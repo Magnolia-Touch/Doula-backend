@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateDoulaDto } from './dto/create-doula.dto';
+import { CreateDoulaDto } from './create-doula.dto';
 // import { UpdateZoneManagerDto } from './dto/update-zone-manager.dto';
 import {
   BookingStatus,
@@ -18,15 +18,15 @@ import {
   WeekDays,
 } from '@prisma/client';
 import { paginate } from 'src/common/utility/pagination.util';
-import { UpdateDoulaRegionDto } from './dto/update-doula-region.dto';
-import { UpdateDoulaProfileDto } from './dto/update-doula.dto';
+import { UpdateDoulaRegionDto } from './update-doula-region.dto';
+import { UpdateDoulaProfileDto } from './update-doula.dto';
 import {
   CreateCertificateDto,
   UpdateCertificateDto,
-} from './dto/certificate.dto';
+} from './certificate.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
 import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
-import { CalculatePricingDto } from './dto/calculate-pricing.dto';
+import { CalculatePricingDto } from './calculate-pricing.dto';
 import {
   generateVisitDatesforBirthDoula,
   generateVisitDatesforPostPartumDoula,
