@@ -450,7 +450,7 @@ export class MeetingsService {
   }
 
   async doulasMeetingSchedule(dto: ScheduleDoulaDto, user: any) {
-    const { enquiryId, date, time, doulaIds } = dto;
+    const { enquiryId, date, time, doulaIds, commissionPercentage } = dto;
 
     this.logger.log(
       `[ScheduleMeeting] START | enquiryId=${enquiryId} | doulaCount=${doulaIds?.length}`,
@@ -494,6 +494,13 @@ export class MeetingsService {
     if (!enquiry.clientProfile) {
       this.logger.error(`[ScheduleMeeting] clientProfile missing in enquiry`);
       throw new NotFoundException('ClientProfile missing in enquiry');
+    }
+
+    if (commissionPercentage !== undefined && commissionPercentage !== null) {
+      await this.prisma.clientProfile.update({
+        where: { id: enquiry.clientProfile.id },
+        data: { commission: commissionPercentage },
+      });
     }
 
     const meetingDate = new Date(date);
