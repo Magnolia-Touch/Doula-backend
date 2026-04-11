@@ -5,6 +5,7 @@ import {
   IsDateString,
   IsEnum,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -59,6 +60,14 @@ export class ScheduleDoulaDto {
   @IsArray()
   @IsUUID('all', { each: true })
   doulaIds: string[];
+
+  @ApiPropertyOptional({
+    example: 12,
+    description: 'Optional commission percentage override for client profile',
+  })
+  @IsOptional()
+  @IsNumber()
+  commissionPercentage?: number;
 }
 
 export class UpdateClientDoulaEnquiryDto {
