@@ -111,6 +111,14 @@ export class IntakeFormDto {
   @IsOptional()
   @IsNumber()
   commissionPercentage?: number;
+
+  @ApiPropertyOptional({
+    example: '09:30',
+    description: 'Optional start time for the service (HH:mm)',
+  })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
 }
 
 export class BookDoulaDto {
@@ -210,6 +218,14 @@ export class BookDoulaDto {
   @ApiProperty({ example: 60, description: 'Buffer time in minutes' })
   @IsNumber()
   buffer: number = 1;
+
+  @ApiPropertyOptional({
+    example: '09:30',
+    description: 'Optional start time for the service (HH:mm)',
+  })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
 
   @IsOptional()
   @IsString()
