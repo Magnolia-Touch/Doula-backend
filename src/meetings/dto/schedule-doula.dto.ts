@@ -17,21 +17,21 @@ export class ScheduleDoulaDto {
     description: 'Enquiry ID',
   })
   @IsUUID()
-  enquiryId: string;
+  enquiryId!: string;
 
   @ApiProperty({
     example: '2025-01-15',
     description: 'Scheduled date (YYYY-MM-DD)',
   })
   @IsDateString()
-  date: string;
+  date!: string;
 
   @ApiProperty({
     example: '10:30:00',
     description: 'Scheduled time (HH:mm:ss)',
   })
   @IsString()
-  time: string; // HH:mm:ss
+  time!: string; // HH:mm:ss
 
   @ApiPropertyOptional({
     example: 'Client prefers morning session',
@@ -59,7 +59,7 @@ export class ScheduleDoulaDto {
   })
   @IsArray()
   @IsUUID('all', { each: true })
-  doulaIds: string[];
+  doulaIds!: string[];
 
   @ApiPropertyOptional({
     example: 12,
@@ -77,7 +77,7 @@ export class UpdateClientDoulaEnquiryDto {
   })
   @IsDateString()
   @IsOptional()
-  date: string;
+  date!: string;
 
   @ApiPropertyOptional({
     example: '14:00:00',
@@ -85,7 +85,7 @@ export class UpdateClientDoulaEnquiryDto {
   })
   @IsString()
   @IsOptional()
-  time: string; // HH:mm:ss
+  time!: string; // HH:mm:ss
 
   @ApiPropertyOptional({
     example: 'Rescheduled due to client request',
@@ -100,7 +100,7 @@ export class UpdateClientDoulaEnquiryDto {
     description: 'Assigned doula ID',
   })
   @IsUUID()
-  doulaId: string;
+  doulaId!: string;
 }
 
 export class UpdateMeetingStatusDto {
@@ -110,5 +110,5 @@ export class UpdateMeetingStatusDto {
     description: 'Meeting status',
   })
   @IsEnum(MeetingStatus)
-  status: MeetingStatus;
+  status!: MeetingStatus;
 }

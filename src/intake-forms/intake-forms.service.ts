@@ -188,6 +188,7 @@ export class IntakeFormService {
       visitDays,
       serviceTimeShift,
       commissionPercentage,
+      startTime,
     } = dto;
 
     if (visitDays) {
@@ -432,6 +433,7 @@ export class IntakeFormService {
         data: {
           startDate,
           endDate,
+          startTime,
           regionId: region.id,
           servicePricingId: servicePricing.id,
           doulaProfileId,
@@ -448,6 +450,7 @@ export class IntakeFormService {
       await tx.schedules.createMany({
         data: availableDates.map((date) => ({
           date,
+          startTime,
           timeshift: resolvedTimeShift,
           doulaProfileId,
           serviceId: servicePricing.id,
@@ -807,6 +810,7 @@ export class IntakeFormService {
       visitDays,
       serviceTimeShift,
       buffer,
+      startTime,
       successUrl,
       cancelUrl,
     } = dto;
@@ -1073,6 +1077,7 @@ export class IntakeFormService {
         data: {
           startDate,
           endDate,
+          startTime,
           regionId: region.id,
           servicePricingId: servicePricing.id,
           doulaProfileId,
@@ -1109,6 +1114,7 @@ export class IntakeFormService {
             serviceName: servicePricing.service.name,
             serviceStartDate: startDate.toISOString(),
             serviceEndDate: endDate?.toISOString(),
+            startTime,
             timeShift: resolvedTimeShift,
             visitDates: availableDates.map((d) => d.toISOString()),
 

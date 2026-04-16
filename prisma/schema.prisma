@@ -393,6 +393,7 @@ model ServiceBooking {
   id             String        @id @default(uuid())
   startDate      DateTime      @default(now())
   endDate        DateTime?
+  startTime      String?
   timeshift      TimeShift     @default(FULLDAY)
   serviceHours   Int           @default(0)
   paymentDetails Json?
@@ -472,6 +473,7 @@ model Testimonials {
 model Schedules {
   id           String        @id @default(uuid())
   date         DateTime      @db.Date
+  startTime    String?
   timeshift    TimeShift     @default(FULLDAY)
   serviceHours Int           @default(0)
   status       ServiceStatus @default(PENDING)
