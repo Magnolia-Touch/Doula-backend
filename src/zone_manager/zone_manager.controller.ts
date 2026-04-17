@@ -49,6 +49,8 @@ import { extname } from 'path';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 import { S3Service } from 'src/s3/s3.service';
 import { GetDoulasQueryDto } from './dto/doula-under-zm-query.dto';
+import { ListZoneUsersQueryDto } from './dto/list-zone-users-query.dto';
+import { UpdateUserCommissionDto } from './dto/update-user-commission.dto';
 const allowedImageTypes = [
   'image/jpeg',
   'image/png',
@@ -733,6 +735,37 @@ export class ZoneManagerController {
   @Get('doulas/list')
   async getDoulasUnderZm(@Req() req: any, @Query() query: GetDoulasQueryDto) {
     return this.service.getDoulasUnderZm(req.user.id, query);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Get('users/commission')
+  @ApiOperation({
+    summary:
+      'List users in zone (bookings/enquiries) with commission, pagination and search',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  async listUsersWithCommission(
+    @Req() req: any,
+    @Query() query: ListZoneUsersQueryDto,
+  ) {
+    return this.service.listZoneUsersWithCommission(req.user.id, query);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ZONE_MANAGER)
+  @Patch('users/commission')
+  @ApiOperation({
+    summary: 'Update commission value for a zone-related user by user ID',
+  })
+  @ApiBody({ type: UpdateUserCommissionDto })
+  async updateUserCommission(
+    @Req() req: any,
+    @Body() dto: UpdateUserCommissionDto,
+  ) {
+    return this.service.updateZoneUserCommission(req.user.id, dto);
   }
 
   @ApiBearerAuth('access-token')
