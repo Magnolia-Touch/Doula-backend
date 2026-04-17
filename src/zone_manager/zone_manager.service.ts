@@ -24,6 +24,8 @@ import { UpdateZoneManagerRegionDto } from './dto/update-zone-manager.dto';
 import { UpdateDoulaProfileDto } from 'src/doula/dto/update-doula.dto';
 import { GetDoulasQueryDto } from './dto/doula-under-zm-query.dto';
 import { PriceBreakdownDto } from 'src/service-pricing/dto/service-pricing.dto';
+import { ListZoneUsersQueryDto } from './dto/list-zone-users-query.dto';
+import { UpdateUserCommissionDto } from './dto/update-user-commission.dto';
 
 type ZoneManagerRecentActivity = {
   id: string; // activity id (derived from source record)
@@ -2026,5 +2028,183 @@ export class ZoneManagerService {
       ...meetingActivities,
       ...galleryActivities,
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  async listZoneUsersWithCommission(
+    zoneManagerUserId: string,
+    query: ListZoneUsersQueryDto,
+  ) {
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId: zoneManagerUserId },
+      select: { id: true },
+    });
+
+    if (!zoneManager) {
+      throw new ForbiddenException('Zone manager profile not found');
+    }
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const search = query.search?.trim();
+
+    const where: Prisma.ClientProfileWhereInput = {
+      OR: [
+        {
+          bookings: {
+            some: {
+              region: {
+                zoneManagerId: zoneManager.id,
+              },
+            },
+          },
+        },
+        {
+          enquiryForms: {
+            some: {
+              region: {
+                zoneManagerId: zoneManager.id,
+              },
+            },
+          },
+        },
+      ],
+      ...(search
+        ? {
+            user: {
+              OR: [
+                { name: { contains: search } },
+                { email: { contains: search } },
+                { phone: { contains: search } },
+              ],
+            },
+          }
+        : {}),
+    };
+
+    const result = await paginate({
+      prismaModel: this.prisma.clientProfile,
+      page,
+      limit,
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    type ZoneClientWithUser = Prisma.ClientProfileGetPayload<{
+      include: {
+        user: {
+          select: {
+            id: true;
+            name: true;
+            email: true;
+            phone: true;
+          };
+        };
+      };
+    }>;
+
+    const data = (result.data as ZoneClientWithUser[]).map((profile) => ({
+      userId: profile.user.id,
+      name: profile.user.name,
+      email: profile.user.email,
+      phone: profile.user.phone,
+      commission: profile.commission,
+    }));
+
+    return {
+      message: 'Zone users with commission fetched successfully',
+      data,
+      meta: result.meta,
+    };
+  }
+
+  async updateZoneUserCommission(
+    zoneManagerUserId: string,
+    dto: UpdateUserCommissionDto,
+  ) {
+    const zoneManager = await this.prisma.zoneManagerProfile.findUnique({
+      where: { userId: zoneManagerUserId },
+      select: { id: true },
+    });
+
+    if (!zoneManager) {
+      throw new ForbiddenException('Zone manager profile not found');
+    }
+
+    const profile = await this.prisma.clientProfile.findFirst({
+      where: {
+        userId: dto.userId,
+        OR: [
+          {
+            bookings: {
+              some: {
+                region: {
+                  zoneManagerId: zoneManager.id,
+                },
+              },
+            },
+          },
+          {
+            enquiryForms: {
+              some: {
+                region: {
+                  zoneManagerId: zoneManager.id,
+                },
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!profile) {
+      throw new NotFoundException(
+        'Client user not found in your assigned regions',
+      );
+    }
+
+    const updated = await this.prisma.clientProfile.update({
+      where: {
+        userId: dto.userId,
+      },
+      data: {
+        commission: dto.commission,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    return {
+      message: 'User commission updated successfully',
+      data: {
+        userId: updated.user.id,
+        name: updated.user.name,
+        email: updated.user.email,
+        phone: updated.user.phone,
+        commission: updated.commission,
+      },
+    };
   }
 }
