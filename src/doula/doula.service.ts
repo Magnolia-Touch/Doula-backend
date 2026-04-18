@@ -2859,6 +2859,7 @@ export class DoulaService {
       });
 
     }
+    console.log("clientProfile code updated, ", clientProfile)
 
     let resolvedCommissionPercentage = 10;
     if (commissionPercentage !== undefined && commissionPercentage !== null) {
