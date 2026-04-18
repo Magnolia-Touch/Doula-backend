@@ -189,6 +189,7 @@ export class IntakeFormService {
       serviceTimeShift,
       commissionPercentage,
       startTime,
+      location
     } = dto;
 
     if (visitDays) {
