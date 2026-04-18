@@ -6,6 +6,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import * as path from 'path';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClientsService } from 'src/client/client.service';
@@ -600,6 +601,19 @@ export class AuthService {
         time: now.toLocaleTimeString(),
       });
 
+      //later when the independentcontractpath is word and need client name to dynamically assign. 
+      // add pass the word doc through clientcontract
+      const independentContractPath = path.join(
+        process.cwd(),
+        'assets',
+        'INDEPENDENT CONTRACTOR AGREEMENT-2.pdf',
+      );
+      const clientServicesAgreementPath = path.join(
+        process.cwd(),
+        'assets',
+        'CLIENT SERVICES AGREEMENT.pdf',
+      );
+
       await this.mail.sendMailWithAttachments({
         to: user.email,
         subject: 'Your Service Agreement – Bambini Doula',
@@ -610,8 +624,12 @@ export class AuthService {
         },
         attachments: [
           {
-            filename: 'Service-Agreement.docx',
-            path: contractPath,
+            filename: 'INDEPENDENT CONTRACTOR AGREEMENT-2.pdf',
+            path: independentContractPath,
+          },
+          {
+            filename: 'CLIENT SERVICES AGREEMENT.pdf',
+            path: clientServicesAgreementPath,
           },
         ],
       });
