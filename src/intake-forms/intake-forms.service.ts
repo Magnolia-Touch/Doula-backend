@@ -803,6 +803,7 @@ export class IntakeFormService {
       email,
       phone,
       address,
+      location,
       serviceHours,
       doulaProfileId,
       serviceId,
@@ -863,12 +864,14 @@ export class IntakeFormService {
      * 2. Validate region
      * -------------------------------------------------- */
     const region = await this.prisma.region.findFirst({
-      where: { doula: { some: { id: doulaProfileId } } },
+      where: { regionName: location }
+      // where: { doula: { some: { id: doulaProfileId } } },
     });
 
     if (!region) {
       throw new BadRequestException('Region not listed for doula');
     }
+    console.log(region)
 
     if (region.is_active === false) {
       throw new BadRequestException('Region is inactive');
