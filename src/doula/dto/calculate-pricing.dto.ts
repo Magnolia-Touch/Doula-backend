@@ -20,6 +20,7 @@ export class CalculatePricingDto {
     example: 'client@example.com',
   })
   @IsEmail()
+  @IsOptional()
   clientEmail?: string;
 
 
