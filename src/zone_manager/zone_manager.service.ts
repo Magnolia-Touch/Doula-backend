@@ -2158,35 +2158,15 @@ export class ZoneManagerService {
     const profile = await this.prisma.clientProfile.findFirst({
       where: {
         userId: dto.userId,
-        OR: [
-          {
-            bookings: {
-              some: {
-                region: {
-                  zoneManagerId: zoneManager.id,
-                },
-              },
-            },
-          },
-          {
-            enquiryForms: {
-              some: {
-                region: {
-                  zoneManagerId: zoneManager.id,
-                },
-              },
-            },
-          },
-        ],
       },
-      select: {
-        id: true,
-      },
+      // select: {
+      //   id: true,
+      // },
     });
 
     if (!profile) {
       throw new NotFoundException(
-        'Client user not found in your assigned regions',
+        'Client user not found',
       );
     }
 
