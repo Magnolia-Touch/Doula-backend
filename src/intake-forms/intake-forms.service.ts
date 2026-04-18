@@ -241,13 +241,23 @@ export class IntakeFormService {
      * 2. Validate region
      * -------------------------------------------------- */
     const region = await this.prisma.region.findFirst({
-      where: { doula: { some: { id: doulaProfileId } } },
+      where: { regionName: location },
       include: { zoneManager: { include: { user: true } } },
+      // where: { doula: { some: { id: doulaProfileId } } },
     });
-    console.log('helo', region);
+
     if (!region) {
       throw new BadRequestException('Region not listed for doula');
     }
+    console.log(region, "region")
+    // const region = await this.prisma.region.findFirst({
+    //   where: { doula: { some: { id: doulaProfileId } } },
+    //   include: { zoneManager: { include: { user: true } } },
+    // });
+    // console.log('helo', region);
+    // if (!region) {
+    //   throw new BadRequestException('Region not listed for doula');
+    // }
     if (region.is_active === false) {
       throw new BadRequestException('Region is inactive');
     }
