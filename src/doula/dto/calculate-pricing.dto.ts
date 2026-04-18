@@ -10,9 +10,19 @@ import {
   Min,
   IsArray,
   ArrayNotEmpty,
+  IsEmail,
 } from 'class-validator';
 
 export class CalculatePricingDto {
+
+  @ApiProperty({
+    description: 'Client Email',
+    example: 'client@example.com',
+  })
+  @IsEmail()
+  clientEmail?: string;
+
+
   @ApiProperty({
     description: 'Doula Profile ID',
     example: '7de77403-ca72-452b-abfa-296c26df8116',

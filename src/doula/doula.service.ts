@@ -2789,6 +2789,7 @@ export class DoulaService {
 
   async calculatePricing(dto: CalculatePricingDto, customerUserId?: string) {
     const {
+      clientEmail,
       doulaProfileId,
       servicePricingId,
       serviceStartDate,
@@ -2848,6 +2849,17 @@ export class DoulaService {
       throw new BadRequestException('Invalid service date range');
     }
 
+    let clientProfile
+    const client = await this.prisma.user.findUnique({
+      where: { email: clientEmail },
+    });
+    if (client) {
+      clientProfile = await this.prisma.clientProfile.findUnique({
+        where: { userId: client.id },
+      });
+
+    }
+
     let resolvedCommissionPercentage = 10;
     if (commissionPercentage !== undefined && commissionPercentage !== null) {
       resolvedCommissionPercentage = commissionPercentage;
@@ -2862,6 +2874,8 @@ export class DoulaService {
       resolvedCommissionPercentage = await this.getCustomerCommissionPercentage(
         customerUserId,
       );
+    } else if (clientProfile?.commission !== undefined && clientProfile?.commission !== null) {
+      resolvedCommissionPercentage = clientProfile.commission;
     }
 
     let visitDates: Date[];
