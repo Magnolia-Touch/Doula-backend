@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { MeetingStatus, Role, TimeShift, WeekDays } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 // utils/meeting.util.ts
@@ -259,6 +259,18 @@ export async function getOrcreateClent(prisma: PrismaService, data: any) {
       clientProfile: true,
     },
   });
+  if (!user) {
+    user = await prisma.user.findUnique({
+      where: { phone: data.phone },
+      include: {
+        clientProfile: true,
+      },
+    });
+    if (user) {
+      console.log('User with this phone number already exists');
+      throw new ConflictException('User with this phone number already exists');
+    }
+  }
 
   if (user) return user;
   //client is created while submiting the enquiry form. might be useful for followup
