@@ -2052,9 +2052,22 @@ export class ZoneManagerService {
         {
           bookings: {
             some: {
-              region: {
-                zoneManagerId: zoneManager.id,
-              },
+              OR: [
+                {
+                  region: {
+                    zoneManagerId: zoneManager.id,
+                  },
+                },
+                {
+                  DoulaProfile: {
+                    zoneManager: {
+                      some: {
+                        id: zoneManager.id,
+                      },
+                    },
+                  },
+                },
+              ],
             },
           },
         },
@@ -2070,14 +2083,14 @@ export class ZoneManagerService {
       ],
       ...(search
         ? {
-            user: {
-              OR: [
-                { name: { contains: search } },
-                { email: { contains: search } },
-                { phone: { contains: search } },
-              ],
-            },
-          }
+          user: {
+            OR: [
+              { name: { contains: search } },
+              { email: { contains: search } },
+              { phone: { contains: search } },
+            ],
+          },
+        }
         : {}),
     };
 
