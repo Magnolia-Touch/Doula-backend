@@ -2850,15 +2850,18 @@ export class DoulaService {
     }
 
     let clientProfile
-    const client = await this.prisma.user.findUnique({
-      where: { email: clientEmail },
-    });
-    if (client) {
-      clientProfile = await this.prisma.clientProfile.findUnique({
-        where: { userId: client.id },
+    if (dto.clientEmail) {
+      const client = await this.prisma.user.findUnique({
+        where: { email: clientEmail },
       });
+      if (client) {
+        clientProfile = await this.prisma.clientProfile.findUnique({
+          where: { userId: client.id },
+        });
 
+      }
     }
+
     console.log("clientProfile code updated, ", clientProfile)
 
     let resolvedCommissionPercentage = 10;
