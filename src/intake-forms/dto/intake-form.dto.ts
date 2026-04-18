@@ -36,6 +36,14 @@ export class IntakeFormDto {
   @IsString()
   phone!: string;
 
+
+  @ApiProperty({
+    example: 'Street, City, State',
+    description: 'Address for the service',
+  })
+  @IsString()
+  location!: string;
+
   @ApiProperty({ example: 'doula-uuid', description: 'Doula profile id' })
   @IsString()
   doulaProfileId!: string;
