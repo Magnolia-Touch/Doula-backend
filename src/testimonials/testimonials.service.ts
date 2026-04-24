@@ -1,10 +1,12 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
+import { CreateDirectTestimonialDto } from './dto/create-direct-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { paginate } from 'src/common/utility/pagination.util';
 import {
@@ -12,12 +14,12 @@ import {
   GetZmTestimonialDto,
 } from './dto/filter-testimonials.dto';
 import { paginateWithRelations } from 'src/common/utility/paginate-with-relations.util';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, Role } from '@prisma/client';
 
 //testimonials can be added for purchased services.
 @Injectable()
 export class TestimonialsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateTestimonialDto, userId: string) {
     console.log('client Id', userId);
@@ -49,6 +51,98 @@ export class TestimonialsService {
         ratings: dto.ratings,
         reviews: dto.reviews,
         clientId: client.id,
+      },
+    });
+  }
+
+  async createDirect(dto: CreateDirectTestimonialDto) {
+    const [doula, servicePricing] = await Promise.all([
+      this.prisma.doulaProfile.findUnique({
+        where: { id: dto.doulaProfileId },
+        select: { id: true },
+      }),
+      this.prisma.servicePricing.findUnique({
+        where: { id: dto.servicePricingId },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!doula) {
+      throw new NotFoundException('Doula profile not found');
+    }
+
+    if (!servicePricing) {
+      throw new NotFoundException('Service pricing not found');
+    }
+
+    if (dto.clientPhone) {
+      const phoneOwner = await this.prisma.user.findUnique({
+        where: { phone: dto.clientPhone },
+        select: { id: true, email: true },
+      });
+
+      if (phoneOwner && phoneOwner.email !== dto.clientEmail) {
+        throw new ConflictException(
+          'Phone number already belongs to another user',
+        );
+      }
+    }
+
+    let clientProfileId: string;
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.clientEmail },
+      include: { clientProfile: true },
+    });
+
+    if (existingUser) {
+      if (existingUser.role !== Role.CLIENT) {
+        throw new ConflictException('Email already exists with non-client role');
+      }
+
+      const user = await this.prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          name: dto.clientName,
+          ...(dto.clientPhone ? { phone: dto.clientPhone } : {}),
+        },
+        include: { clientProfile: true },
+      });
+
+      if (user.clientProfile) {
+        clientProfileId = user.clientProfile.id;
+      } else {
+        const profile = await this.prisma.clientProfile.create({
+          data: { userId: user.id },
+          select: { id: true },
+        });
+        clientProfileId = profile.id;
+      }
+    } else {
+      const createdClient = await this.prisma.user.create({
+        data: {
+          name: dto.clientName,
+          email: dto.clientEmail,
+          ...(dto.clientPhone ? { phone: dto.clientPhone } : {}),
+          role: Role.CLIENT,
+          clientProfile: { create: {} },
+        },
+        include: { clientProfile: { select: { id: true } } },
+      });
+
+      if (!createdClient.clientProfile) {
+        throw new NotFoundException('Failed to create client profile');
+      }
+      clientProfileId = createdClient.clientProfile.id;
+    }
+
+    return this.prisma.testimonials.create({
+      data: {
+        doulaProfileId: dto.doulaProfileId,
+        serviceId: dto.servicePricingId,
+        clientId: clientProfileId,
+        ratings: dto.ratings,
+        reviews: dto.reviews,
       },
     });
   }
