@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
+import { CreateDirectTestimonialDto } from './dto/create-direct-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import {
   FilterTestimonialsDto,
@@ -37,7 +38,7 @@ import {
   version: '1',
 })
 export class TestimonialsController {
-  constructor(private readonly service: TestimonialsService) {}
+  constructor(private readonly service: TestimonialsService) { }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CLIENT)
@@ -62,6 +63,32 @@ export class TestimonialsController {
   })
   create(@Body() dto: CreateTestimonialDto, @Req() req) {
     return this.service.create(dto, req.user.id);
+  }
+
+  @Post('direct')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Create testimonial directly (Admin)',
+    description:
+      'Allows admin to add testimonials directly by creating/reusing client details without purchase verification',
+  })
+  @ApiBody({
+    type: CreateDirectTestimonialDto,
+    schema: {
+      example: {
+        doulaProfileId: 'doula-uuid',
+        servicePricingId: 'service-pricing-uuid',
+        clientName: 'Ananya Rao',
+        clientEmail: 'ananya.rao@example.com',
+        clientPhone: '+919876543210',
+        ratings: 5,
+        reviews: 'Very kind and professional support.',
+      },
+    },
+  })
+  createDirect(@Body() dto: CreateDirectTestimonialDto) {
+    return this.service.createDirect(dto);
   }
 
   @Get()
