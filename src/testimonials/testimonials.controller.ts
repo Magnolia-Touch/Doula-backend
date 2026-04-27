@@ -67,7 +67,7 @@ export class TestimonialsController {
 
   @Post('direct')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ZONE_MANAGER, Role.CLIENT, Role.DOULA)
   @ApiOperation({
     summary: 'Create testimonial directly (Admin)',
     description:
