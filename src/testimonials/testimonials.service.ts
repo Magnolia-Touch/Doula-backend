@@ -458,6 +458,8 @@ export class TestimonialsService {
 
     return {
       data: result.data.map((t) => ({
+        testimonialId: t.id,
+        id: t.id,
         clientUserId: t.client.user.id,
         clientProfileId: t.client.id,
         clientName: t.client.user.name,
